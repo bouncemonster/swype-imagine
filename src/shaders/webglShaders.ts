@@ -1400,42 +1400,99 @@ void main() {
     }
 
     // ===================================================================
-    // Rendering Styles: 7 Visualization Techniques
+    // Rendering Modalities: 7 Math-Driven Visualization Techniques
+    // Each reveals different mathematical properties of the fractal
+    // ZERO extra SDF calls — uses only already-computed data
     // ===================================================================
     
     if (u_render_style > 0.5 && u_render_style < 1.5) {
-      // 1. X-Ray: Simple density visualization
+      // 1. X-Ray Томография: Density gradient + surface curvature + interior glow
+      // Reveals internal structure through raymarch step density
       float dens = float(steps) / 90.0;
-      vec3 xrayCol = u_accent_color * (0.3 + dens * 1.2);
+      float surfaceEdge = pow(1.0 - ao, 2.0); // Curvature proxy from AO
+      vec3 xrayCore = u_accent_color * (0.3 + dens * 1.2);
+      vec3 xrayShell = u_secondary_color * (0.2 + surfaceEdge * 0.8);
+      vec3 xrayCol = mix(xrayCore, xrayShell, 0.4 + 0.6 * ao);
+      xrayCol += vec3(0.05, 0.12, 0.2) * surfaceEdge * 1.5; // Interior glow
+      xrayCol += u_primary_color * surfaceEdge * 0.6; // Edge enhancement
       col = mix(col * 0.2, xrayCol * 1.4, 0.7 + 0.3 * ao);
     } else if (u_render_style > 1.5 && u_render_style < 2.5) {
-      // 2. LiDAR/Sonar: Heatmap based on distance
-      float distNorm = clamp(t / 20.0, 0.0, 1.0);
-      vec3 lidarCol = mix(u_primary_color, u_accent_color, distNorm);
-      col = lidarCol * (0.5 + 0.5 * ao);
+      // 2. Топография: Normal-based elevation contours + slope shading
+      // Reveals surface structure through topographic contour bands
+      float elevation = dot(n, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
+      float contour = abs(fract(elevation * 12.0) - 0.5) * 2.0;
+      contour = smoothstep(0.0, 0.08, contour);
+      vec3 topoLow = u_secondary_color * 0.4;
+      vec3 topoHigh = u_primary_color * (0.6 + elevation * 0.8);
+      vec3 topoRidge = u_accent_color * (0.8 + elevation * 1.2);
+      vec3 topoCol = mix(topoLow, topoHigh, elevation);
+      topoCol = mix(topoCol, topoRidge, elevation * 0.7);
+      topoCol = mix(topoCol, topoCol * 1.8, (1.0 - contour) * 0.5);
+      float slope = 1.0 - abs(dot(n, vec3(0.0, 1.0, 0.0)));
+      topoCol *= (0.5 + 0.5 * slope);
+      col = topoCol * (0.5 + 0.5 * ao);
     } else if (u_render_style > 2.5 && u_render_style < 3.5) {
-      // 3. Hologram: Wireframe grid overlay
-      float grid = abs(sin(p.x * 20.0)) * abs(sin(p.y * 20.0)) * abs(sin(p.z * 20.0));
-      vec3 holoCol = u_accent_color * (0.3 + grid * 0.7);
-      col = mix(col * 0.1, holoCol, 0.85);
+      // 3. Голографическая проекция: Chromatic aberration + scan lines + shimmer
+      // Simulates volumetric holographic display
+      float depthNorm = clamp(t / 20.0, 0.0, 1.0);
+      float rOff = sin(depthNorm * 20.0 + u_time * 3.0) * 0.02;
+      float gOff = sin(depthNorm * 20.0 + u_time * 3.0 + 2.094) * 0.02;
+      float bOff = sin(depthNorm * 20.0 + u_time * 3.0 + 4.189) * 0.02;
+      vec3 holoBase = vec3(
+        u_primary_color.r * (1.0 + rOff),
+        u_primary_color.g * (1.0 + gOff),
+        u_primary_color.b * (1.0 + bOff)
+      );
+      float holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
+      float scanFreq = 180.0 + depthNorm * 120.0;
+      float scanline = 0.85 + 0.15 * sin(v_uv.y * scanFreq + u_time * 8.0);
+      float shimmer = 0.9 + 0.1 * sin(u_time * 5.0 + length(p) * 10.0);
+      vec3 holoCol = holoBase * (0.4 + holoFres * 1.2) * scanline * shimmer;
+      holoCol += u_accent_color * pow(1.0 - ao, 2.0) * 2.0; // Edge wireframe
+      holoCol += vec3(0.1, 0.3, 0.5) * holoFres * 1.5;
+      col = mix(col * 0.1, holoCol, 0.92);
     } else if (u_render_style > 3.5 && u_render_style < 4.5) {
-      // 4. Iridescent: Simple interference
+      // 4. Радужная интерференция: Multi-order thin-film interference
+      // Angle-dependent spectral color shifting like butterfly wings
       float nv = max(dot(n, -rd), 0.0);
-      float interference = 0.5 + 0.5 * cos(nv * 6.28 + min_trap * 2.0);
-      vec3 iridCol = mix(u_primary_color, u_accent_color, interference);
-      col = iridCol * (0.5 + 0.5 * ao);
+      float order1 = nv * 3.0 + min_trap * 0.5;
+      float order2 = nv * 5.0 + min_trap * 0.3 + u_time * 0.08;
+      float order3 = nv * 7.0 + min_trap * 0.2;
+      vec3 iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
+      vec3 iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
+      vec3 iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
+      vec3 iridCol = mix(iridR, mix(iridG, iridB, 0.5), 0.5);
+      vec3 hIrid = normalize(light1 - rd);
+      float specAngle = max(dot(n, hIrid), 0.0);
+      vec3 specIrid = vec3(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
+      col = iridCol * (0.5 + 0.5 * ao) + specIrid;
     } else if (u_render_style > 4.5 && u_render_style < 5.5) {
-      // 5. Plasma: 2 standing waves
-      float wave1 = sin(length(p) * 10.0 - u_time * 3.0);
-      float wave2 = cos(dot(p, normalize(vec3(1.0, 1.0, 0.0))) * 8.0 + u_time * 2.0);
-      float plasma = (wave1 + wave2) * 0.5;
-      vec3 plasmaCol = mix(u_secondary_color, u_accent_color, plasma * 0.5 + 0.5);
-      col = plasmaCol * (0.4 + 0.6 * ao) + sssCol * 1.2;
+      // 5. Квантовое поле: 3 standing waves on golden vectors + interference
+      // Visualizes quantum energy density through wave superposition
+      float wave1 = sin(length(p) * 12.0 - u_time * 3.5);
+      float wave2 = cos(dot(p, normalize(vec3(1.618, 1.0, 0.618))) * 7.0 + u_time * 2.2);
+      float wave3 = sin(dot(p, normalize(vec3(-0.618, 1.618, 1.0))) * 9.0 - u_time * 1.8);
+      float interference = (wave1 + wave2 + wave3) / 3.0;
+      float energy = pow(abs(interference), 0.7);
+      vec3 plasmaCold = u_secondary_color * (0.3 + energy * 0.5);
+      vec3 plasmaHot = u_accent_color * (0.8 + energy * 1.5);
+      vec3 qCol = mix(plasmaCold, plasmaHot, energy);
+      qCol += u_accent_color * pow(fresnel, 2.0) * 1.2;
+      col = qCol * (0.4 + 0.6 * ao) + sssCol * 1.2;
     } else if (u_render_style > 5.5) {
-      // 6. Amber/Gemstone: Simple refraction
-      vec3 beer = exp(-max(t - 0.5, 0.0) * vec3(0.1, 0.3, 0.8));
+      // 6. Кристалл: Beer-Lambert + dual caustic + spectral dispersion
+      // Physical refraction with wavelength-dependent absorption
+      vec3 beer = exp(-max(t - 0.5, 0.0) * vec3(0.08, 0.25, 0.9));
+      float caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
+      float caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
+      float caustic = caustic1 + caustic2;
       vec3 refractCol = mix(u_primary_color, u_accent_color, fresnel * 0.7);
-      col = refractCol * beer * (0.7 + 0.3 * ao);
+      vec3 gemCol = refractCol * beer;
+      vec3 gemSpec = vec3(1.0, 0.96, 0.82) * spec1 * 2.0;
+      float dispersion = fresnel * 0.15;
+      gemCol.r *= (1.0 + dispersion);
+      gemCol.b *= (1.0 - dispersion * 0.5);
+      col = gemCol * (0.7 + 0.3 * ao) + gemSpec + u_accent_color * caustic * 0.6;
     }
 
     // Distance-relative atmospheric falloff

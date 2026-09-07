@@ -1513,42 +1513,93 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
 
     // ===================================================================
-    // Rendering Styles: 7 Visualization Techniques
+    // Rendering Modalities: 7 Math-Driven Visualization Techniques
+    // Each reveals different mathematical properties of the fractal
+    // ZERO extra SDF calls — uses only already-computed data
     // ===================================================================
     
     if (u.render_style > 0.5 && u.render_style < 1.5) {
-      // 1. X-Ray: Simple density visualization
+      // 1. X-Ray Томография: Density gradient + surface curvature + interior glow
       let dens = f32(steps) / 90.0;
-      let xrayCol = u.accent_color * (0.3 + dens * 1.2);
+      let surfaceEdge = pow(1.0 - ao, 2.0);
+      let xrayCore = u.accent_color * (0.3 + dens * 1.2);
+      let xrayShell = u.secondary_color * (0.2 + surfaceEdge * 0.8);
+      var xrayCol = mix(xrayCore, xrayShell, 0.4 + 0.6 * ao);
+      xrayCol = xrayCol + vec3<f32>(0.05, 0.12, 0.2) * surfaceEdge * 1.5;
+      xrayCol = xrayCol + u.primary_color * surfaceEdge * 0.6;
       col = mix(col * 0.2, xrayCol * 1.4, 0.7 + 0.3 * ao);
     } else if (u.render_style > 1.5 && u.render_style < 2.5) {
-      // 2. LiDAR/Sonar: Heatmap based on distance
-      let distNorm = clamp(t / 20.0, 0.0, 1.0);
-      let lidarCol = mix(u.primary_color, u.accent_color, distNorm);
-      col = lidarCol * (0.5 + 0.5 * ao);
+      // 2. Топография: Normal-based elevation contours + slope shading
+      let elevation = dot(n, vec3<f32>(0.0, 1.0, 0.0)) * 0.5 + 0.5;
+      let contourRaw = abs(fract(elevation * 12.0) - 0.5) * 2.0;
+      let contour = smoothstep(0.0, 0.08, contourRaw);
+      let topoLow = u.secondary_color * 0.4;
+      let topoHigh = u.primary_color * (0.6 + elevation * 0.8);
+      let topoRidge = u.accent_color * (0.8 + elevation * 1.2);
+      var topoCol = mix(topoLow, topoHigh, elevation);
+      topoCol = mix(topoCol, topoRidge, elevation * 0.7);
+      topoCol = mix(topoCol, topoCol * 1.8, (1.0 - contour) * 0.5);
+      let slope = 1.0 - abs(dot(n, vec3<f32>(0.0, 1.0, 0.0)));
+      topoCol = topoCol * (0.5 + 0.5 * slope);
+      col = topoCol * (0.5 + 0.5 * ao);
     } else if (u.render_style > 2.5 && u.render_style < 3.5) {
-      // 3. Hologram: Wireframe grid overlay
-      let grid = abs(sin(p.x * 20.0)) * abs(sin(p.y * 20.0)) * abs(sin(p.z * 20.0));
-      let holoCol = u.accent_color * (0.3 + grid * 0.7);
-      col = mix(col * 0.1, holoCol, 0.85);
+      // 3. Голографическая проекция: Chromatic aberration + scan lines + shimmer
+      let depthNorm = clamp(t / 20.0, 0.0, 1.0);
+      let rOff = sin(depthNorm * 20.0 + u.time * 3.0) * 0.02;
+      let gOff = sin(depthNorm * 20.0 + u.time * 3.0 + 2.094) * 0.02;
+      let bOff = sin(depthNorm * 20.0 + u.time * 3.0 + 4.189) * 0.02;
+      let holoBase = vec3<f32>(
+        u.primary_color.r * (1.0 + rOff),
+        u.primary_color.g * (1.0 + gOff),
+        u.primary_color.b * (1.0 + bOff)
+      );
+      let holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
+      let scanFreq = 180.0 + depthNorm * 120.0;
+      let scanline = 0.85 + 0.15 * sin(in.uv.y * scanFreq + u.time * 8.0);
+      let shimmer = 0.9 + 0.1 * sin(u.time * 5.0 + length(p) * 10.0);
+      var holoCol = holoBase * (0.4 + holoFres * 1.2) * scanline * shimmer;
+      holoCol = holoCol + u.accent_color * pow(1.0 - ao, 2.0) * 2.0;
+      holoCol = holoCol + vec3<f32>(0.1, 0.3, 0.5) * holoFres * 1.5;
+      col = mix(col * 0.1, holoCol, 0.92);
     } else if (u.render_style > 3.5 && u.render_style < 4.5) {
-      // 4. Iridescent: Simple interference
+      // 4. Радужная интерференция: Multi-order thin-film interference
       let nv = max(dot(n, -rd), 0.0);
-      let interference = 0.5 + 0.5 * cos(nv * 6.28 + min_trap * 2.0);
-      let iridCol = mix(u.primary_color, u.accent_color, interference);
-      col = iridCol * (0.5 + 0.5 * ao);
+      let order1 = nv * 3.0 + min_trap * 0.5;
+      let order2 = nv * 5.0 + min_trap * 0.3 + u.time * 0.08;
+      let order3 = nv * 7.0 + min_trap * 0.2;
+      let iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
+      let iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
+      let iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
+      let iridCol = mix(iridR, mix(iridG, iridB, 0.5), 0.5);
+      let hIrid = normalize(light1 - rd);
+      let specAngle = max(dot(n, hIrid), 0.0);
+      let specIrid = vec3<f32>(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
+      col = iridCol * (0.5 + 0.5 * ao) + specIrid;
     } else if (u.render_style > 4.5 && u.render_style < 5.5) {
-      // 5. Plasma: 2 standing waves
-      let wave1 = sin(length(p) * 10.0 - u.time * 3.0);
-      let wave2 = cos(dot(p, normalize(vec3<f32>(1.0, 1.0, 0.0))) * 8.0 + u.time * 2.0);
-      let plasma = (wave1 + wave2) * 0.5;
-      let plasmaCol = mix(u.secondary_color, u.accent_color, plasma * 0.5 + 0.5);
-      col = plasmaCol * (0.4 + 0.6 * ao) + sssCol * 1.2;
+      // 5. Квантовое поле: 3 standing waves on golden vectors + interference
+      let wave1 = sin(length(p) * 12.0 - u.time * 3.5);
+      let wave2 = cos(dot(p, normalize(vec3<f32>(1.618, 1.0, 0.618))) * 7.0 + u.time * 2.2);
+      let wave3 = sin(dot(p, normalize(vec3<f32>(-0.618, 1.618, 1.0))) * 9.0 - u.time * 1.8);
+      let interference = (wave1 + wave2 + wave3) / 3.0;
+      let energy = pow(abs(interference), 0.7);
+      let plasmaCold = u.secondary_color * (0.3 + energy * 0.5);
+      let plasmaHot = u.accent_color * (0.8 + energy * 1.5);
+      var qCol = mix(plasmaCold, plasmaHot, energy);
+      qCol = qCol + u.accent_color * pow(fresnel, 2.0) * 1.2;
+      col = qCol * (0.4 + 0.6 * ao) + sssCol * 1.2;
     } else if (u.render_style > 5.5) {
-      // 6. Amber/Gemstone: Simple refraction
-      let beer = exp(-max(t - 0.5, 0.0) * vec3<f32>(0.1, 0.3, 0.8));
+      // 6. Кристалл: Beer-Lambert + dual caustic + spectral dispersion
+      let beer = exp(-max(t - 0.5, 0.0) * vec3<f32>(0.08, 0.25, 0.9));
+      let caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
+      let caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
+      let caustic = caustic1 + caustic2;
       let refractCol = mix(u.primary_color, u.accent_color, fresnel * 0.7);
-      col = refractCol * beer * (0.7 + 0.3 * ao);
+      var gemCol = refractCol * beer;
+      let gemSpec = vec3<f32>(1.0, 0.96, 0.82) * spec1 * 2.0;
+      let dispersion = fresnel * 0.15;
+      gemCol.r = gemCol.r * (1.0 + dispersion);
+      gemCol.b = gemCol.b * (1.0 - dispersion * 0.5);
+      col = gemCol * (0.7 + 0.3 * ao) + gemSpec + u.accent_color * caustic * 0.6;
     }
 
     // Distance-relative atmospheric falloff
