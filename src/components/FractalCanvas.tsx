@@ -188,6 +188,8 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       if (!canvas) return;
       console.info('[FractalCanvas] Setup starting, activeEngineType=', activeEngineType);
       setIsCompiling(true);
+      // CRITICAL: Reset engine ready flag so error overlay shows if this setup fails
+      engineReadyRef.current = false;
 
       // Clean up previous
       if (webgpuEngineRef.current) {

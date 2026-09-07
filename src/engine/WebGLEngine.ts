@@ -90,16 +90,10 @@ export class WebGLEngine {
     console.info('[WebGL2] KHR_parallel_shader_compile:', extensions?.includes('KHR_parallel_shader_compile'));
     console.info('[WebGL2] WEBGL_debug_renderer_info:', extensions?.includes('WEBGL_debug_renderer_info'));
 
-    // Listen for WebGL context loss
-    this.canvas.addEventListener('webglcontextlost', (e) => {
-      console.warn('[WebGL2] Context lost — GPU process may have crashed');
-      console.warn('[WebGL2] Context lost event:', e);
-      e.preventDefault(); // Allow context restoration
-    });
-    this.canvas.addEventListener('webglcontextrestored', () => {
-      console.info('[WebGL2] Context restored — reinitializing...');
-      this.init();
-    });
+    // NOTE: Context loss/restore is managed by FractalCanvas.tsx which orchestrates
+    // the full engine lifecycle (destroy + reinit). Do NOT add handlers here —
+    // they would conflict with FractalCanvas's contextLostRef and cause the render
+    // loop to freeze after context restoration.
 
     // Detect renderer info
     try {
