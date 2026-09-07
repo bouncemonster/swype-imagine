@@ -822,18 +822,28 @@ fn mapJerusalemCube(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
 
 // 30. 3D Lorenz Strange Attractor Chaotic Flow
 fn mapLorenzAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
-  var p = p_in * 2.2;
-  let rot = rot2D(p.xz, t * 0.08);
-  p = vec3<f32>(rot.x, p.y + 0.5, rot.y);
-  let r_xy = length(p.xz);
-  let lobe1 = length(p - vec3<f32>(0.9, 0.4, 0.0)) - 0.7;
-  let lobe2 = length(p - vec3<f32>(-0.9, -0.4, 0.0)) - 0.7;
-  let lobes = min(lobe1, lobe2);
-  let theta = atan2(p.z, p.x);
-  let vortex = sin(p.y * 3.0 + theta * 2.0 + t * 0.5) * 0.2;
-  let d = lobes + vortex * 0.35;
-  let bound = length(p_in) - 2.8;
-  return vec2<f32>(max(d * 0.45, bound), abs(vortex) + 0.3 * r_xy);
+  var p = p_in * 1.8;
+  let r0 = rot2D(p.xz, t * 0.08);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let sigma = 10.0; let rho = 28.0; let beta = 8.0 / 3.0;
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var q = vec3<f32>(0.1 + f32(s) * 0.05, 0.0, 25.0 - f32(s) * 5.0);
+    for (var i: i32 = 0; i < 30; i = i + 1) {
+      let dx = sigma * (q.y - q.x);
+      let dy = q.x * (rho - q.z) - q.y;
+      let dz = q.x * q.y - beta * q.z;
+      q = q + vec3<f32>(dx, dy, dz) * 0.004;
+      let scaled = q * 0.04;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
+  }
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -882,17 +892,32 @@ fn mapAntoineNecklace(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
 
 // 33. 3D Diffusion-Limited Aggregation (DLA) Dendritic Cluster
 fn mapDLACluster(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
-  var p = p_in * 1.6;
-  let rot = rot2D(p.xz, t * 0.06);
-  p = vec3<f32>(rot.x, p.y, rot.y);
-  let r = length(p);
-  let theta = atan2(p.y, p.x);
-  let phi_ang = acos(clamp(p.z / max(r, 0.001), -1.0, 1.0));
-  let dendrite = sin(phi_ang * 7.0 + theta * 5.0) * cos(theta * 3.0 + r * 6.0 - t * 0.3);
-  let growth = r - 1.2 - dendrite * 0.35 * (1.0 + 0.5 * sin(r * 12.0 * phi));
-  let d = growth * 0.5;
-  let bound = r - 2.8;
-  return vec2<f32>(max(d, bound), abs(dendrite) + 0.25 * r);
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  var d = length(p) - 0.06;
+  var trap: f32 = 0.0;
+  for (var i: i32 = 0; i < 8; i = i + 1) {
+    if (i >= iters) { break; }
+    let fi = f32(i);
+    let ang = fi * 2.39996323 + t * 0.1;
+    let h = fi * 0.18 - 0.6;
+    let rad = 0.4 * pow(0.72, fi);
+    let center = vec3<f32>(cos(ang) * rad, h, sin(ang) * rad);
+    let branch = length(p - center) - 0.04 * pow(0.75, fi);
+    d = min(d, branch);
+    trap += exp(-5.0 * length(p - center));
+    for (var j: i32 = 0; j < 3; j = j + 1) {
+      let fj = f32(j);
+      let subAng = ang + (fj - 1.0) * 0.8;
+      let subRad = rad * 0.5;
+      let subCenter = center + vec3<f32>(cos(subAng) * subRad, 0.06, sin(subAng) * subRad);
+      let subBranch = length(p - subCenter) - 0.02 * pow(0.75, fi);
+      d = min(d, subBranch);
+    }
+  }
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, trap * 0.15);
 }
 
 // 34. 4D Hyperchaotic Rössler Attractor
@@ -919,24 +944,27 @@ fn mapRosslerHyperchaos(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
 
 // 35. Clifford-Pickover 4D Chaotic Dynamic Manifold
 fn mapCliffordAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
-  let a = -1.4 + 0.1 * sin(t * 0.2);
-  let b = 1.6 + 0.1 * cos(t * 0.15);
-  let c = 1.0 * phi;
-  let d_p: f32 = 0.7;
-  var q = p_in;
-  var trap: f32 = 1e10;
-  var d: f32 = 1e10;
-  for (var i: i32 = 0; i < 7; i = i + 1) {
-    let x_next = sin(a * q.y) + c * cos(a * q.x);
-    let y_next = sin(b * q.x) + d_p * cos(b * q.y);
-    let z_next = sin(q.z * phi + t * 0.1) * 0.5;
-    let target = vec3<f32>(x_next, y_next, z_next) * 0.55;
-    let dist = length(p_in - target) - 0.08 * (1.0 + 0.5 * sin(f32(i) * phi));
-    d = min(d, dist);
-    trap = min(trap, dist);
-    q = target;
+  let aa = -1.4 + 0.1 * sin(t * 0.2);
+  let bb = 1.6 + 0.1 * cos(t * 0.15);
+  let cc = 1.0 * phi;
+  let dd: f32 = 0.7;
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 4; s = s + 1) {
+    var q = vec3<f32>(f32(s) * 0.5 - 0.75, f32(s & 1) * 0.3 - 0.15, 0.0);
+    for (var i: i32 = 0; i < 20; i = i + 1) {
+      let xn = sin(aa * q.y) + cc * cos(aa * q.x);
+      let yn = sin(bb * q.x) + dd * cos(bb * q.y);
+      let zn = sin(q.z * 1.5 + t * 0.1) * 0.3;
+      q = vec3<f32>(xn, yn, zn);
+      let dist = length(p_in - q);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
   }
-  return vec2<f32>(d, trap);
+  let d = 0.35 - density * 0.08;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.6, density * 0.3);
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -1253,28 +1281,31 @@ fn mapApollonianGasket(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   return vec2<f32>(abs(d) * 0.4, trap * 0.08);
 }
 
-// 53. Barnsley Fern 3D
+// 53. Barnsley Fern 3D (orbit-traced IFS)
 fn mapBarnsleyFern3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
-  var p = p_in * 1.8;
+  var p = p_in * 1.5;
   let r0 = rot2D(p.xz, t * 0.06);
   p = vec3<f32>(r0.x, p.y, r0.y);
-  var d = 1e10;
-  var trap = 0.0;
-  var q = p;
-  for (var i = 0; i < 12; i++) {
-    if (i >= iters) { break; }
-    let fi = f32(i);
-    let choice = fract(sin(fi * 12.9898 + 78.233) * 43758.5453);
-    if (choice < 0.01) { q = vec3<f32>(0.0, 0.18 * q.y, 0.0); }
-    else if (choice < 0.86) { q = vec3<f32>(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.1 * q.z); }
-    else if (choice < 0.93) { q = vec3<f32>(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.1 * q.z); }
-    else { q = vec3<f32>(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.1 * q.z); }
-    let leaf = length(q - vec3<f32>(0.0, 1.2, 0.0)) - 0.8;
-    d = min(d, leaf);
-    trap += exp(-length(q));
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 5; s = s + 1) {
+    var q = vec3<f32>(0.0, 0.0, 0.0);
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let fi = f32(i);
+      let choice = fract(sin(fi * 12.9898 + f32(s) * 78.233 + 43.12) * 43758.5453);
+      if (choice < 0.01) { q = vec3<f32>(0.0, 0.16 * q.y, 0.0); }
+      else if (choice < 0.86) { q = vec3<f32>(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.08 * q.z); }
+      else if (choice < 0.93) { q = vec3<f32>(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.08 * q.z); }
+      else { q = vec3<f32>(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.08 * q.z); }
+      let scaled = q * 0.06;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 6.0);
+    }
   }
-  let bound = length(p_in) - 2.0;
-  return vec2<f32>(max(d, bound) * 0.5, trap * 0.12);
+  let d = 0.25 - density * 0.05;
+  let bound = length(p_in) - 2.2;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
 }
 
 // 54. Klein Quartic Surface (genus-3)

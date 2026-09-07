@@ -732,20 +732,29 @@ vec2 mapJerusalemCube(vec3 p_in, float t, float phi, int iters) {
   return vec2(d, trap);
 }
 
-// 30. 3D Lorenz Strange Attractor Chaotic Flow
+// 30. 3D Lorenz Strange Attractor (orbit-traced, sigma=10, rho=28, beta=8/3)
 vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 2.2;
+  vec3 p = p_in * 1.8;
   p.xz = rot2D(t * 0.08) * p.xz;
-  p.y += 0.5;
-  float r_xy = length(p.xz);
-  float lobe1 = length(p - vec3(0.9, 0.4, 0.0)) - 0.7;
-  float lobe2 = length(p - vec3(-0.9, -0.4, 0.0)) - 0.7;
-  float lobes = min(lobe1, lobe2);
-  float theta = atan(p.z, p.x);
-  float vortex = sin(p.y * 3.0 + theta * 2.0 + t * 0.5) * 0.2;
-  float d = lobes + vortex * 0.35;
-  float bound = length(p_in) - 2.8;
-  return vec2(max(d * 0.45, bound), abs(vortex) + 0.3 * r_xy);
+  float sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 3; s++) {
+    vec3 q = vec3(0.1 + float(s) * 0.05, 0.0, 25.0 - float(s) * 5.0);
+    for (int i = 0; i < 30; i++) {
+      float dx = sigma * (q.y - q.x);
+      float dy = q.x * (rho - q.z) - q.y;
+      float dz = q.x * q.y - beta * q.z;
+      q += vec3(dx, dy, dz) * 0.004;
+      vec3 scaled = q * 0.04;
+      float dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
+  }
+  float d = 0.3 - density * 0.06;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.5, density * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -791,16 +800,36 @@ vec2 mapAntoineNecklace(vec3 p_in, float t, float phi, int iters) {
 
 // 33. 3D Diffusion-Limited Aggregation (DLA) Dendritic Cluster
 vec2 mapDLACluster(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 1.6;
+  vec3 p = p_in * 1.5;
   p.xz = rot2D(t * 0.06) * p.xz;
-  float r = length(p);
-  float theta = atan(p.y, p.x);
-  float phi_ang = acos(clamp(p.z / max(r, 0.001), -1.0, 1.0));
-  float dendrite = sin(phi_ang * 7.0 + theta * 5.0) * cos(theta * 3.0 + r * 6.0 - t * 0.3);
-  float growth = r - 1.2 - dendrite * 0.35 * (1.0 + 0.5 * sin(r * 12.0 * phi));
-  float d = growth * 0.5;
-  float bound = r - 2.8;
-  return vec2(max(d, bound), abs(dendrite) + 0.25 * r);
+  // Branching tree structure with deterministic pseudo-random directions
+  float d = length(p) - 0.06; // seed particle
+  float trap = 0.0;
+  float sc = 1.0;
+  for (int i = 0; i < 8; i++) {
+    if (i >= iters) break;
+    float fi = float(i);
+    // Golden angle branching for natural look
+    float ang = fi * 2.39996323 + t * 0.1;
+    float h = fi * 0.18 - 0.6;
+    float rad = 0.4 * pow(0.72, fi);
+    vec3 center = vec3(cos(ang) * rad, h, sin(ang) * rad);
+    float branch = length(p - center) - 0.04 * pow(0.75, fi);
+    d = min(d, branch);
+    trap += exp(-5.0 * length(p - center));
+    // Sub-branches
+    for (int j = 0; j < 3; j++) {
+      float fj = float(j);
+      float subAng = ang + (fj - 1.0) * 0.8;
+      float subRad = rad * 0.5;
+      vec3 subCenter = center + vec3(cos(subAng) * subRad, 0.06, sin(subAng) * subRad);
+      float subBranch = length(p - subCenter) - 0.02 * pow(0.75, fi);
+      d = min(d, subBranch);
+    }
+    sc *= 0.72;
+  }
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.5, trap * 0.15);
 }
 
 // 34. 4D Hyperchaotic Rössler Attractor
@@ -823,26 +852,32 @@ vec2 mapRosslerHyperchaos(vec3 p, float t, float phi, int iters) {
   return vec2(min(d_tube, d_cap), trap);
 }
 
-// 35. Clifford-Pickover 4D Chaotic Dynamic Manifold
+// 35. Clifford-Pickover Attractor (orbit-traced density field)
 vec2 mapCliffordAttractor(vec3 p, float t, float phi, int iters) {
-  float a = -1.4 + 0.1 * sin(t * 0.2);
-  float b = 1.6 + 0.1 * cos(t * 0.15);
-  float c = 1.0 * phi;
-  float d_p = 0.7;
-  vec3 q = p;
-  float trap = 1e10;
-  float d = 1e10;
-  for (int i = 0; i < 7; i++) {
-    float x_next = sin(a * q.y) + c * cos(a * q.x);
-    float y_next = sin(b * q.x) + d_p * cos(b * q.y);
-    float z_next = sin(q.z * phi + t * 0.1) * 0.5;
-    vec3 target = vec3(x_next, y_next, z_next) * 0.55;
-    float dist = length(p - target) - 0.08 * (1.0 + 0.5 * sin(float(i) * phi));
-    d = min(d, dist);
-    trap = min(trap, dist);
-    q = target;
+  float aa = -1.4 + 0.1 * sin(t * 0.2);
+  float bb = 1.6 + 0.1 * cos(t * 0.15);
+  float cc = 1.0 * phi;
+  float dd = 0.7;
+  // Orbit-trace: iterate from multiple seeds, accumulate density near p
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 4; s++) {
+    // 4 different seed points for coverage
+    vec3 q = vec3(float(s) * 0.5 - 0.75, float(s & 1) * 0.3 - 0.15, 0.0);
+    for (int i = 0; i < 20; i++) {
+      float xn = sin(aa * q.y) + cc * cos(aa * q.x);
+      float yn = sin(bb * q.x) + dd * cos(bb * q.y);
+      float zn = sin(q.z * 1.5 + t * 0.1) * 0.3;
+      q = vec3(xn, yn, zn);
+      float dist = length(p - q);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
   }
-  return vec2(d, trap);
+  // Convert density to distance: high density = close to attractor
+  float d = 0.35 - density * 0.08;
+  float bound = length(p) - 2.5;
+  return vec2(max(d, bound) * 0.6, density * 0.3);
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -1153,30 +1188,36 @@ vec2 mapApollonianGasket(vec3 p_in, float t, float phi, int iters) {
   return vec2(abs(d) * 0.4, trap * 0.08);
 }
 
-// 53. Barnsley Fern 3D (IFS affine transforms)
+// 53. Barnsley Fern 3D (orbit-traced IFS)
 vec2 mapBarnsleyFern3D(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 1.8;
+  vec3 p = p_in * 1.5;
   p.xz = rot2D(t * 0.06) * p.xz;
-  float d = 1e10;
-  float trap = 0.0;
-  vec3 q = p;
-  for (int i = 0; i < 12; i++) {
-    if (i >= iters) break;
-    float choice = fract(sin(float(i) * 12.9898 + 78.233) * 43758.5453);
-    if (choice < 0.01) {
-      q = vec3(0.0, 0.18 * q.y, 0.0);
-    } else if (choice < 0.86) {
-      q = vec3(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.1 * q.z);
-    } else if (choice < 0.93) {
-      q = vec3(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.1 * q.z);
-    } else {
-      q = vec3(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.1 * q.z);
+  float density = 0.0;
+  float minDist = 1e10;
+  // 4 IFS transformations with proper probabilities
+  for (int s = 0; s < 5; s++) {
+    vec3 q = vec3(0.0, 0.0, 0.0); // start from origin
+    for (int i = 0; i < 25; i++) {
+      float fi = float(i);
+      float choice = fract(sin(fi * 12.9898 + float(s) * 78.233 + 43.12) * 43758.5453);
+      if (choice < 0.01) {
+        q = vec3(0.0, 0.16 * q.y, 0.0);
+      } else if (choice < 0.86) {
+        q = vec3(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.08 * q.z);
+      } else if (choice < 0.93) {
+        q = vec3(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.08 * q.z);
+      } else {
+        q = vec3(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.08 * q.z);
+      }
+      vec3 scaled = q * 0.06;
+      float dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 6.0);
     }
-    float leaf = length(q - vec3(0.0, 1.2, 0.0)) - 0.8;
-    d = min(d, leaf);
-    trap += exp(-length(q));
   }
-  return vec2(max(d, length(p_in) - 2.0) * 0.5, trap * 0.12);
+  float d = 0.25 - density * 0.05;
+  float bound = length(p_in) - 2.2;
+  return vec2(max(d, bound) * 0.5, density * 0.2);
 }
 
 // 54. Klein Quartic Surface (genus-3 Hurwitz surface)
