@@ -1618,7 +1618,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       let iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
       let iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
       let iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
-      let iridCol = mix(iridR, mix(iridG, iridB, 0.5), 0.5);
+      let iridCol = vec3<f32>(iridR, iridG, iridB);
       let hIrid = normalize(light1 - rd);
       let specAngle = max(dot(n, hIrid), 0.0);
       let specIrid = vec3<f32>(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
@@ -3113,11 +3113,7 @@ void main() {
       float rOff = sin(depthNorm * 20.0 + u_time * 3.0) * 0.02;
       float gOff = sin(depthNorm * 20.0 + u_time * 3.0 + 2.094) * 0.02;
       float bOff = sin(depthNorm * 20.0 + u_time * 3.0 + 4.189) * 0.02;
-      vec3 holoBase = vec3(
-        u_primary_color.r * (1.0 + rOff),
-        u_primary_color.g * (1.0 + gOff),
-        u_primary_color.b * (1.0 + bOff)
-      );
+      vec3 holoBase = u_primary_color * vec3(1.0 + rOff, 1.0 + gOff, 1.0 + bOff);
       float holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
       float scanFreq = 180.0 + depthNorm * 120.0;
       float scanline = 0.85 + 0.15 * sin(v_uv.y * scanFreq + u_time * 8.0);
@@ -3133,10 +3129,10 @@ void main() {
       float order1 = nv * 3.0 + min_trap * 0.5;
       float order2 = nv * 5.0 + min_trap * 0.3 + u_time * 0.08;
       float order3 = nv * 7.0 + min_trap * 0.2;
-      vec3 iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
-      vec3 iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
-      vec3 iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
-      vec3 iridCol = mix(iridR, mix(iridG, iridB, 0.5), 0.5);
+      float iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
+      float iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
+      float iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
+      vec3 iridCol = vec3(iridR, iridG, iridB);
       vec3 hIrid = normalize(light1 - rd);
       float specAngle = max(dot(n, hIrid), 0.0);
       vec3 specIrid = vec3(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;

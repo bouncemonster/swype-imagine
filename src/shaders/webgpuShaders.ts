@@ -1570,7 +1570,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       let iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
       let iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
       let iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
-      let iridCol = mix(iridR, mix(iridG, iridB, 0.5), 0.5);
+      let iridCol = vec3<f32>(iridR, iridG, iridB);
       let hIrid = normalize(light1 - rd);
       let specAngle = max(dot(n, hIrid), 0.0);
       let specIrid = vec3<f32>(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
