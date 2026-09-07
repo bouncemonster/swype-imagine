@@ -3010,13 +3010,13 @@ vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
 vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.4;
   p.xz = rot2D(t * 0.08) * p.xz;
-  float a = 0.95, b = 0.7, c = 0.6, d = 3.5, e = 0.25, f = 0.1;
+  float a = 0.95, b = 0.7, c = 0.6, dd = 3.5, e = 0.25, f = 0.1;
   vec3 v = p * 0.4;
   float trap = 0.0;
   for (int i = 0; i < 12; i++) {
     if (i >= iters) break;
-    float dx = (v.z - b) * v.x - d * v.y;
-    float dy = d * v.x + (v.z - b) * v.y;
+    float dx = (v.z - b) * v.x - dd * v.y;
+    float dy = dd * v.x + (v.z - b) * v.y;
     float dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
     v += vec3(dx, dy, dz) * 0.06;
     trap += exp(-length(v));
