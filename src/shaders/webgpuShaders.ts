@@ -1325,7 +1325,8 @@ fn mapNovaFractal(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     let r2 = dot(z, z);
     if (r2 > 16.0) { break; }
     let z3 = vec2<f32>(z.x * z.x * z.x - 3.0 * z.x * z.y * z.y, 3.0 * z.x * z.x * z.y - z.y * z.y * z.y);
-    z = z - z3 / vec2<f32>(0.0001, 0.0001) + c;
+    let dz3 = vec2<f32>(3.0 * (z.x * z.x - z.y * z.y), 6.0 * z.x * z.y);
+    z = z - z3 / (dz3 + vec2<f32>(0.0001, 0.0001)) + c;
     md *= 2.0 * length(z);
     trap += exp(-2.0 * length(z));
   }

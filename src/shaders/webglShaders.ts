@@ -1225,7 +1225,7 @@ vec2 mapNovaFractal(vec3 p_in, float t, float phi, int iters) {
     if (r2 > 16.0) break;
     vec2 z3 = vec2(z.x * z.x * z.x - 3.0 * z.x * z.y * z.y,
                    3.0 * z.x * z.x * z.y - z.y * z.y * z.y);
-    vec2 dz3 = 3.0 * z * z;
+    vec2 dz3 = vec2(3.0 * (z.x * z.x - z.y * z.y), 6.0 * z.x * z.y);
     z = z - z3 / (dz3 + vec2(0.0001)) + c;
     md *= 2.0 * length(z);
     trap += exp(-2.0 * length(z));
