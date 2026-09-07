@@ -779,7 +779,7 @@ fn mapNewtonBasins(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     if (i >= count) { break; }
     let z2 = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
     let z3 = vec2<f32>(z2.x * z.x - z2.y * z.y, z2.x * z.y + z2.y * z.x);
-    let num = 2.0 * z3 + vec2<f32>(1.0, 0.0);
+    let num = vec2<f32>(2.0 * z3.x - 1.0, 2.0 * z3.y);
     let den = 3.0 * z2;
     let denom = dot(den, den);
     if (denom < 0.00001) { break; }
@@ -1033,86 +1033,108 @@ fn mapBelousovWaves(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
 // EXPANDED FRACTAL TYPES (41-60): Real mathematical fractals
 // ============================================================
 
-// 41. Henon 3D Strange Attractor
+// 41. Henon 3D Strange Attractor (orbit-traced, a=1.4, b=0.3)
 fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.3;
   let r0 = rot2D(p.xz, t * 0.07);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 1.4; let b = 0.3;
-  var v = p * 0.5;
-  var trap = 0.0;
-  for (var i = 0; i < 16; i++) {
-    if (i >= iters) { break; }
-    let x = 1.0 - a * v.x * v.x + v.y;
-    let y = b * v.x;
-    let z = sin(v.z * phi + t * 0.15) * 0.35;
-    v = vec3<f32>(x, y, z);
-    trap += exp(-2.0 * length(v));
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 4; s = s + 1) {
+    var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.1 - f32(s) * 0.08, f32(s) * 0.05);
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let x = 1.0 - a * v.x * v.x + v.y;
+      let y = b * v.x;
+      let z = sin(v.z * phi + t * 0.15) * 0.35;
+      v = vec3<f32>(x, y, z);
+      let scaled = v * 0.35;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
   }
-  let d = length(v) - 0.4;
-  return vec2<f32>(d * 0.3, trap * 0.15);
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
 }
 
-// 42. Aizawa Toroidal Chaotic Attractor
+// 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
 fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.4;
   let r0 = rot2D(p.xz, t * 0.08);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 0.95; let b = 0.7; let c = 0.6; let dd = 3.5; let e = 0.25; let f = 0.1;
-  var v = p * 0.4;
-  var trap = 0.0;
-  for (var i = 0; i < 12; i++) {
-    if (i >= iters) { break; }
-    let dx = (v.z - b) * v.x - dd * v.y;
-    let dy = dd * v.x + (v.z - b) * v.y;
-    let dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
-    v = v + vec3<f32>(dx, dy, dz) * 0.06;
-    trap += exp(-length(v));
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var v = vec3<f32>(0.1 + f32(s) * 0.1, 0.0, 0.5 + f32(s) * 0.3);
+    for (var i: i32 = 0; i < 20; i = i + 1) {
+      let dx = (v.z - b) * v.x - dd * v.y;
+      let dy = dd * v.x + (v.z - b) * v.y;
+      let dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
+      v = v + vec3<f32>(dx, dy, dz) * 0.05;
+      let scaled = v * 0.5;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
   }
-  let d = length(v) - 0.3;
+  let d = 0.35 - density * 0.07;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d * 0.35, bound) * 0.7, trap * 0.12);
+  return vec2<f32>(max(d, bound) * 0.6, density * 0.2);
 }
 
-// 43. Thomas Cyclically Symmetric Attractor
+// 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
 fn mapThomasAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.2;
   let r0 = rot2D(p.yz, t * 0.06);
   p = vec3<f32>(p.x, r0.x, r0.y);
   let b = 0.208186;
-  var v = p * 0.5;
-  var trap = 0.0;
-  for (var i = 0; i < 16; i++) {
-    if (i >= iters) { break; }
-    let dx = sin(v.y) - b * v.x;
-    let dy = sin(v.z) - b * v.y;
-    let dz = sin(v.x) - b * v.z;
-    v = v + vec3<f32>(dx, dy, dz) * 0.08;
-    trap += exp(-1.5 * length(v));
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 4; s = s + 1) {
+    var v = vec3<f32>(1.0 + f32(s) * 0.3, 0.0, -1.0 + f32(s) * 0.5);
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let dx = sin(v.y) - b * v.x;
+      let dy = sin(v.z) - b * v.y;
+      let dz = sin(v.x) - b * v.z;
+      v = v + vec3<f32>(dx, dy, dz) * 0.1;
+      let scaled = v * 0.25;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
   }
-  let d = length(v) - 0.35;
-  return vec2<f32>(d * 0.35, trap * 0.1);
+  let d = 0.35 - density * 0.07;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
 }
 
-// 44. Halvorsen 3-Fold Chaotic Attractor
+// 44. Halvorsen 3-Fold Chaotic Attractor (orbit-traced, a=1.89)
 fn mapHalvorsenAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.3;
   let r0 = rot2D(p.xy, t * 0.07);
   p = vec3<f32>(r0.x, r0.y, p.z);
   let a = 1.89;
-  var v = p * 0.35;
-  var trap = 0.0;
-  for (var i = 0; i < 12; i++) {
-    if (i >= iters) { break; }
-    let dx = -a * v.x - 4.0 * v.y - 4.0 * v.z - v.y * v.y;
-    let dy = -a * v.y - 4.0 * v.z - 4.0 * v.x - v.z * v.z;
-    let dz = -a * v.z - 4.0 * v.x - 4.0 * v.y - v.x * v.x;
-    v = v + vec3<f32>(dx, dy, dz) * 0.02;
-    trap += exp(-length(v) * 0.8);
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var v = vec3<f32>(-1.0 + f32(s) * 0.5, -1.0 + f32(s) * 0.3, -1.0);
+    for (var i: i32 = 0; i < 20; i = i + 1) {
+      let dx = -a * v.x - 4.0 * v.y - 4.0 * v.z - v.y * v.y;
+      let dy = -a * v.y - 4.0 * v.z - 4.0 * v.x - v.z * v.z;
+      let dz = -a * v.z - 4.0 * v.x - 4.0 * v.y - v.x * v.x;
+      v = v + vec3<f32>(dx, dy, dz) * 0.04;
+      let scaled = v * 0.12;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 3.5);
+    }
   }
-  let d = length(v) - 0.5;
+  let d = 0.35 - density * 0.07;
   let bound = length(p_in) - 2.0;
-  return vec2<f32>(max(d * 0.3, bound) * 0.6, trap * 0.1);
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.18);
 }
 
 // 45. Julia Set 3D (c = -0.7 + 0.27i)
@@ -1131,7 +1153,7 @@ fn mapJuliaSet3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     trap += exp(-3.0 * length(z));
     if (dot(z, z) > 16.0) { break; }
   }
-  let d = (length(z) - 2.0) * 0.5 / max(dz, 0.001);
+  let d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dz, 0.001);
   let bound = length(p_in) - 2.3;
   return vec2<f32>(max(abs(d), bound * 0.3), trap);
 }
@@ -1155,7 +1177,7 @@ fn mapMultibrot3(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     trap += exp(-2.0 * length(z));
     if (dot(z, z) > 16.0) { break; }
   }
-  let d = (length(z) - 2.0) * 0.5 / max(md, 0.001);
+  let d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(md, 0.001);
   let bound = length(p_in) - 2.2;
   return vec2<f32>(max(abs(d), bound * 0.3), trap);
 }
@@ -1190,7 +1212,7 @@ fn mapGosperCurve(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.5;
   let r0 = rot2D(p.xy, t * 0.06);
   p = vec3<f32>(r0.x, r0.y, p.z);
-  var sc = phi;
+  var sc: f32 = 2.6457513; // sqrt(7): Gosper curve scaling factor
   var trap = 0.0;
   for (var i = 0; i < 8; i++) {
     if (i >= iters) { break; }
@@ -1203,7 +1225,7 @@ fn mapGosperCurve(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     let d7 = length(q - vec3<f32>(0.75, -1.3, 0.0));
     let mn = min(min(min(d1, d2), min(d3, d4)), min(min(d5, d6), d7));
     trap += mn / sc;
-    sc *= phi;
+    sc *= 2.6457513;
   }
   let d = length(p) / sc * 0.5;
   return vec2<f32>(d, trap * 0.1);
