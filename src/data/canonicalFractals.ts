@@ -1386,7 +1386,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'cesaro-curve',
+    id: 'cesaro-curve-v2',
     name: 'Кривая Чезаро',
     englishName: 'Cesàro Curve (Torn Square)',
     category: 'geometric_curves',
@@ -1403,7 +1403,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'drummond-curve',
+    id: 'drummond-curve-v2',
     name: 'Кривая Драммонда',
     englishName: 'Drummond Fractal Curve',
     category: 'geometric_curves',
@@ -1420,7 +1420,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'koch-mcwhorter',
+    id: 'koch-mcwhorter-v2',
     name: 'Снежинка Коха — МакВортера (Pentigree)',
     englishName: 'McWhorter\'s Pentigree',
     category: 'geometric_curves',
@@ -1438,7 +1438,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'rice-curve',
+    id: 'rice-curve-v2',
     name: 'Кривая Райса',
     englishName: 'Rice Space-Filling Curve',
     category: 'geometric_curves',
@@ -1455,7 +1455,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'polya-curve',
+    id: 'polya-curve-v2',
     name: 'Кривая Пойи',
     englishName: 'Pólya Space-Filling Curve',
     category: 'geometric_curves',
@@ -1473,7 +1473,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'twenmey-dragon',
+    id: 'twenmey-dragon-v2',
     name: 'Дракон Твенми',
     englishName: 'Twenmey Dragon Curve',
     category: 'geometric_curves',
@@ -1490,7 +1490,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'golden-dragon',
+    id: 'golden-dragon-v2',
     name: 'Золотой Дракон (φ-Dragon)',
     englishName: 'Golden Ratio Dragon Curve',
     category: 'geometric_curves',
@@ -1509,7 +1509,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'sierpinski-arrowhead',
+    id: 'sierpinski-arrowhead-v2',
     name: 'Стреловидная кривая Серпинского',
     englishName: 'Sierpiński Arrowhead Curve',
     category: 'geometric_curves',
@@ -1525,7 +1525,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'pythagoras-tree-wind',
+    id: 'pythagoras-tree-wind-v2',
     name: 'Дерево Пифагора обдуваемое (Асимметричное)',
     englishName: 'Windblown Pythagoras Tree',
     category: 'constructive',
@@ -1543,7 +1543,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'pythagoras-tree-naked',
+    id: 'pythagoras-tree-naked-v2',
     name: 'Обнаженное дерево Пифагора',
     englishName: 'Naked Skeleton Pythagoras Tree',
     category: 'constructive',
@@ -1560,7 +1560,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 't-square',
+    id: 't-square-v2',
     name: 'Т-квадрат (T-Square Fractal)',
     englishName: 'T-Square Fractal',
     category: 'constructive',
@@ -1577,7 +1577,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'sierpinski-cross',
+    id: 'sierpinski-cross-v2',
     name: 'Крест Серпинского 3D',
     englishName: 'Sierpiński Cross 3D',
     category: 'constructive',
@@ -1594,7 +1594,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'sierpinski-pentagon',
+    id: 'sierpinski-pentagon-v2',
     name: 'Пятиугольник Серпинского (Пентафлейк / Pentaflake)',
     englishName: 'Pentaflake / Sierpiński Pentagon',
     category: 'constructive',
@@ -1611,7 +1611,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'hexaflake',
+    id: 'hexaflake-v2',
     name: 'Гексафрактал (Hexaflake / Снежинка Серпинского)',
     englishName: 'Hexaflake',
     category: 'constructive',
@@ -1628,7 +1628,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'ivezic-fractal',
+    id: 'ivezic-fractal-v2',
     name: 'Фрактал Ивезича (Многомерный симплекс Серпинского)',
     englishName: 'Ivezić n-Simplex Fractal',
     category: 'constructive',
@@ -1646,7 +1646,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'levi-snowflake',
+    id: 'levi-snowflake-v2',
     name: 'Снежинка Леви',
     englishName: 'Lévy Snowflake (C-Curve Boundary)',
     category: 'constructive',
@@ -1662,7 +1662,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'burning-ship-perpendicular',
+    id: 'burning-ship-perpendicular-v2',
     name: 'Перпендикулярный Пылающий Корабль',
     englishName: 'Perpendicular Burning Ship',
     category: 'algebraic_complex',
@@ -1679,7 +1679,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'jesus-trigonometric',
+    id: 'jesus-trigonometric-v2',
     name: 'Фрактал Иисуса / Тригонометрический фрактал',
     englishName: 'Jesus / Sine-Cosine Transcendental Fractal',
     category: 'algebraic_complex',
@@ -1697,7 +1697,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'spider-fractal',
+    id: 'spider-fractal-v2',
     name: 'Фрактал «Паук» (Spider Fractal)',
     englishName: 'Spider Dynamical System',
     category: 'algebraic_complex',
@@ -1714,7 +1714,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'sherwood-carpet',
+    id: 'sherwood-carpet-v2',
     name: 'Фрактал «Ковер Шервуда»',
     englishName: 'Sherwood Algebraic Carpet',
     category: 'algebraic_complex',
@@ -1731,7 +1731,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'serafimski-newton',
+    id: 'serafimski-newton-v2',
     name: 'Фрактал Серафимского (Фазовый метод Ньютона)',
     englishName: 'Serafimski Non-Linear Newton Fractal',
     category: 'algebraic_complex',
@@ -1817,7 +1817,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'avalanche-dbm',
+    id: 'avalanche-dbm-v2',
     name: 'Фрактал лавинного пробоя (DBM / Молния Лихтенберга)',
     englishName: 'Dielectric Breakdown Model (DBM)',
     category: 'stochastic',
@@ -1924,7 +1924,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'clifford-attractor',
+    id: 'clifford-attractor-v2',
     name: '4D Аттрактор Клиффорда — Пиковера',
     englishName: 'Clifford-Pickover 4D Dynamic Attractor',
     category: 'ifs_attractors',
@@ -2258,7 +2258,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'quaternion-mandelbrot',
+    id: 'quaternion-mandelbrot-v2',
     name: '4D Кватернионное множество Мандельброта',
     englishName: '4D Quaternion Mandelbrot Set',
     category: 'multidimensional',
@@ -2277,7 +2277,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'burning-ship-3d',
+    id: 'burning-ship-3d-v2',
     name: '3D Горящий корабль',
     englishName: '3D Burning Ship Fractal',
     category: 'algebraic_complex',
@@ -2296,7 +2296,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'newton-basins-3d',
+    id: 'newton-basins-3d-v2',
     name: '3D Бассейны Ньютона-Рафсона',
     englishName: '3D Newton-Raphson Basins of Attraction',
     category: 'algebraic_complex',
@@ -2315,7 +2315,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'jerusalem-cube',
+    id: 'jerusalem-cube-v2',
     name: 'Иерусалимский куб',
     englishName: 'Jerusalem Cube',
     category: 'constructive',
@@ -2334,7 +2334,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'hofstadter-butterfly-3d',
+    id: 'hofstadter-butterfly-3d-v2',
     name: 'Квантовая бабочка Хофштадтера',
     englishName: 'Hofstadter Butterfly Energy Spectrum',
     category: 'topological_physical',
@@ -2352,7 +2352,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
   {
-    id: 'antoine-necklace',
+    id: 'antoine-necklace-v2',
     name: 'Ожерелье Антуана (дикие зацепления)',
     englishName: 'Antoine\'s Necklace Wild Linking',
     category: 'topological_physical',
