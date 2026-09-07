@@ -1,0 +1,6 @@
+{
+  "name": "Golden Ratio WebGPU Fractal Engine",
+  "description": "High-performance WebGPU and WebGL2 real-time 3D fractal raymarching engine based on golden ratio φ, prime distributions, TPMS surfaces, and mathematical hybrids.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

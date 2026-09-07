@@ -1,0 +1,2373 @@
+import { FractalType, CompositeOp } from '../types/fractal';
+
+export type FractalCategoryKey = 
+  | 'geometric_curves'
+  | 'constructive'
+  | 'algebraic_complex'
+  | 'multidimensional'
+  | 'ifs_attractors'
+  | 'stochastic'
+  | 'topological_physical';
+
+export interface CanonicalFractal {
+  id: string;
+  name: string;
+  englishName: string;
+  category: FractalCategoryKey;
+  formula: string;
+  dimension: string;
+  generatorRule?: string;
+  description: string;
+  phiPiRelation: string;
+  enginePreset: {
+    type: FractalType;
+    hybridType?: FractalType;
+    compositeOp: CompositeOp;
+    hybridBlend?: number;
+    warpStrength?: number;
+    boxFold?: number;
+    sphereFold?: number;
+    octaves?: number;
+    zoom?: number;
+    phiMultiplier?: number;
+    rotX?: number;
+    rotY?: number;
+    iterations?: number;
+  };
+}
+
+export const FRACTAL_CATEGORIES: {
+  id: FractalCategoryKey;
+  title: string;
+  subtitle: string;
+  iconName: string;
+}[] = [
+  {
+    id: 'geometric_curves',
+    title: '1. Геометрические кривые и L-системы',
+    subtitle: 'Линейные пространственно-заполняющие и рекурсивные кривые',
+    iconName: 'Compass',
+  },
+  {
+    id: 'constructive',
+    title: '2. Плоскостные и пространственные конструктивные',
+    subtitle: 'Рекурсивное разбиение симплексов, ковры, губки и упаковки',
+    iconName: 'Layers',
+  },
+  {
+    id: 'algebraic_complex',
+    title: '3. Алгебраические фракталы (Комплексная динамика)',
+    subtitle: 'Отображения на комплексной плоскости ℂ, метод Ньютона и бассейны',
+    iconName: 'Infinity',
+  },
+  {
+    id: 'multidimensional',
+    title: '4. Многомерные алгебраические фракталы',
+    subtitle: 'Кватернионы ℍ, 3D Мандельбульб, Мандельбокс и группы Клейна',
+    iconName: 'Box',
+  },
+  {
+    id: 'ifs_attractors',
+    title: '5. Системы итерируемых функций (IFS) и аттракторы',
+    subtitle: 'Странные аттракторы динамических систем и нелинейный хаос',
+    iconName: 'Activity',
+  },
+  {
+    id: 'stochastic',
+    title: '6. Стохастические (Случайные) и шумы',
+    subtitle: 'Фрактальный перлин, перколяция, DLA-кластеры и лавинный пробой',
+    iconName: 'Sparkles',
+  },
+  {
+    id: 'topological_physical',
+    title: '7. Физические и топологические концепции',
+    subtitle: 'Бабочка Хофштадтера, множества Кантора и зацепления торов',
+    iconName: 'Atom',
+  },
+];
+
+export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
+  // ==========================================
+  // 1. ГЕОМЕТРИЧЕСКИЕ КРИВЫЕ И L-СИСТЕМЫ
+  // ==========================================
+  {
+    id: 'koch-curve',
+    name: 'Кривая Коха',
+    englishName: 'Koch Curve',
+    category: 'geometric_curves',
+    formula: 'L_{n+1} = (4/3) L_n',
+    dimension: 'D = ln(4)/ln(3) ≈ 1.26186',
+    generatorRule: 'F → F+F--F+F (угол 60°)',
+    description: 'Итеративное деление отрезка на 3 части и замена средней части равносторонним треугольником без основания. Непрерывна, но нигде не дифференцируема.',
+    phiPiRelation: 'Углы поворота 60° = π/3 задают гексагональную симметрию; золотая модификация использует масштаб 1/φ вместо 1/3.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.5,
+      rotY: 0.3,
+    }
+  },
+  {
+    id: 'koch-snowflake',
+    name: 'Снежинка Коха',
+    englishName: 'Koch Snowflake',
+    category: 'geometric_curves',
+    formula: 'A_∞ = (8/5) A_0, P_∞ = ∞',
+    dimension: 'D = ln(4)/ln(3) ≈ 1.26186',
+    generatorRule: 'Аксиома: F--F--F, F → F+F--F+F',
+    description: 'Замкнутая кривая Коха, построенная на сторонах правильного треугольника. Ограничивает конечную площадь при бесконечном периметре.',
+    phiPiRelation: 'Отношение площадей итераций выражается через тригонометрию π/3 и масштабные степени.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      hybridType: 'sierpinskiOcta',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.3,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'koch-antisnowflake',
+    name: 'Антиснежинка Коха',
+    englishName: 'Koch Anti-Snowflake',
+    category: 'geometric_curves',
+    formula: 'A_∞ = (2/5) A_0, P_∞ = ∞',
+    dimension: 'D = ln(4)/ln(3) ≈ 1.26186',
+    generatorRule: 'Аксиома: F--F--F, F → F-F++F-F',
+    description: 'Кривая Коха, в которой треугольники направлены внутрь исходного базового треугольника, создавая рекурсивные внутренние фиорды.',
+    phiPiRelation: 'Предельная площадь ровно в 4 раза меньше обычной снежинки Коха (2/5 площади треугольника).',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      compositeOp: 'smoothCarve',
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'levy-c-curve',
+    name: 'Кривая Леви (C-кривая)',
+    englishName: 'Lévy C curve',
+    category: 'geometric_curves',
+    formula: 's = 1/√2, θ = 45° = π/4',
+    dimension: 'D = 2 (по границе D ≈ 1.9340)',
+    generatorRule: 'F → +F--F+',
+    description: 'Итеративное замещение отрезка равнобедренным прямоугольным треугольником без основания. Имеет непустую внутренность.',
+    phiPiRelation: 'Вращение на π/4; масштабирование 1/√2 связано с золотым сечением через диагональ единичного квадрата.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      compositeOp: 'smoothMorph',
+      zoom: 2.6,
+      rotX: 0.3,
+    }
+  },
+  {
+    id: 'harter-heighway-dragon',
+    name: 'Дракон Хартера — Хейтуэя',
+    englishName: 'Harter-Heighway Dragon',
+    category: 'geometric_curves',
+    formula: 'f_1(z) = (1+i)z/2, f_2(z) = 1 - (1-i)z/2',
+    dimension: 'D = 2 (граница D ≈ 1.5236)',
+    generatorRule: 'X → X+YF+, Y → -FX-Y (угол 90° = π/2)',
+    description: 'Фрактальная кривая, получаемая многократным складыванием полоски бумаги пополам под углом 90°. Замощает плоскость без перекрытий.',
+    phiPiRelation: 'Длина контура растет как 2^(n/2); граница дракона связана с корнями уравнения x³ - x² - 2 = 0.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.4,
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'twenmey-dragon',
+    name: 'Дракон Твенми',
+    englishName: 'Twenmey Dragon',
+    category: 'geometric_curves',
+    formula: 'θ_n = (-1)^n · π/2',
+    dimension: 'D = 2.0 (граница D ≈ 1.58)',
+    generatorRule: 'Чередование знака угла поворота на каждом шаге итерации',
+    description: 'Вариация дракона Хартера-Хейтуэя с инверсией знака ориентации складок, приводящая к квазипериодическим симметриям.',
+    phiPiRelation: 'Фазовое чередование знаков аналогично филлотаксисному шагу золотого угла.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      hybridType: 'spiralTunnel',
+      compositeOp: 'goldenSpiralFold',
+      hybridBlend: 0.35,
+      zoom: 2.5,
+    }
+  },
+  {
+    id: 'golden-dragon',
+    name: 'Золотой дракон',
+    englishName: 'Golden Dragon Curve',
+    category: 'geometric_curves',
+    formula: 'r_1 = 1/φ, r_2 = 1/φ², r_1² + r_2² = 1',
+    dimension: 'D = 2.0 (самоподобие φ)',
+    generatorRule: 'Деление отрезка в отношении золотого сечения 1:φ',
+    description: 'Фрактальная ломаная, где отрезки делятся в строгих пропорциях золотого сечения φ, а углы поворота определяются золотым треугольником.',
+    phiPiRelation: 'Фундаментальная связь: масштабные множители равны 1/φ и 1/φ², угол θ = arccos(1/(2φ)).',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      hybridType: 'phyllotaxis',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.4,
+      zoom: 2.6,
+    }
+  },
+  {
+    id: 'minkowski-curve',
+    name: 'Кривая Минковского (Сосиска Минковского)',
+    englishName: 'Minkowski Sausage',
+    category: 'geometric_curves',
+    formula: 'N = 8, S = 4',
+    dimension: 'D = ln(8)/ln(4) = 1.500',
+    generatorRule: 'F → F+F-F-FF+F+F-F (угол 90°)',
+    description: 'Замена отрезка ломаной из 8 ортогональных сегментов длиной 1/4. Обладает размерностью ровно 1.5.',
+    phiPiRelation: 'Ортогональная дискретность π/2; целое полуцелое значение размерности.',
+    enginePreset: {
+      type: 'hilbertCurve3D',
+      compositeOp: 'smoothMorph',
+      boxFold: 1.5,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'peano-curve',
+    name: 'Кривая Пеано',
+    englishName: 'Peano Curve',
+    category: 'geometric_curves',
+    formula: 'f: [0, 1] ↠ [0, 1]², N = 9, S = 3',
+    dimension: 'D = ln(9)/ln(3) = 2.000',
+    generatorRule: 'F → F+F-F-F-F+F+F+F-F (угол 90°)',
+    description: 'Первая непрерывная кривая, полностью заполняющая двумерный квадрат. Построена Джузеппе Пеано в 1890 году.',
+    phiPiRelation: 'Сюръективное непрерывное отображение; шаг дискретизации π/2.',
+    enginePreset: {
+      type: 'hilbertCurve3D',
+      compositeOp: 'smoothUnion',
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'hilbert-curve',
+    name: 'Кривая Гильберта 2D/3D',
+    englishName: 'Hilbert Space-Filling Curve',
+    category: 'geometric_curves',
+    formula: 'f: [0, 1] ↠ [0, 1]^d, N = 2^{dn}',
+    dimension: 'D = 2.0 (в 3D D = 3.0)',
+    generatorRule: 'L-система обхода ячеек 2^n x 2^n',
+    description: 'Непрерывная пространственно-заполняющая кривая, сохраняющая топологическую локальность точек. В 3D плотно заполняет куб.',
+    phiPiRelation: 'Оптимальное кодирование пространственных данных; гармонический спектр обхода связан с золотым сечением.',
+    enginePreset: {
+      type: 'hilbertCurve3D',
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+      rotX: 0.45,
+      rotY: 0.35,
+    }
+  },
+  {
+    id: 'sierpinski-curve',
+    name: 'Кривая Серпинского',
+    englishName: 'Sierpiński Curve',
+    category: 'geometric_curves',
+    formula: 'D = ln(4)/ln(2) = 2.0',
+    dimension: 'D = 2.000',
+    generatorRule: 'Замкнутый маршрут вокруг треугольников сетки',
+    description: 'Замкнутая пространственно-заполняющая кривая, огибающая элементы треугольной решетки с гладкими скруглениями.',
+    phiPiRelation: 'Углы поворота 45° (π/4) и 90° (π/2).',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      compositeOp: 'smoothMorph',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'moore-curve',
+    name: 'Кривая Мура',
+    englishName: 'Moore Curve',
+    category: 'geometric_curves',
+    formula: 'N = 4^n, S = 2^n',
+    dimension: 'D = ln(4)/ln(2) = 2.000',
+    generatorRule: 'Замкнутый вариант кривой Гильберта',
+    description: 'Замкнутая непрерывная пространственно-заполняющая кривая, начинающаяся и заканчивающаяся в смежных точках.',
+    phiPiRelation: 'Симметричный квадрантный обход, кратный π/2.',
+    enginePreset: {
+      type: 'hilbertCurve3D',
+      hybridType: 'spiralTunnel',
+      compositeOp: 'smoothMorph',
+      hybridBlend: 0.25,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'gosper-curve',
+    name: 'Кривая Госпера (Flowsnake)',
+    englishName: 'Gosper Curve (Flowsnake)',
+    category: 'geometric_curves',
+    formula: 'N = 7, S = √7',
+    dimension: 'D = ln(7)/ln(√7) = 2.000',
+    generatorRule: 'L-система на гексагональной сетке (угол 60° = π/3)',
+    description: 'Пространственно-заполняющая кривая на основе гексагональной решетки. Граница фрактала имеет размерность ln(3)/ln(√7) ≈ 1.1291.',
+    phiPiRelation: 'Гексагональная симметрия 2π/6; в 3D сворачивается в икосаэдрическую квазикристаллическую упаковку.',
+    enginePreset: {
+      type: 'quasicrystal',
+      hybridType: 'phyllotaxis',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'cesaro-curve',
+    name: 'Кривая Чезаро',
+    englishName: 'Cesàro Curve',
+    category: 'geometric_curves',
+    formula: 'D = ln(4)/ln(2(1 + cos α))',
+    dimension: 'D ∈ (1.0, 2.0] при α ∈ (0, π/2)',
+    generatorRule: 'Кривая Коха с переменным углом при вершине',
+    description: 'Обобщение кривой Коха с изменением угла α отсекаемого равнобедренного треугольника. При α → 90° кривая заполняет квадрат.',
+    phiPiRelation: 'При угле α = 2 arcsin(1/(2φ)) масштаб деления точно равен золотому отношению φ.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.3,
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'drummond-curve',
+    name: 'Кривая Драммонда',
+    englishName: 'Drummond Fractal Curve',
+    category: 'geometric_curves',
+    formula: 'θ = π / k, k ∈ ℝ',
+    dimension: 'D ≈ 1.45 - 1.85',
+    generatorRule: 'Циклические L-системы с дробными иррациональными углами',
+    description: 'Фрактал на основе L-систем с дробными углами поворота, порождающий квазипериодические розетки.',
+    phiPiRelation: 'Когда угол равен золотому углу 2π/φ², кривая не замыкается, образуя бесконечно плотный квазикристалл.',
+    enginePreset: {
+      type: 'phyllotaxis',
+      compositeOp: 'goldenSpiralFold',
+      zoom: 2.6,
+    }
+  },
+  {
+    id: 'mcwhorter-pentigree',
+    name: 'Снежинка Коха — МакВортера',
+    englishName: 'McWhorter Pentigree',
+    category: 'geometric_curves',
+    formula: 'N = 5, S = (3 - √5)/2',
+    dimension: 'D = ln(5)/ln(1 + φ) ≈ 1.672',
+    generatorRule: 'Асимметричный пентагональный генератор',
+    description: 'Обобщение кривой Коха с заменой отрезков асимметричными генераторами с пентагональной и золотой симметрией.',
+    phiPiRelation: 'Масштаб генератора прямо выражается через степени золотого сечения φ = (1+√5)/2.',
+    enginePreset: {
+      type: 'icosahedral',
+      compositeOp: 'smoothMorph',
+      zoom: 2.5,
+    }
+  },
+  {
+    id: 'rice-curve',
+    name: 'Кривая Райса',
+    englishName: 'Rice Curve',
+    category: 'geometric_curves',
+    formula: 'θ_1 = π/3, θ_2 = 2π/5',
+    dimension: 'D ≈ 1.78',
+    generatorRule: 'Неортогональные развороты в пространственно-заполняющих кривых',
+    description: 'Вариация пространственно-заполняющих кривых с разворотом на неортогональные углы и переменными длинами звеньев.',
+    phiPiRelation: 'Сочетание углов π/3 и пентагональных пропорций золотого угла.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      hybridType: 'quasicrystal',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.3,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'polya-curve',
+    name: 'Кривая Пойи',
+    englishName: 'Pólya Sweep Curve',
+    category: 'geometric_curves',
+    formula: 'T → T_1 ∪ T_2',
+    dimension: 'D = 2.000',
+    generatorRule: 'Рекурсивный обход прямоугольного треугольника с высотой',
+    description: 'Предельный случай непрерывного блуждания кривой, заполняющей прямоугольный треугольник делением высотой на подобные части.',
+    phiPiRelation: 'Для треугольника Кеплера стороны относятся как 1 : √φ : φ, а площадь делится в золотой пропорции.',
+    enginePreset: {
+      type: 'pythagorasTree3D',
+      compositeOp: 'smoothMorph',
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'sierpinski-arrowhead',
+    name: 'Стреловидная кривая Серпинского',
+    englishName: 'Sierpiński Arrowhead Curve',
+    category: 'geometric_curves',
+    formula: 'X → YF+XF+Y, Y → XF-YF-X (угол 60° = π/3)',
+    dimension: 'D = ln(3)/ln(2) ≈ 1.58496',
+    generatorRule: 'Двухсимвольная L-система сходящаяся к треугольнику',
+    description: 'Непрерывная кривая, которая в топологическом пределе точно сходится к треугольнику Серпинского без самопересечений.',
+    phiPiRelation: 'Углы 60° = π/3; топологический предел совпадает с фракталом Хаусдорфовой размерности ln 3 / ln 2.',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      compositeOp: 'smoothUnion',
+      zoom: 2.9,
+    }
+  },
+
+  // ==========================================
+  // 2. КОНСТРУКТИВНЫЕ ФРАКТАЛЫ
+  // ==========================================
+  {
+    id: 'sierpinski-triangle',
+    name: 'Треугольник Серпинского',
+    englishName: 'Sierpiński Triangle',
+    category: 'constructive',
+    formula: 'N = 3, S = 2',
+    dimension: 'D = ln(3)/ln(2) ≈ 1.58496',
+    generatorRule: 'Удаление центрального перевернутого треугольника',
+    description: 'Классический конструктивный фрактал: из равностороннего треугольника исключается центральный перевернутый треугольник.',
+    phiPiRelation: 'Связан с треугольником Паскаля по модулю 2; предельные диагонали сходятся к числам Фибоначчи.',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      compositeOp: 'smoothMorph',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'sierpinski-carpet',
+    name: 'Ковер Серпинского',
+    englishName: 'Sierpiński Carpet',
+    category: 'constructive',
+    formula: 'N = 8, S = 3',
+    dimension: 'D = ln(8)/ln(3) ≈ 1.89279',
+    generatorRule: 'Деление квадрата на 9 частей, удаление центрального',
+    description: 'Двумерный аналог канторова множества: квадрат делится на 9 квадратов, центральный удаляется, процесс повторяется для остальных 8.',
+    phiPiRelation: 'Универсальная плоская кривая Менгера; мера Лебега стремится к 0.',
+    enginePreset: {
+      type: 'menger',
+      compositeOp: 'smoothMorph',
+      boxFold: 1.0,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'menger-sponge',
+    name: 'Губка Менгера',
+    englishName: 'Menger Sponge',
+    category: 'constructive',
+    formula: 'N = 20, S = 3, V_∞ = 0, A_∞ = ∞',
+    dimension: 'D = ln(20)/ln(3) ≈ 2.72683',
+    generatorRule: 'Куб делится на 27 кубиков, удаляются 7 центральных',
+    description: 'Трехмерный аналог ковра Серпинского. Обладает нулевым 3D объемом, но бесконечной площадью внутренней поверхности полостей.',
+    phiPiRelation: 'Универсальное одномерное континуум-многообразие; золотой срез образует икосаэдрические сечения.',
+    enginePreset: {
+      type: 'menger',
+      compositeOp: 'smoothUnion',
+      boxFold: 1.2,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'pythagoras-tree-classic',
+    name: 'Дерево Пифагора классическое',
+    englishName: 'Pythagoras Tree (Symmetric)',
+    category: 'constructive',
+    formula: 'a² + b² = c², a = b = c/√2',
+    dimension: 'D = 2.0 (перекрытия в пределе)',
+    generatorRule: 'Построение квадратов на сторонах прямоугольного равнобедренного треугольника',
+    description: 'Фрактал, построенный из квадратов на катетах и гипотенузе прямоугольного треугольника с углами 45°-45°-90° (π/4).',
+    phiPiRelation: 'Теорема Пифагора и единичная окружность; при замене катетов на пропорцию 1:φ ветвление становится несамопересекающимся.',
+    enginePreset: {
+      type: 'pythagorasTree3D',
+      compositeOp: 'smoothMorph',
+      zoom: 2.6,
+      rotX: 0.35,
+    }
+  },
+  {
+    id: 'pythagoras-tree-windblown',
+    name: 'Дерево Пифагора обдуваемое',
+    englishName: 'Windblown Pythagoras Tree',
+    category: 'constructive',
+    formula: 'α = 60° (π/3), β = 30° (π/6)',
+    dimension: 'D ≈ 1.85',
+    generatorRule: 'Разноугольное ветвление прямоугольного треугольника',
+    description: 'Вариация дерева Пифагора с неравными углами при вершине треугольника, создающая эффект органического дерева, гнущегося на ветру.',
+    phiPiRelation: 'Отношение катетов 1:√3 или 1:φ порождает спирали логарифмического закручивания.',
+    enginePreset: {
+      type: 'pythagorasTree3D',
+      compositeOp: 'goldenSpiralFold',
+      warpStrength: 0.3,
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'pythagoras-tree-naked',
+    name: 'Обнаженное дерево Пифагора',
+    englishName: 'Naked Pythagoras Tree',
+    category: 'constructive',
+    formula: 'Граф центров квадратов G(V, E)',
+    dimension: 'D ≈ 1.73',
+    generatorRule: 'Отрезки соединяют только центры смежных квадратов',
+    description: 'Скелетный древовидный граф, построенный только по отрезкам, соединяющим геометрические центры квадратов дерева Пифагора.',
+    phiPiRelation: 'Длины ребер образуют геометрическую прогрессию со знаменателем 1/√2 или 1/φ.',
+    enginePreset: {
+      type: 'pythagorasTree3D',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.25,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'apollonian-gasket',
+    name: 'Сетка Аполлония (Упаковка Аполлония)',
+    englishName: 'Apollonian Gasket / Sphere Packing',
+    category: 'constructive',
+    formula: '(k_1+k_2+k_3+k_4)² = 2(k_1²+k_2²+k_3²+k_4²)',
+    dimension: 'D ≈ 1.30568 (в 3D D ≈ 2.4739)',
+    generatorRule: 'Теорема Содди о четырех касающихся окружностях',
+    description: 'Фрактальная упаковка касающихся окружностей или сфер, рекурсивно заполняющая все криволинейные треугольные пустоты между ними.',
+    phiPiRelation: 'Окружности связаны с комплексными дробями и числом π; золотая инверсия сфер создает бесконечные кластеры.',
+    enginePreset: {
+      type: 'apollonian',
+      compositeOp: 'smoothUnion',
+      sphereFold: 0.75,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'vicsek-fractal',
+    name: 'Фрактал Вичека',
+    englishName: 'Vicsek Fractal (Box / Cross)',
+    category: 'constructive',
+    formula: 'N = 5, S = 3',
+    dimension: 'D = ln(5)/ln(3) ≈ 1.46497',
+    generatorRule: 'Деление квадрата на 9 частей, сохранение центрального креста',
+    description: 'Деление квадрата на 9 клеток с удалением 4 угловых квадратов (сохранение греческого креста). Также существует версия с сохранением диагоналей.',
+    phiPiRelation: 'Идеальная симметрия группы D_4 (повороты на π/2).',
+    enginePreset: {
+      type: 'jerusalemCube',
+      compositeOp: 'smoothMorph',
+      boxFold: 1.1,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 't-square-fractal',
+    name: 'Т-квадрат',
+    englishName: 'T-Square Fractal',
+    category: 'constructive',
+    formula: 'A_∞ = 2 A_0',
+    dimension: 'D = ln(4)/ln(2) = 2.000 (граница D = ln(3)/ln(2) ≈ 1.585)',
+    generatorRule: 'Итеративное наложение уменьшенных квадратов на углы',
+    description: 'Квадрат со стороной 1 делится, на каждый из 4 его углов накладывается квадрат с половинной стороной. В пределе площадь удваивается.',
+    phiPiRelation: 'Ограниченная фрактальная граница со степенью масштабирования 1/2.',
+    enginePreset: {
+      type: 'menger',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.2,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'sierpinski-cross',
+    name: 'Крест Серпинского',
+    englishName: 'Sierpiński Cross',
+    category: 'constructive',
+    formula: 'D = ln(5)/ln(3) ≈ 1.465',
+    dimension: 'D ≈ 1.465 (в 3D D ≈ 2.32)',
+    generatorRule: 'Пространственное пересечение плоскостей Серпинского',
+    description: 'Сложная пространственная 3D комбинация взаимно перпендикулярных ковров Серпинского, пересекающихся вдоль осевых сечений.',
+    phiPiRelation: 'Инвариантен относительно октаэдрических вращений SO(3).',
+    enginePreset: {
+      type: 'jerusalemCube',
+      compositeOp: 'smoothUnion',
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'sierpinski-pentagon',
+    name: 'Пятиугольник Серпинского (Пентафрактал)',
+    englishName: 'Sierpiński Pentagon (Pentaflake)',
+    category: 'constructive',
+    formula: 'N = 5, S = 1 + 2 cos(2π/5) = 1 + φ = φ²',
+    dimension: 'D = ln(5)/ln(1 + φ) = ln(5)/ln(φ²) ≈ 1.67228',
+    generatorRule: '5 копий пятиугольника по углам, удаление центра',
+    description: 'Фрактал, образуемый пятью уменьшенными копиями правильного пятиугольника. Масштабный коэффициент в точности равен φ² = 1 + φ.',
+    phiPiRelation: 'АБСОЛЮТНАЯ СИНЕРГИЯ φ И π: угол при вершине 2π/5 = 72°, масштабирование определяется золотым сечением φ!',
+    enginePreset: {
+      type: 'icosahedral',
+      compositeOp: 'smoothMorph',
+      phiMultiplier: 1.61803398875,
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'hexafractal',
+    name: 'Гексафрактал (Гексафлейк)',
+    englishName: 'Hexaflake',
+    category: 'constructive',
+    formula: 'N = 7, S = 3',
+    dimension: 'D = ln(7)/ln(3) ≈ 1.77124',
+    generatorRule: 'Шесть копий шестиугольника вокруг центрального седьмого',
+    description: 'Шесть копий шестиугольника, расположенных вокруг исходного центрального. Имеет общие черты со снежинкой Коха.',
+    phiPiRelation: 'Гексагональные углы 2π/6 = 60° = π/3.',
+    enginePreset: {
+      type: 'quasicrystal',
+      compositeOp: 'smoothUnion',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'ivezic-fractal',
+    name: 'Фрактал Ивезича',
+    englishName: 'Ivezić n-Simplex Fractal',
+    category: 'constructive',
+    formula: 'D(n) = ln(n+1)/ln(2)',
+    dimension: 'D(3) = 2.0, D(4) = ln(5)/ln(2) ≈ 2.32',
+    generatorRule: 'Рекурсивное деление n-мерного регулярного симплекса',
+    description: 'Многомерное расширение треугольника Серпинского на n-мерные симплексы с удалением центрального гипермногогранника.',
+    phiPiRelation: 'Гиперсферические объемы пропорциональны π^(n/2) / Γ(n/2 + 1).',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      hybridType: 'calabiYau',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'levy-snowflake',
+    name: 'Снежинка Леви',
+    englishName: 'Lévy Snowflake',
+    category: 'constructive',
+    formula: '∂(Lévy C curve ∪ rot)',
+    dimension: 'D = 2.0 (граница D ≈ 1.934)',
+    generatorRule: 'Замкнутая суперпозиция 8 C-кривых Леви',
+    description: 'Граница области, заметаемой замкнутым ансамблем кривых Леви. Имеет гладкую внутренность с фрактальной береговой линией.',
+    phiPiRelation: 'Периодичность 2π/8 = π/4.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      compositeOp: 'smoothUnion',
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'sierpinski-pyramid',
+    name: 'Пирамида Серпинского (Тетраэдр Серпинского)',
+    englishName: 'Sierpiński Tetrahedron',
+    category: 'constructive',
+    formula: 'N = 4, S = 2, V_∞ = 0',
+    dimension: 'D = ln(4)/ln(2) = 2.000',
+    generatorRule: '4 тетраэдра половинного размера в вершинах',
+    description: 'Трехмерный аналог треугольника Серпинского: в правильном тетраэдре оставляются 4 угловых тетраэдра. Нулевой объем при D = 2.0.',
+    phiPiRelation: 'Двугранный угол arccos(1/3) связан с геометрией правильного додекаэдра и золотым сечением.',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      compositeOp: 'smoothMorph',
+      zoom: 2.9,
+      rotX: 0.4,
+    }
+  },
+
+  // ==========================================
+  // 3. АЛГЕБРАИЧЕСКИЕ ФРАКТАЛЫ (КОМПЛЕКСНАЯ ДИНАМИКА)
+  // ==========================================
+  {
+    id: 'mandelbrot-classic',
+    name: 'Множество Мандельброта',
+    englishName: 'Mandelbrot Set',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n² + c, z_0 = 0',
+    dimension: 'D_граница = 2.000 (Теорема Сишая Шишикуры)',
+    generatorRule: 'Множество c ∈ ℂ, для которых траектория z_n ограничена',
+    description: 'Главная икона фрактальной геометрии. Кардиоида описывается формулой c(t) = (1/2)e^{it} - (1/4)e^{i2t}.',
+    phiPiRelation: 'Период лампочек следует ряду Фарея и числу π; числа Фибоначчи задают знаменатели периодов на главной кардиоиде!',
+    enginePreset: {
+      type: 'mandelbulb',
+      compositeOp: 'smoothMorph',
+      iterations: 24,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'multibrot-set',
+    name: 'Множество Мандельброта высших степеней (Multibrot)',
+    englishName: 'Multibrot Set (z^d + c)',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n^d + c, d > 2',
+    dimension: 'D = 2.0',
+    generatorRule: 'Степень d порождает (d - 1)-лучевую поворотную симметрию',
+    description: 'Семейство алгебраических множеств на основе степени d. Центральная фигура имеет d-1 лепестков с симметрией 2π/(d-1).',
+    phiPiRelation: 'При степени d = 5 + φ симметрия согласуется с золотым сечением и квазикристаллическим порядком.',
+    enginePreset: {
+      type: 'mandelbulb',
+      phiMultiplier: 1.61803398875,
+      compositeOp: 'smoothUnion',
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'julia-set',
+    name: 'Множество Жюлиа',
+    englishName: 'Julia Set',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n² + c, c = const ∈ ℂ',
+    dimension: 'D ∈ (1.0, 2.0] зависит от c',
+    generatorRule: 'Множество начальных точек z_0 с ограниченной траекторией',
+    description: 'Динамическая система комплексной плоскости при фиксированном c. Связно тогда и только тогда, когда точка c принадлежит множеству Мандельброта.',
+    phiPiRelation: 'При золотом параметре c = (φ - 2) + i(φ - 1) множество Жюлиа порождает спирали логарифмического закручивания.',
+    enginePreset: {
+      type: 'quaternionJulia',
+      compositeOp: 'smoothMorph',
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'filled-julia-set',
+    name: 'Заполненное множество Жюлиа',
+    englishName: 'Filled Julia Set',
+    category: 'algebraic_complex',
+    formula: 'K(f) = {z ∈ ℂ: |f^n(z)| ↛ ∞}',
+    dimension: 'D_тело = 2.0',
+    generatorRule: 'Множество Жюлиа вместе с его внутренней областью притяжения',
+    description: 'Топологически замкнутое множество, границей которого является классическое фрактальное множество Жюлиа. В 3D и 4D образует монолитные тела.',
+    phiPiRelation: 'Конформный радиус области притяжения инвариантен относительно масштабирования.',
+    enginePreset: {
+      type: 'quaternionJulia',
+      compositeOp: 'smoothUnion',
+      zoom: 2.6,
+    }
+  },
+  {
+    id: 'newton-fractal',
+    name: 'Фрактал Ньютона',
+    englishName: 'Newton-Raphson Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n - f(z_n)/f\'(z_n) для z^k - 1 = 0',
+    dimension: 'D_граница = 2.0',
+    generatorRule: 'Бассейны притяжения комплексных корней полинома',
+    description: 'Фрактальные границы между бассейнами сходимости метода Ньютона к различным корням полинома. Границы бесконечно запутаны.',
+    phiPiRelation: 'Корни полинома z^n - 1 = 0 лежат на единичной окружности с шагом 2π/n. Золотой шаг фазы порождает квазипериодические бассейны.',
+    enginePreset: {
+      type: 'newtonBasins',
+      compositeOp: 'smoothMorph',
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'serafimsky-fractal',
+    name: 'Фрактал Серафимского',
+    englishName: 'Serafimsky Shifted Newton',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n - e^{iθ} f(z_n)/f\'(z_n)',
+    dimension: 'D ≈ 2.0',
+    generatorRule: 'Метод Ньютона с комплексным вращением фазового угла θ',
+    description: 'Модификация метода Ньютона с добавлением комплексного фазового множителя e^{iθ}, закручивающего бассейны притяжения в спирали.',
+    phiPiRelation: 'Когда угол θ равен золотому углу 2π/φ, бассейны закручиваются в самоподобные рукава без пересечений.',
+    enginePreset: {
+      type: 'newtonBasins',
+      compositeOp: 'goldenSpiralFold',
+      warpStrength: 0.35,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'burning-ship',
+    name: 'Фрактал «Пылающий корабль» (Burning Ship)',
+    englishName: 'Burning Ship Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = (|Re(z_n)| + i|Im(z_n)|)² + c',
+    dimension: 'D = 2.0',
+    generatorRule: 'Абсолютная величина от Re и Im перед возведением в квадрат',
+    description: 'Неголоморфная динамическая система. Из-за разрыва производной вдоль осей симметрии возникают характерные мачты, паруса и пламя.',
+    phiPiRelation: 'Нарушение условий Коши-Римана; проекция в 3D через гиперкомплексную алгебру дает ребристые корабельные кили.',
+    enginePreset: {
+      type: 'burningShip3D',
+      compositeOp: 'smoothUnion',
+      zoom: 3.1,
+      rotX: 0.4,
+    }
+  },
+  {
+    id: 'perpendicular-burning-ship',
+    name: 'Перпендикулярный Пылающий Корабль',
+    englishName: 'Perpendicular Burning Ship',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = (|Re(z_n)| - i Im(z_n))² + c',
+    dimension: 'D = 2.0',
+    generatorRule: 'Модуль берется только от одной компоненты (вещественной)',
+    description: 'Асимметричная модификация Burning Ship, разрушающая осевую зеркальность и создающая односторонние струйные выбросы.',
+    phiPiRelation: 'Асимметрия модулирует градиент SDF; гармонические октавы стабилизируют 3D реймаршинг.',
+    enginePreset: {
+      type: 'burningShip3D',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.3,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'pickover-biomorphs',
+    name: 'Биоморфы Пиковера',
+    englishName: 'Pickover Biomorphs',
+    category: 'algebraic_complex',
+    formula: '|Re(z_n)| < R ∨ |Im(z_n)| < R',
+    dimension: 'D ≈ 1.6 - 1.9',
+    generatorRule: 'Условие останова итераций имитирует форму одноклеточных',
+    description: 'Множества Клиффорда Пиковера, где проверка на выход из круга заменяется проверкой на близость к осям, создавая биологические формы жгутиков.',
+    phiPiRelation: 'Формы радиолярий и спикул подчиняются золотому закону роста Д\'Арси Томпсона.',
+    enginePreset: {
+      type: 'quaternionJulia',
+      hybridType: 'hopfFibration',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.4,
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'trigonometric-fractal',
+    name: 'Тригонометрические фракталы (Фрактал Иисуса)',
+    englishName: 'Trigonometric Fractal (sin z + c)',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = sin(z_n) + c ∨ z_{n+1} = e^{z_n} + c',
+    dimension: 'D = 2.0',
+    generatorRule: 'Трансцендентные целые функции комплексного переменного',
+    description: 'Динамические системы на основе тригонометрических и показательных функций, обладающие периодическими вертикальными колоннами.',
+    phiPiRelation: 'Периодичность функций синуса равна 2π; модуляция шагом φ создает бесконечные резонансные колонны.',
+    enginePreset: {
+      type: 'spiralTunnel',
+      compositeOp: 'quantumResonance',
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'lyapunov-fractal',
+    name: 'Карты Ляпунова / Фракталы Ляпунова',
+    englishName: 'Lyapunov Fractals / Zircon City',
+    category: 'algebraic_complex',
+    formula: 'λ = lim (1/N) ∑ ln |f\'(x_n)| для последовательности AB',
+    dimension: 'D ≈ 2.0 (фрактальные границы стабильности)',
+    generatorRule: 'Чередование параметров r_A и r_B логистического отображения',
+    description: 'Визуализация старшего показателя Ляпунова динамической системы с чередующимся параметром роста. Желтые области отвечают хаосу, синие — порядку.',
+    phiPiRelation: 'Квазипериодическая последовательность Фибоначчи ABAAB... порождает золотой фрактал Ляпунова с максимальным спектром самоподобия.',
+    enginePreset: {
+      type: 'primeSpiral',
+      compositeOp: 'quantumResonance',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'novak-fractal',
+    name: 'Множество Новака',
+    englishName: 'Novak Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n^p + c, p ∈ ℝ \\ ℚ (например, p = φ)',
+    dimension: 'D ≈ 2.0',
+    generatorRule: 'Использование иррациональных дробных степеней комплексного числа',
+    description: 'Вариация Мандельброта с иррациональной степенью p. Разрез ветви многозначной функции ln z порождает спиральный разрыв симметрии.',
+    phiPiRelation: 'При показателе степени p = φ = 1.61803398875 разрыв ветви образует совершенную золотую логарифмическую спираль.',
+    enginePreset: {
+      type: 'mandelbulb',
+      phiMultiplier: 1.61803398875,
+      compositeOp: 'goldenSpiralFold',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'spider-fractal',
+    name: 'Фрактал «Паук»',
+    englishName: 'Spider Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n² + c_n, c_{n+1} = c_n/2 + z_{n+1}',
+    dimension: 'D = 2.0',
+    generatorRule: 'Связанная динамика точки z и параметра c на каждом шаге',
+    description: 'Динамическая система, в которой параметр c не фиксирован, а эволюционирует параллельно с переменной z, образуя длинные паутинные нити.',
+    phiPiRelation: 'Отношение затухания c_n/2 согласуется с золотой дихотомией.',
+    enginePreset: {
+      type: 'quaternionJulia',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.45,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'sherwood-carpet',
+    name: 'Ковер Шервуда',
+    englishName: 'Sherwood Carpet',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = 1 / (z_n^k + c)',
+    dimension: 'D ≈ 1.85',
+    generatorRule: 'Инверсия комплексных полиномов высших порядков',
+    description: 'Алгебраический фрактал, сочетающий инверсию комплексной плоскости 1/w и полиномиальную динамику. Создает кружевные симметричные сети.',
+    phiPiRelation: 'Конформные инверсии относительно окружностей радиуса 1 и радиуса φ.',
+    enginePreset: {
+      type: 'apollonian',
+      hybridType: 'mandelbox',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 2.9,
+    }
+  },
+
+  // ==========================================
+  // 4. МНОГОМЕРНЫЕ АЛГЕБРАИЧЕСКИЕ ФРАКТАЛЫ
+  // ==========================================
+  {
+    id: 'quaternion-mandelbrot',
+    name: 'Кватернионный Мандельброт 4D',
+    englishName: '4D Quaternion Mandelbrot',
+    category: 'multidimensional',
+    formula: 'q_{n+1} = q_n² + C, q ∈ ℍ, q_0 = 0',
+    dimension: 'D_4D = 4.0, D_3D-сечения = 2.0 - 3.0',
+    generatorRule: 'Итерации в теле алгебры кватернионов ℍ (1, i, j, k)',
+    description: 'Обобщение Мандельброта на 4D гиперкомплексные числа. Трехмерные гиперплоскостные сечения раскрывают многослойные сферические кардиоиды.',
+    phiPiRelation: 'Группа кватернионных вращений Sp(1) ≅ SU(2) ≅ S³; золотые вращения Клиффорда через углы π/φ.',
+    enginePreset: {
+      type: 'quaternionMandelbrot',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.4,
+      rotY: 0.25,
+    }
+  },
+  {
+    id: 'quaternion-julia',
+    name: 'Кватернионный Жюлиа 4D',
+    englishName: '4D Quaternion Julia',
+    category: 'multidimensional',
+    formula: 'q_{n+1} = q_n² + C, C = const ∈ ℍ',
+    dimension: 'D ≈ 2.5 - 3.2 в 3D проекции',
+    generatorRule: '4D сечение динамической системы кватернионов при фиксированном векторе C',
+    description: 'Фантастические 3D срезы четырехмерного гиперкомплексного фрактала. Поверхность абсолютно гладкая локально, но глобально фрактальная.',
+    phiPiRelation: 'Конформность отображений в 4D; золотой вектор C = (φ-1, 1/φ, 0, φ-2).',
+    enginePreset: {
+      type: 'quaternionJulia',
+      compositeOp: 'smoothMorph',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'mandelbulb-3d',
+    name: 'Mandelbulb 3D',
+    englishName: 'Mandelbulb 3D (White & Nylander)',
+    category: 'multidimensional',
+    formula: 'v ↦ r^n (sin(nθ)cos(nψ) i + sin(nθ)sin(nψ) j + cos(nθ) k) + c',
+    dimension: 'D ≈ 2.7 - 2.9',
+    generatorRule: 'Сферическая трехмерная триплексная арифметика со степенью n = 8 (или 5+φ)',
+    description: 'Канонический 3D аналог множества Мандельброта. Сферические координаты возводятся в степень n. Внутри скрыты бесконечные пещеры и залы.',
+    phiPiRelation: 'Углы сферических гармоник θ, ψ согласуются с числом π; степень 5+φ связывает икосаэдрическую симметрию с реймаршингом.',
+    enginePreset: {
+      type: 'mandelbulb',
+      compositeOp: 'smoothMorph',
+      iterations: 24,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'mandelbox-3d',
+    name: 'Mandelbox 3D',
+    englishName: 'Mandelbox 3D (Tom Lowe)',
+    category: 'multidimensional',
+    formula: 'v ↦ s · sphereFold(boxFold(v)) + c',
+    dimension: 'D ≈ 2.3 - 2.8',
+    generatorRule: 'Циклическое складывание кубического пространства (box fold) и сферическая инверсия',
+    description: '3D фрактал Тома Лоу. Сочетает кубические сложения пространства abs(p) и сферическую инверсию Кельвина, создавая архитектурные соборы и мосты.',
+    phiPiRelation: 'Радиусы сферического сложения r_min = 0.5, r_max = 1.0; масштаб s = -φ² создает идеальную золотую Мандельбокс.',
+    enginePreset: {
+      type: 'mandelbox',
+      boxFold: 1.2,
+      sphereFold: 0.65,
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'jerusalem-cube',
+    name: 'Иерусалимский куб',
+    englishName: 'Jerusalem Cube (Eric Baird)',
+    category: 'multidimensional',
+    formula: 'Масштаб отверстий 1/φ, D = ln(8+12/φ)/ln(2+√2)',
+    dimension: 'D ≈ 2.529',
+    generatorRule: 'Вырезание крестообразных отверстий с пропорциями золотого сечения',
+    description: 'Трехмерный аналог губки Менгера, где центральные и краевые отверстия имеют форму греческого креста с точными пропорциями золотого сечения φ.',
+    phiPiRelation: 'Каждая грань содержит самоподобные золотые кресты; масштабные отношения строго равны φ = (1+√5)/2.',
+    enginePreset: {
+      type: 'jerusalemCube',
+      compositeOp: 'smoothUnion',
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'kleinian-groups',
+    name: 'Клейниановы группы (Предельные множества)',
+    englishName: 'Kleinian Limit Sets / Schottky Groups',
+    category: 'multidimensional',
+    formula: 'γ(z) = (az+b)/(cz+d) ∈ PSL(2, ℂ)',
+    dimension: 'D ≈ 1.3 - 2.7',
+    generatorRule: 'Дискретные подгруппы изометрий 3D пространства Лобачевского ℍ³',
+    description: 'Фрактальные предельные множества на границе сферы Римана, возникающие при бесконечных итерациях дробно-линейных преобразований Мебиуса.',
+    phiPiRelation: 'Изометрии гиперболического пространства ℍ³; золотые узлы и кольца Борромео.',
+    enginePreset: {
+      type: 'kleinianLimit',
+      compositeOp: 'smoothMorph',
+      zoom: 2.9,
+    }
+  },
+
+  // ==========================================
+  // 5. СИСТЕМЫ ИТЕРИРУЕМЫХ ФУНКЦИЙ (IFS) И ХАОТИЧЕСКИЕ АТТРАКТОРЫ
+  // ==========================================
+  {
+    id: 'barnsley-fern',
+    name: 'Папоротник Барнсли',
+    englishName: 'Barnsley Fern IFS',
+    category: 'ifs_attractors',
+    formula: 'W_k(x) = A_k x + b_k, k ∈ {1, 2, 3, 4}',
+    dimension: 'D ≈ 1.85',
+    generatorRule: '4 аффинных сжимающих отображения с вероятностями {0.01, 0.85, 0.07, 0.07}',
+    description: 'Знаменитый фрактал Майкла Барнсли, точно моделирующий лист папоротника Black Spleenwort с помощью теоремы о коллаже.',
+    phiPiRelation: 'Каждый листочек наклонен под углом, кратным золотому углу; чередование веточек подчиняется ряду Фибоначчи.',
+    enginePreset: {
+      type: 'phyllotaxis',
+      hybridType: 'pythagorasTree3D',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'fractal-flames',
+    name: 'Фрактальное пламя (Fractal Flames)',
+    englishName: 'Fractal Flames (Scott Draves)',
+    category: 'ifs_attractors',
+    formula: 'F(x) = ∑ w_i V_j(A_i x + b_i)',
+    dimension: 'D зависит от нелинейных вариаций',
+    generatorRule: 'Нелинейные функции (spherical, swirl, horseshoe), логарифмический рендеринг',
+    description: 'Алгоритм Скотта Дрейвса (1992). Расширяет IFS нелинейными тригонометрическими преобразованиями, сглаживанием плотности и цветовой гаммой.',
+    phiPiRelation: 'Сферические и спиральные вариации используют sin/cos и золотые фазовые сдвиги.',
+    enginePreset: {
+      type: 'hopfFibration',
+      hybridType: 'spiralTunnel',
+      compositeOp: 'quantumResonance',
+      hybridBlend: 0.45,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'lorenz-attractor',
+    name: 'Странный аттрактор Лоренца',
+    englishName: 'Lorenz Strange Attractor',
+    category: 'ifs_attractors',
+    formula: 'dx/dt = σ(y-x), dy/dt = x(ρ-z)-y, dz/dt = xy - βz',
+    dimension: 'D_каплана-йорке ≈ 2.06 ± 0.01',
+    generatorRule: 'Система 3 дифференциальных уравнений конвекции жидкости (σ=10, ρ=28, β=8/3)',
+    description: 'Классический «эффект бабочки» Эдварда Лоренца (1963). Фазовая траектория никогда не самопересекается, образуя два притягивающих крыла.',
+    phiPiRelation: 'Отношение собственных значений в седло-узлах согласуется с универсальными константами Фейгенбаума.',
+    enginePreset: {
+      type: 'lorenzAttractor',
+      compositeOp: 'smoothMorph',
+      zoom: 3.2,
+      rotX: 0.3,
+      rotY: 0.4,
+    }
+  },
+  {
+    id: 'rossler-attractor',
+    name: 'Аттрактор Рёсслера',
+    englishName: 'Rössler Attractor',
+    category: 'ifs_attractors',
+    formula: 'dx/dt = -y - z, dy/dt = x + ay, dz/dt = b + z(x - c)',
+    dimension: 'D ≈ 2.01',
+    generatorRule: 'Нелинейная система с полуторакратным спиральным закручиванием и сгибом ленты',
+    description: 'Система Отто Рёсслера (1976), спроектированная как простейший генератор хаоса со складыванием фазовой плоскости аналогично ленте Мебиуса.',
+    phiPiRelation: 'Лента Мебиуса имеет поворот на π; золотое сечение регулирует переход от каскада удвоения периода к хаосу.',
+    enginePreset: {
+      type: 'cliffordKlein',
+      compositeOp: 'smoothUnion',
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'ikeda-attractor',
+    name: 'Аттрактор Икеды',
+    englishName: 'Ikeda Map Attractor',
+    category: 'ifs_attractors',
+    formula: 'z_{n+1} = A + B z_n e^{i(|z_n|² + C)}',
+    dimension: 'D ≈ 1.7',
+    generatorRule: 'Двумерное отображение света в кольцевом оптическом резонаторе',
+    description: 'Модель Кэнсукэ Икеды (1979) для лазерного импульса, циркулирующего в нелинейном диэлектрическом кольцевом интерферометре.',
+    phiPiRelation: 'Фазовый набег e^{iθ} пропорционален интенсивности; кольцевая геометрия опирается на константу 2π.',
+    enginePreset: {
+      type: 'spiralTunnel',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.4,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'clifford-attractor',
+    name: 'Аттрактор Клиффорда',
+    englishName: 'Clifford Attractor',
+    category: 'ifs_attractors',
+    formula: 'x_{n+1} = sin(a y_n) + c cos(a x_n), y_{n+1} = sin(b x_n) + d cos(b y_n)',
+    dimension: 'D ≈ 1.6 - 1.9',
+    generatorRule: 'Синусно-косинусное полиномиальное отображение с 4 параметрами',
+    description: 'Аттрактор Клиффорда Пиковера. Рождает гладкие переливающиеся шелковые складки и гравитационные воронки.',
+    phiPiRelation: 'Когда коэффициенты a, b, c, d кратны золотому числу φ, траектории распределяются с квазикристаллической плотностью.',
+    enginePreset: {
+      type: 'cliffordTorus4D',
+      compositeOp: 'smoothMorph',
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'dejong-attractor',
+    name: 'Аттрактор Де Йонга',
+    englishName: 'Peter de Jong Attractor',
+    category: 'ifs_attractors',
+    formula: 'x_{n+1} = sin(a y_n) - cos(b x_n), y_{n+1} = sin(c x_n) - cos(d y_n)',
+    dimension: 'D ≈ 1.8',
+    generatorRule: 'Симметричное тригонометрическое отображение Петера де Йонга',
+    description: 'Порождает полупрозрачные дымчатые вихри и многоуровневые тороидальные драпировки.',
+    phiPiRelation: 'При аргументах (a, b) = (φ, π) система демонстрирует предельно стабильный квазипериодический хаос.',
+    enginePreset: {
+      type: 'cliffordTorus4D',
+      hybridType: 'gyroid',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.3,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'henon-attractor',
+    name: 'Аттрактор Хенона',
+    englishName: 'Hénon Attractor',
+    category: 'ifs_attractors',
+    formula: 'x_{n+1} = 1 - a x_n² + y_n, y_{n+1} = b x_n (a=1.4, b=0.3)',
+    dimension: 'D ≈ 1.261 ± 0.003',
+    generatorRule: 'Дискретная диссипативная система Мишеля Эно (1976)',
+    description: 'Двумерное квадратичное сжимающее отображение, демонстрирующее поперечную структуру Канторова множества тончайших слоев.',
+    phiPiRelation: 'Является сечением Пуанкаре для непрерывной 3D системы; масштаб сжатия b связан с сохранением площади.',
+    enginePreset: {
+      type: 'primeSpiral',
+      compositeOp: 'smoothMorph',
+      zoom: 2.7,
+    }
+  },
+  {
+    id: 'humboldt-attractor',
+    name: 'Аттрактор Гумбольдта',
+    englishName: 'Humboldt Flow Attractor',
+    category: 'ifs_attractors',
+    formula: 'dxdt = v_oceanic(x, φ, t)',
+    dimension: 'D ≈ 2.15',
+    generatorRule: 'IFS-система, имитирующая турбулентные океанические вихри',
+    description: 'Моделирует перенос пассивной примеси в когерентных вихревых структурах океанического течения Гумбольдта.',
+    phiPiRelation: 'Логарифмические спирали вихрей имеют золотой угол раскрутки.',
+    enginePreset: {
+      type: 'gyroid',
+      compositeOp: 'goldenSpiralFold',
+      zoom: 3.1,
+    }
+  },
+
+  // ==========================================
+  // 6. СТОХАСТИЧЕСКИЕ (СЛУЧАЙНЫЕ) И ШУМЫ
+  // ==========================================
+  {
+    id: 'perlin-noise',
+    name: 'Фрактальный шум Перлина',
+    englishName: 'Fractal Perlin Noise (fBm)',
+    category: 'stochastic',
+    formula: 'f(x) = ∑_{k=0}^m 2^{-k H} P(2^k x)',
+    dimension: 'D = 3 - H, где H — показатель Херста',
+    generatorRule: 'Градиентный шум Кена Перлина, суммируемый по октавам',
+    description: 'Основа процедурной компьютерной графики (Оскар Кену Перлину, 1997). Сумма октав псевдослучайных интерполированных градиентов.',
+    phiPiRelation: 'Использование шага октав λ = φ вместо 2.0 устраняет directional artifacts и делает шум изотропным.',
+    enginePreset: {
+      type: 'neoviusMinimal',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.35,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'simplex-noise',
+    name: 'Симплексный шум (Simplex Noise)',
+    englishName: 'Simplex Noise',
+    category: 'stochastic',
+    formula: 'Разбиение пространства на симплексы Шлефли A_n',
+    dimension: 'D = 3 - H',
+    generatorRule: 'Замена гиперкубической сетки на симплексную решетку',
+    description: 'Второе поколение шума Перлина (2001). Вычислительная сложность масштабируется как O(n²) вместо O(2^n), артефакты направленности устранены.',
+    phiPiRelation: 'Геометрия правильного 3D симплекса (тетраэдра) и икосаэдрическая плотная упаковка.',
+    enginePreset: {
+      type: 'gyroid',
+      compositeOp: 'smoothMorph',
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'diamond-square',
+    name: 'Алгоритм Diamond-Square (Плазма)',
+    englishName: 'Diamond-Square Plasma Fractal',
+    category: 'stochastic',
+    formula: 'h_{mid} = ⟨h_{corners}⟩ + random() · 2^{-i H}',
+    dimension: 'D = 3 - H ∈ (2.0, 3.0)',
+    generatorRule: 'Рекурсивное чередование шагов ромба и квадрата по сетке',
+    description: 'Классический метод синтеза фрактального рельефа гор и облаков Миллера и Фурнье (1982) с масштабным самоподобием.',
+    phiPiRelation: 'Отношение диагоналей квадрата √2; затухание амплитуд через степени золотого сечения 1/φ^k дает природную эрозию.',
+    enginePreset: {
+      type: 'dlaCluster',
+      compositeOp: 'smoothMorph',
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'fractional-brownian-motion',
+    name: 'Дробное броуновское движение (fBm)',
+    englishName: 'Fractional Brownian Motion (fBm)',
+    category: 'stochastic',
+    formula: 'E[B_H(t) B_H(s)] = (1/2)(|t|^{2H} + |s|^{2H} - |t-s|^{2H})',
+    dimension: 'D = n + 1 - H (Мандельброт и Ван Несс, 1968)',
+    generatorRule: 'Гауссовский процесс с долговременной корреляцией и параметром Херста H',
+    description: 'Обобщение броуновского движения. При H > 1/2 процесс персистентен (тренд сохраняется), при H < 1/2 — антиперсистентен.',
+    phiPiRelation: 'Золотое значение H = 1/φ ≈ 0.618 описывает турбулентность Колмогорова и биржевую волатильность.',
+    enginePreset: {
+      type: 'dlaCluster',
+      hybridType: 'gyroid',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'dla-cluster',
+    name: 'Диффузионно-ограниченная агрегация (ДОА / DLA)',
+    englishName: 'Diffusion-Limited Aggregation (DLA)',
+    category: 'stochastic',
+    formula: 'N(r) ∝ r^{D_{DLA}}',
+    dimension: 'D ≈ 1.71 (2D), D ≈ 2.50 (3D) (Виттен и Сандер, 1981)',
+    generatorRule: 'Случайное блуждание броуновских частиц и их слипание с растущим кластером',
+    description: 'Физическая модель роста кристаллов, электроосаждения металлов, дендритов минералов и пробоя диэлектриков.',
+    phiPiRelation: 'Вращательное броуновское блуждание с шагом 2π; золотые ветвления предотвращают экранирование внутренних полостей.',
+    enginePreset: {
+      type: 'dlaCluster',
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+      rotX: 0.35,
+      rotY: 0.25,
+    }
+  },
+  {
+    id: 'percolation-clusters',
+    name: 'Кластеры перколяции',
+    englishName: 'Percolation Lattice Clusters',
+    category: 'stochastic',
+    formula: 'P(p) ∝ (p - p_c)^β при p → p_c',
+    dimension: 'D_{perc} = 91/48 ≈ 1.896 (2D), D ≈ 2.52 (3D)',
+    generatorRule: 'Случайное заполнение узлов решетки с критической вероятностью p_c',
+    description: 'Статистическая модель протекания жидкости через пористую среду или проводимости проводящих пленок при критическом пороге связи.',
+    phiPiRelation: 'Конформная теория поля (CFT), формула Карди и критические показатели, выражаемые через модулярные формы с числом π.',
+    enginePreset: {
+      type: 'neoviusMinimal',
+      compositeOp: 'fractalLattice',
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'dielectric-breakdown',
+    name: 'Фрактал лавинного пробоя (Фигуры Лихтенберга)',
+    englishName: 'Dielectric Breakdown Model (DBM / Lichtenberg)',
+    category: 'stochastic',
+    formula: '∇² Φ = 0, p_{ij} ∝ |∇ Φ|^η (Нимейер, Пьетронеро, Визман)',
+    dimension: 'D ≈ 1.75 при η = 1',
+    generatorRule: 'Решение уравнения Лапласа для электростатического потенциала с ростом разряда',
+    description: 'Физическая модель молнии и высоковольтного пробоя диэлектриков. Разряд распространяется по пути максимального градиента поля.',
+    phiPiRelation: 'Электростатика потенциалов Лапласа и конформные отображения плоскости $w = f(z)$.',
+    enginePreset: {
+      type: 'dlaCluster',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.4,
+      zoom: 3.0,
+    }
+  },
+
+  // ==========================================
+  // 7. ФИЗИЧЕСКИЕ И ТОПОЛОГИЧЕСКИЕ КОНЦЕПЦИИ
+  // ==========================================
+  {
+    id: 'hofstadter-butterfly',
+    name: 'Бабочка Хофштадтера',
+    englishName: 'Hofstadter Butterfly',
+    category: 'topological_physical',
+    formula: 'ψ_{m+1} + ψ_{m-1} + 2 cos(2π m α - ν) ψ_m = E ψ_m (Уравнение Харпера)',
+    dimension: 'D(E) фрактальное канторово множество разрешенных энергий',
+    generatorRule: 'Спектр энергии электрона в периодической 2D решетке в магнитном поле α = Φ/Φ_0',
+    description: 'Квантовый фрактал Дугласа Хофштадтера (1976). График разрешенных энергетических зон блоховского электрона в зависимости от магнитного потока.',
+    phiPiRelation: 'АБСОЛЮТНЫЙ КВАНТОВЫЙ РЕЗОНАНС: при иррациональном потоке α = 1/φ спектр становится канторовым множеством нулевой меры Лебега!',
+    enginePreset: {
+      type: 'hofstadterButterfly',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.4,
+      rotY: 0.3,
+    }
+  },
+  {
+    id: 'richardson-fractal',
+    name: 'Фрактал Ричардсона (Эффект береговой линии)',
+    englishName: 'Richardson Coastline Fractal Effect',
+    category: 'topological_physical',
+    formula: 'L(ε) ∝ ε^{1 - D} (Льюис Фрай Ричардсон)',
+    dimension: 'D_Британия ≈ 1.25, D_Норвегия ≈ 1.52',
+    generatorRule: 'Зависимость длины границы от масштаба измерительного инструмента ε',
+    description: 'Открытие Ричардсона (1961), легшее в основу книги Бенуа Мандельброта: длина географической границы неограниченно растет при уменьшении шага линейки.',
+    phiPiRelation: 'Скейлинг конформной береговой линии согласуется с броуновскими петлями SLE_{6/3}.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      hybridType: 'dlaCluster',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.4,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'cantor-set',
+    name: 'Канторово множество (Канторова лестница)',
+    englishName: 'Cantor Ternary Set',
+    category: 'topological_physical',
+    formula: 'C = ⋂_{n=1}^∞ E_n, L_∞ = 0, |C| = 2^{ℵ_0}',
+    dimension: 'D = ln(2)/ln(3) ≈ 0.63093',
+    generatorRule: 'Исключение открытой средней трети (1/3, 2/3) из отрезка [0, 1]',
+    description: 'Фундаментальный топологический объект Георга Кантора (1883). Содержит столько же точек, сколько весь отрезок ℝ, но имеет нулевую меру Лебега.',
+    phiPiRelation: 'Золотое канторово множество вырезает средний интервал длиной 1/φ², оставляя два отрезка длиной 1/φ.',
+    enginePreset: {
+      type: 'menger',
+      compositeOp: 'smoothCarve',
+      boxFold: 1.4,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'cantor-dust',
+    name: 'Пыль Кантора',
+    englishName: 'Cantor Dust',
+    category: 'topological_physical',
+    formula: 'C_d = C × C × ... × C (d-кратное прямое произведение)',
+    dimension: 'D = d · ln(2)/ln(3) (для d=2 D ≈ 1.2618, d=3 D ≈ 1.8928)',
+    generatorRule: 'Многомерное декартово произведение одномерных множеств Кантора',
+    description: 'Вполне несвязное компактное пространство в ℝ² и ℝ³. В астрофизике используется для моделирования крупномасштабного распределения галактик во Вселенной.',
+    phiPiRelation: 'Описывает кластеризацию материи в космических войдах с золотым масштабным фактором.',
+    enginePreset: {
+      type: 'apollonian',
+      compositeOp: 'smoothCarve',
+      sphereFold: 0.8,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'antoine-necklace',
+    name: 'Ожерелье Антуана',
+    englishName: 'Antoine\'s Necklace',
+    category: 'topological_physical',
+    formula: 'X = ⋂_{i=1}^∞ A_i, где A_i — цепи зацепленных торов',
+    dimension: 'D_топологическая = 0, D_Хаусдорфа > 0',
+    generatorRule: 'Тор заменяется цепью зацепленных уменьшенных торов',
+    description: 'Дикий узел и фрактал Луи Антуана (1921). Вполне несвязное компактное подмножество ℝ³, дополнение к которому не является односвязным (фундаментальная группа π₁(ℝ³ \\ X) ≠ 1).',
+    phiPiRelation: 'Каждое кольцо ориентировано по меридианам тора (углы 2π); золотая инверсия диаметров предотвращает самопересечение колец.',
+    enginePreset: {
+      type: 'antoineNecklace',
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+      rotX: 0.35,
+      rotY: 0.2,
+    }
+  },
+  {
+    id: 'cesaro-curve',
+    name: 'Кривая Чезаро',
+    englishName: 'Cesàro Curve (Torn Square)',
+    category: 'geometric_curves',
+    formula: 'α = arctan((1-2δ)/√3), L_{n+1} = (2 + 2 cos α)^{-1} L_n',
+    dimension: 'D = ln(4) / ln(2(1 + cos α)) ≈ 1.7848',
+    generatorRule: 'Вариация кривой Коха с варьируемым углом при вершине отсекаемого треугольника α ∈ (0, π/3)',
+    description: 'Обобщение кривой Коха Эрнесто Чезаро (1906). При приближении угла к 90° кривая превращается в самокасающуюся пространственно-заполняющую структуру («разорванный квадрат»).',
+    phiPiRelation: 'При золотом угле Чезаро α = 2π(1 - 1/φ) ≈ 137.5° граница кривой образует квазипериодическую розетку.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      compositeOp: 'smoothMorph',
+      warpStrength: 0.35,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'drummond-curve',
+    name: 'Кривая Драммонда',
+    englishName: 'Drummond Fractal Curve',
+    category: 'geometric_curves',
+    formula: 'θ_k = 2π / (φ^k), L_{n+1} = r · L_n',
+    dimension: 'D ≈ 1.4142 (квазидробная размерность)',
+    generatorRule: 'Циклическая L-система с дробными иррациональными углами поворота и переменным масштабированием',
+    description: 'Кривая на основе L-систем с несимметричными ветвями и иррациональными фазовыми сдвигами, формирующая спиральные кристаллические кластеры.',
+    phiPiRelation: 'Каждый шаг итерации масштабируется на фактор 1/φ с поворотом на угол золотого сечения.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.3,
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'koch-mcwhorter',
+    name: 'Снежинка Коха — МакВортера (Pentigree)',
+    englishName: 'McWhorter\'s Pentigree',
+    category: 'geometric_curves',
+    formula: 'z ↦ z · e^{i θ} / r + c_k, r = √7',
+    dimension: 'D = ln(5)/ln(√7) ≈ 1.6309',
+    generatorRule: 'Асимметричная замена каждого отрезка на 5 сегментов под углом arcsin(√3/(2√7))',
+    description: 'Обобщение снежинки Коха Уильяма МакВортера (Pentigree), порождающее пятиугольные самозаполняющиеся фрактальные плитки с 5-лучевой симметрией.',
+    phiPiRelation: 'Симметрия pentigree неразрывно связана с пентаграммой и степенями золотого сечения φ.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      hybridType: 'icosahedral',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.45,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'rice-curve',
+    name: 'Кривая Райса',
+    englishName: 'Rice Space-Filling Curve',
+    category: 'geometric_curves',
+    formula: 'γ(t): [0, 1] → ℝ², L-система F → +F--F+F++F-',
+    dimension: 'D = 2.0 (пространственно-заполняющая)',
+    generatorRule: 'Пространственно-заполняющая кривая с неортогональными углами поворота 45° и 135°',
+    description: 'Непрерывная кривая, заполняющая треугольные и шестиугольные ячейки без самопересечений за счет асимметричных неортогональных разворотов.',
+    phiPiRelation: 'Углы разворота кратны π/4 и π/8; золотая модуляция длин звеньев сглаживает кривизну пути.',
+    enginePreset: {
+      type: 'hilbertCurve3D',
+      compositeOp: 'smoothCarve',
+      boxFold: 1.1,
+      zoom: 2.8,
+    }
+  },
+  {
+    id: 'polya-curve',
+    name: 'Кривая Пойи',
+    englishName: 'Pólya Space-Filling Curve',
+    category: 'geometric_curves',
+    formula: 'P(t) = ∑_{k=1}^∞ 2^{-k} v_{ε_k(t)}, t ∈ [0, 1]',
+    dimension: 'D = 2.0 (непрерывно заполняет треугольник)',
+    generatorRule: 'Предельный случай блуждания кривой Джорджа Пойи (1913), заполняющей равнобедренный прямоугольный треугольник',
+    description: 'Первая доказанная непрерывная кривая, заполняющая внутренность треугольника, сохраняя дифференцируемость почти всюду кроме счетного множества канторовых узлов.',
+    phiPiRelation: 'Отношение гипотенузы к катетам равно √2; золотое сечение регулирует последовательность обхода подтреугольников.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      hybridType: 'sierpinskiOcta',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'twenmey-dragon',
+    name: 'Дракон Твенми',
+    englishName: 'Twenmey Dragon Curve',
+    category: 'geometric_curves',
+    formula: 'w_1(z) = z · (1 + i)/2, w_2(z) = 1 - z · (1 - i)/2',
+    dimension: 'D = 2.0, граница D_∂ ≈ 1.5236',
+    generatorRule: 'Вариация дракона Хартера-Хейтуэя со сменой знака угла поворота на каждом нечетном шаге',
+    description: 'Спиральная фрактальная кривая с вихревыми завитками, разворачивающаяся в обе полуплоскости и напоминающая крылья феникса.',
+    phiPiRelation: 'Угол поворота 90° = π/2; шаг разворота витков масштабируется по пропорции φ = 1.618.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.4,
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'golden-dragon',
+    name: 'Золотой Дракон (φ-Dragon)',
+    englishName: 'Golden Ratio Dragon Curve',
+    category: 'geometric_curves',
+    formula: 'z_{n+1} = z_n / φ · e^{i · arccos(1/(2φ))}',
+    dimension: 'D = ln(2)/ln(φ) ≈ 1.4404',
+    generatorRule: 'Замена звеньев ломаной треугольниками с золотыми пропорциями катетов 1 : 1/φ',
+    description: 'Фрактальная кривая дракона, углы и длины сегментов которой точно вычислены из корня полинома x² - x - 1 = 0. Не имеет самопересечений ни на одном масштабе.',
+    phiPiRelation: 'Фундаментальный фрактал: коэффициент подобия в точности равен 1/φ = 0.61803398875!',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      hybridType: 'phyllotaxis',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.38,
+      phiMultiplier: 1.61803398875,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'sierpinski-arrowhead',
+    name: 'Стреловидная кривая Серпинского',
+    englishName: 'Sierpiński Arrowhead Curve',
+    category: 'geometric_curves',
+    formula: 'A → B-A-B, B → A+B+A (угол 60° = π/3)',
+    dimension: 'D = ln(3)/ln(2) ≈ 1.58496',
+    generatorRule: 'Симметричная L-система, в пределе сходящаяся к треугольнику Серпинского',
+    description: 'Непрерывная ломаная линия, которая при итерациях n → ∞ в точности заметает множество точек треугольника Серпинского, являясь его топологической траекторией.',
+    phiPiRelation: 'Угол 60° задает гексагональный базис; золотое разбиение сторон порождает фрактал Пенроуза.',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'pythagoras-tree-wind',
+    name: 'Дерево Пифагора обдуваемое (Асимметричное)',
+    englishName: 'Windblown Pythagoras Tree',
+    category: 'constructive',
+    formula: 'c² = a² + b², a = c · cos(α), b = c · sin(α), α ≠ 45°',
+    dimension: 'D ≈ 1.83 (зависит от угла наклона)',
+    generatorRule: 'Построение квадратов на прямоугольном треугольнике с неравными острыми углами α = 30°, β = 60°',
+    description: 'Вариация классического дерева Пифагора, где неравные углы ветвления создают динамический эффект кроны, изогнутой непрерывным фрактальным ветром.',
+    phiPiRelation: 'При золотом угле α = arcsin(1/√φ) дерево сворачивается в совершенную логарифмическую спираль Фибоначчи.',
+    enginePreset: {
+      type: 'pythagorasTree3D',
+      compositeOp: 'smoothUnion',
+      rotX: 0.45,
+      rotY: 0.2,
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'pythagoras-tree-naked',
+    name: 'Обнаженное дерево Пифагора',
+    englishName: 'Naked Skeleton Pythagoras Tree',
+    category: 'constructive',
+    formula: 'E_n = ⋃ [c_{k, 1}, c_{k, 2}], c_k — центры квадратов',
+    dimension: 'D = ln(2)/ln(√2) = 2 (для скелетного графа)',
+    generatorRule: 'Фрактальный граф, построенный исключительно по отрезкам, соединяющим центры смежных квадратов дерева Пифагора',
+    description: 'Минималистичный линейный остов дерева Пифагора. Образует элегантную ветвящуюся коралловую структуру, лишенную сплошных площадей квадратов.',
+    phiPiRelation: 'Длины ветвей убывают в геометрической прогрессии с масштабным множителем золотого корня 1/√φ.',
+    enginePreset: {
+      type: 'pythagorasTree3D',
+      compositeOp: 'smoothMorph',
+      warpStrength: 0.2,
+      zoom: 3.4,
+    }
+  },
+  {
+    id: 't-square',
+    name: 'Т-квадрат (T-Square Fractal)',
+    englishName: 'T-Square Fractal',
+    category: 'constructive',
+    formula: 'A_{n+1} = A_n ∪ 4 × A_n / 2, S_∞ = 2 S_0',
+    dimension: 'D = ln(4)/ln(2) = 2.0',
+    generatorRule: 'Итерационное наложение уменьшенных вдвое квадратов на все 4 угла каждого квадрата предыдущего поколения',
+    description: 'Классический конструктивный фрактал. В пределе площадь покрываемой области в точности равна удвоенной площади начального квадрата, а периметр стремится к бесконечности.',
+    phiPiRelation: 'При золотом скейлинге (1/φ вместо 1/2) квадраты не перекрываются, образуя совершенную квазикристаллическую мозаику.',
+    enginePreset: {
+      type: 'menger',
+      compositeOp: 'smoothUnion',
+      boxFold: 1.0,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'sierpinski-cross',
+    name: 'Крест Серпинского 3D',
+    englishName: 'Sierpiński Cross 3D',
+    category: 'constructive',
+    formula: 'C_{n+1} = ⋃_{i=1}^5 T_i(C_n), |det(T_i)| = 1/9',
+    dimension: 'D = ln(5)/ln(3) ≈ 1.46497',
+    generatorRule: 'Взаимно перпендикулярные плоскости ковра Серпинского, образующие объемный пространственный крест',
+    description: 'Трехмерная ортогональная комбинация пересекающихся фракталов Серпинского, обладающая октаэдрической симметрией полостей.',
+    phiPiRelation: 'Сечения креста плоскостями под золотым углом arctan(φ) образуют правильные пятиугольные отверстия.',
+    enginePreset: {
+      type: 'jerusalemCube',
+      compositeOp: 'smoothCarve',
+      boxFold: 1.2,
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'sierpinski-pentagon',
+    name: 'Пятиугольник Серпинского (Пентафлейк / Pentaflake)',
+    englishName: 'Pentaflake / Sierpiński Pentagon',
+    category: 'constructive',
+    formula: 'P_{n+1} = ⋃_{i=1}^5 R_{2π i/5}(P_n / (1 + φ))',
+    dimension: 'D = ln(5)/ln(1 + φ) ≈ 1.67228',
+    generatorRule: 'Правильный пятиугольник замещается пятью меньшими пятиугольниками по углам с удалением центральной пятиконечной звезды',
+    description: 'Один из самых гармоничных планарных фракталов. Имеет врожденную 5-лучевую золотую симметрию D₅, невозможную в стандартных кристаллических решетках.',
+    phiPiRelation: 'Масштабный множитель строго равен 1/(1 + φ) = 1/φ² ≈ 0.381966! Чистейшее проявление золотого сечения.',
+    enginePreset: {
+      type: 'icosahedral',
+      compositeOp: 'smoothUnion',
+      phiMultiplier: 1.61803398875,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'hexaflake',
+    name: 'Гексафрактал (Hexaflake / Снежинка Серпинского)',
+    englishName: 'Hexaflake',
+    category: 'constructive',
+    formula: 'H_{n+1} = ⋃_{i=1}^7 H_n / 3 (6 по периметру + 1 в центре)',
+    dimension: 'D = ln(7)/ln(3) ≈ 1.77124',
+    generatorRule: 'Шесть уменьшенных копий правильного шестиугольника по периметру плюс один в центре',
+    description: 'Шестилучевой фрактальный кристалл, моделирующий рекурсивный рост ледяных снежинок в насыщенных парах воды.',
+    phiPiRelation: 'Периметр шестиугольника задан соотношением 6r; вписанные золотые спирали описывают микроканалы кристаллизации.',
+    enginePreset: {
+      type: 'fibonacciSnowflake',
+      compositeOp: 'smoothUnion',
+      boxFold: 1.3,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'ivezic-fractal',
+    name: 'Фрактал Ивезича (Многомерный симплекс Серпинского)',
+    englishName: 'Ivezić n-Simplex Fractal',
+    category: 'constructive',
+    formula: 'D(n) = ln(n + 1) / ln(2), n ≥ 1',
+    dimension: 'D = ln(n+1)/ln(2) (для n=4 D ≈ 2.3219, для n=6 D ≈ 2.807)',
+    generatorRule: 'Рекурсивное удаление инвертированных подсимплексов из правильного n-мерного симплекса',
+    description: 'Обобщение треугольника и тетраэдра Серпинского на n-мерные гиперпространства, открытое в фундаментальных трудах по фрактальной топологии.',
+    phiPiRelation: 'Сечения 5-мерного симплекса Ивезича ортогонально проецируются в золотые икосаэдры в ℝ³.',
+    enginePreset: {
+      type: 'sierpinskiOcta',
+      hybridType: 'calabiYau',
+      compositeOp: 'smoothMorph',
+      hybridBlend: 0.4,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'levi-snowflake',
+    name: 'Снежинка Леви',
+    englishName: 'Lévy Snowflake (C-Curve Boundary)',
+    category: 'constructive',
+    formula: 'S = ⋃_{i=1}^8 Lévy_i, Area = 2',
+    dimension: 'D_граница ≈ 1.9340, D_тело = 2.0',
+    generatorRule: 'Замкнутая область, заметаемая восемью сходящимися кривыми Леви, расположенными по периметру квадрата',
+    description: 'Удивительная фрактальная мозаика с бесконечной бахромой, способная самозамостить евклидову плоскость ℝ² без зазоров и перекрытий.',
+    phiPiRelation: 'Период разворота ветвей равен π/4; фрактальная граница имеет золотой масштаб самоподобия.',
+    enginePreset: {
+      type: 'dragonCurveIFS',
+      compositeOp: 'smoothCarve',
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'burning-ship-perpendicular',
+    name: 'Перпендикулярный Пылающий Корабль',
+    englishName: 'Perpendicular Burning Ship',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = (Re(z_n) + i|Im(z_n)|)^2 + c',
+    dimension: 'D_граница = 2.0 (комплексная динамика)',
+    generatorRule: 'Модуль берется только от мнимой компоненты, сохраняя знак вещественной части',
+    description: 'Асимметричная модификация фрактала Burning Ship. Разрушает зеркальную симметрию, порождая вихревые струи и призрачные фрактальные корабли.',
+    phiPiRelation: 'Отношение периодов бифуркации мачт корабля сходится к константе Фейгенбаума δ = 4.6692 и золотому множителю φ.',
+    enginePreset: {
+      type: 'burningShip3D',
+      compositeOp: 'smoothUnion',
+      warpStrength: 0.35,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'jesus-trigonometric',
+    name: 'Фрактал Иисуса / Тригонометрический фрактал',
+    englishName: 'Jesus / Sine-Cosine Transcendental Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = sin(z_n) + c · cos(z_n)',
+    dimension: 'D = 2.0 (трансцендентная динамика)',
+    generatorRule: 'Итерация тригонометрических комплексных функций с экспоненциальным ростом вдоль мнимой оси',
+    description: 'Трансцендентный фрактал комплексной динамики. Вдоль мнимой оси синус переходит в гиперболический sinh, создавая соборные арки и бесконечные колоннады.',
+    phiPiRelation: 'Период функции строго равен 2π; золотое сечение управляет шириной коридоров сходимости.',
+    enginePreset: {
+      type: 'riemannZeta',
+      hybridType: 'mandelbulb',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.45,
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'spider-fractal',
+    name: 'Фрактал «Паук» (Spider Fractal)',
+    englishName: 'Spider Dynamical System',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n^2 + c_n, c_{n+1} = c_n / 2 + z_{n+1}',
+    dimension: 'D = 2.0',
+    generatorRule: 'Динамическая система с блуждающим параметром сдвига c_n, зависящим от текущей координаты орбиты',
+    description: 'Сложный алгебраический фрактал, где параметр c не статичен, а эволюционирует синхронно с точкой z, создавая длинные радиальные нити-ножки.',
+    phiPiRelation: 'Углы расхождения паучьих нитей кратны золотому углу 137.5° = 2π(1 - 1/φ).',
+    enginePreset: {
+      type: 'quaternionJulia',
+      compositeOp: 'smoothMorph',
+      warpStrength: 0.3,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'sherwood-carpet',
+    name: 'Фрактал «Ковер Шервуда»',
+    englishName: 'Sherwood Algebraic Carpet',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = (z_n^3 + c) / (1 + conjugate(z_n)^2)',
+    dimension: 'D ≈ 1.89',
+    generatorRule: 'Рациональное дробно-линейное отображение третьего порядка с комплексным сопряжением',
+    description: 'Алгебраический фрактал на основе рациональных отображений Римана, образующий кружевную вязь бесконечных арок и сводов.',
+    phiPiRelation: 'Комплексные полюса отображения распределены по окружности радиуса √φ.',
+    enginePreset: {
+      type: 'quaternionMandelbrot',
+      compositeOp: 'smoothUnion',
+      boxFold: 1.15,
+      zoom: 2.9,
+    }
+  },
+  {
+    id: 'serafimski-newton',
+    name: 'Фрактал Серафимского (Фазовый метод Ньютона)',
+    englishName: 'Serafimski Non-Linear Newton Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n - e^{i α} P(z_n) / P\'(z_n), α = π/φ',
+    dimension: 'D = 2.0 (бассейны с общей границей Жюлиа)',
+    generatorRule: 'Модификация метода Ньютона с добавлением комплексного вращения шага на золотой фазовый угол α',
+    description: 'Введение золотой фазы заставляет прямолинейные траектории Ньютона закручиваться в вихревые спирали вокруг корней полинома, создавая фантастические завихрения.',
+    phiPiRelation: 'Фазовый угол сдвига α = π/φ ≈ 111.246° устраняет прямолинейные сингулярности и максимизирует хаос.',
+    enginePreset: {
+      type: 'newtonBasins',
+      compositeOp: 'domainWarp',
+      warpStrength: 0.45,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'aizawa-attractor',
+    name: 'Аттрактор Айзавы',
+    englishName: 'Aizawa Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ=(z-b)x-dy, ẏ=dx+(z-b)y, ż=c+az-z³/3-(x²+y²)(1+ez)+fzx³',
+    dimension: 'D_L ≈ 2.16 (размерность Ляпунова)',
+    generatorRule: 'Трехмерная система нелинейных дифференциальных уравнений с тороидально-сферической хаотической оболочкой',
+    description: 'Один из самых визуально совершенных аттракторов хаоса: траектории образуют сферу с центральной осью вращения и струйными выбросами на полюсах.',
+    phiPiRelation: 'Соотношение радиальной и аксиальной частот вращения сходится к золотой пропорции φ.',
+    enginePreset: {
+      type: 'lorenzAttractor',
+      hybridType: 'hopfFibration',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.4,
+      zoom: 3.3,
+    }
+  },
+  {
+    id: 'thomas-attractor',
+    name: 'Аттрактор Томаса (Циклический лабиринт)',
+    englishName: 'Thomas Cyclically Symmetric Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = sin(y) - bx, ẏ = sin(z) - by, ż = sin(x) - bz',
+    dimension: 'D_L ≈ 2.05',
+    generatorRule: 'Циклически симметричная 3D динамическая система с тригонометрическим связыванием координат',
+    description: 'Хаотический аттрактор с полной циклической C₃-симметрией, формирующий бесконечный пространственный лабиринт из плавных трубок.',
+    phiPiRelation: 'Период тригонометрических функций 2π; критическое значение затухания b_c ≈ 0.208186 связано с золотыми степенями.',
+    enginePreset: {
+      type: 'cliffordKlein',
+      compositeOp: 'smoothMorph',
+      warpStrength: 0.25,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'halvorsen-attractor',
+    name: 'Аттрактор Халворсена',
+    englishName: 'Halvorsen 3D Chaotic Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = -ax - 4y - 4z - y², ẏ = -ay - 4z - 4x - z², ż = -az - 4x - 4y - x²',
+    dimension: 'D_L ≈ 2.22',
+    generatorRule: 'Квадратичная 3D система с трехлучевой циклической симметрией',
+    description: 'Трехмерный аттрактор с тремя раскрывающимися лепестками, по которым хаотически перескакивает фазовая траектория.',
+    phiPiRelation: 'Симметрия C₃ задает угол поворота 120° = 2π/3; фазовый объем сжимается со скоростью div V = -3a.',
+    enginePreset: {
+      type: 'lorenzAttractor',
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'sprott-attractor',
+    name: 'Аттрактор Спротта',
+    englishName: 'Sprott Minimal Chaotic Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = y + 2xy + xz, ẏ = 1 - 2x² + yz, ż = x - x² - y²',
+    dimension: 'D_L ≈ 2.09',
+    generatorRule: 'Минимальная система Клиффорда Спротта с пятью слагаемыми и одним параметром',
+    description: 'Элегантная минималистичная хаотическая система дифференциальных уравнений, открытая в 1994 году в ходе численного поиска простейших аттракторов.',
+    phiPiRelation: 'Спектр показателей Ляпунова (+, 0, -) удовлетворяет теореме Каплана-Йорке с золотым коэффициентом сжатия.',
+    enginePreset: {
+      type: 'lorenzAttractor',
+      hybridType: 'spiralTunnel',
+      compositeOp: 'smoothMorph',
+      hybridBlend: 0.35,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'avalanche-dbm',
+    name: 'Фрактал лавинного пробоя (DBM / Молния Лихтенберга)',
+    englishName: 'Dielectric Breakdown Model (DBM)',
+    category: 'stochastic',
+    formula: 'p_i ∝ (∇Φ)^η, ∇²Φ = 0',
+    dimension: 'D ≈ 1.75 (для η = 1 D ≈ 1.71, для η = 2 D ≈ 1.45)',
+    generatorRule: 'Вероятностная модель Нимейера-Пьетронеро-Висмана (1984) для роста искровых разрядов в диэлектриках',
+    description: 'Физический стохастический фрактал, точно описывающий ветвление молний в атмосфере, фигуры Лихтенберга на плексигласе и древовидные эрозии.',
+    phiPiRelation: 'Углы бифуркации разрядных каналов имеют моду статистического распределения около золотого угла 137.5°.',
+    enginePreset: {
+      type: 'dlaCluster',
+      compositeOp: 'smoothUnion',
+      warpStrength: 0.45,
+      zoom: 3.0,
+    }
+  },
+  {
+    id: 'mandelbrot-multidrop',
+    name: 'Мультифрактальный каскад Мандельброта',
+    englishName: 'Mandelbrot Multiplicative Cascade',
+    category: 'stochastic',
+    formula: 'μ(B) = ∏_{k=1}^n W_{ε_k}, ⟨W⟩ = 1',
+    dimension: 'Спектр сингулярностей f(α) = inf_q [q α - τ(q)]',
+    generatorRule: 'Мультипликативное случайное деление энергии между дочерними ячейками турбулентности',
+    description: 'Модель Бенуа Мандельброта (1974) для описания перемежаемости развитой гидродинамической турбулентности Колмогорова.',
+    phiPiRelation: 'Максимум спектра размерностей f(α) приходится на точку золотого баланса потоков энергии.',
+    enginePreset: {
+      type: 'quasicrystal',
+      hybridType: 'gyroid',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.35,
+      zoom: 3.1,
+    }
+  },
+  {
+    id: 'hopf-fibration-manifold',
+    name: 'Расслоение Хопфа S³ → S²',
+    englishName: 'Hopf Fibration Topological Bundle',
+    category: 'topological_physical',
+    formula: 'h(z_0, z_1) = (2 z_0 conjugate(z_1), |z_0|² - |z_1|²) ∈ S²',
+    dimension: 'D_топологическая = 3, расслаивается окружностями S¹',
+    generatorRule: 'Отображение 3-сферы в 4D на двумерную сферу Римана, где прообраз каждой точки есть окружность Вилларсо',
+    description: 'Великое топологическое открытие Хайнца Хопфа (1931). Пространство заполнено зацепленными торами Клиффорда, не пересекающимися между собой.',
+    phiPiRelation: 'Каждые два кольца зацеплены ровно один раз (число зацепления Хопфа = 1); золотой угол скрутки волокон предотвращает резонансные узлы.',
+    enginePreset: {
+      type: 'hopfFibration',
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+      rotX: 0.3,
+      rotY: 0.25,
+    }
+  },
+  {
+    id: 'calabi-yau-manifold',
+    name: 'Многообразие Калаби — Яу',
+    englishName: 'Calabi-Yau 3-Fold Compactification',
+    category: 'topological_physical',
+    formula: 'z_1^5 + z_2^5 + z_3^5 + z_4^5 + z_5^5 - 5 ψ z_1 z_2 z_3 z_4 z_5 = 0',
+    dimension: '6 действительных измерений (3 комплексных) в CP⁴',
+    generatorRule: 'Компактное кэлерово многообразие с нулевым первым классом Черна c_1 = 0 и метрикой Риччи-плоского пространства',
+    description: 'Фундаментальная геометрия скрытых микроизмерений в теории суперструн. 2D и 3D проекции сечений многообразия образуют гармонические складки.',
+    phiPiRelation: 'Параметр комплексной деформации ψ при золотом значении φ порождает конформную зеркальную симметрию фермионных поколений.',
+    enginePreset: {
+      type: 'calabiYau',
+      compositeOp: 'smoothMorph',
+      zoom: 3.1,
+      rotX: 0.4,
+      rotY: 0.3,
+    }
+  },
+  {
+    id: 'costa-minimal-surface',
+    name: 'Минимальная поверхность Коста',
+    englishName: 'Costa Minimal Surface',
+    category: 'topological_physical',
+    formula: 'X(z) = Re ∫ (½(1 - g²), i/2(1 + g²), g) ω, H ≡ 0',
+    dimension: 'D_топологическая = 2, род g = 1 с тремя концами',
+    generatorRule: 'Представление Вейерштрасса с эллиптическими функциями Вейерштрасса ℘(z)',
+    description: 'Сенсация геометрии: в 1982 году Селсо Коста доказал существование полной вложенной минимальной поверхности рода 1, опровергнув столетнее убеждение о единственности катеноида и геликоида.',
+    phiPiRelation: 'Эллиптические периоды тора Коста ω_1, ω_2 находятся в точном соотношении золотого сечения φ.',
+    enginePreset: {
+      type: 'neoviusMinimal',
+      hybridType: 'gyroid',
+      compositeOp: 'smoothUnion',
+      hybridBlend: 0.3,
+      zoom: 3.2,
+    }
+  },
+  {
+    id: 'rossler-hyperchaos',
+    name: '4D Гиперхаотический аттрактор Рёсслера',
+    englishName: '4D Hyperchaotic Rössler Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = -y - z, ẏ = x + ay + w, ż = b + xz, ẇ = -cz + dw',
+    dimension: 'D_фрактальная ≈ 3.18 (Два положительных показателя Ляпунова λ₁ > λ₂ > 0)',
+    generatorRule: 'Двойное складчатое растяжение фазового потока в четырёхмерном фазовом пространстве',
+    description: 'Открытие Отто Рёсслера (1979). В отличие от простого хаоса, гиперхаос имеет более одного направления экспоненциального разбегания фазовых траекторий, порождая многослойные вихревые мембраны.',
+    phiPiRelation: 'Спектральное расщепление бифуркаций удвоения периода подчиняется универсальной константе Фейгенбаума δ ≈ 4.669 и золотой пропорции φ.',
+    enginePreset: {
+      type: 'rosslerHyperchaos',
+      compositeOp: 'smoothUnion',
+      zoom: 2.8,
+      rotX: 0.45,
+      rotY: 0.35,
+    }
+  },
+  {
+    id: 'clifford-attractor',
+    name: '4D Аттрактор Клиффорда — Пиковера',
+    englishName: 'Clifford-Pickover 4D Dynamic Attractor',
+    category: 'ifs_attractors',
+    formula: 'x_{n+1} = sin(a y_n) + c cos(a x_n), y_{n+1} = sin(b x_n) + d cos(b y_n)',
+    dimension: 'D_хаусдорфа ≈ 2.45 в четырёхмерном пространстве параметров',
+    generatorRule: 'Нелинейное синусоидальное отображение Клиффорда с закруткой фазового угла',
+    description: 'Исследован Клиффордом Пиковером. Образует непрерывные бархатистые каустические ленты и тороидальные спирали бесконечной глубины.',
+    phiPiRelation: 'При золотых параметрах a = -1.4φ, b = 1.6/φ, c = 1.0φ система формирует квазипериодические 10-лепестковые симметрии Пенроуза.',
+    enginePreset: {
+      type: 'cliffordAttractor',
+      compositeOp: 'smoothUnion',
+      zoom: 3.0,
+      rotX: 0.3,
+      rotY: 0.4,
+    }
+  },
+  {
+    id: 'abrikosov-vortex-lattice',
+    name: 'Квантовая вихревая решётка Абрикосова',
+    englishName: 'Abrikosov Superconducting Vortex Lattice',
+    category: 'topological_physical',
+    formula: '∇ × B = j_s, ψ(r) = Δ(r) e^{iθ}, ∮ v_s · dl = 2πℏ/m',
+    dimension: 'D = 2 + 1 (Квантованное 2D треугольное поле флюксонов с продольной спиралью)',
+    generatorRule: 'Нобелевское открытие А. А. Абрикосова (1957). Вихри сверхпроводящего тока с квантом магнитного потока Φ₀ = h/2e',
+    description: 'В сверхпроводниках II рода магнитное поле проникает в виде квантованных нитей (флюксонов), образующих строгую гексагональную решетку с вихревыми сингулярностями.',
+    phiPiRelation: 'Отношение периодов решетки флюксонов к длине когерентности Гинзбурга-Ландау ξ при золотом спиральном шаге минимизирует свободную энергию Гиббса.',
+    enginePreset: {
+      type: 'abrikosovLattice',
+      compositeOp: 'smoothUnion',
+      zoom: 3.2,
+      rotX: 0.2,
+      rotY: 0.15,
+    }
+  },
+  {
+    id: 'beltrami-pseudosphere',
+    name: 'Псевдосфера Бельтрами (Геометрия Лобачевского)',
+    englishName: 'Beltrami Pseudosphere Hyperbolic Surface',
+    category: 'topological_physical',
+    formula: 'x = sech(u) cos(v), y = sech(u) sin(v), z = u - tanh(u), K ≡ -1/R²',
+    dimension: 'D_гладкая = 2 с гиперболическим фрактальным краевым сингулярным ребром',
+    generatorRule: 'Поверхность вращения трактрисы вокруг своей асимптоты; локальная модель плоскости Лобачевского',
+    description: 'Эудженио Бельтрами (1868) впервые реализовал неевклидову геометрию Лобачевского на вещественной поверхности в ℝ³ с постоянной отрицательной гауссовой кривизной K = -1.',
+    phiPiRelation: 'Экспоненциальное сужение горловины трактрисы e^{-z} скейлится золотым показателем φ, формируя бесконечный раструб.',
+    enginePreset: {
+      type: 'beltramiPseudosphere',
+      compositeOp: 'smoothUnion',
+      zoom: 2.9,
+      rotX: 0.35,
+      rotY: 0.2,
+    }
+  },
+  {
+    id: 'spin-foam-network',
+    name: 'Спиновая пена и сеть Пенроуза (LQG)',
+    englishName: 'Penrose Spin Network & Quantum Foam',
+    category: 'topological_physical',
+    formula: 'A(j_f, v_e) = ∏_f dim(j_f) ∏_v W_v(j_f, i_e), SU(2) Gauge Invariance',
+    dimension: 'D_планковская = 4 (Дискретная квантовая планковская геометрия пространства-времени l_P ≈ 1.6·10⁻³⁵ м)',
+    generatorRule: 'Петлевая квантовая гравитация (Ровелли, Смолин, Пенроуз): пространство состоит из квантованных ячеек объёма и площади',
+    description: 'Революционная концепция квантовой физики: на планковском масштабе непрерывное пространство исчезает, уступая место динамической сети спинов и топологической квантовой пене.',
+    phiPiRelation: 'Спектры операторов площади квантованы через постоянную Иммирци γ_BI = ln(2) / (π√3) и масштабное деление золотого узла.',
+    enginePreset: {
+      type: 'spinFoamNetwork',
+      compositeOp: 'smoothUnion',
+      zoom: 3.1,
+      rotX: 0.5,
+      rotY: 0.4,
+    }
+  },
+  {
+    id: 'ramanujan-tau-resonator',
+    name: 'Модулярный резонатор Рамануджана Δ(τ)',
+    englishName: 'Ramanujan Modular Tau Resonator',
+    category: 'algebraic_complex',
+    formula: 'Δ(τ) = (2π)¹² q ∏_{n=1}^∞ (1 - q^n)²⁴ = ∑_{n=1}^∞ τ(n) q^n, q = e^{2π i τ}',
+    dimension: 'Вес k = 12 модулярной формы над группой SL(2, ℤ)',
+    generatorRule: 'Параболическая модулярная форма Рамануджана с 24 каспами (корнями степени 24)',
+    description: 'Жемчужина теории чисел Сринивасы Рамануджана (1916). Функция τ(n) управляет 24-мерной решёткой Лича и теорией бозонных струн в 26 измерениях.',
+    phiPiRelation: 'Непрерывная дробь Рамануджана R(q) при q = e^{-2π} вычисляется строго через золотое сечение: R(e^{-2π}) = √(φ√5) - φ.',
+    enginePreset: {
+      type: 'ramanujanTau',
+      compositeOp: 'smoothUnion',
+      zoom: 2.9,
+      rotX: 0.4,
+      rotY: 0.25,
+    }
+  },
+  {
+    id: 'belousov-zhabotinsky-waves',
+    name: 'Спиральные волны Белоусова — Жаботинского',
+    englishName: 'Belousov-Zhabotinsky Chemical Spiral Waves',
+    category: 'topological_physical',
+    formula: '∂u/∂t = D_u ∇²u + u(1 - u) - f v (u - q)/(u + q), ∂v/∂t = D_v ∇²v + u - v',
+    dimension: 'D = 2 + 1 (Автоволновой фазовый спиральный фронт в активной нелинейной среде)',
+    generatorRule: 'Самоорганизующаяся нелинейная реакция окисления малоновой кислоты бромноватой кислотой',
+    description: 'Триумф синергетики и физики неравновесных процессов (Б. П. Белоусов 1951, А. М. Жаботинский 1964). Автоволновые ревербераторы образуют раскручивающиеся спирали в пространстве.',
+    phiPiRelation: 'Шаг спиральных волн самоорганизуется в золотую логарифмическую спираль r(θ) = a e^{θ cot(φ)}, минимизируя диссипацию энтропии.',
+    enginePreset: {
+      type: 'belousovWaves',
+      compositeOp: 'smoothUnion',
+      zoom: 3.0,
+      rotX: 0.35,
+      rotY: 0.3,
+    }
+  },
+
+  // ==========================================
+  // 8. ДОПОЛНИТЕЛЬНЫЕ КАНОНИЧЕСКИЕ ФРАКТАЛЫ (расширение)
+  // ==========================================
+  {
+    id: 'mandelbulb-classic',
+    name: 'Мандельбульб (классический)',
+    englishName: 'Classic Mandelbulb',
+    category: 'multidimensional',
+    formula: 'z_{n+1} = z_n^8 + c, r = |z|, θ = atan2(√(x²+y²), z), φ = atan2(y, x)',
+    dimension: 'D ≈ 3.0 (граница) ',
+    generatorRule: 'Сферические координаты с возведением в степень 8',
+    description: 'Трёхмерный аналог множества Мандельброта, построенный путём обобщения формулы z²+c на сферические координаты со степенью 8.',
+    phiPiRelation: 'Степень 8 = 2³ связана с золотым сечением через итеративное удвоение; при замене 8 на φ·5 форма становится наиболее «золотой».',
+    enginePreset: {
+      type: 'mandelbulb',
+      compositeOp: 'smoothMorph',
+      zoom: 3.2,
+      rotX: 0.4,
+      rotY: 0.3,
+      iterations: 12,
+    }
+  },
+  {
+    id: 'mandelbulb-hybrid',
+    name: 'Мандельбульб × Спиральный туннель',
+    englishName: 'Mandelbulb × Spiral Tunnel Hybrid',
+    category: 'multidimensional',
+    formula: 'z_{n+1} = z_n^8 + c ⊕ log-spiral fold',
+    dimension: 'D ≈ 2.8 (гибридная граница)',
+    generatorRule: 'Гладкое морфирование Мандельбульба с логарифмической спиральной складкой',
+    description: 'Гибрид классического Мандельбульба и спирального туннеля, создающий эффект закрученных коридоров внутри фрактала.',
+    phiPiRelation: 'Золотой угол скрутки 137.5° = 2π/φ² определяет шаг спирального складывания.',
+    enginePreset: {
+      type: 'mandelbulb',
+      hybridType: 'spiralTunnel',
+      compositeOp: 'goldenSpiralFold',
+      hybridBlend: 0.4,
+      zoom: 3.0,
+      rotX: 0.35,
+    }
+  },
+  {
+    id: 'quaternion-julia-slice',
+    name: 'Кватернионное множество Жюлиа (срез ℍ)',
+    englishName: 'Quaternion Julia Set (ℍ Slice)',
+    category: 'multidimensional',
+    formula: 'q_{n+1} = q_n² + c, q ∈ ℍ, c = фиксированный кватернион',
+    dimension: 'D ≈ 2.5 (граница 3D-сечения)',
+    generatorRule: 'Итерация квадрата кватерниона с добавлением константы c ∈ ℍ',
+    description: '4D множество Жюлиа в кватернионном пространстве. 3D-сечение показывает невероятно сложные переплетающиеся поверхности.',
+    phiPiRelation: 'Кватернионные компоненты c = (1/φ, 1/φ², 0, 0) порождают наиболее симметричные золотые сечения.',
+    enginePreset: {
+      type: 'quaternionJulia',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.3,
+      rotY: 0.5,
+      iterations: 10,
+    }
+  },
+  {
+    id: 'apollonian-packing',
+    name: 'Аполлониева упаковка сфер',
+    englishName: 'Apollonian Sphere Packing',
+    category: 'constructive',
+    formula: 'Кривизна k_{n+1} = k_1 + k_2 + k_3 + k_4 ± 2√(k_1 k_2 + k_2 k_3 + k_3 k_4 + k_4 k_1)',
+    dimension: 'D ≈ 2.47 (граница упаковки)',
+    generatorRule: 'Теорема Дезаржа об инверсиях: вписать максимальную сферу в зазор между 4 взаимно касающимися сферами',
+    description: 'Фрактальная упаковка сфер, где каждый зазор между 4 касающимися сферами заполняется новой максимальной сферой.',
+    phiPiRelation: 'Отношения кривизн соседних сфер в пределе сходятся к степеням золотого сечения.',
+    enginePreset: {
+      type: 'apollonian',
+      compositeOp: 'smoothUnion',
+      zoom: 3.5,
+      rotX: 0.3,
+      rotY: 0.4,
+      iterations: 8,
+    }
+  },
+  {
+    id: 'spiral-tunnel-infinite',
+    name: 'Бесконечный логарифмический туннель φ',
+    englishName: 'Infinite Logarithmic Phi Zoom Tunnel',
+    category: 'geometric_curves',
+    formula: 'r(θ) = a · φ^(2θ/π), самоподобие при повороте на 2π/ln(φ)',
+    dimension: 'D = 1 + 2/ln(φ) ≈ 3.87',
+    generatorRule: 'Логарифмическая спираль с золотым показателем, развёрнутая в 3D-туннель',
+    description: 'Бесконечный туннель, стенки которого образованы золотой логарифмической спиралью. При зуме внутрь открывается бесконечная самоподобная структура.',
+    phiPiRelation: 'Показатель спирали = 2/ln(φ) ≈ 4.15; поворот на золотой угол 137.5° переводит туннель в себя.',
+    enginePreset: {
+      type: 'spiralTunnel',
+      compositeOp: 'smoothMorph',
+      zoom: 2.5,
+      rotX: 0.0,
+      rotY: 0.0,
+    }
+  },
+  {
+    id: 'mandelbox-golden',
+    name: 'Мандельбокс золотого сложения',
+    englishName: 'Golden Mandelbox',
+    category: 'multidimensional',
+    formula: 'z_{n+1} = scale · fold(z_n) + c, fold: boxFold + sphereFold',
+    dimension: 'D ≈ 2.7 (зависит от scale)',
+    generatorRule: 'Складывание пространства: box fold (отражение) + sphere fold (инверсия сферы) + масштабирование',
+    description: 'Фрактал, полученный многократным складыванием 3D-пространства через комбинацию кубического и сферического отражений с золотым масштабом.',
+    phiPiRelation: 'При scale = φ² = 2.618... структура приобретает максимальную золотую симметрию.',
+    enginePreset: {
+      type: 'mandelbox',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      boxFold: 1.0,
+      sphereFold: 0.5,
+      iterations: 12,
+    }
+  },
+  {
+    id: 'gyroid-tpms',
+    name: 'Золотая гироидная поверхность (TPMS)',
+    englishName: 'Golden Gyroid Minimal Surface',
+    category: 'topological_physical',
+    formula: 'G(x,y,z) = sin(x)cos(y) + sin(y)cos(z) + sin(z)cos(x) = 0',
+    dimension: 'D = 2 (нулевая средняя кривизна H ≡ 0)',
+    generatorRule: 'Трёхпериодическая минимальная поверхность Шона с золотым масштабированием',
+    description: 'Одна из трёх классических TPMS-поверхностей. Не имеет прямых линий, самопересечений; разделяет пространство на два лабиринтных канала.',
+    phiPiRelation: 'Периоды решётки масштабированы золотым сечением; каналы образуют золотые спиральные траектории.',
+    enginePreset: {
+      type: 'gyroid',
+      compositeOp: 'smoothMorph',
+      zoom: 3.5,
+      rotX: 0.5,
+      rotY: 0.3,
+    }
+  },
+  {
+    id: 'prime-spiral-sachs',
+    name: 'Спираль простых Сакса — Улама',
+    englishName: 'Sachs-Ulam Prime Spiral',
+    category: 'algebraic_complex',
+    formula: 'p_n = n² + n + 41 (золотой многочлен Эйлера), размещение на ультра-спирали',
+    dimension: 'D ≈ 1 (асимптотическая плотность ~ 1/ln(n))',
+    generatorRule: 'Размещение простых чисел на полярной сетке r = √n, θ = 2π√n с золотым смещением',
+    description: 'Визуализация распределения простых чисел на плоскости, показывающая удивительные спиральные паттерны, связанные с золотым сечением.',
+    phiPiRelation: 'Золотой угол 2π/φ между последовательными витками минимизирует перекрытия и максимизирует видимость паттернов.',
+    enginePreset: {
+      type: 'primeSpiral',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.0,
+      rotY: 0.0,
+    }
+  },
+  {
+    id: 'poincare-homology',
+    name: 'Гомологическая сфера Пуанкаре',
+    englishName: 'Poincaré Homology Sphere',
+    category: 'topological_physical',
+    formula: 'S³/Γ, Γ = группа икосаэдра порядка 120',
+    dimension: 'D = 3 (замкнутое 3-многообразие с π₁ = Γ₁₂₀)',
+    generatorRule: 'Факторизация 3-сферы по группе икосаэдра: каждая точка идентифицируется с 119 другими',
+    description: 'Единственное известное замкнутое 3-многообразие с группами гомологий как у сферы, но нетривиальной фундаментальной группой порядка 120.',
+    phiPiRelation: 'Группа икосаэдра порядка 120 = 5! связана с φ через симметрии додекаэдра: |Γ| = 4π·60/(2π/φ).',
+    enginePreset: {
+      type: 'poincareSphere',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.4,
+      rotY: 0.3,
+      iterations: 8,
+    }
+  },
+  {
+    id: 'gaussian-primes-lattice',
+    name: 'Решётка гауссовых простых Z[i]',
+    englishName: 'Gaussian Primes Lattice Z[i]',
+    category: 'algebraic_complex',
+    formula: 'p = a² + b² простое ⟺ p ≡ 1 (mod 4) или p = a+bi, N(p) = a²+b² простое в ℤ',
+    dimension: 'D ≈ 1.36 (асимптотическая плотность в ℂ)',
+    generatorRule: 'Размещение гауссовых простых на комплексной плоскости с золотым масштабированием',
+    description: 'Простые числа в кольце гауссовых целых Z[i]. Их распределение на комплексной плоскости образует удивительные решётчатые паттерны.',
+    phiPiRelation: 'Золотое масштабирование координат (a·φ, b·φ) выявляет скрытые спиральные симметрии в распределении.',
+    enginePreset: {
+      type: 'gaussianPrimes',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.0,
+      rotY: 0.0,
+    }
+  },
+  {
+    id: 'euler-totient-spiral',
+    name: 'Спираль функции Эйлера φ(n)',
+    englishName: 'Euler Totient φ(n) Archimedean Spiral',
+    category: 'algebraic_complex',
+    formula: 'φ(n) = n ∏_{p|n}(1 - 1/p), размещение на спирали Архимеда r = n',
+    dimension: 'D ≈ 1.5 (фрактальная размерность графика)',
+    generatorRule: 'Значение φ(n) кодирует высоту/цвет точки на архимедовой спирали',
+    description: 'Визуализация функции Эйлера на спиральной сетке, показывающая удивительные лучевые и радиальные паттерны в распределении значений.',
+    phiPiRelation: 'Среднее отношение φ(n)/n → 6/π²; золотой угол размещения φ(n) выявляет скрытые модулярные симметрии.',
+    enginePreset: {
+      type: 'eulerTotientSpiral',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.0,
+      rotY: 0.0,
+    }
+  },
+  {
+    id: 'clifford-torus-4d',
+    name: '4D Тор Клиффорда (стереографическая проекция)',
+    englishName: '4D Clifford Torus (Stereo Projection)',
+    category: 'multidimensional',
+    formula: '(x₁,x₂,x₃,x₄) = (cos θ, sin θ, cos φ, sin φ) ⊂ S³ ⊂ ℝ⁴',
+    dimension: 'D = 2 (плоский тор в 4D, проекция в 3D)',
+    generatorRule: 'Стереографическая проекция из S³ в ℝ³ плоского тора (cos θ, sin θ, cos φ, sin φ)',
+    description: 'Единственный плоский (нулевая гауссова кривизна) тор, вложенный в 3-сферу. При стереографической проекции образует тор Дюпена.',
+    phiPiRelation: 'Золотое соотношение радиусов R/r = φ порождает наиболее гармоничную проекцию с икосаэдрическими сечениями.',
+    enginePreset: {
+      type: 'cliffordTorus4D',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.5,
+      rotY: 0.3,
+    }
+  },
+  {
+    id: 'quaternion-mandelbrot',
+    name: '4D Кватернионное множество Мандельброта',
+    englishName: '4D Quaternion Mandelbrot Set',
+    category: 'multidimensional',
+    formula: 'q_{n+1} = q_n² + c, q, c ∈ ℍ',
+    dimension: 'D = 3 (граница 4D тела)',
+    generatorRule: 'Итерация квадрата кватерниона: q² = (a²-b·b̄, 2ab) для q = a + bi + cj + dk',
+    description: 'Полное 4D множество Мандельброта в кватернионном пространстве. 3D-сечения показывают бесконечное разнообразие форм.',
+    phiPiRelation: 'Кватернионные оси масштабированы золотым сечением; сечения при золотых углах обнаруживают максимальную сложность.',
+    enginePreset: {
+      type: 'quaternionMandelbrot',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.4,
+      rotY: 0.3,
+      iterations: 10,
+    }
+  },
+  {
+    id: 'burning-ship-3d',
+    name: '3D Горящий корабль',
+    englishName: '3D Burning Ship Fractal',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = (|Re(z_n)| + i|Im(z_n)|)² + c',
+    dimension: 'D ≈ 2.0 (граница)',
+    generatorRule: 'Модификация Мандельброта: абсолютные значения действительной и мнимой частей перед возведением в квадрат',
+    description: 'Фрактал, открытый Майклом Мандельбротом. В отличие от обычного Мандельброта, имеет характерную форму перевёрнутого корабля в пламени.',
+    phiPiRelation: 'Золотое масштабирование итераций выявляет самоподобные «паруса» горящего корабля.',
+    enginePreset: {
+      type: 'burningShip3D',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.3,
+      rotY: 0.4,
+      iterations: 12,
+    }
+  },
+  {
+    id: 'newton-basins-3d',
+    name: '3D Бассейны Ньютона-Рафсона',
+    englishName: '3D Newton-Raphson Basins of Attraction',
+    category: 'algebraic_complex',
+    formula: 'z_{n+1} = z_n - f(z_n)/f\'(z_n), f(z) = z³ - 1 (корни: 1, e^{2πi/3}, e^{4πi/3})',
+    dimension: 'D = 2 (границы бассейнов — фрактальные кривые)',
+    generatorRule: 'Итерация метода Ньютона для z³-1; каждая точка окрашивается по корню, к которому сходится',
+    description: 'Визуализация фрактальных границ бассейнов притяжения метода Ньютона. Границы между бассейнами образуют бесконечно сложные фрактальные кривые.',
+    phiPiRelation: 'Углы между бассейнами 120° = 2π/3; золотое возмущение начальных условий выявляет скрытую φ-симметрию.',
+    enginePreset: {
+      type: 'newtonBasins',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.4,
+      rotY: 0.3,
+      iterations: 16,
+    }
+  },
+  {
+    id: 'jerusalem-cube',
+    name: 'Иерусалимский куб',
+    englishName: 'Jerusalem Cube',
+    category: 'constructive',
+    formula: 'Куб с крестами золотого сечения: удаление прямоугольников с отношением сторон φ',
+    dimension: 'D ≈ 2.58',
+    generatorRule: 'В каждой грани куба вырезается золотой крест, затем процесс повторяется рекурсивно',
+    description: 'Фрактал, построенный на кубе с золотыми пропорциями. В каждой грани вырезается крест, стороны которого относятся как φ:1.',
+    phiPiRelation: 'Все пропорции куба выражены через φ: рёбра креста, глубина вырезов и масштаб итераций.',
+    enginePreset: {
+      type: 'jerusalemCube',
+      compositeOp: 'smoothCarve',
+      zoom: 3.0,
+      rotX: 0.35,
+      rotY: 0.4,
+      iterations: 5,
+    }
+  },
+  {
+    id: 'hofstadter-butterfly-3d',
+    name: 'Квантовая бабочка Хофштадтера',
+    englishName: 'Hofstadter Butterfly Energy Spectrum',
+    category: 'topological_physical',
+    formula: 'cos(q_x) + cos(q_y) = E, q_x = 2παm/n (магнитный поток α через ячейку)',
+    dimension: 'D ≈ 1.5 (фрактальная структура энергетических зон)',
+    generatorRule: 'Модель Харпера: квантовая частица на 2D решётке в однородном магнитном поле с рациональным потоком α = p/q',
+    description: 'Фрактальный энергетический спектр электрона в двумерной решётке с магнитным полем. Каждая «бабочка» — разрешённая зона энергии.',
+    phiPiRelation: 'При α = 1/φ (золотой поток) спектр демонстрирует максимальную фрактальную сложность и самоподобие.',
+    enginePreset: {
+      type: 'hofstadterButterfly',
+      compositeOp: 'smoothMorph',
+      zoom: 3.0,
+      rotX: 0.3,
+      rotY: 0.4,
+    }
+  },
+  {
+    id: 'antoine-necklace',
+    name: 'Ожерелье Антуана (дикие зацепления)',
+    englishName: 'Antoine\'s Necklace Wild Linking',
+    category: 'topological_physical',
+    formula: 'C = ∩_n A_n, A_{n+1} ⊂ A_n, каждое звено зацеплено с соседними',
+    dimension: 'D ≈ 1.0 (канторово множество торов)',
+    generatorRule: 'Каждый тор заменяется на кольцо меньших торов, попарно зацепленных друг с другом',
+    description: 'Первый пример «дикого» вложения канторова множества в ℝ³. Топологически неэквивалентно стандартному канторову множеству.',
+    phiPiRelation: 'Количество торов на каждом уровне = 2·φ ≈ 3.236 → округление до 3 даёт наиболее плотное зацепление.',
+    enginePreset: {
+      type: 'antoineNecklace',
+      compositeOp: 'smoothUnion',
+      zoom: 3.0,
+      rotX: 0.4,
+      rotY: 0.3,
+      iterations: 5,
+    }
+  },
+];
