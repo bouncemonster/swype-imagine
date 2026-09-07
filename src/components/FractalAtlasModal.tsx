@@ -98,7 +98,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
               <h2 className="text-lg font-semibold tracking-tight text-white flex items-center gap-2">
                 Атлас Канонических Фракталов и Научная Синергия
                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono">
-                  8 Семейств · {CANONICAL_FRACTALS_CATALOG.length} Канонических Фракталов
+                  9 Семейств · {CANONICAL_FRACTALS_CATALOG.length} Канонических Фракталов
                 </span>
               </h2>
               <p className="text-xs text-slate-400">

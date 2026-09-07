@@ -39,7 +39,26 @@ export type FractalType =
   | 'beltramiPseudosphere'// 37: Constant Negative Gaussian Curvature Lobachevsky Hyperbolic Surface
   | 'spinFoamNetwork'     // 38: Loop Quantum Gravity Penrose Spin-Network & Quantum Foam
   | 'ramanujanTau'        // 39: Ramanujan Modular Discriminant Delta(tau) Resonator
-  | 'belousovWaves';      // 40: Belousov-Zhabotinsky Non-Equilibrium Chemical Spiral Waves
+  | 'belousovWaves'       // 40: Belousov-Zhabotinsky Non-Equilibrium Chemical Spiral Waves
+  | 'henonAttractor'      // 41: Hénon 3D Strange Attractor (folded band chaos)
+  | 'aizawaAttractor'     // 42: Aizawa Toroidal Chaotic Attractor
+  | 'thomasAttractor'     // 43: Thomas Cyclically Symmetric C3 Attractor
+  | 'halvorsenAttractor'  // 44: Halvorsen 3-Fold Chaotic Attractor
+  | 'juliaSet3D'          // 45: Classic Julia Set 3D (c = -0.7 + 0.27i)
+  | 'multibrot3'          // 46: Multibrot z³+c Cubic 3D Generalization
+  | 'tetrix'              // 47: Tetrix (Sierpinski Tetrahedron 3D IFS)
+  | 'gosperCurve'         // 48: Gosper Island (hexagonal space-filling fractal)
+  | 'lSystemPlant'        // 49: L-System Plant (3D phyllotactic branching)
+  | 'schwarzP'            // 50: Schwarz P Minimal Surface (cubic TPMS)
+  | 'schwarzD'            // 51: Schwarz D Diamond Surface (TPMS)
+  | 'apollonianGasket'    // 52: Apollonian Gasket (recursive sphere packing)
+  | 'barnsleyFern3D'      // 53: Barnsley Fern 3D (IFS affine transforms)
+  | 'kleinQuartic'        // 54: Klein Quartic Surface (genus-3 Hurwitz)
+  | 'spherePacking'       // 55: Sphere Packing (FCC dense packing fractal)
+  | 'novaFractal'         // 56: Nova Fractal (Newton + Mandelbrot hybrid)
+  | 'goldenKnot'          // 57: Golden Knot (torus knot with golden winding)
+  | 'sphericalHarmonics'  // 58: Spherical Harmonics (quantum orbital shapes)
+  | 'reactionDiffusion';  // 59: Reaction-Diffusion (Gray-Scott Turing pattern)
 
 export type RenderStyle = 
   | 'solid'       // 0: PBR Solid with AO, Soft Shadows & Subsurface Scattering (SSS)

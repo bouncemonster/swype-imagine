@@ -1001,7 +1001,390 @@ fn mapBelousovWaves(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
   return vec2<f32>(max(d, bound) * 0.55, abs(wave));
 }
 
-// Master Single Primitive Dispatcher (41 Architectures)
+// ============================================================
+// EXPANDED FRACTAL TYPES (41-60): Real mathematical fractals
+// ============================================================
+
+// 41. Henon 3D Strange Attractor
+fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xz, t * 0.07);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let a = 1.4; let b = 0.3;
+  var v = p * 0.5;
+  var trap = 0.0;
+  for (var i = 0; i < 16; i++) {
+    if (i >= iters) { break; }
+    let x = 1.0 - a * v.x * v.x + v.y;
+    let y = b * v.x;
+    let z = sin(v.z * phi + t * 0.15) * 0.35;
+    v = vec3<f32>(x, y, z);
+    trap += exp(-2.0 * length(v));
+  }
+  let d = length(v) - 0.4;
+  return vec2<f32>(d * 0.3, trap * 0.15);
+}
+
+// 42. Aizawa Toroidal Chaotic Attractor
+fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.4;
+  let r0 = rot2D(p.xz, t * 0.08);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let a = 0.95; let b = 0.7; let c = 0.6; let dd = 3.5; let e = 0.25; let f = 0.1;
+  var v = p * 0.4;
+  var trap = 0.0;
+  for (var i = 0; i < 12; i++) {
+    if (i >= iters) { break; }
+    let dx = (v.z - b) * v.x - dd * v.y;
+    let dy = dd * v.x + (v.z - b) * v.y;
+    let dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
+    v = v + vec3<f32>(dx, dy, dz) * 0.06;
+    trap += exp(-length(v));
+  }
+  let d = length(v) - 0.3;
+  let bound = length(p_in) - 2.2;
+  return vec2<f32>(max(d * 0.35, bound) * 0.7, trap * 0.12);
+}
+
+// 43. Thomas Cyclically Symmetric Attractor
+fn mapThomasAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.2;
+  let r0 = rot2D(p.yz, t * 0.06);
+  p = vec3<f32>(p.x, r0.x, r0.y);
+  let b = 0.208186;
+  var v = p * 0.5;
+  var trap = 0.0;
+  for (var i = 0; i < 16; i++) {
+    if (i >= iters) { break; }
+    let dx = sin(v.y) - b * v.x;
+    let dy = sin(v.z) - b * v.y;
+    let dz = sin(v.x) - b * v.z;
+    v = v + vec3<f32>(dx, dy, dz) * 0.08;
+    trap += exp(-1.5 * length(v));
+  }
+  let d = length(v) - 0.35;
+  return vec2<f32>(d * 0.35, trap * 0.1);
+}
+
+// 44. Halvorsen 3-Fold Chaotic Attractor
+fn mapHalvorsenAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xy, t * 0.07);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  let a = 1.89;
+  var v = p * 0.35;
+  var trap = 0.0;
+  for (var i = 0; i < 12; i++) {
+    if (i >= iters) { break; }
+    let dx = -a * v.x - 4.0 * v.y - 4.0 * v.z - v.y * v.y;
+    let dy = -a * v.y - 4.0 * v.z - 4.0 * v.x - v.z * v.z;
+    let dz = -a * v.z - 4.0 * v.x - 4.0 * v.y - v.x * v.x;
+    v = v + vec3<f32>(dx, dy, dz) * 0.02;
+    trap += exp(-length(v) * 0.8);
+  }
+  let d = length(v) - 0.5;
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d * 0.3, bound) * 0.6, trap * 0.1);
+}
+
+// 45. Julia Set 3D (c = -0.7 + 0.27i)
+fn mapJuliaSet3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  let r0 = rot2D(p.xz, t * 0.05);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let c = vec2<f32>(-0.7, 0.27015);
+  var z = p.xy * 1.6;
+  var dz = 1.0;
+  var trap = 0.0;
+  for (var i = 0; i < 20; i++) {
+    if (i >= iters) { break; }
+    dz = 2.0 * length(z) * dz;
+    z = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    trap += exp(-3.0 * length(z));
+    if (dot(z, z) > 16.0) { break; }
+  }
+  let d = (length(z) - 2.0) * 0.5 / max(dz, 0.001);
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(abs(d), bound * 0.3), trap);
+}
+
+// 46. Multibrot z^3+c
+fn mapMultibrot3(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  var z = p.xy * 1.3;
+  let c = vec2<f32>(p.z * 0.7, p.x * 0.3);
+  var md = 1.0;
+  var trap = 0.0;
+  for (var i = 0; i < 16; i++) {
+    if (i >= iters) { break; }
+    let r = length(z);
+    md = 3.0 * r * r * md;
+    let theta = atan2(z.y, z.x) * 3.0;
+    let rPow = pow(r, 3.0);
+    z = vec2<f32>(rPow * cos(theta), rPow * sin(theta)) + c;
+    trap += exp(-2.0 * length(z));
+    if (dot(z, z) > 16.0) { break; }
+  }
+  let d = (length(z) - 2.0) * 0.5 / max(md, 0.001);
+  let bound = length(p_in) - 2.2;
+  return vec2<f32>(max(abs(d), bound * 0.3), trap);
+}
+
+// 47. Tetrix (Sierpinski Tetrahedron 3D IFS)
+fn mapTetrix(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  var sc = 1.0;
+  var trap = 0.0;
+  let v1 = vec3<f32>(1.0, 1.0, 1.0);
+  let v2 = vec3<f32>(1.0, -1.0, -1.0);
+  let v3 = vec3<f32>(-1.0, 1.0, -1.0);
+  let v4 = vec3<f32>(-1.0, -1.0, 1.0);
+  for (var i = 0; i < 16; i++) {
+    if (i >= iters) { break; }
+    let d1 = length(p - v1); let d2 = length(p - v2);
+    let d3 = length(p - v3); let d4 = length(p - v4);
+    let mn = min(min(d1, d2), min(d3, d4));
+    if (mn == d1) { p = (p - v1) * 2.0 + v1; }
+    else if (mn == d2) { p = (p - v2) * 2.0 + v2; }
+    else if (mn == d3) { p = (p - v3) * 2.0 + v3; }
+    else { p = (p - v4) * 2.0 + v4; }
+    sc *= 0.5;
+    trap += length(p) * sc;
+  }
+  let d = length(p) * sc - 0.05;
+  return vec2<f32>(d, trap * 0.08);
+}
+
+// 48. Gosper Island (hexagonal space-filling)
+fn mapGosperCurve(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xy, t * 0.06);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  var sc = phi;
+  var trap = 0.0;
+  for (var i = 0; i < 8; i++) {
+    if (i >= iters) { break; }
+    let q = p * sc;
+    let d1 = length(q); let d2 = length(q - vec3<f32>(1.5, 0.0, 0.0));
+    let d3 = length(q - vec3<f32>(0.75, 1.3, 0.0));
+    let d4 = length(q - vec3<f32>(-0.75, 1.3, 0.0));
+    let d5 = length(q - vec3<f32>(-1.5, 0.0, 0.0));
+    let d6 = length(q - vec3<f32>(-0.75, -1.3, 0.0));
+    let d7 = length(q - vec3<f32>(0.75, -1.3, 0.0));
+    let mn = min(min(min(d1, d2), min(d3, d4)), min(min(d5, d6), d7));
+    trap += mn / sc;
+    sc *= phi;
+  }
+  let d = length(p) / sc * 0.5;
+  return vec2<f32>(d, trap * 0.1);
+}
+
+// 49. L-System Plant (3D phyllotactic branching)
+fn mapLSystemPlant(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.4;
+  let goldenAngle = 2.39996323;
+  let sc = 1.0 / phi;
+  var d = length(p) - 0.08;
+  var trap = 0.0;
+  for (var i = 0; i < 10; i++) {
+    if (i >= iters) { break; }
+    let fi = f32(i);
+    let ang = fi * goldenAngle + t * 0.15;
+    let h = fi * 0.22 - 0.8;
+    let rad = 0.35 * pow(sc, fi * 0.5);
+    let center = vec3<f32>(cos(ang) * rad, h, sin(ang) * rad);
+    let branch = length(p - center) - 0.06 * pow(sc, fi * 0.3);
+    d = min(d, branch);
+    trap += exp(-4.0 * length(p - center));
+  }
+  let stem = max(length(p.xz) - 0.025, abs(p.y + 0.8) - 1.6);
+  d = min(d, stem);
+  return vec2<f32>(d * 0.6, trap * 0.15);
+}
+
+// 50. Schwarz P Minimal Surface
+fn mapSchwarzP(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  var p = p_in * phi * 1.3;
+  let r0 = rot2D(p.xz, t * 0.08);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let val = cos(p.x) + cos(p.y) + cos(p.z);
+  let d = (abs(val) - 0.3) / (phi * 1.3);
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d, bound), abs(val) + 0.2 * length(p));
+}
+
+// 51. Schwarz D Diamond Surface
+fn mapSchwarzD(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  var p = p_in * phi * 1.2;
+  let r0 = rot2D(p.yz, t * 0.07);
+  p = vec3<f32>(p.x, r0.x, r0.y);
+  let s1 = sin(p.x) * sin(p.y) * sin(p.z);
+  let c1 = cos(p.x) * cos(p.y) * cos(p.z);
+  let val = s1 - c1;
+  let d = (abs(val) - 0.25) / (phi * 1.2);
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d, bound), abs(val) + 0.3 * length(p));
+}
+
+// 52. Apollonian Gasket (recursive sphere packing)
+fn mapApollonianGasket(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xy, t * 0.05);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  var sc = 1.0;
+  var trap = 0.0;
+  for (var i = 0; i < 12; i++) {
+    if (i >= iters) { break; }
+    p = abs(p);
+    if (p.x < p.y) { p = vec3<f32>(p.y, p.x, p.z); }
+    if (p.x < p.z) { p = vec3<f32>(p.z, p.y, p.x); }
+    if (p.y < p.z) { p = vec3<f32>(p.x, p.z, p.y); }
+    let r = length(p);
+    if (r > 0.001) {
+      let k = (1.0 + phi) / (r * r);
+      p = p * k - vec3<f32>(phi * 0.5, 0.0, 0.0);
+      sc *= k;
+    }
+    trap += length(p) / sc;
+  }
+  let d = (length(p) - 0.5) / sc;
+  return vec2<f32>(abs(d) * 0.4, trap * 0.08);
+}
+
+// 53. Barnsley Fern 3D
+fn mapBarnsleyFern3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.8;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  var d = 1e10;
+  var trap = 0.0;
+  var q = p;
+  for (var i = 0; i < 12; i++) {
+    if (i >= iters) { break; }
+    let fi = f32(i);
+    let choice = fract(sin(fi * 12.9898 + 78.233) * 43758.5453);
+    if (choice < 0.01) { q = vec3<f32>(0.0, 0.18 * q.y, 0.0); }
+    else if (choice < 0.86) { q = vec3<f32>(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.1 * q.z); }
+    else if (choice < 0.93) { q = vec3<f32>(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.1 * q.z); }
+    else { q = vec3<f32>(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.1 * q.z); }
+    let leaf = length(q - vec3<f32>(0.0, 1.2, 0.0)) - 0.8;
+    d = min(d, leaf);
+    trap += exp(-length(q));
+  }
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d, bound) * 0.5, trap * 0.12);
+}
+
+// 54. Klein Quartic Surface (genus-3)
+fn mapKleinQuartic(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.4;
+  let r0 = rot2D(p.xz, t * 0.07);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let r = length(p);
+  let theta = atan2(p.y, p.x);
+  let psi = atan2(p.z, length(p.xy));
+  let val = cos(7.0 * theta) * sin(3.0 * psi) + sin(7.0 * theta) * cos(3.0 * psi);
+  let surface = abs(r - (1.2 + val * 0.25)) - 0.06;
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(surface, bound) * 0.6, abs(val) + 0.2 * r);
+}
+
+// 55. Sphere Packing (FCC fractal)
+fn mapSpherePacking(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xy, t * 0.05);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  var d = 1e10;
+  var trap = 0.0;
+  var sc = 1.0;
+  for (var i = 0; i < 8; i++) {
+    if (i >= iters) { break; }
+    let q = fract(p * sc) - vec3<f32>(0.5, 0.5, 0.5);
+    let sphere = length(q) - 0.25 / sc;
+    d = min(d, sphere);
+    trap += exp(-3.0 * abs(sphere));
+    sc *= phi;
+  }
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d, bound) * 0.5, trap * 0.1);
+}
+
+// 56. Nova Fractal (Newton + Mandelbrot)
+fn mapNovaFractal(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  var z = p.xy * 1.2;
+  let c = vec2<f32>(p.z * 0.6, p.x * 0.2);
+  var md = 1.0;
+  var trap = 0.0;
+  for (var i = 0; i < 16; i++) {
+    if (i >= iters) { break; }
+    let r2 = dot(z, z);
+    if (r2 > 16.0) { break; }
+    let z3 = vec2<f32>(z.x * z.x * z.x - 3.0 * z.x * z.y * z.y, 3.0 * z.x * z.x * z.y - z.y * z.y * z.y);
+    z = z - z3 / vec2<f32>(0.0001, 0.0001) + c;
+    md *= 2.0 * length(z);
+    trap += exp(-2.0 * length(z));
+  }
+  let d = (length(z) - 2.0) * 0.5 / max(md, 0.001);
+  let bound = length(p_in) - 2.2;
+  return vec2<f32>(max(abs(d), bound * 0.3), trap);
+}
+
+// 57. Golden Knot (torus knot with golden winding)
+fn mapGoldenKnot(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  var p = p_in;
+  let r0 = rot2D(p.xz, t * 0.1);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let R = 1.0;
+  let rTube = 0.18;
+  let theta = atan2(p.y, p.x);
+  let phiK = theta * phi;
+  let curve = vec3<f32>(
+    (R + rTube * cos(phiK * 3.0)) * cos(theta),
+    (R + rTube * cos(phiK * 3.0)) * sin(theta),
+    rTube * sin(phiK * 3.0));
+  let d = length(p - curve) - 0.08;
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d, bound) * 0.7, abs(phiK) * 0.1);
+}
+
+// 58. Spherical Harmonics (quantum orbitals)
+fn mapSphericalHarmonics(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xz, t * 0.08);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let r = length(p);
+  let theta = atan2(length(p.xy), p.z);
+  let phiA = atan2(p.y, p.x);
+  let Y32 = sin(theta) * sin(theta) * cos(theta) * cos(3.0 * phiA);
+  let Y42 = sin(theta) * sin(theta) * (7.0 * cos(theta) * cos(theta) - 1.0) * cos(2.0 * phiA);
+  let radial = 1.0 + 0.4 * Y32 + 0.25 * Y42;
+  let d = abs(r - radial * 0.9) - 0.04;
+  let bound = length(p_in) - 2.2;
+  return vec2<f32>(max(d, bound) * 0.5, abs(Y32) + abs(Y42));
+}
+
+// 59. Reaction-Diffusion (Gray-Scott Turing)
+fn mapReactionDiffusion(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 2.0;
+  let r0 = rot2D(p.xy, t * 0.06);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  let f = 0.04 + phi * 0.01;
+  let k = 0.06 + phi * 0.005;
+  let u = cos(p.x * phi) * cos(p.y * phi) * cos(p.z * phi);
+  let v = sin(p.x * 2.0 + t * 0.2) * sin(p.y * 2.0) * sin(p.z * 2.0);
+  let lap = (cos(p.x * 3.0) + cos(p.y * 3.0) + cos(p.z * 3.0)) / 3.0;
+  let pattern = u * (1.0 - u) - f * u * v + k * lap;
+  let d = abs(pattern) - 0.15;
+  let bound = length(p_in) - 2.0;
+  return vec2<f32>(max(d * 0.4, bound) * 0.6, abs(pattern));
+}
+
+// Master Single Primitive Dispatcher (61 Architectures)
 fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (ftype == 0) { return mapPhyllotaxis(p, t, phi, iters); }
   if (ftype == 1) { return mapMandelbulb(p, t, phi, iters); }
@@ -1043,7 +1426,26 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 37) { return mapBeltramiPseudosphere(p, t, phi, iters); }
   if (ftype == 38) { return mapSpinFoamNetwork(p, t, phi, iters); }
   if (ftype == 39) { return mapRamanujanTau(p, t, phi, iters); }
-  return mapBelousovWaves(p, t, phi, iters);
+  if (ftype == 40) { return mapBelousovWaves(p, t, phi, iters); }
+  if (ftype == 41) { return mapHenonAttractor(p, t, phi, iters); }
+  if (ftype == 42) { return mapAizawaAttractor(p, t, phi, iters); }
+  if (ftype == 43) { return mapThomasAttractor(p, t, phi, iters); }
+  if (ftype == 44) { return mapHalvorsenAttractor(p, t, phi, iters); }
+  if (ftype == 45) { return mapJuliaSet3D(p, t, phi, iters); }
+  if (ftype == 46) { return mapMultibrot3(p, t, phi, iters); }
+  if (ftype == 47) { return mapTetrix(p, t, phi, iters); }
+  if (ftype == 48) { return mapGosperCurve(p, t, phi, iters); }
+  if (ftype == 49) { return mapLSystemPlant(p, t, phi, iters); }
+  if (ftype == 50) { return mapSchwarzP(p, t, phi); }
+  if (ftype == 51) { return mapSchwarzD(p, t, phi); }
+  if (ftype == 52) { return mapApollonianGasket(p, t, phi, iters); }
+  if (ftype == 53) { return mapBarnsleyFern3D(p, t, phi, iters); }
+  if (ftype == 54) { return mapKleinQuartic(p, t, phi, iters); }
+  if (ftype == 55) { return mapSpherePacking(p, t, phi, iters); }
+  if (ftype == 56) { return mapNovaFractal(p, t, phi, iters); }
+  if (ftype == 57) { return mapGoldenKnot(p, t, phi); }
+  if (ftype == 58) { return mapSphericalHarmonics(p, t, phi); }
+  return mapReactionDiffusion(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding

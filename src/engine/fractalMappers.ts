@@ -41,6 +41,25 @@ export function getFractalIndex(type?: string): number {
     case 'spinFoamNetwork': return 38;
     case 'ramanujanTau': return 39;
     case 'belousovWaves': return 40;
+    case 'henonAttractor': return 41;
+    case 'aizawaAttractor': return 42;
+    case 'thomasAttractor': return 43;
+    case 'halvorsenAttractor': return 44;
+    case 'juliaSet3D': return 45;
+    case 'multibrot3': return 46;
+    case 'tetrix': return 47;
+    case 'gosperCurve': return 48;
+    case 'lSystemPlant': return 49;
+    case 'schwarzP': return 50;
+    case 'schwarzD': return 51;
+    case 'apollonianGasket': return 52;
+    case 'barnsleyFern3D': return 53;
+    case 'kleinQuartic': return 54;
+    case 'spherePacking': return 55;
+    case 'novaFractal': return 56;
+    case 'goldenKnot': return 57;
+    case 'sphericalHarmonics': return 58;
+    case 'reactionDiffusion': return 59;
     default: return 0;
   }
 }

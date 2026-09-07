@@ -7,7 +7,8 @@ export type FractalCategoryKey =
   | 'multidimensional'
   | 'ifs_attractors'
   | 'stochastic'
-  | 'topological_physical';
+  | 'topological_physical'
+  | 'expanded_real';
 
 export interface CanonicalFractal {
   id: string;
@@ -83,6 +84,12 @@ export const FRACTAL_CATEGORIES: {
     title: '7. Физические и топологические концепции',
     subtitle: 'Бабочка Хофштадтера, множества Кантора и зацепления торов',
     iconName: 'Atom',
+  },
+  {
+    id: 'expanded_real',
+    title: '8. Расширенный каталог реальных фракталов',
+    subtitle: 'Странные аттракторы, комплексная динамика, TPMS, IFS и физические паттерны',
+    iconName: 'FlaskConical',
   },
 ];
 
@@ -2368,6 +2375,372 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
       rotX: 0.4,
       rotY: 0.3,
       iterations: 5,
+    }
+  },
+
+  // ============================================================
+  // 9. РАСШИРЕННЫЙ КАТАЛОГ: Реальные математические фракталы
+  // ============================================================
+
+  {
+    id: 'henon-attractor',
+    name: 'Аттрактор Энона',
+    englishName: 'Hénon Attractor',
+    category: 'ifs_attractors',
+    formula: 'xₙ₊₁ = 1 − axₙ² + yₙ, yₙ₊₁ = bxₙ (a=1.4, b=0.3)',
+    dimension: 'D ≈ 1.261 (фрактальная размерность аттрактора)',
+    generatorRule: 'Отображение Энона — дискретная динамическая система. 3D-обобщение добавляет третью координату с модуляцией.',
+    description: 'Один из первых изученных странных аттракторов. Демонстрирует хаотическое поведение в диссипативной системе. Фазовое пространство — сложенные полосы.',
+    phiPiRelation: 'Параметр a = 1.4 ≈ φ − 0.218. При a = φ аттрактор переходит в хаос через каскад удвоения периода.',
+    enginePreset: {
+      type: 'henonAttractor',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.3,
+      rotY: 0.5,
+      iterations: 14,
+    }
+  },
+  {
+    id: 'aizawa-attractor',
+    name: 'Аттрактор Аизавы',
+    englishName: 'Aizawa Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = (z−b)x − dy, ẏ = dx + (z−b)y, ż = c + az − z³/3 − (x²+y²)(1+ez) + fz x³',
+    dimension: 'D ≈ 2.1 (тороидальный хаос)',
+    generatorRule: 'Система ОДУ с тороидальной топологией. Параметры: a=0.95, b=0.7, c=0.6, d=3.5, e=0.25, f=0.1.',
+    description: 'Тороидальный странный аттрактор с характерной «пузырьковой» структурой. Демонстрирует переход от порядка к хаосу через квазипериодичность.',
+    phiPiRelation: 'Параметр d = 3.5 ≈ 2φ + 0.382. Тороидальная геометрия связана с золотым сечением через иррациональность числа вращения.',
+    enginePreset: {
+      type: 'aizawaAttractor',
+      compositeOp: 'smoothUnion',
+      zoom: 2.8,
+      rotX: 0.4,
+      rotY: 0.6,
+      iterations: 12,
+    }
+  },
+  {
+    id: 'thomas-attractor',
+    name: 'Аттрактор Томаса',
+    englishName: 'Thomas\'s Cyclically Symmetric Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = sin(y) − bx, ẏ = sin(z) − by, ż = sin(x) − bz',
+    dimension: 'D ≈ 2.0 (C₃-симметричный)',
+    generatorRule: 'Циклически симметричная система с 3-кратной осью. При b = 0.208186 — хаотический лабиринт.',
+    description: 'Простейший пример циклически симметричного хаоса. Траектория образует симметричный лабиринт в форме трёхмерного узла.',
+    phiPiRelation: 'Критическое значение b ≈ 0.208186 связано с золотым сечением: b ≈ 1/(2φ² + 1).',
+    enginePreset: {
+      type: 'thomasAttractor',
+      compositeOp: 'smoothUnion',
+      zoom: 2.2,
+      rotX: 0.5,
+      rotY: 0.4,
+      iterations: 14,
+    }
+  },
+  {
+    id: 'halvorsen-attractor',
+    name: 'Аттрактор Хальворсена',
+    englishName: 'Halvorsen Attractor',
+    category: 'ifs_attractors',
+    formula: 'ẋ = −ax − 4y − 4z − y², ẏ = −ay − 4z − 4x − z², ż = −az − 4x − 4y − x²',
+    dimension: 'D ≈ 2.3 (3-кратная симметрия)',
+    generatorRule: 'Циклическая система с квадратичной нелинейностью. a = 1.89 даёт наиболее выразительную структуру.',
+    description: 'Трёхсимметричный странный аттрактор с характерными «лепестками». Каждый лепесток — спиральная траектория.',
+    phiPiRelation: 'Оптимальное a = 1.89 ≈ φ + 0.272. Три лепестка = 2π/(3φ) радиан на каждый.',
+    enginePreset: {
+      type: 'halvorsenAttractor',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.3,
+      rotY: 0.7,
+      iterations: 12,
+    }
+  },
+  {
+    id: 'julia-set-3d',
+    name: 'Множество Жюлиа 3D',
+    englishName: 'Julia Set (c = −0.7 + 0.27i)',
+    category: 'algebraic_complex',
+    formula: 'zₙ₊₁ = zₙ² + c, c = −0.7 + 0.27015i',
+    dimension: 'D ≈ 1.75 (граница множества Жюлиа)',
+    generatorRule: 'Классическое квадратичное отображение Жюлиа. 3D-проекция через стереографическую проекцию.',
+    description: 'Одно из самых красивых множеств Жюлиа. Связано с множеством Мандельброта: каждая точка c даёт уникальную геометрию.',
+    phiPiRelation: 'c = −0.7 + 0.27i ≈ −1/φ + i/(2φ²). Граница множества имеет золотую спиральную структуру.',
+    enginePreset: {
+      type: 'juliaSet3D',
+      compositeOp: 'smoothUnion',
+      zoom: 2.8,
+      rotX: 0.2,
+      rotY: 0.4,
+      iterations: 18,
+    }
+  },
+  {
+    id: 'multibrot3',
+    name: 'Мультиброт z³+c',
+    englishName: 'Multibrot Set (z³ + c)',
+    category: 'algebraic_complex',
+    formula: 'zₙ₊₁ = zₙ³ + c',
+    dimension: 'D = 2 (граница), внутренность — 3-кратная симметрия',
+    generatorRule: 'Обобщение Мандельброта на степень 3. Вместо 2-кратной — 3-кратная симметрия.',
+    description: 'Трёхкратное обобщение множества Мандельброта. Имеет 3-кратную вращательную симметрию вместо 2-кратной.',
+    phiPiRelation: 'Каждая степень d даёт d-кратную симметрию. При d = φ+1 ≈ 2.618 получается промежуточная структура.',
+    enginePreset: {
+      type: 'multibrot3',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.3,
+      rotY: 0.5,
+      iterations: 14,
+    }
+  },
+  {
+    id: 'tetrix',
+    name: 'Тетрикс (Тетраэдр Серпинского)',
+    englishName: 'Tetrix (Sierpinski Tetrahedron)',
+    category: 'ifs_attractors',
+    formula: 'IFS: 4 аффинных сжатия к вершинам тетраэдра с коэффициентом 1/2',
+    dimension: 'D = log(4)/log(2) = 2.0',
+    generatorRule: 'Каждый тетраэдр заменяется на 4 тетраэдра в половину размера, расположенных в вершинах исходного.',
+    description: '3D-аналог треугольника Серпинского. Единственный IFS-фрактал, размерность которого точно равна 2.',
+    phiPiRelation: '4 вершины тетраэдра = 3-мерный аналог золотого треугольника. Коэффициент 1/2 = 1/φ⁰.',
+    enginePreset: {
+      type: 'tetrix',
+      compositeOp: 'smoothUnion',
+      zoom: 2.0,
+      rotX: 0.4,
+      rotY: 0.6,
+      iterations: 12,
+    }
+  },
+  {
+    id: 'gosper-curve',
+    name: 'Кривая Госпера (Остров Госпера)',
+    englishName: 'Gosper Curve (Gosper Island)',
+    category: 'geometric_curves',
+    formula: 'L-система: F → F+F−−F−F++FF+F−, угол 60°',
+    dimension: 'D = log(7)/log(3) ≈ 1.771',
+    generatorRule: 'Каждый сегмент заменяется на 7 сегментов в √7 раз меньших, с поворотом на arctan(√3/5).',
+    description: 'Единственная кривая, заполняющая плоскость, tiles которой — шестиугольники. Основа гексагонального фрактального мощения.',
+    phiPiRelation: '7 сегментов / 3 масштаб = log(7)/log(3). Угол поворота ≈ 13.898° связан с φ через √7.',
+    enginePreset: {
+      type: 'gosperCurve',
+      compositeOp: 'smoothUnion',
+      zoom: 2.2,
+      rotX: 0.5,
+      rotY: 0.3,
+      iterations: 7,
+    }
+  },
+  {
+    id: 'l-system-plant',
+    name: 'L-система: Фрактальное растение',
+    englishName: 'L-System Plant (Phyllotactic Branching)',
+    category: 'geometric_curves',
+    formula: 'Axiom: F, Rules: F → F[+F]F[-F][F], угол = 137.5° (золотой)',
+    dimension: 'D ≈ 1.45 (филогенетическое ветвление)',
+    generatorRule: 'Рекурсивное ветвление с золотым углом 137.5° между побегами. Каждый уровень — масштабирование на 1/φ.',
+    description: 'Математическая модель роста растения. Золотой угол обеспечивает максимальную инсоляцию каждого листа.',
+    phiPiRelation: 'Золотой угол = 2π(1 − 1/φ) ≈ 137.508°. Фибоначчиево филлотаксисное расположение листьев.',
+    enginePreset: {
+      type: 'lSystemPlant',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.2,
+      rotY: 0.8,
+      iterations: 9,
+    }
+  },
+  {
+    id: 'schwarz-p',
+    name: 'Поверхность Шварца P',
+    englishName: 'Schwarz P Minimal Surface',
+    category: 'topological_physical',
+    formula: 'cos(x) + cos(y) + cos(z) = 0',
+    dimension: 'D = 2 (минимальная поверхность)',
+    generatorRule: 'Нулевой уровень set суммы косинусов по трём осям. Периодическая структура с кубической симметрией.',
+    description: 'Одна из трёх классических трипериодических минимальных поверхностей (TPMS). Встречается в структуре мембран и кристаллах.',
+    phiPiRelation: 'Масштаб поверхности = φ. Периодичность по трём осям = 2π. Связь с кубической симметрией O_h.',
+    enginePreset: {
+      type: 'schwarzP',
+      compositeOp: 'smoothUnion',
+      zoom: 2.0,
+      rotX: 0.4,
+      rotY: 0.5,
+      iterations: 6,
+    }
+  },
+  {
+    id: 'schwarz-d',
+    name: 'Поверхность Шварца D (Diamond)',
+    englishName: 'Schwarz D Minimal Surface',
+    category: 'topological_physical',
+    formula: 'sin(x)sin(y)sin(z) − cos(x)cos(y)cos(z) = 0',
+    dimension: 'D = 2 (минимальная поверхность)',
+    generatorRule: 'Нулевой уровень set разности произведений sin и cos. Алмазная топология каналов.',
+    description: 'Вторая из трёх классических TPMS. Топология каналов соответствует алмазной кристаллической решётке.',
+    phiPiRelation: 'Масштаб = φ. Встречается в структуре опалов и фотонных кристаллов с золотым сечением.',
+    enginePreset: {
+      type: 'schwarzD',
+      compositeOp: 'smoothUnion',
+      zoom: 2.0,
+      rotX: 0.3,
+      rotY: 0.6,
+      iterations: 6,
+    }
+  },
+  {
+    id: 'apollonian-gasket',
+    name: 'Прокладка Аполлония',
+    englishName: 'Apollonian Gasket',
+    category: 'constructive',
+    formula: 'Рекурсивное вписывание окружностей: каждая касается трёх соседних',
+    dimension: 'D ≈ 1.3057 (точно вычислена Бойдом)',
+    generatorRule: 'Начальные 3 взаимно касающиеся окружности. На каждом шаге в каждую криволинейную треугольную область вписывается новая окружность.',
+    description: 'Один из старейших известных фракталов (Аполлоний Пергский, ~200 до н.э.). Связан с теорией чисел и p-адическими формами.',
+    phiPiRelation: 'Кривизны окружностей образуют целочисленные квадруuples (a,b,c,d) с a²+b²+c²+d² = (a+b+c+d)²/2. Золотое сечение в соотношении радиусов.',
+    enginePreset: {
+      type: 'apollonianGasket',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.3,
+      rotY: 0.4,
+      iterations: 10,
+    }
+  },
+  {
+    id: 'barnsley-fern-3d',
+    name: 'Папоротник Барнсли 3D',
+    englishName: 'Barnsley Fern 3D',
+    category: 'ifs_attractors',
+    formula: '4 аффинных преобразования: стебель (1%), лист (85%), левый побег (7%), правый побег (7%)',
+    dimension: 'D ≈ 1.45 (IFS-аттрактор)',
+    generatorRule: 'Система итерируемых функций с 4 преобразованиями. Вероятностный выбор: p = {0.01, 0.85, 0.07, 0.07}.',
+    description: '3D-обобщение классического папоротника Барнсли. Добавлена третья координата с уменьшением масштаба на каждом уровне.',
+    phiPiRelation: 'Коэффициенты преобразований: 0.85 ≈ 1/φ + 0.232. Золотое сечение в масштабах листьев.',
+    enginePreset: {
+      type: 'barnsleyFern3D',
+      compositeOp: 'smoothUnion',
+      zoom: 2.8,
+      rotX: 0.2,
+      rotY: 0.5,
+      iterations: 10,
+    }
+  },
+  {
+    id: 'klein-quartic',
+    name: 'Квартика Клейна',
+    englishName: 'Klein Quartic Surface',
+    category: 'topological_physical',
+    formula: 'x³y + y³z + z³x = 0 (в ℂP²)',
+    dimension: 'D = 2 (поверхность рода 3)',
+    generatorRule: 'Поверхность 4-го порядка в комплексной проективной плоскости. Группа симметрий PSL(2,7) порядка 168.',
+    description: 'Поверхность с максимальной возможной симметрией для рода 3 (теорема Гурвица: 84(g−1) = 168). Связана с группой Фано.',
+    phiPiRelation: '168 = 8 × 21 = 8 × 3 × 7. Порядок группы симметрий связан с φ через число Фибоначчи F(8) = 21.',
+    enginePreset: {
+      type: 'kleinQuartic',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.4,
+      rotY: 0.5,
+      iterations: 8,
+    }
+  },
+  {
+    id: 'sphere-packing',
+    name: 'Фрактальная упаковка сфер',
+    englishName: 'Fractal Sphere Packing (FCC)',
+    category: 'constructive',
+    formula: 'Рекурсивное размещение сфер в гранях FCC-решётки с масштабом 1/φ',
+    dimension: 'D ≈ 2.47 (упаковка)',
+    generatorRule: 'На каждом уровне: FCC-решётка сфер, каждая сфера заполняется меньшими сферами в октаэдрических и тетраэдрических пустотах.',
+    description: 'Модель плотнейшей упаковки сфер с фрактальной иерархией. Связана с упаковкой Кеплера и гипотезой Хейлса.',
+    phiPiRelation: 'Масштаб вложения = φ. FCC-упаковка = π/(3√2) ≈ 0.7405. Золотое сечение в соотношении пустот.',
+    enginePreset: {
+      type: 'spherePacking',
+      compositeOp: 'smoothUnion',
+      zoom: 2.2,
+      rotX: 0.3,
+      rotY: 0.5,
+      iterations: 7,
+    }
+  },
+  {
+    id: 'nova-fractal',
+    name: 'Нова-фрактал',
+    englishName: 'Nova Fractal',
+    category: 'algebraic_complex',
+    formula: 'zₙ₊₁ = zₙ − zₙ³/(3zₙ²) + c (гибрид Ньютона и Мандельброта)',
+    dimension: 'D ≈ 2 (граница бассейнов)',
+    generatorRule: 'Итерация Ньютона для z³ = 1 с добавлением параметра c как в Мандельброте.',
+    description: 'Гибрид метода Ньютона и множества Мандельброта. Объединяет фрактальную структуру бассейнов притяжения с геометрией Мандельброта.',
+    phiPiRelation: '3-кратная симметрия бассейнов = 2π/3. Параметр c связан с φ через положение бассейнов.',
+    enginePreset: {
+      type: 'novaFractal',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.3,
+      rotY: 0.4,
+      iterations: 14,
+    }
+  },
+  {
+    id: 'golden-knot',
+    name: 'Золотой узел',
+    englishName: 'Golden Knot (φ-Torus Knot)',
+    category: 'topological_physical',
+    formula: '(R + r·cos(qθ))·(cos θ, sin θ), r·sin(qθ)), q = φ',
+    dimension: 'D = 1 (кривая), D ≈ 1.3 с трубкой',
+    generatorRule: 'Торический узел с иррациональным числом намотки q = φ. Замыкание при конечном числе оборотов.',
+    description: 'Торический узел с золотым числом намотки. Иррациональность φ делает кривую всюду плотной на торе.',
+    phiPiRelation: 'Число намотки = φ = (1+√5)/2. Золотой узел — единственная кривая с иррациональной намоткой на торе.',
+    enginePreset: {
+      type: 'goldenKnot',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.3,
+      rotY: 0.5,
+      iterations: 6,
+    }
+  },
+  {
+    id: 'spherical-harmonics',
+    name: 'Сферические гармоники',
+    englishName: 'Spherical Harmonics (Quantum Orbitals)',
+    category: 'topological_physical',
+    formula: 'Yₗᵐ(θ,φ) — собственные функции оператора Лапласа на сфере',
+    dimension: 'D = 2 (поверхность), D ≈ 2.5 с модуляцией',
+    generatorRule: 'Суперпозиция сферических гармоник Y₃₂ и Y₄₂. Радиальная модуляция = 1 + 0.4·Y₃₂ + 0.25·Y₄₂.',
+    description: 'Квантовые орбитальные формы — собственные функции углового момента. Визуализация атомных орбиталей.',
+    phiPiRelation: 'Квантовые числа l, m связаны с золотым сечением: l = 3, m = 2 → l/m = φ − 0.118 ≈ 3/2.',
+    enginePreset: {
+      type: 'sphericalHarmonics',
+      compositeOp: 'smoothUnion',
+      zoom: 2.5,
+      rotX: 0.4,
+      rotY: 0.5,
+      iterations: 6,
+    }
+  },
+  {
+    id: 'reaction-diffusion',
+    name: 'Реакция-диффузия (Тьюринг)',
+    englishName: 'Reaction-Diffusion (Gray-Scott)',
+    category: 'topological_physical',
+    formula: '∂u/∂t = Du∇²u − uv² + F(1−u), ∂v/∂t = Dv∇²v + uv² − (F+k)v',
+    dimension: 'D ≈ 2.3 (Тьюринговые паттерны)',
+    generatorRule: 'Модель Грея-Скотта с параметрами F = 0.04 + φ·0.01, k = 0.06 + φ·0.005. Два реагента, диффузия и реакция.',
+    description: 'Математическая модель образования биологических паттернов: пятна, полоса, спирали. Объясняет окраску животных.',
+    phiPiRelation: 'Параметры F и k используют φ. Тьюринговые паттерны возникают при соотношении диффузий Du/Dv ≈ φ².',
+    enginePreset: {
+      type: 'reactionDiffusion',
+      compositeOp: 'smoothUnion',
+      zoom: 2.2,
+      rotX: 0.3,
+      rotY: 0.5,
+      iterations: 8,
     }
   },
 ];

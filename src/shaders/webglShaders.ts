@@ -906,6 +906,403 @@ vec2 mapBelousovWaves(vec3 p, float t, float phi, int iters) {
   return vec2(max(d, bound) * 0.55, abs(wave));
 }
 
+// ============================================================
+// EXPANDED FRACTAL TYPES (41-60): Real mathematical fractals
+// ============================================================
+
+// 41. Hénon 3D Strange Attractor (folded band chaos)
+vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  p.xz = rot2D(t * 0.07) * p.xz;
+  float a = 1.4, b = 0.3;
+  vec3 v = p * 0.5;
+  float trap = 0.0;
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    float x = 1.0 - a * v.x * v.x + v.y;
+    float y = b * v.x;
+    float z = sin(v.z * phi + t * 0.15) * 0.35;
+    v = vec3(x, y, z);
+    trap += exp(-2.0 * length(v));
+  }
+  float d = length(v) - 0.4;
+  return vec2(d * 0.3, trap * 0.15);
+}
+
+// 42. Aizawa Toroidal Chaotic Attractor
+vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.4;
+  p.xz = rot2D(t * 0.08) * p.xz;
+  float a = 0.95, b = 0.7, c = 0.6, d = 3.5, e = 0.25, f = 0.1;
+  vec3 v = p * 0.4;
+  float trap = 0.0;
+  for (int i = 0; i < 12; i++) {
+    if (i >= iters) break;
+    float dx = (v.z - b) * v.x - d * v.y;
+    float dy = d * v.x + (v.z - b) * v.y;
+    float dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
+    v += vec3(dx, dy, dz) * 0.06;
+    trap += exp(-length(v));
+  }
+  float d = length(v) - 0.3;
+  float bound = length(p_in) - 2.2;
+  return vec2(max(d * 0.35, bound) * 0.7, trap * 0.12);
+}
+
+// 43. Thomas Cyclically Symmetric Attractor (C3 labyrinth)
+vec2 mapThomasAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.2;
+  p.yz = rot2D(t * 0.06) * p.yz;
+  float b = 0.208186;
+  vec3 v = p * 0.5;
+  float trap = 0.0;
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    float dx = sin(v.y) - b * v.x;
+    float dy = sin(v.z) - b * v.y;
+    float dz = sin(v.x) - b * v.z;
+    v += vec3(dx, dy, dz) * 0.08;
+    trap += exp(-1.5 * length(v));
+  }
+  float d = length(v) - 0.35;
+  return vec2(d * 0.35, trap * 0.1);
+}
+
+// 44. Halvorsen 3-Fold Chaotic Attractor
+vec2 mapHalvorsenAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  p.xy = rot2D(t * 0.07) * p.xy;
+  float a = 1.89;
+  vec3 v = p * 0.35;
+  float trap = 0.0;
+  for (int i = 0; i < 12; i++) {
+    if (i >= iters) break;
+    float dx = -a * v.x - 4.0 * v.y - 4.0 * v.z - v.y * v.y;
+    float dy = -a * v.y - 4.0 * v.z - 4.0 * v.x - v.z * v.z;
+    float dz = -a * v.z - 4.0 * v.x - 4.0 * v.y - v.x * v.x;
+    v += vec3(dx, dy, dz) * 0.02;
+    trap += exp(-length(v) * 0.8);
+  }
+  float d = length(v) - 0.5;
+  float bound = length(p_in) - 2.0;
+  return vec2(max(d * 0.3, bound) * 0.6, trap * 0.1);
+}
+
+// 45. Julia Set 3D (c = -0.7 + 0.27i, classic dendrite)
+vec2 mapJuliaSet3D(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  p.xz = rot2D(t * 0.05) * p.xz;
+  vec2 c = vec2(-0.7, 0.27015);
+  vec2 z = p.xy * 1.6;
+  float dz = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 20; i++) {
+    if (i >= iters) break;
+    dz = 2.0 * length(z) * dz;
+    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    trap += exp(-3.0 * length(z));
+    if (dot(z, z) > 16.0) break;
+  }
+  float d = (length(z) - 2.0) * 0.5 / max(dz, 0.001);
+  float bound = length(p_in) - 2.3;
+  return vec2(max(abs(d), bound * 0.3), trap);
+}
+
+// 46. Multibrot z^3+c (cubic 3D generalization)
+vec2 mapMultibrot3(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  vec2 z = p.xy * 1.3;
+  vec2 c = vec2(p.z * 0.7, p.x * 0.3);
+  float md = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    float r = length(z);
+    md = 3.0 * r * r * md;
+    float theta = atan(z.y, z.x) * 3.0;
+    float rPow = pow(r, 3.0);
+    z = vec2(rPow * cos(theta), rPow * sin(theta)) + c;
+    trap += exp(-2.0 * length(z));
+    if (dot(z, z) > 16.0) break;
+  }
+  float d = (length(z) - 2.0) * 0.5 / max(md, 0.001);
+  float bound = length(p_in) - 2.2;
+  return vec2(max(abs(d), bound * 0.3), trap);
+}
+
+// 47. Tetrix (Sierpinski Tetrahedron 3D IFS)
+vec2 mapTetrix(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  float scale = 1.0;
+  float trap = 0.0;
+  vec3 v1 = vec3(1, 1, 1), v2 = vec3(1, -1, -1);
+  vec3 v3 = vec3(-1, 1, -1), v4 = vec3(-1, -1, 1);
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    float d1 = length(p - v1), d2 = length(p - v2);
+    float d3 = length(p - v3), d4 = length(p - v4);
+    float mn = min(min(d1, d2), min(d3, d4));
+    if (mn == d1) p = (p - v1) * 2.0 + v1;
+    else if (mn == d2) p = (p - v2) * 2.0 + v2;
+    else if (mn == d3) p = (p - v3) * 2.0 + v3;
+    else p = (p - v4) * 2.0 + v4;
+    scale *= 0.5;
+    trap += length(p) * scale;
+  }
+  float d = length(p) * scale - 0.05;
+  return vec2(d, trap * 0.08);
+}
+
+// 48. Gosper Island (hexagonal space-filling fractal)
+vec2 mapGosperCurve(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xy = rot2D(t * 0.06) * p.xy;
+  float sc = phi;
+  float trap = 0.0;
+  vec3 c1 = vec3(0, 0, 0), c2 = vec3(1.5, 0, 0), c3 = vec3(0.75, 1.3, 0);
+  vec3 c4 = vec3(-0.75, 1.3, 0), c5 = vec3(-1.5, 0, 0), c6 = vec3(-0.75, -1.3, 0);
+  vec3 c7 = vec3(0.75, -1.3, 0);
+  for (int i = 0; i < 8; i++) {
+    if (i >= iters) break;
+    vec3 q = p * sc;
+    float d1 = length(q - c1), d2 = length(q - c2), d3 = length(q - c3);
+    float d4 = length(q - c4), d5 = length(q - c5), d6 = length(q - c6);
+    float d7 = length(q - c7);
+    float mn = min(min(min(d1, d2), min(d3, d4)), min(min(d5, d6), d7));
+    if (mn == d1) p = (p - c1 / sc) * sc;
+    else if (mn == d2) p = (p - c2 / sc) * sc;
+    else if (mn == d3) p = (p - c3 / sc) * sc;
+    else if (mn == d4) p = (p - c4 / sc) * sc;
+    else if (mn == d5) p = (p - c5 / sc) * sc;
+    else if (mn == d6) p = (p - c6 / sc) * sc;
+    else p = (p - c7 / sc) * sc;
+    trap += mn / sc;
+    sc *= phi;
+  }
+  float d = length(p) / sc * 0.5;
+  return vec2(d, trap * 0.1);
+}
+
+// 49. L-System Plant (3D branching phyllotactic structure)
+vec2 mapLSystemPlant(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.4;
+  float goldenAngle = 2.39996323;
+  float d = length(p) - 0.08;
+  float trap = 0.0;
+  float sc = 1.0 / phi;
+  for (int i = 0; i < 10; i++) {
+    if (i >= iters) break;
+    float ang = float(i) * goldenAngle + t * 0.15;
+    float h = float(i) * 0.22 - 0.8;
+    float rad = 0.35 * pow(sc, float(i) * 0.5);
+    vec3 center = vec3(cos(ang) * rad, h, sin(ang) * rad);
+    float branch = length(p - center) - 0.06 * pow(sc, float(i) * 0.3);
+    d = min(d, branch);
+    trap += exp(-4.0 * length(p - center));
+  }
+  float stem = length(p.xz) - 0.025;
+  stem = max(stem, abs(p.y + 0.8) - 1.6);
+  d = min(d, stem);
+  return vec2(d * 0.6, trap * 0.15);
+}
+
+// 50. Schwarz P Minimal Surface (cubic TPMS)
+vec2 mapSchwarzP(vec3 p_in, float t, float phi) {
+  vec3 p = p_in * phi * 1.3;
+  p.xz = rot2D(t * 0.08) * p.xz;
+  float val = cos(p.x) + cos(p.y) + cos(p.z);
+  float d = (abs(val) - 0.3) / (phi * 1.3);
+  float bound = length(p_in) - 2.0;
+  return vec2(max(d, bound), abs(val) + 0.2 * length(p));
+}
+
+// 51. Schwarz D Diamond Surface (TPMS)
+vec2 mapSchwarzD(vec3 p_in, float t, float phi) {
+  vec3 p = p_in * phi * 1.2;
+  p.yz = rot2D(t * 0.07) * p.yz;
+  float s1 = sin(p.x) * sin(p.y) * sin(p.z);
+  float c1 = cos(p.x) * cos(p.y) * cos(p.z);
+  float val = s1 - c1;
+  float d = (abs(val) - 0.25) / (phi * 1.2);
+  float bound = length(p_in) - 2.0;
+  return vec2(max(d, bound), abs(val) + 0.3 * length(p));
+}
+
+// 52. Apollonian Gasket (recursive sphere packing)
+vec2 mapApollonianGasket(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xy = rot2D(t * 0.05) * p.xy;
+  float sc = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 12; i++) {
+    if (i >= iters) break;
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    if (p.y < p.z) p.yz = p.zy;
+    float r = length(p);
+    if (r > 0.001) {
+      float k = (1.0 + phi) / (r * r);
+      p = p * k - vec3(phi * 0.5);
+      sc *= k;
+    }
+    trap += length(p) / sc;
+  }
+  float d = (length(p) - 0.5) / sc;
+  return vec2(abs(d) * 0.4, trap * 0.08);
+}
+
+// 53. Barnsley Fern 3D (IFS affine transforms)
+vec2 mapBarnsleyFern3D(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.8;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  float d = 1e10;
+  float trap = 0.0;
+  vec3 q = p;
+  for (int i = 0; i < 12; i++) {
+    if (i >= iters) break;
+    float choice = fract(sin(float(i) * 12.9898 + 78.233) * 43758.5453);
+    if (choice < 0.01) {
+      q = vec3(0.0, 0.18 * q.y, 0.0);
+    } else if (choice < 0.86) {
+      q = vec3(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.1 * q.z);
+    } else if (choice < 0.93) {
+      q = vec3(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.1 * q.z);
+    } else {
+      q = vec3(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.1 * q.z);
+    }
+    float leaf = length(q - vec3(0.0, 1.2, 0.0)) - 0.8;
+    d = min(d, leaf);
+    trap += exp(-length(q));
+  }
+  return vec2(max(d, length(p_in) - 2.0) * 0.5, trap * 0.12);
+}
+
+// 54. Klein Quartic Surface (genus-3 Hurwitz surface)
+vec2 mapKleinQuartic(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.4;
+  p.xz = rot2D(t * 0.07) * p.xz;
+  float r = length(p);
+  float theta = atan(p.y, p.x);
+  float psi = atan(p.z, length(p.xy));
+  float val = cos(7.0 * theta) * sin(3.0 * psi) + sin(7.0 * theta) * cos(3.0 * psi);
+  float surface = abs(r - (1.2 + val * 0.25)) - 0.06;
+  float bound = length(p_in) - 2.0;
+  return vec2(max(surface, bound) * 0.6, abs(val) + 0.2 * r);
+}
+
+// 55. Sphere Packing (FCC dense packing fractal)
+vec2 mapSpherePacking(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xy = rot2D(t * 0.05) * p.xy;
+  float d = 1e10;
+  float trap = 0.0;
+  float sc = 1.0;
+  for (int i = 0; i < 8; i++) {
+    if (i >= iters) break;
+    vec3 q = fract(p * sc) - 0.5;
+    float sphere = length(q) - 0.25 / sc;
+    d = min(d, sphere);
+    trap += exp(-3.0 * abs(sphere));
+    sc *= phi;
+  }
+  float bound = length(p_in) - 2.0;
+  return vec2(max(d, bound) * 0.5, trap * 0.1);
+}
+
+// 56. Nova Fractal (Newton + Mandelbrot hybrid)
+vec2 mapNovaFractal(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  vec2 z = p.xy * 1.2;
+  vec2 c = vec2(p.z * 0.6, p.x * 0.2);
+  float md = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    float r2 = dot(z, z);
+    if (r2 > 16.0) break;
+    vec2 z3 = vec2(z.x * z.x * z.x - 3.0 * z.x * z.y * z.y,
+                   3.0 * z.x * z.x * z.y - z.y * z.y * z.y);
+    vec2 dz3 = 3.0 * z * z;
+    z = z - z3 / (dz3 + vec2(0.0001)) + c;
+    md *= 2.0 * length(z);
+    trap += exp(-2.0 * length(z));
+  }
+  float d = (length(z) - 2.0) * 0.5 / max(md, 0.001);
+  float bound = length(p_in) - 2.2;
+  return vec2(max(abs(d), bound * 0.3), trap);
+}
+
+// 57. Golden Knot (torus knot with golden winding)
+vec2 mapGoldenKnot(vec3 p_in, float t, float phi) {
+  vec3 p = p_in;
+  p.xz = rot2D(t * 0.1) * p.xz;
+  float R = 1.0;
+  float r_tube = 0.18;
+  float pq = phi;
+  float theta = atan(p.y, p.x);
+  float phiK = theta * pq;
+  vec3 curve = vec3((R + r_tube * cos(phiK * 3.0)) * cos(theta),
+                    (R + r_tube * cos(phiK * 3.0)) * sin(theta),
+                    r_tube * sin(phiK * 3.0));
+  float d = length(p - curve) - 0.08;
+  float bound = length(p_in) - 2.0;
+  return vec2(max(d, bound) * 0.7, abs(phiK) * 0.1);
+}
+
+// 58. Spherical Harmonics (quantum orbital shapes)
+vec2 mapSphericalHarmonics(vec3 p_in, float t, float phi) {
+  vec3 p = p_in * 1.3;
+  p.xz = rot2D(t * 0.08) * p.xz;
+  float r = length(p);
+  float theta = atan(length(p.xy), p.z);
+  float phiA = atan(p.y, p.x);
+  float Y32 = sin(theta) * sin(theta) * cos(theta) * cos(3.0 * phiA);
+  float Y42 = sin(theta) * sin(theta) * (7.0 * cos(theta) * cos(theta) - 1.0) * cos(2.0 * phiA);
+  float radial = 1.0 + 0.4 * Y32 + 0.25 * Y42;
+  float d = abs(r - radial * 0.9) - 0.04;
+  float bound = length(p_in) - 2.2;
+  return vec2(max(d, bound) * 0.5, abs(Y32) + abs(Y42));
+}
+
+// 59. Fractal Cross (3D plus-shaped recursive IFS)
+vec2 mapFractalCross(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  float sc = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 12; i++) {
+    if (i >= iters) break;
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    p = p * 2.0 - vec3(1.0);
+    if (p.y < p.x) p.xy = p.yx;
+    if (p.z < p.x) p.xz = p.zx;
+    p = p * 2.0 - vec3(1.0);
+    sc *= 0.5;
+    trap += length(p) * sc;
+  }
+  float d = length(p) * sc - 0.05;
+  return vec2(d, trap * 0.06);
+}
+
+// 60. Reaction-Diffusion (Gray-Scott Turing pattern)
+vec2 mapReactionDiffusion(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 2.0;
+  p.xy = rot2D(t * 0.06) * p.xy;
+  float f = 0.04 + phi * 0.01;
+  float k = 0.06 + phi * 0.005;
+  float u = cos(p.x * phi) * cos(p.y * phi) * cos(p.z * phi);
+  float v = sin(p.x * 2.0 + t * 0.2) * sin(p.y * 2.0) * sin(p.z * 2.0);
+  float lap = (cos(p.x * 3.0) + cos(p.y * 3.0) + cos(p.z * 3.0)) / 3.0;
+  float pattern = u * (1.0 - u) - f * u * v + k * lap;
+  float d = abs(pattern) - 0.15;
+  float bound = length(p_in) - 2.0;
+  return vec2(max(d * 0.4, bound) * 0.6, abs(pattern));
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -947,7 +1344,26 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 37) return mapBeltramiPseudosphere(p, t, phi, iters);
   if (ftype == 38) return mapSpinFoamNetwork(p, t, phi, iters);
   if (ftype == 39) return mapRamanujanTau(p, t, phi, iters);
-  return mapBelousovWaves(p, t, phi, iters);
+  if (ftype == 40) return mapBelousovWaves(p, t, phi, iters);
+  if (ftype == 41) return mapHenonAttractor(p, t, phi, iters);
+  if (ftype == 42) return mapAizawaAttractor(p, t, phi, iters);
+  if (ftype == 43) return mapThomasAttractor(p, t, phi, iters);
+  if (ftype == 44) return mapHalvorsenAttractor(p, t, phi, iters);
+  if (ftype == 45) return mapJuliaSet3D(p, t, phi, iters);
+  if (ftype == 46) return mapMultibrot3(p, t, phi, iters);
+  if (ftype == 47) return mapTetrix(p, t, phi, iters);
+  if (ftype == 48) return mapGosperCurve(p, t, phi, iters);
+  if (ftype == 49) return mapLSystemPlant(p, t, phi, iters);
+  if (ftype == 50) return mapSchwarzP(p, t, phi);
+  if (ftype == 51) return mapSchwarzD(p, t, phi);
+  if (ftype == 52) return mapApollonianGasket(p, t, phi, iters);
+  if (ftype == 53) return mapBarnsleyFern3D(p, t, phi, iters);
+  if (ftype == 54) return mapKleinQuartic(p, t, phi, iters);
+  if (ftype == 55) return mapSpherePacking(p, t, phi, iters);
+  if (ftype == 56) return mapNovaFractal(p, t, phi, iters);
+  if (ftype == 57) return mapGoldenKnot(p, t, phi);
+  if (ftype == 58) return mapSphericalHarmonics(p, t, phi);
+  return mapReactionDiffusion(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
