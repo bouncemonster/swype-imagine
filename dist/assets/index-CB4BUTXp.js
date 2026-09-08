@@ -2286,9 +2286,10 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
     let blend = clamp(u.hybrid_blend, 0.0, 0.7);
 
     if (compOp == 0) {
-      // 0: Continuous Topological Morph
-      current_d = mix(current_d, dB, blend);
-      current_trap = mix(current_trap, trapB, blend);
+      // 0: Continuous Topological Morph — stronger blend for visible transition
+      let morphBlend = blend * 0.7 + 0.15; // Minimum 15% blend even at low settings
+      current_d = mix(current_d, dB, morphBlend);
+      current_trap = mix(current_trap, trapB, morphBlend * 0.8);
     } else if (compOp == 1) {
       // 1: Polynomial Smooth Union (smin)
       let h = clamp(0.5 + 0.5 * (dB - current_d) / k, 0.0, 1.0);
@@ -2305,14 +2306,15 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
       current_d = mix(current_d, -dB, h) + k * h * (1.0 - h);
       current_trap = mix(current_trap, trapB, h);
     } else if (compOp == 4) {
-      // 4: Domain Warp
-      current_d = mix(current_d, dB, blend * 0.2);
-      current_trap = mix(current_trap, trapB, 0.35);
+      // 4: Domain Warp — stronger spatial distortion
+      let warpBlend = blend * 0.5 + 0.1; // Stronger base warp
+      current_d = mix(current_d, dB, warpBlend);
+      current_trap = mix(current_trap, trapB, 0.55); // More trap influence
     } else if (compOp == 5) {
-      // 5: Harmonic Spectral Resonance (Smooth micro-relief without derivative explosion)
-      let disp = clamp(dB * 0.16, -0.05, 0.05) * blend;
+      // 5: Harmonic Spectral Resonance — stronger displacement
+      let disp = clamp(dB * 0.35, -0.12, 0.12) * blend; // 2x displacement range
       current_d = current_d + disp;
-      current_trap = min(current_trap, trapB);
+      current_trap = min(current_trap, trapB * 0.7 + current_trap * 0.3); // Blend traps
     } else if (compOp == 6) {
       // 6: Interlaced TPMS Cellular Lattice
       let lattice = abs(dB) - 0.035;
@@ -4964,9 +4966,10 @@ vec2 sceneSDF(vec3 p_world) {
     float blend = clamp(u_hybrid_blend, 0.0, 0.7);
 
     if (compOp == 0) {
-      // 0: Continuous Topological Morph
-      current_d = mix(current_d, dB, blend);
-      current_trap = mix(current_trap, trapB, blend);
+      // 0: Continuous Topological Morph — stronger blend for visible transition
+      float morphBlend = blend * 0.7 + 0.15; // Minimum 15% blend even at low settings
+      current_d = mix(current_d, dB, morphBlend);
+      current_trap = mix(current_trap, trapB, morphBlend * 0.8);
     } else if (compOp == 1) {
       // 1: Polynomial Smooth Union (smin)
       float h = clamp(0.5 + 0.5 * (dB - current_d) / k, 0.0, 1.0);
@@ -4983,14 +4986,15 @@ vec2 sceneSDF(vec3 p_world) {
       current_d = mix(current_d, -dB, h) + k * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, h);
     } else if (compOp == 4) {
-      // 4: Domain Warp
-      current_d = mix(current_d, dB, blend * 0.2);
-      current_trap = mix(current_trap, trapB, 0.35);
+      // 4: Domain Warp — stronger spatial distortion
+      float warpBlend = blend * 0.5 + 0.1; // Stronger base warp
+      current_d = mix(current_d, dB, warpBlend);
+      current_trap = mix(current_trap, trapB, 0.55); // More trap influence
     } else if (compOp == 5) {
-      // 5: Harmonic Spectral Resonance
-      float disp = clamp(dB * 0.16, -0.05, 0.05) * blend;
+      // 5: Harmonic Spectral Resonance — stronger displacement
+      float disp = clamp(dB * 0.35, -0.12, 0.12) * blend; // 2x displacement range
       current_d = current_d + disp;
-      current_trap = min(current_trap, trapB);
+      current_trap = min(current_trap, trapB * 0.7 + current_trap * 0.3); // Blend traps
     } else if (compOp == 6) {
       // 6: Interlaced TPMS Cellular Lattice
       float lattice = abs(dB) - 0.035;
