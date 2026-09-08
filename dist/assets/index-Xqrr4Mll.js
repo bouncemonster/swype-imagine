@@ -2658,10 +2658,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
-    // curvNorm provides surface variation; length(p-ro) is ray distance (always meaningful)
-    // palette_rotation animates the seed over time for dynamic color cycling
+    // Reduced trap weight to prevent horizontal banding; added position-based variation
     let seedAnim = u.palette_seed + u.palette_rotation * u.time * 2.5;
-    let phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u.time * 0.04 + seedAnim * 0.01);
+    let trapSmooth = effectiveTrap / (1.0 + effectiveTrap); // Soft saturation, no jumps
+    let phase = fract(trapSmooth * 0.8 + curvNorm * 1.2 + p.y * 0.5 + p.x * 0.3 + length(p - ro) * 0.15 + u.time * 0.04 + seedAnim * 0.01);
     let w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     let w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     let w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
@@ -2828,10 +2828,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u.accent_color * caustic * 0.6;
     }
 
-    // Distance-relative atmospheric falloff
-    // Smooth fog interpolation — no discontinuous jumps with zoom
-    let fogStart: f32 = mix(16.0, max(2.0, cam_dist + 2.5), smoothstep(0.5, 3.0, cam_dist));
-    let fogDensity: f32 = mix(0.012, 0.02, smoothstep(0.3, 1.5, cam_dist));
+    // Distance-relative atmospheric falloff — fog starts well beyond surface at all zoom levels
+    let fogStart: f32 = mix(20.0, max(4.0, cam_dist * 3.0 + 4.0), smoothstep(0.5, 5.0, cam_dist));
+    let fogDensity: f32 = mix(0.008, 0.015, smoothstep(0.3, 3.0, cam_dist));
     let fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
     col = mix(col, vec3<f32>(0.005, 0.004, 0.008), fog * clamp(u.volumetric_fog, 0.0, 1.0));
   }
@@ -5359,10 +5358,10 @@ void main() {
     float trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
-    // curvNorm provides surface variation; length(p-ro) is ray distance (always meaningful)
-    // palette_rotation animates the seed over time for dynamic color cycling
+    // Reduced trap weight to prevent horizontal banding; added position-based variation
     float seedAnim = u_palette_seed + u_palette_rotation * u_time * 2.5;
-    float phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u_time * 0.04 + seedAnim * 0.01);
+    float trapSmooth = effectiveTrap / (1.0 + effectiveTrap); // Soft saturation, no jumps
+    float phase = fract(trapSmooth * 0.8 + curvNorm * 1.2 + p.y * 0.5 + p.x * 0.3 + length(p - ro) * 0.15 + u_time * 0.04 + seedAnim * 0.01);
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
@@ -5521,10 +5520,9 @@ void main() {
       col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u_accent_color * caustic * 0.6;
     }
 
-    // Distance-relative atmospheric falloff
-    // Smooth fog interpolation — no discontinuous jumps with zoom
-    float fogStart = mix(16.0, max(2.0, cam_dist + 2.5), smoothstep(0.5, 3.0, cam_dist));
-    float fogDensity = mix(0.012, 0.02, smoothstep(0.3, 1.5, cam_dist));
+    // Distance-relative atmospheric falloff — fog starts well beyond surface at all zoom levels
+    float fogStart = mix(20.0, max(4.0, cam_dist * 3.0 + 4.0), smoothstep(0.5, 5.0, cam_dist));
+    float fogDensity = mix(0.008, 0.015, smoothstep(0.3, 3.0, cam_dist));
     float fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
     col = mix(col, vec3(0.005, 0.004, 0.008), fog * clamp(u_volumetric_fog, 0.0, 1.0));
   }
