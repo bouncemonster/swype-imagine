@@ -106,6 +106,37 @@ export function getFractalIndex(type?: string): number {
     case 'sprottAttractor': return 77; // Map to deJongAttractor (similar)
     case 'torusKnot': return 57; // Map to goldenKnot
     case 'worleyNoise': return 60; // Map to reactionDiffusion
+    // 4D POLYTOPES (104-108)
+    case 'tesseract': return 104;
+    case '120Cell': return 105;
+    case '600Cell': return 106;
+    case '24Cell': return 107;
+    case '5Cell': return 108;
+    // HIGHER-DIMENSIONAL MANIFOLDS (109-112)
+    case 'kleinBottle': return 109;
+    case 'projectivePlane': return 110;
+    case 'mobiusStrip': return 111;
+    case 'torusKnot4D': return 112;
+    // FRACTAL FLAMES (113-125)
+    case 'flameSinusoidal': return 113;
+    case 'flameSpherical': return 114;
+    case 'flameSwirl': return 115;
+    case 'flameHorseshoe': return 116;
+    case 'flameButterfly': return 117;
+    case 'flameHeart': return 118;
+    case 'flameSpiral': return 119;
+    case 'flameHyperbolic': return 120;
+    case 'flameDiamond': return 121;
+    case 'flameWaves': return 122;
+    case 'flamePopcorn': return 123;
+    case 'flameRings': return 124;
+    case 'flameFan': return 125;
+    // ADVANCED IFS (126-130)
+    case 'ifs3DTree': return 126;
+    case 'ifs3DFern': return 127;
+    case 'ifs3DSierpinski': return 128;
+    case 'ifs3DCantor': return 129;
+    case 'ifs3DKoch': return 130;
     default: return 0;
   }
 }

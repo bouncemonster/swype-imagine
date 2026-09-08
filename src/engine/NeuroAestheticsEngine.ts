@@ -374,6 +374,37 @@ export const ALL_FRACTAL_TYPES: FractalType[] = [
   'bedheadAttractor',
   'fourSpotAttractor',
   'svenssonAttractor',
+  // 4D POLYTOPES
+  'tesseract',
+  '120Cell',
+  '600Cell',
+  '24Cell',
+  '5Cell',
+  // HIGHER-DIMENSIONAL MANIFOLDS
+  'kleinBottle',
+  'projectivePlane',
+  'mobiusStrip',
+  'torusKnot4D',
+  // FRACTAL FLAMES
+  'flameSinusoidal',
+  'flameSpherical',
+  'flameSwirl',
+  'flameHorseshoe',
+  'flameButterfly',
+  'flameHeart',
+  'flameSpiral',
+  'flameHyperbolic',
+  'flameDiamond',
+  'flameWaves',
+  'flamePopcorn',
+  'flameRings',
+  'flameFan',
+  // ADVANCED IFS
+  'ifs3DTree',
+  'ifs3DFern',
+  'ifs3DSierpinski',
+  'ifs3DCantor',
+  'ifs3DKoch',
 ];
 
 export const FRACTAL_NAMES: Record<FractalType, string> = {
@@ -463,6 +494,37 @@ export const FRACTAL_NAMES: Record<FractalType, string> = {
   bedheadAttractor: '3D хаотический аттрактор Bedhead',
   fourSpotAttractor: '4-крылый хаотический аттрактор FourSpot',
   svenssonAttractor: 'Странный аттрактор Свенссона',
+  // 4D POLYTOPES
+  tesseract: 'Тессеракт (4D гиперкуб)',
+  '120Cell': '120-ячейка (4D додекаэдр)',
+  '600Cell': '600-ячейка (4D икосаэдр)',
+  '24Cell': '24-ячейка (самодвойственный)',
+  '5Cell': '5-ячейка (4D тетраэдр)',
+  // HIGHER-DIMENSIONAL MANIFOLDS
+  kleinBottle: 'Бутылка Клейна (неориентируемая)',
+  projectivePlane: 'Проективная плоскость RP²',
+  mobiusStrip: 'Лента Мёбиуса 3D',
+  torusKnot4D: 'Торический узел 4D',
+  // FRACTAL FLAMES
+  flameSinusoidal: 'Пламя: Синусоидальное',
+  flameSpherical: 'Пламя: Сферическое',
+  flameSwirl: 'Пламя: Вихрь',
+  flameHorseshoe: 'Пламя: Подкова',
+  flameButterfly: 'Пламя: Бабочка',
+  flameHeart: 'Пламя: Сердце',
+  flameSpiral: 'Пламя: Спираль',
+  flameHyperbolic: 'Пламя: Гиперболическое',
+  flameDiamond: 'Пламя: Алмаз',
+  flameWaves: 'Пламя: Волны',
+  flamePopcorn: 'Пламя: Попкорн',
+  flameRings: 'Пламя: Кольца',
+  flameFan: 'Пламя: Веер',
+  // ADVANCED IFS
+  ifs3DTree: 'IFS 3D Дерево',
+  ifs3DFern: 'IFS 3D Папоротник Барнсли',
+  ifs3DSierpinski: 'IFS 3D Серпинского',
+  ifs3DCantor: 'IFS 3D Пыль Кантора',
+  ifs3DKoch: 'IFS 3D Кривая Коха',
 };
 
 export const DEFAULT_ZOOMS: Record<FractalType, number> = {
@@ -552,6 +614,37 @@ export const DEFAULT_ZOOMS: Record<FractalType, number> = {
   bedheadAttractor: 2.5,
   fourSpotAttractor: 2.5,
   svenssonAttractor: 2.5,
+  // 4D POLYTOPES
+  tesseract: 3.0,
+  '120Cell': 3.5,
+  '600Cell': 3.0,
+  '24Cell': 2.5,
+  '5Cell': 2.0,
+  // HIGHER-DIMENSIONAL MANIFOLDS
+  kleinBottle: 2.5,
+  projectivePlane: 2.0,
+  mobiusStrip: 1.5,
+  torusKnot4D: 3.0,
+  // FRACTAL FLAMES
+  flameSinusoidal: 2.5,
+  flameSpherical: 2.6,
+  flameSwirl: 2.4,
+  flameHorseshoe: 2.5,
+  flameButterfly: 2.45,
+  flameHeart: 2.5,
+  flameSpiral: 2.4,
+  flameHyperbolic: 2.6,
+  flameDiamond: 2.5,
+  flameWaves: 2.45,
+  flamePopcorn: 2.4,
+  flameRings: 2.5,
+  flameFan: 2.45,
+  // ADVANCED IFS
+  ifs3DTree: 2.0,
+  ifs3DFern: 2.2,
+  ifs3DSierpinski: 2.0,
+  ifs3DCantor: 2.0,
+  ifs3DKoch: 2.0,
 };
 
 export interface TasteProfile {

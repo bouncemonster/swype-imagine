@@ -2430,6 +2430,358 @@ float mapMengerMandelboxHybrid(vec3 p, float t, float phi, int iters) {
   return minDist * 0.4;
 }
 
+// ============= 4D POLYTOPES (projected from 4D to 3D) =============
+
+vec4 project4Dto3D(vec4 p4, float distance) {
+  float w = 1.0 / (distance - p4.w);
+  return vec4(p4.xyz * w, 0.0);
+}
+
+float mapTesseract(vec3 p, float t, float phi, int iters) {
+  float angle1 = t * 0.3;
+  float angle2 = t * 0.2;
+  float c1 = cos(angle1), s1 = sin(angle1);
+  float c2 = cos(angle2), s2 = sin(angle2);
+  vec4 p4 = vec4(p, 0.0);
+  p4.xw = mat2(c1, -s1, s1, c1) * p4.xw;
+  p4.yw = mat2(c2, -s2, s2, c2) * p4.yw;
+  vec3 projected = project4Dto3D(p4, 3.0).xyz;
+  vec3 d = abs(projected) - vec3(1.0);
+  float cubeDist = length(max(d, 0.0)) + min(max(d.x, max(d.y, d.z)), 0.0);
+  float scale = phi;
+  for (int i = 0; i < 8; i++) {
+    projected = abs(projected) - 0.5;
+    projected *= scale;
+    if (i % 2 == 0) projected = projected.zxy;
+  }
+  return length(projected) * pow(scale, -8.0);
+}
+
+float map120Cell(vec3 p, float t, float phi, int iters) {
+  float angle = t * 0.25;
+  float c = cos(angle), s = sin(angle);
+  vec4 p4 = vec4(p, 0.0);
+  p4.xw = mat2(c, -s, s, c) * p4.xw;
+  p4.yz = mat2(c, s, -s, c) * p4.yz;
+  vec3 projected = project4Dto3D(p4, 3.5).xyz;
+  vec3 q = abs(projected);
+  float d = max(max(q.x + q.y + q.z - phi, q.x + q.y - q.z), max(q.x - q.y + q.z, -q.x + q.y + q.z)) - 1.0;
+  float scale = 1.0 / phi;
+  for (int i = 0; i < 6; i++) {
+    projected = abs(projected) - 0.618;
+    projected *= phi;
+    projected = projected.yzx;
+  }
+  return length(projected) * pow(scale, 6.0) * 0.5;
+}
+
+float map600Cell(vec3 p, float t, float phi, int iters) {
+  float angle = t * 0.2;
+  float c = cos(angle), s = sin(angle);
+  vec4 p4 = vec4(p, 0.0);
+  p4.xw = mat2(c, -s, s, c) * p4.xw;
+  p4.zw = mat2(c, s, -s, c) * p4.zw;
+  vec3 projected = project4Dto3D(p4, 3.0).xyz;
+  vec3 q = abs(projected);
+  float d = max(max(q.x * 1.618 + q.y, q.y * 1.618 + q.z), q.z * 1.618 + q.x) - 1.0;
+  float scale = phi;
+  for (int i = 0; i < 7; i++) {
+    projected = abs(projected) - 0.5;
+    projected *= scale;
+    projected = projected.zxy;
+  }
+  return length(projected) * pow(scale, -7.0);
+}
+
+float map24Cell(vec3 p, float t, float phi, int iters) {
+  float angle = t * 0.3;
+  float c = cos(angle), s = sin(angle);
+  vec4 p4 = vec4(p, 0.0);
+  p4.xy = mat2(c, -s, s, c) * p4.xy;
+  p4.zw = mat2(c, s, -s, c) * p4.zw;
+  vec3 projected = project4Dto3D(p4, 2.5).xyz;
+  vec3 q = abs(projected);
+  float d = max(max(q.x + q.y, q.y + q.z), q.z + q.x) - 1.414;
+  float scale = 1.0 / phi;
+  for (int i = 0; i < 8; i++) {
+    projected = abs(projected) - 0.707;
+    projected *= phi;
+    if (i % 3 == 0) projected = projected.zxy;
+    else if (i % 3 == 1) projected = projected.yzx;
+  }
+  return length(projected) * pow(scale, 8.0) * 0.6;
+}
+
+float map5Cell(vec3 p, float t, float phi, int iters) {
+  float angle = t * 0.35;
+  float c = cos(angle), s = sin(angle);
+  vec4 p4 = vec4(p, 0.0);
+  p4.xw = mat2(c, -s, s, c) * p4.xw;
+  vec3 projected = project4Dto3D(p4, 2.0).xyz;
+  vec3 q = abs(projected);
+  float d = max(q.x + q.y + q.z - 1.0, -q.x - q.y - q.z - 1.0);
+  float scale = phi;
+  for (int i = 0; i < 10; i++) {
+    projected = abs(projected) - 0.618;
+    projected *= scale;
+    projected = projected.zxy;
+  }
+  return length(projected) * pow(scale, -10.0);
+}
+
+float mapKleinBottle(vec3 p, float t, float phi) {
+  float u = atan(p.y, p.x);
+  float v = atan(p.z, length(p.xy));
+  float r = 2.0 + cos(u) * sin(v) - sin(u) * sin(2.0 * v);
+  vec3 surface = vec3(r * cos(u), r * sin(u), sin(u) * sin(v) + cos(u) * sin(2.0 * v));
+  return length(p - surface) - 0.1;
+}
+
+float mapProjectivePlane(vec3 p, float t, float phi) {
+  float u = atan(p.y, p.x);
+  float v = atan(p.z, length(p.xy));
+  float r = 1.5 + cos(2.0 * u) * sin(v);
+  vec3 surface = vec3(r * cos(u) * cos(v), r * sin(u) * cos(v), sin(2.0 * u) * sin(v));
+  return length(p - surface) - 0.08;
+}
+
+float mapMobiusStrip3D(vec3 p, float t, float phi) {
+  float u = atan(p.y, p.x);
+  float v = p.z;
+  float r = 1.0 + 0.5 * cos(u * 0.5) * v;
+  vec3 surface = vec3(r * cos(u), r * sin(u), 0.5 * sin(u * 0.5) * v);
+  return length(p - surface) - 0.05;
+}
+
+float mapTorusKnot4D(vec3 p, float t, float phi, int iters) {
+  float angle = t * 0.2;
+  float c = cos(angle), s = sin(angle);
+  vec4 p4 = vec4(p, 0.0);
+  p4.xw = mat2(c, -s, s, c) * p4.xw;
+  vec3 projected = project4Dto3D(p4, 3.0).xyz;
+  float u = atan(projected.y, projected.x);
+  float r = 1.0 + 0.3 * cos(3.0 * u);
+  vec3 torus = vec3(r * cos(2.0 * u), r * sin(2.0 * u), 0.3 * sin(3.0 * u));
+  return length(projected - torus) - 0.08;
+}
+
+float mapFlameSinusoidal(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 12; i++) {
+    z = vec3(sin(z.x), sin(z.y), sin(z.z)) * phi;
+    z += 0.1 * p;
+    if (i % 3 == 0) z = z.zxy;
+  }
+  return length(z) * pow(phi, -12.0) - 0.5;
+}
+
+float mapFlameSpherical(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float r2 = dot(z, z);
+  for (int i = 0; i < 10; i++) {
+    z = z / r2 * phi;
+    z += 0.15 * p;
+    r2 = dot(z, z);
+  }
+  return length(z) * pow(phi, -10.0) - 0.6;
+}
+
+float mapFlameSwirl(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 14; i++) {
+    float r = length(z.xy);
+    float angle = atan(z.y, z.x) + r * 0.5;
+    z.xy = vec2(cos(angle), sin(angle)) * r;
+    z *= phi * 0.9;
+    z += 0.1 * p;
+  }
+  return length(z) * pow(phi, -14.0) - 0.4;
+}
+
+float mapFlameHorseshoe(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 11; i++) {
+    float r = length(z);
+    float angle = atan(z.y, z.x) * 2.0;
+    z = vec3(cos(angle), sin(angle), z.z) * r / (r + 1.0);
+    z *= phi;
+    z += 0.12 * p;
+  }
+  return length(z) * pow(phi, -11.0) - 0.5;
+}
+
+float mapFlameButterfly(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 13; i++) {
+    float r = length(z.xy);
+    float x = z.x * cos(r) - z.y * sin(r);
+    float y = z.x * sin(r) + z.y * cos(r);
+    z.xy = vec2(x, y) * phi * 0.8;
+    z += 0.08 * p;
+  }
+  return length(z) * pow(phi, -13.0) - 0.45;
+}
+
+float mapFlameHeart(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 12; i++) {
+    float r = length(z);
+    float angle = atan(z.y, z.x);
+    float heart = 1.0 - sin(angle);
+    z.xy = vec2(cos(angle), sin(angle)) * r * heart;
+    z *= phi * 0.85;
+    z += 0.1 * p;
+  }
+  return length(z) * pow(phi, -12.0) - 0.5;
+}
+
+float mapFlameSpiral(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 15; i++) {
+    float r = length(z.xy);
+    float angle = atan(z.y, z.x) + 0.5;
+    z.xy = vec2(cos(angle), sin(angle)) * (r + 0.1);
+    z *= phi * 0.95;
+    z += 0.05 * p;
+  }
+  return length(z) * pow(phi, -15.0) - 0.4;
+}
+
+float mapFlameHyperbolic(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 10; i++) {
+    float r = length(z.xy);
+    float angle = atan(z.y, z.x);
+    z.xy = vec2(cosh(r) * cos(angle), sinh(r) * sin(angle));
+    z *= phi * 0.7;
+    z += 0.15 * p;
+  }
+  return length(z) * pow(phi, -10.0) - 0.6;
+}
+
+float mapFlameDiamond(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 11; i++) {
+    float r = length(z.xy);
+    float angle = atan(z.y, z.x);
+    z.xy = vec2(sin(angle) * r, cos(angle) * r);
+    z *= phi * 0.9;
+    z += 0.12 * p;
+  }
+  return length(z) * pow(phi, -11.0) - 0.5;
+}
+
+float mapFlameWaves(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 12; i++) {
+    z.x += 0.3 * sin(z.y * 3.14159);
+    z.y += 0.3 * sin(z.x * 3.14159);
+    z *= phi * 0.85;
+    z += 0.1 * p;
+  }
+  return length(z) * pow(phi, -12.0) - 0.45;
+}
+
+float mapFlamePopcorn(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 13; i++) {
+    float dx = 0.2 * sin(tan(z.y));
+    float dy = 0.2 * sin(tan(z.x));
+    z.x += dx;
+    z.y += dy;
+    z *= phi * 0.9;
+    z += 0.08 * p;
+  }
+  return length(z) * pow(phi, -13.0) - 0.4;
+}
+
+float mapFlameRings(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 10; i++) {
+    float r = length(z.xy);
+    float angle = atan(z.y, z.x);
+    r = 0.5 + 0.3 * sin(r * 10.0);
+    z.xy = vec2(cos(angle), sin(angle)) * r;
+    z *= phi * 0.8;
+    z += 0.15 * p;
+  }
+  return length(z) * pow(phi, -10.0) - 0.5;
+}
+
+float mapFlameFan(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  for (int i = 0; i < 11; i++) {
+    float r = length(z.xy);
+    float angle = atan(z.y, z.x);
+    if (mod(r, 0.5) > 0.25) angle += 0.5;
+    z.xy = vec2(cos(angle), sin(angle)) * r;
+    z *= phi * 0.85;
+    z += 0.12 * p;
+  }
+  return length(z) * pow(phi, -11.0) - 0.45;
+}
+
+float mapIFS3DTree(vec3 p, float t, float phi, int iters) {
+  float d = length(p - vec3(0.0, 1.0, 0.0)) - 0.3;
+  for (int i = 0; i < 8; i++) {
+    p = abs(p) - vec3(0.5, 0.8, 0.5);
+    p.xz = mat2(cos(0.5), -sin(0.5), sin(0.5), cos(0.5)) * p.xz;
+    p *= phi * 0.7;
+    d = min(d, length(p) * pow(phi, -float(i)) * 0.5);
+  }
+  return d;
+}
+
+float mapIFS3DFern(vec3 p, float t, float phi, int iters) {
+  float d = 1e10;
+  for (int i = 0; i < 10; i++) {
+    vec3 z = p;
+    if (i % 4 == 0) z = z * 0.85 + vec3(0.0, 0.1, 0.0);
+    else if (i % 4 == 1) z = z * 0.2 + vec3(0.0, 0.2, 0.0);
+    else if (i % 4 == 2) { z.x = -z.x * 0.85; z = z + vec3(0.0, 0.15, 0.0); }
+    else { z.x = -z.x * 0.85; z = z + vec3(0.0, 0.1, 0.0); }
+    z *= phi;
+    d = min(d, length(z) * pow(phi, -float(i)));
+  }
+  return d - 0.1;
+}
+
+float mapIFS3DSierpinski(vec3 p, float t, float phi, int iters) {
+  float scale = 2.0;
+  for (int i = 0; i < 12; i++) {
+    if (p.x + p.y < 0.0) p.xy = -p.yx;
+    if (p.x + p.z < 0.0) p.xz = -p.zx;
+    if (p.y + p.z < 0.0) p.yz = -p.zy;
+    p = p * scale - (scale - 1.0);
+  }
+  return length(p) * pow(scale, -12.0);
+}
+
+float mapIFS3DCantor(vec3 p, float t, float phi, int iters) {
+  float d = 1e10;
+  for (int i = 0; i < 8; i++) {
+    vec3 z = p;
+    z = fract(z * 3.0) - 0.5;
+    z *= phi;
+    d = min(d, length(z) * pow(phi, -float(i)) * 0.3);
+  }
+  return d;
+}
+
+float mapIFS3DKoch(vec3 p, float t, float phi, int iters) {
+  float d = length(p) - 1.0;
+  for (int i = 0; i < 10; i++) {
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    if (p.y < p.z) p.yz = p.zy;
+    p = p * 3.0 - vec3(2.0, 1.0, 1.0);
+    p.xz = mat2(0.5, -0.866, 0.866, 0.5) * p.xz;
+    d = min(d, length(p) * pow(3.0, -float(i)));
+  }
+  return d * 0.5;
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -2537,6 +2889,37 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 101) return vec2(mapAmazingBox(p, t, phi, iters), 0.0);
   if (ftype == 102) return vec2(mapMandelbulbMandelboxHybrid(p, t, phi, iters), 0.0);
   if (ftype == 103) return vec2(mapMengerMandelboxHybrid(p, t, phi, iters), 0.0);
+  // 4D POLYTOPES (projected from 4D to 3D)
+  if (ftype == 104) return vec2(mapTesseract(p, t, phi, iters), 0.0); // 4D hypercube
+  if (ftype == 105) return vec2(map120Cell(p, t, phi, iters), 0.0); // 4D dodecahedron
+  if (ftype == 106) return vec2(map600Cell(p, t, phi, iters), 0.0); // 4D icosahedron
+  if (ftype == 107) return vec2(map24Cell(p, t, phi, iters), 0.0); // self-dual 4D polytope
+  if (ftype == 108) return vec2(map5Cell(p, t, phi, iters), 0.0); // 4D tetrahedron
+  // HIGHER-DIMENSIONAL MANIFOLDS
+  if (ftype == 109) return vec2(mapKleinBottle(p, t, phi), 0.0); // non-orientable surface
+  if (ftype == 110) return vec2(mapProjectivePlane(p, t, phi), 0.0); // RP^2
+  if (ftype == 111) return vec2(mapMobiusStrip3D(p, t, phi), 0.0); // twisted strip
+  if (ftype == 112) return vec2(mapTorusKnot4D(p, t, phi, iters), 0.0); // 4D torus knot
+  // FRACTAL FLAMES (Apophysis variations)
+  if (ftype == 113) return vec2(mapFlameSinusoidal(p, t, phi, iters), 0.0);
+  if (ftype == 114) return vec2(mapFlameSpherical(p, t, phi, iters), 0.0);
+  if (ftype == 115) return vec2(mapFlameSwirl(p, t, phi, iters), 0.0);
+  if (ftype == 116) return vec2(mapFlameHorseshoe(p, t, phi, iters), 0.0);
+  if (ftype == 117) return vec2(mapFlameButterfly(p, t, phi, iters), 0.0);
+  if (ftype == 118) return vec2(mapFlameHeart(p, t, phi, iters), 0.0);
+  if (ftype == 119) return vec2(mapFlameSpiral(p, t, phi, iters), 0.0);
+  if (ftype == 120) return vec2(mapFlameHyperbolic(p, t, phi, iters), 0.0);
+  if (ftype == 121) return vec2(mapFlameDiamond(p, t, phi, iters), 0.0);
+  if (ftype == 122) return vec2(mapFlameWaves(p, t, phi, iters), 0.0);
+  if (ftype == 123) return vec2(mapFlamePopcorn(p, t, phi, iters), 0.0);
+  if (ftype == 124) return vec2(mapFlameRings(p, t, phi, iters), 0.0);
+  if (ftype == 125) return vec2(mapFlameFan(p, t, phi, iters), 0.0);
+  // ADVANCED IFS (3D affine transforms)
+  if (ftype == 126) return vec2(mapIFS3DTree(p, t, phi, iters), 0.0);
+  if (ftype == 127) return vec2(mapIFS3DFern(p, t, phi, iters), 0.0);
+  if (ftype == 128) return vec2(mapIFS3DSierpinski(p, t, phi, iters), 0.0);
+  if (ftype == 129) return vec2(mapIFS3DCantor(p, t, phi, iters), 0.0);
+  if (ftype == 130) return vec2(mapIFS3DKoch(p, t, phi, iters), 0.0);
   return mapPhyllotaxis(p, t, phi, iters); // Default fallback
 }
 
