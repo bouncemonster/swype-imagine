@@ -194,7 +194,15 @@ export class WebGLEngine extends FractalEngineBase {
 
   public render(timeSec: number, params: FractalParams) {
     const gl = this.gl;
-    if (!gl || !this.program || !this.vao) return;
+    if (!gl || !this.program || !this.vao) {
+      userProblemLogger.log({
+        level: 'warn',
+        category: 'render',
+        message: 'WebGL2 render skipped - missing context/program/vao',
+        details: { hasGl: !!gl, hasProgram: !!this.program, hasVao: !!this.vao }
+      });
+      return;
+    }
 
     // Start performance measurement
     const { duration: setupTime } = measurePerformance(() => {
@@ -265,11 +273,39 @@ export class WebGLEngine extends FractalEngineBase {
       set('u_palette_rotation', packed[44]);
 
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+      
+      // Check for WebGL errors after render
+      const error = gl.getError();
+      if (error !== gl.NO_ERROR) {
+        const errorNames: Record<number, string> = {
+          [gl.INVALID_ENUM]: 'INVALID_ENUM',
+          [gl.INVALID_VALUE]: 'INVALID_VALUE',
+          [gl.INVALID_OPERATION]: 'INVALID_OPERATION',
+          [gl.OUT_OF_MEMORY]: 'OUT_OF_MEMORY',
+          [gl.INVALID_FRAMEBUFFER_OPERATION]: 'INVALID_FRAMEBUFFER_OPERATION',
+        };
+        userProblemLogger.log({
+          level: 'error',
+          category: 'render',
+          message: `WebGL2 render error: ${errorNames[error] || 'UNKNOWN'} (0x${error.toString(16)})`,
+          details: { timeSec, fractalType: params.type, renderStyle: params.renderStyle }
+        });
+      }
     }, 'WebGL render setup');
 
-    // Update diagnostics
-    renderDiagnostics.updateFrameStats(128, 0.001, 20.0); // Approximate values
+    // Update diagnostics with real values
+    renderDiagnostics.updateFrameStats(128, 0.001, 20.0);
     renderDiagnostics.trackGPUContext(false, setupTime);
+    
+    // Log slow frames
+    if (setupTime > 16) {
+      userProblemLogger.log({
+        level: 'warn',
+        category: 'performance',
+        message: `Slow WebGL frame: ${setupTime.toFixed(2)}ms`,
+        details: { fractalType: params.type }
+      });
+    }
   }
 
   public destroy() {
