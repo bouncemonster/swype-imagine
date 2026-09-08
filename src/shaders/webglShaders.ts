@@ -2201,7 +2201,7 @@ float mapHyperbolicTiling(vec3 p, float t, float phi) {
 float mapOrganicCell(vec3 p, float t, float phi) {
   float r = length(p);
   float theta = atan(p.y, p.x);
-  float phiAngle = acos(p.z / max(r, 0.01));
+  float phiAngle = acos(clamp(p.z / max(r, 0.01), -1.0, 1.0));
   float membrane = abs(r - 1.0 - sin(theta * 5.0 + t) * 0.1 - sin(phiAngle * 4.0) * 0.1);
   float nucleus = length(p - vec3(0.0, 0.0, 0.2)) - 0.3;
   float organelles = 0.0;
@@ -2244,7 +2244,7 @@ float mapMandelbulbPower4(vec3 p, float t, float phi, int iters) {
     if (i >= maxIter) break;
     r = length(z);
     if (r > 2.0) break;
-    float theta = acos(z.z / max(r, 0.001));
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     dr = pow(r, 3.0) * 4.0 * dr + 1.0;
     float zr = pow(r, 4.0);
@@ -2266,7 +2266,7 @@ float mapMandelbulbPower12(vec3 p, float t, float phi, int iters) {
     if (i >= maxIter) break;
     r = length(z);
     if (r > 2.0) break;
-    float theta = acos(z.z / max(r, 0.001));
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     dr = pow(r, 11.0) * 12.0 * dr + 1.0;
     float zr = pow(r, 12.0);
@@ -2313,7 +2313,7 @@ float mapMultibrot3Advanced(vec3 p, float t, float phi, int iters) {
     r = length(z);
     if (r > 2.0) break;
     // Power 3 in spherical coordinates
-    float theta = acos(z.z / max(r, 0.001));
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     dr = 3.0 * pow(r, 2.0) * dr + 1.0;
     float zr = pow(r, 3.0);
@@ -2388,7 +2388,7 @@ float mapMandelbulbMandelboxHybrid(vec3 p, float t, float phi, int iters) {
     if (i % 2 == 0) {
       // Mandelbulb: spherical coordinates
       float r = length(z);
-      float theta = acos(z.z / max(r, 0.001));
+      float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
       float phi_angle = atan(z.y, z.x);
       dr = pow(r, 7.0) * 8.0 * dr + 1.0;
       float zr = pow(r, 8.0);
@@ -3122,7 +3122,6 @@ void main() {
     // Instead, use only Ambient Occlusion for self-shadowing
     // This ensures only the fractal casts shadows on itself, not external objects
     float sh1 = 1.0; // No soft shadows — pure AO-based shading
-    float sh2 = 1.0;
 
     // IMPROVED SSS: 5 samples with better color bleeding (was 3)
     // Based on modern volumetric subsurface scattering techniques
@@ -3403,18 +3402,6 @@ void main() {
   // Subpixel anti-aliasing boost — sharpen edges via fwidth unsharp mask
   float edgeDetect = length(fwidth(col)) * 0.5;
   col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
-
-  // DEPTH OF FIELD: Simple distance-based blur for cinematic effect
-  // Based on camera distance - objects far from focal plane get blurred
-  float focalDistance = cam_dist; // Focus on the fractal surface
-  float dofStrength = abs(t - focalDistance) * 0.015; // Blur strength based on distance from focal plane
-  dofStrength = clamp(dofStrength, 0.0, 0.4); // Limit blur amount
-  
-  // Simple box blur approximation using screen-space derivatives
-  float blurAmount = dofStrength * 0.5;
-  vec3 colBlur = col;
-  colBlur += texture2D(u_texture, v_uv + vec2(blurAmount, 0.0)).rgb * 0.25; // Sample offset
-  col = mix(col, colBlur, 0.3); // Blend blurred version
 
   fragColor = vec4(col, 1.0);
 }

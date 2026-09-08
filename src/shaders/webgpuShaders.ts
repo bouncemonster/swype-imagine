@@ -150,7 +150,9 @@ fn mapMandelbulb(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (escaped) {
     d = 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
   } else {
-    d = 0.5 * log(max(r, 0.001)) * r / max(dr, 0.0001);
+    // FIX: Point is inside fractal - return small positive distance
+    // log(r) would be negative for r < 1, breaking SDF
+    d = 0.001 * f32(count - iters + 14); // Small positive value
   }
   return vec2<f32>(d, trap);
 }
@@ -1156,7 +1158,7 @@ fn mapJuliaSet3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var z = p.xy * 1.6;
   var dz = 1.0;
   var trap = 0.0;
-  for (var i = 0; i < 20; i++) {
+  for (var i = 0; i < 20; i = i + 1) {
     if (i >= iters) { break; }
     dz = 2.0 * length(z) * dz;
     z = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
@@ -1178,7 +1180,7 @@ fn mapMultibrot3(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let c = vec2<f32>(p.z * 0.7, p.x * 0.3);
   var md = 1.0;
   var trap = 0.0;
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < 16; i = i + 1) {
     if (i >= iters) { break; }
     let r = length(z);
     md = 3.0 * r * r * md;
@@ -1202,7 +1204,7 @@ fn mapTetrix(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let v2 = vec3<f32>(1.0, -1.0, -1.0);
   let v3 = vec3<f32>(-1.0, 1.0, -1.0);
   let v4 = vec3<f32>(-1.0, -1.0, 1.0);
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < 16; i = i + 1) {
     if (i >= iters) { break; }
     let d1 = length(p - v1); let d2 = length(p - v2);
     let d3 = length(p - v3); let d4 = length(p - v4);
@@ -1230,7 +1232,7 @@ fn mapGosperCurve(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let c3 = vec3<f32>(0.75, 1.3, 0.0); let c4 = vec3<f32>(-0.75, 1.3, 0.0);
   let c5 = vec3<f32>(-1.5, 0.0, 0.0); let c6 = vec3<f32>(-0.75, -1.3, 0.0);
   let c7 = vec3<f32>(0.75, -1.3, 0.0);
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 8; i = i + 1) {
     if (i >= iters) { break; }
     let q = p * sc;
     let d1 = length(q - c1); let d2 = length(q - c2); let d3 = length(q - c3);
@@ -1258,7 +1260,7 @@ fn mapLSystemPlant(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let sc = 1.0 / phi;
   var d = length(p) - 0.08;
   var trap = 0.0;
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 10; i = i + 1) {
     if (i >= iters) { break; }
     let fi = f32(i);
     let ang = fi * goldenAngle + t * 0.15;
@@ -1305,7 +1307,7 @@ fn mapApollonianGasket(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   p = vec3<f32>(r0.x, r0.y, p.z);
   var sc = 1.0;
   var trap = 0.0;
-  for (var i = 0; i < 12; i++) {
+  for (var i = 0; i < 12; i = i + 1) {
     if (i >= iters) { break; }
     p = abs(p);
     if (p.x < p.y) { p = vec3<f32>(p.y, p.x, p.z); }
@@ -1373,7 +1375,7 @@ fn mapSpherePacking(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
   var d = 1e10;
   var trap = 0.0;
   var sc = 1.0;
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 8; i = i + 1) {
     if (i >= iters) { break; }
     let q = fract(p * sc) - vec3<f32>(0.5, 0.5, 0.5);
     let sphere = length(q) - 0.25 / sc;
@@ -1394,7 +1396,7 @@ fn mapNovaFractal(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let c = vec2<f32>(p.z * 0.6, p.x * 0.2);
   var md = 1.0;
   var trap = 0.0;
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < 16; i = i + 1) {
     if (i >= iters) { break; }
     let r2 = dot(z, z);
     if (r2 > 16.0) { break; }
@@ -2128,7 +2130,7 @@ fn mapKaleidoscopicIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   let scale = phi;
   var minDist = 1e10;
   let offset = vec3<f32>(1.0) * 0.8;
-  for (var i = 0; i < 12; i++) {
+  for (var i = 0; i < 12; i = i + 1) {
     pos = abs(pos) - offset;
     pos = vec3<f32>(rot2D(t * 0.1 + f32(i) * 0.5) * pos.xy, pos.z);
     pos = vec3<f32>(pos.x, rot2D(t * 0.08 + f32(i) * 0.3) * pos.yz);
@@ -2144,7 +2146,7 @@ fn mapFlowerOfLife(p: vec3<f32>, t: f32, phi: f32) -> f32 {
   let r = length(p.xy);
   let theta = atan2(p.y, p.x);
   var petals = 0.0;
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 6; i = i + 1) {
     let angle = f32(i) * 1.0472 + t * 0.1;
     let center = vec2<f32>(cos(angle), sin(angle)) * 0.5;
     let d = length(p.xy - center) - 0.5;
@@ -2172,7 +2174,7 @@ fn mapCosmicSpiral(p: vec3<f32>, t: f32, phi: f32) -> f32 {
 fn mapCrystalGrowth(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var d = length(p) - 1.0;
   var dir = normalize(p);
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 8; i = i + 1) {
     let fi = f32(i);
     var branch = dir * (1.0 + fi * 0.3);
     branch = vec3<f32>(rot2D(fi * 1.2 + t * 0.1) * branch.xy, branch.z);
@@ -2186,7 +2188,7 @@ fn mapCrystalGrowth(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
 // 90: Quantum Foam
 fn mapQuantumFoam(p: vec3<f32>, t: f32, phi: f32) -> f32 {
   var bubbles = 0.0;
-  for (var i = 0; i < 12; i++) {
+  for (var i = 0; i < 12; i = i + 1) {
     let fi = f32(i);
     let center = vec3<f32>(sin(fi * 1.3 + t * 0.2), cos(fi * 1.7 + t * 0.15), sin(fi * 2.1 + t * 0.1)) * 1.2;
     let r = 0.3 + sin(fi + t) * 0.1;
@@ -2201,7 +2203,7 @@ fn mapFractalCoral(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var pos = p;
   var d = length(p) - 1.5;
   let offset = vec3<f32>(0.0, 1.0, 0.0);
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 10; i = i + 1) {
     pos = abs(pos) - offset;
     pos = vec3<f32>(rot2D(0.8 + t * 0.05) * pos.xy, pos.z);
     let r = length(pos);
@@ -2216,7 +2218,7 @@ fn mapNebulaCloud(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var minDist2: f32 = 1e10;
   var maxDensity: f32 = 0.0;
   var q = p;
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 8; i = i + 1) {
     q = abs(q) - vec3<f32>(0.5, 0.3, 0.4);
     q = vec3<f32>(rot2D(t * 0.1 + f32(i)) * q.xy, q.z);
     q = vec3<f32>(q.x, rot2D(t * 0.08) * q.yz);
@@ -2244,11 +2246,11 @@ fn mapHyperbolicTiling(p: vec3<f32>, t: f32, phi: f32) -> f32 {
 fn mapOrganicCell(p: vec3<f32>, t: f32, phi: f32) -> f32 {
   let r = length(p);
   let theta = atan2(p.y, p.x);
-  let phiAngle = acos(p.z / max(r, 0.01));
+  let phiAngle = acos(clamp(p.z / max(r, 0.01), -1.0, 1.0));
   let membrane = abs(r - 1.0 - sin(theta * 5.0 + t) * 0.1 - sin(phiAngle * 4.0) * 0.1);
   let nucleus = length(p - vec3<f32>(0.0, 0.0, 0.2)) - 0.3;
   var organelles = 0.0;
-  for (var i = 0; i < 5; i++) {
+  for (var i = 0; i < 5; i = i + 1) {
     let fi = f32(i);
     let pos = vec3<f32>(sin(fi * 1.5), cos(fi * 1.3), sin(fi * 1.7)) * 0.5;
     organelles = max(organelles, -(length(p - pos) - 0.15));
@@ -2260,7 +2262,7 @@ fn mapOrganicCell(p: vec3<f32>, t: f32, phi: f32) -> f32 {
 fn mapGoldenHelix(p: vec3<f32>, t: f32, phi: f32) -> f32 {
   var helix1 = 0.0;
   var helix2 = 0.0;
-  for (var i = 0; i < 20; i++) {
+  for (var i = 0; i < 20; i = i + 1) {
     let fi = f32(i) * 0.3;
     let angle1 = fi * 2.4 + t * 0.5;
     let angle2 = angle1 + 3.14159;
@@ -2279,11 +2281,11 @@ fn mapMandelbulbPower4(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var dr = 1.0;
   var r = 0.0;
   let maxIter = i32(clamp(f32(iters), 6.0, 16.0));
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < 16; i = i + 1) {
     if (i >= maxIter) { break; }
     r = length(z);
     if (r > 2.0) { break; }
-    let theta = acos(z.z / max(r, 0.001));
+    let theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     let phiAngle = atan2(z.y, z.x);
     dr = pow(r, 3.0) * 4.0 * dr + 1.0;
     let zr = pow(r, 4.0);
@@ -2299,11 +2301,11 @@ fn mapMandelbulbPower12(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var dr = 1.0;
   var r = 0.0;
   let maxIter = i32(clamp(f32(iters), 6.0, 16.0));
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < 16; i = i + 1) {
     if (i >= maxIter) { break; }
     r = length(z);
     if (r > 2.0) { break; }
-    let theta = acos(z.z / max(r, 0.001));
+    let theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     let phiAngle = atan2(z.y, z.x);
     dr = pow(r, 11.0) * 12.0 * dr + 1.0;
     let zr = pow(r, 12.0);
@@ -2320,7 +2322,7 @@ fn mapHybridMandelboxKIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   let offset = vec3<f32>(1.0);
   var minDist = 1e10;
   let maxIter = i32(clamp(f32(iters), 6.0, 14.0));
-  for (var i = 0; i < 14; i++) {
+  for (var i = 0; i < 14; i = i + 1) {
     if (i >= maxIter) { break; }
     pos = abs(pos) - offset * 0.5;
     pos = clamp(pos, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - pos;
@@ -2340,11 +2342,11 @@ fn mapMultibrot3Advanced(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var dr = 1.0;
   var r = 0.0;
   let maxIter = i32(clamp(f32(iters), 8.0, 20.0));
-  for (var i = 0; i < 20; i++) {
+  for (var i = 0; i < 20; i = i + 1) {
     if (i >= maxIter) { break; }
     r = length(z);
     if (r > 2.0) { break; }
-    let theta = acos(z.z / max(r, 0.001));
+    let theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     let phiAngle = atan2(z.y, z.x);
     dr = 3.0 * pow(r, 2.0) * dr + 1.0;
     let zr = pow(r, 3.0);
@@ -2360,7 +2362,7 @@ fn mapFractalFlameIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
   var color = 0.0;
   var minDist = 1e10;
   let maxIter = i32(clamp(f32(iters), 8.0, 18.0));
-  for (var i = 0; i < 18; i++) {
+  for (var i = 0; i < 18; i = i + 1) {
     if (i >= maxIter) { break; }
     z = vec3<f32>(
       sin(z.x * phi + t * 0.1) + cos(z.y * 1.3),
@@ -2412,7 +2414,7 @@ fn mapMandelbulbMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> v
     if (i % 2 == 0) {
       // Mandelbulb: spherical coordinates
       let r = length(z);
-      let theta = acos(z.z / max(r, 0.001));
+      let theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
       let phi_angle = atan2(z.y, z.x);
       dr = pow(r, 7.0) * 8.0 * dr + 1.0;
       let zr = pow(r, 8.0);
@@ -2865,12 +2867,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let sy = sin(u.cam_rot.x);
     let cp = cos(u.cam_rot.y);
     let sp = sin(u.cam_rot.y);
-    let forward = vec3<f32>(sy * cp, sp, -cy * cp);
+    var forward = vec3<f32>(sy * cp, sp, -cy * cp);
     let fwd_len = length(forward);
     forward = forward / max(fwd_len, 1e-6);
-    let up_hint = vec3<f32>(0.0, 1.0, 0.0);
-    let cross_fwd_up = cross(forward, up_hint);
-    let cross_len = length(cross_fwd_up);
+    var up_hint = vec3<f32>(0.0, 1.0, 0.0);
+    var cross_fwd_up = cross(forward, up_hint);
+    var cross_len = length(cross_fwd_up);
     // Gimbal lock fallback: when forward ≈ up, use alternate hint
     if (cross_len < 1e-4) {
       up_hint = vec3<f32>(0.0, 0.0, 1.0);
@@ -2890,8 +2892,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     ro = vec3<f32>(r_spiral * cos(theta_spiral), y_spiral, r_spiral * sin(theta_spiral));
     let lookTarget = vec3<f32>(0.0, 0.0, 0.0);
     let ww = (lookTarget - ro) / max(length(lookTarget - ro), 1e-6);
-    let cross_ww_up = cross(ww, vec3<f32>(0.0, 1.0, 0.0));
-    let cross_ww_len = length(cross_ww_up);
+    var cross_ww_up = cross(ww, vec3<f32>(0.0, 1.0, 0.0));
+    var cross_ww_len = length(cross_ww_up);
     if (cross_ww_len < 1e-4) {
       cross_ww_up = cross(ww, vec3<f32>(0.0, 0.0, 1.0));
       cross_ww_len = length(cross_ww_up);
@@ -2906,8 +2908,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     ro = rotateVec(ro, u.cam_rot.y, u.cam_rot.x);
     let lookTarget = vec3<f32>(0.0, 0.0, 0.0);
     let ww = (lookTarget - ro) / max(length(lookTarget - ro), 1e-6);
-    let cross_ww_up2 = cross(ww, vec3<f32>(0.0, 1.0, 0.0));
-    let cross_ww_len2 = length(cross_ww_up2);
+    var cross_ww_up2 = cross(ww, vec3<f32>(0.0, 1.0, 0.0));
+    var cross_ww_len2 = length(cross_ww_up2);
     if (cross_ww_len2 < 1e-4) {
       cross_ww_up2 = cross(ww, vec3<f32>(0.0, 0.0, 1.0));
       cross_ww_len2 = length(cross_ww_up2);
@@ -3149,7 +3151,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // Instead, use only Ambient Occlusion for self-shadowing
     // This ensures only the fractal casts shadows on itself, not external objects
     let sh1: f32 = 1.0; // No soft shadows — pure AO-based shading
-    let sh2: f32 = 1.0;
 
     // IMPROVED SSS: 5 samples with better color bleeding (was 3)
     var sssCol = vec3<f32>(0.0, 0.0, 0.0);
@@ -3181,6 +3182,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let effectiveTrap = max(min_trap, curvNorm * 0.15);
     // FIX: More responsive trap detail (was 1.0 / (1.0 + effectiveTrap * 2.0))
     let trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 0.8), 0.0, 1.0);
+
+    // PROCEDURAL FRACTAL TEXTURE: Add micro-detail using fractal noise
+    var texDetail: f32 = 0.0;
+    let texScale: f32 = 8.0;
+    for (var ti: i32 = 0; ti < 3; ti = ti + 1) {
+      let ti_f = f32(ti);
+      let texP = p * texScale * pow(2.0, ti_f);
+      texDetail = texDetail + sin(texP.x * 1.3 + texP.y * 0.7) * sin(texP.y * 1.1 + texP.z * 0.9) * sin(texP.z * 1.5 + texP.x * 0.8);
+      texDetail = texDetail * 0.5;
+    }
+    texDetail = texDetail * 0.15 + 0.85;
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
     // FIX: Added high-frequency hash noise to break up uniform color zones on IFS fractals
@@ -3224,6 +3236,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // FIX: More visible orbit trap coloring (was 0.30 / (1.0 + effectiveTrap * 2.5))
     let trapWeight = clamp(0.45 / (1.0 + effectiveTrap * 1.2), 0.0, 0.55);
     mat_col = mix(mat_col, u.accent_color * (0.5 + trapDetail * 0.5), trapWeight);
+
+    // Apply procedural fractal texture detail
+    mat_col = mat_col * texDetail;
 
     // Environment ambient: sample SDF along normal for color-bleeding approximation
     let envOcc = sceneSDF(p + n * 0.15).x;
