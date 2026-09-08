@@ -973,27 +973,27 @@ vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
 
 // 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
 vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 1.4;
+  vec3 p = p_in * 1.2;
   p.xz = rot2D(t * 0.08) * p.xz;
   float a = 0.95, b = 0.7, c = 0.6, dd = 3.5, e = 0.25, f = 0.1;
   float density = 0.0;
   float minDist = 1e10;
-  for (int s = 0; s < 3; s++) {
-    vec3 v = vec3(0.1 + float(s) * 0.1, 0.0, 0.5 + float(s) * 0.3);
-    for (int i = 0; i < 20; i++) {
+  for (int s = 0; s < 4; s++) {
+    vec3 v = vec3(0.1 + float(s) * 0.15, 0.05 * float(s), 0.5 + float(s) * 0.25);
+    for (int i = 0; i < 30; i++) {
       float dx = (v.z - b) * v.x - dd * v.y;
       float dy = dd * v.x + (v.z - b) * v.y;
       float dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
       v += vec3(dx, dy, dz) * 0.05;
-      vec3 scaled = v * 0.5;
+      vec3 scaled = v * 1.0;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
-      density += exp(-dist * 4.0);
+      density += exp(-dist * 3.5);
     }
   }
-  float d = 0.35 - density * 0.07;
-  float bound = length(p_in) - 2.2;
-  return vec2(max(d, bound) * 0.6, density * 0.2);
+  float d = 0.4 - density * 0.1;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.5, density * 0.25);
 }
 
 // 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
@@ -1046,7 +1046,7 @@ vec2 mapHalvorsenAttractor(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(d, bound) * 0.5, density * 0.18);
 }
 
-// 45. Julia Set 3D (c = -0.7 + 0.27i, classic dendrite)
+// 45. Julia Set 3D (c = -0.7 + 0.27i, thick 3D extrusion with orbit trap)
 vec2 mapJuliaSet3D(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in;
   p.xz = rot2D(t * 0.05) * p.xz;
@@ -1062,8 +1062,10 @@ vec2 mapJuliaSet3D(vec3 p_in, float t, float phi, int iters) {
     if (dot(z, z) > 16.0) break;
   }
   float d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dz, 0.001);
+  // Thicken 2D Julia into visible 3D volume using z-axis
+  float zThick = sqrt(d * d + p.z * p.z * 0.15) - 0.06;
   float bound = length(p_in) - 2.3;
-  return vec2(max(abs(d), bound * 0.3), trap);
+  return vec2(max(max(zThick, bound * 0.4), 0.001), trap);
 }
 
 // 46. Multibrot z^3+c (cubic 3D generalization)
@@ -1116,8 +1118,10 @@ vec2 mapTetrix(vec3 p_in, float t, float phi, int iters) {
 vec2 mapGosperCurve(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xy = rot2D(t * 0.06) * p.xy;
-  float sc = 2.6457513; // sqrt(7): Gosper curve scaling factor
+  // Standard IFS: fold to nearest of 7 Gosper centers, constant scale
+  float sc = 2.6457513; // sqrt(7)
   float trap = 0.0;
+  float d = 1e10;
   vec3 c1 = vec3(0, 0, 0), c2 = vec3(1.5, 0, 0), c3 = vec3(0.75, 1.3, 0);
   vec3 c4 = vec3(-0.75, 1.3, 0), c5 = vec3(-1.5, 0, 0), c6 = vec3(-0.75, -1.3, 0);
   vec3 c7 = vec3(0.75, -1.3, 0);
@@ -1128,6 +1132,8 @@ vec2 mapGosperCurve(vec3 p_in, float t, float phi, int iters) {
     float d4 = length(q - c4), d5 = length(q - c5), d6 = length(q - c6);
     float d7 = length(q - c7);
     float mn = min(min(min(d1, d2), min(d3, d4)), min(min(d5, d6), d7));
+    trap += mn / sc;
+    // Transform into closest center's local frame
     if (mn == d1) p = (p - c1 / sc) * sc;
     else if (mn == d2) p = (p - c2 / sc) * sc;
     else if (mn == d3) p = (p - c3 / sc) * sc;
@@ -1135,11 +1141,10 @@ vec2 mapGosperCurve(vec3 p_in, float t, float phi, int iters) {
     else if (mn == d5) p = (p - c5 / sc) * sc;
     else if (mn == d6) p = (p - c6 / sc) * sc;
     else p = (p - c7 / sc) * sc;
-    trap += mn / sc;
-    sc *= 2.6457513;
+    d = min(d, length(p) / sc);
   }
-  float d = length(p) / sc * 0.5;
-  return vec2(d, trap * 0.1);
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d * 0.5, bound * 0.3), trap * 0.1);
 }
 
 // 49. L-System Plant (3D branching phyllotactic structure)
@@ -1371,7 +1376,7 @@ vec2 mapReactionDiffusion(vec3 p_in, float t, float phi, int iters) {
 // BATCH 3 fractals (61-75): More verified real mathematical fractals
 // ============================================================
 
-// 61. Sierpinski Carpet (IFS, dim = log(8)/log(3) ≈ 1.893)
+// 61. Sierpinski Carpet (IFS, dim = log(8)/log(3) ~ 1.893)
 vec2 mapSierpinskiCarpet(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in;
   float scale = 1.0;
@@ -1385,9 +1390,15 @@ vec2 mapSierpinskiCarpet(vec3 p_in, float t, float phi, int iters) {
     if (p.x < p.z) p.xz = p.zx;
     if (p.y < p.z) p.yz = p.zy;
     p = p * 3.0 - vec3(2.0);
-    // Remove center column (Sierpinski carpet rule)
+    // Remove center column in ALL three axis pairs (true 3D carpet)
     if (p.x > -0.5 && p.x < 0.5 && p.y > -0.5 && p.y < 0.5) {
       p.x += (p.x > 0.0) ? 1.0 : -1.0;
+    }
+    if (p.y > -0.5 && p.y < 0.5 && p.z > -0.5 && p.z < 0.5) {
+      p.y += (p.y > 0.0) ? 1.0 : -1.0;
+    }
+    if (p.x > -0.5 && p.x < 0.5 && p.z > -0.5 && p.z < 0.5) {
+      p.z += (p.z > 0.0) ? 1.0 : -1.0;
     }
     scale *= 3.0;
     trap = min(trap, length(p));
@@ -1498,62 +1509,46 @@ vec2 mapIkedaMap(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(d, bound) * 0.5, density * 0.2);
 }
 
-// 66. Koch Snowflake 3D (recursive triangular IFS)
+// 66. Koch Snowflake 3D (recursive triangular SDF)
 vec2 mapKochSnowflake3D(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xy = rot2D(t * 0.06) * p.xy;
-  float d = 1e10;
+  float d = length(p) - 1.5;
   float trap = 0.0;
   float sc = 1.0;
-  // Koch curve: 4 segments, scale 1/3, with triangular bump
-  float s3 = 1.0 / 3.0;
-  vec3 offsets[4];
-  offsets[0] = vec3(0.0, 0.0, 0.0);
-  offsets[1] = vec3(s3, 0.0, 0.0);
-  offsets[2] = vec3(0.5 * s3, s3 * 0.866, 0.0);
-  offsets[3] = vec3(2.0 * s3, 0.0, 0.0);
-  for (int i = 0; i < 8; i++) {
+  // Koch curve via recursive triangular bump
+  for (int i = 0; i < 6; i++) {
     if (i >= iters) break;
-    vec3 q = p * sc;
-    float mn = 1e10;
-    for (int j = 0; j < 4; j++) {
-      float dd = length(q - offsets[j]);
-      mn = min(mn, dd);
-    }
-    trap += mn / sc;
-    // Find closest segment and zoom in
-    float best = 1e10;
-    int bestIdx = 0;
-    for (int j = 0; j < 4; j++) {
-      float dd = length(q - offsets[j]);
-      if (dd < best) { best = dd; bestIdx = j; }
-    }
-    p = (p - offsets[bestIdx] / sc) * sc * 3.0;
+    // Fold into fundamental domain of equilateral triangle
+    p.x = abs(p.x);
+    p.x = p.x * 0.5 - 0.25;
+    p.y = p.y * 3.0;
+    trap += length(p) / sc;
     sc *= 3.0;
+    d = min(d, length(p) / sc);
   }
   float bound = length(p_in) - 2.2;
-  d = length(p) / sc;
   return vec2(max(d * 0.5, bound * 0.3), trap * 0.08);
 }
 
-// 67. Cantor Dust 3D (recursive corner cubes, dim = log(8)/log(3) ≈ 1.893)
+// 67. Cantor Dust 3D (recursive corner cubes, dim = log(8)/log(3) ~ 1.893)
 vec2 mapCantorDust(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xy = rot2D(t * 0.05) * p.xy;
   float scale = 1.0;
   float trap = 0.0;
+  float d = 1e10;
   for (int i = 0; i < 10; i++) {
     if (i >= iters) break;
+    // Cantor dust: keep 8 corners of cube, remove center
     p = abs(p);
-    if (p.x < p.y) p.xy = p.yx;
-    if (p.x < p.z) p.xz = p.zx;
-    if (p.y < p.z) p.yz = p.zy;
-    p = p * 3.0 - vec3(2.0);
+    p = p * 3.0 - vec3(4.0); // offset 4 maps corners to ±2 range
     scale *= 3.0;
     trap = min(trap, length(p));
+    d = min(d, length(p) / scale);
   }
-  float d = (length(p) - 0.4) / max(scale, 0.0001);
-  return vec2(d, trap * 0.06);
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound * 0.3), trap * 0.06);
 }
 
 // 68. Phoenix Fractal (z_{n+1} = z_n^2 + c + p*z_{n-1}, memory fractal)
@@ -1580,13 +1575,12 @@ vec2 mapPhoenixFractal(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(abs(d), bound * 0.3), trap);
 }
 
-// 69. Fatou Set (basin boundary of z^2+c, showing connected/disconnected Julia)
+// 69. Fatou Set (orbit-trap 3D rendering of Julia basin boundary)
 vec2 mapFatouSet(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xy = rot2D(t * 0.05) * p.xy;
-  // Animate c along the boundary of the Mandelbrot set
   float ang = t * 0.15;
-  vec2 c = vec2(0.7885 * cos(ang), 0.7885 * sin(ang)); // on M-set boundary
+  vec2 c = vec2(0.7885 * cos(ang), 0.7885 * sin(ang));
   vec2 z = p.xy;
   float minR = 1e10;
   float trap = 0.0;
@@ -1598,12 +1592,12 @@ vec2 mapFatouSet(vec3 p_in, float t, float phi, int iters) {
     trap += exp(-2.0 * r);
     if (r > 4.0) break;
   }
-  // Fatou set = points that don't escape (minR stays small)
-  float fatou = smoothstep(0.0, 2.0, minR);
-  float d = abs(fatou - 0.5) - 0.05;
-  float d3d = sqrt(d * d + p.z * p.z * 0.3) - 0.08;
+  // Use orbit trap directly for 3D SDF instead of thin boundary
+  float d = 0.5 - trap * 0.08;
+  // Thicken with z-axis for 3D volume
+  float d3d = sqrt(d * d + p.z * p.z * 0.2) - 0.1;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d3d, bound) * 0.5, trap * 0.15);
+  return vec2(max(max(d3d, 0.001), bound) * 0.5, trap * 0.15);
 }
 
 // 70. E8 Lattice Projection (exceptional Lie group, 8D → 3D shadow)
@@ -1751,7 +1745,7 @@ vec2 mapLogisticBifurcation(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(d, bound) * 0.5, density * 0.2);
 }
 
-// 76. Fractal Spire (Exponential spiral tower z → e^z + c)
+// 76. Fractal Spire (Exponential spiral tower z -> e^z + c)
 vec2 mapFractalSpire(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.2;
   float rot_a = t * 0.08;
@@ -1762,16 +1756,16 @@ vec2 mapFractalSpire(vec3 p_in, float t, float phi, int iters) {
   int count = clamp(iters, 4, 16);
   for (int i = 0; i < 16; i++) {
     if (i >= count) break;
-    float ex = exp(z.x);
+    float ex = exp(clamp(z.x, -10.0, 10.0));
     vec2 ez = vec2(ex * cos(z.y), ex * sin(z.y));
     dr = length(ez) * dr + 1.0;
-    z = ez + p.xy * 0.3;
+    z = ez + p.xy * 0.7;
     trap = min(trap, length(z));
     if (dot(z, z) > 256.0) break;
   }
   float d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dr, 0.001);
   float bound = length(p_in) - 2.8;
-  return vec2(max(d * 0.6, bound), trap);
+  return vec2(max(d * 0.5, bound * 0.4), trap);
 }
 
 // 77. DeJong Attractor (x'=sin(a*y)-z*cos(b*x))
@@ -1803,46 +1797,58 @@ vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
 
 // 78. Pickover Attractor (x'=sin(a*y)+c*cos(a*x), y'=sin(b*x)+d*cos(b*y))
 vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 0.7;
+  vec3 p = p_in * 0.8;
   float a = -1.64 + sin(t * 0.04) * 0.4;
   float b = 1.9 + cos(t * 0.06) * 0.3;
   float c_ = -0.31 + sin(t * 0.05) * 0.3;
   float d_ = 0.72 + cos(t * 0.03) * 0.2;
   float density = 0.0;
-  vec2 z = vec2(0.1, 0.1);
-  int count = clamp(iters, 8, 24);
-  for (int i = 0; i < 24; i++) {
-    if (i >= count) break;
-    vec2 nz = vec2(sin(a * z.y) + c_ * cos(a * z.x), sin(b * z.x) + d_ * cos(b * z.y));
-    z = nz;
-    vec3 pt = vec3(z * 0.6, p.z * 0.4);
-    float dist = length(p - pt);
-    density += exp(-dist * 4.5);
+  int count = clamp(iters, 10, 40);
+  // Multiple seeds for better orbit coverage
+  for (int s = 0; s < 3; s++) {
+    vec2 z = vec2(0.1 + float(s) * 0.3, 0.1 + float(s) * 0.2);
+    for (int i = 0; i < 40; i++) {
+      if (i >= count) break;
+      vec2 nz = vec2(sin(a * z.y) + c_ * cos(a * z.x), sin(b * z.x) + d_ * cos(b * z.y));
+      z = nz;
+      vec3 pt = vec3(z * 0.8, sin(float(s) + t * 0.1) * 0.5);
+      float dist = length(p - pt);
+      density += exp(-dist * 4.0);
+    }
   }
-  float dd = 0.28 - density * 0.035;
+  float dd = 0.35 - density * 0.06;
   float bound = length(p_in) - 2.3;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
-// 79. Vicsek Fractal (3D cross-shaped IFS, dim ≈ 1.465)
+// 79. Vicsek Fractal (3D cross-shaped IFS, dim ~ 1.465)
 vec2 mapVicsekFractal(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.8;
   float rot_a = t * 0.04;
   p = vec3(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
   float scale = 3.0;
   float d = 1e10;
-  int count = clamp(iters, 4, 12);
-  for (int i = 0; i < 12; i++) {
+  float trap = 0.0;
+  int count = clamp(iters, 4, 10);
+  for (int i = 0; i < 10; i++) {
     if (i >= count) break;
+    // Vicsek: 5 copies — center + 4 cardinal directions
     p = abs(p);
+    // Fold to keep cross pattern (center + axes)
     if (p.x < p.y) p.xy = p.yx;
     if (p.x < p.z) p.xz = p.zx;
     if (p.y < p.z) p.yz = p.zy;
+    // Cross rule: keep center and one axis direction
     p = p * scale - vec3(scale - 1.0);
-    d = min(d, length(p) * pow(scale, -float(i + 1)));
+    // Push off-center copies back (creates the cross arms)
+    if (p.x < -0.5) p.x += 2.0;
+    if (p.y < -0.5) p.y += 2.0;
+    scale *= 3.0;
+    trap = min(trap, length(p));
+    d = min(d, length(p) / scale);
   }
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound), length(p_in) * 0.3);
+  return vec2(max(d, bound * 0.3), trap * 0.1);
 }
 
 // 80. Mandelbar (Conjugate Mandelbrot: z → conj(z)^2 + c)
@@ -1939,48 +1945,59 @@ vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
 
 // 84. FourSpot Attractor (4-wing chaotic attractor)
 vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 0.8;
+  vec3 p = p_in * 1.0;
   float a = 2.0 + sin(t * 0.05) * 0.5;
   float density = 0.0;
-  vec3 z = vec3(0.5, 0.5, 0.5);
-  int count = clamp(iters, 6, 20);
-  for (int i = 0; i < 20; i++) {
-    if (i >= count) break;
-    vec3 nz = vec3(
-      z.y * z.z - a * z.x,
-      z.x * z.z - z.y,
-      -z.x * z.y + z.z
-    );
-    z = nz * 0.3;
-    float dist = length(p - z);
-    density += exp(-dist * 5.0);
+  int count = clamp(iters, 8, 30);
+  // Multiple seeds for dense orbit coverage
+  for (int s = 0; s < 4; s++) {
+    vec3 z = vec3(0.5 + float(s) * 0.2, 0.5, 0.5 + float(s) * 0.1);
+    for (int i = 0; i < 30; i++) {
+      if (i >= count) break;
+      vec3 nz = vec3(
+        z.y * z.z - a * z.x,
+        z.x * z.z - z.y,
+        -z.x * z.y + z.z
+      );
+      // No damping — let orbits explore full attractor
+      z = nz;
+      // Clamp to prevent escape to infinity
+      z = clamp(z, vec3(-5.0), vec3(5.0));
+      vec3 scaled = z * 0.4;
+      float dist = length(p - scaled);
+      density += exp(-dist * 4.0);
+    }
   }
-  float dd = 0.25 - density * 0.04;
+  float dd = 0.35 - density * 0.07;
   float bound = length(p_in) - 2.5;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
-// 85. Svensson Attractor (x'=d*sin(a*y)-z, y'=b*cos(c*x))
+// 85. Svensson Attractor (x'=d*sin(a*y)-c, y'=b-x)
 vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
-  vec3 p = p_in * 0.7;
+  vec3 p = p_in * 0.8;
   float a = 2.0 + sin(t * 0.04) * 0.3;
   float b = 0.2 + cos(t * 0.06) * 0.1;
   float c_ = 1.57 + sin(t * 0.05) * 0.2;
-  float d_ = 0.4 + cos(t * 0.03) * 0.15;
+  float d_ = 1.4 + cos(t * 0.03) * 0.3;
   float density = 0.0;
-  vec2 z = vec2(0.1, 0.1);
-  int count = clamp(iters, 8, 22);
-  for (int i = 0; i < 22; i++) {
-    if (i >= count) break;
-    vec2 nz = vec2(d_ * sin(a * z.y) - z.x * 0.1, b - z.x * cos(c_ * z.x));
-    z = nz;
-    vec3 pt = vec3(z * 0.8, p.z * 0.4);
-    float dist = length(p - pt);
-    density += exp(-dist * 4.5);
+  int count = clamp(iters, 10, 35);
+  for (int s = 0; s < 3; s++) {
+    vec2 z = vec2(0.1 + float(s) * 0.2, 0.1 + float(s) * 0.15);
+    for (int i = 0; i < 35; i++) {
+      if (i >= count) break;
+      // Correct Svensson formula: x'=d*sin(a*y)-c, y'=b*sin(c*x)
+      vec2 nz = vec2(d_ * sin(a * z.y) - c_, b * sin(c_ * z.x));
+      z = nz;
+      z = clamp(z, vec2(-5.0), vec2(5.0));
+      vec3 pt = vec3(z * 0.8, sin(float(s) * 1.5 + t * 0.1) * 0.4);
+      float dist = length(p - pt);
+      density += exp(-dist * 4.0);
+    }
   }
-  float dd = 0.28 - density * 0.035;
+  float dd = 0.35 - density * 0.06;
   float bound = length(p_in) - 2.3;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
