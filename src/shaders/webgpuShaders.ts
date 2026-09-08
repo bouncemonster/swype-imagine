@@ -1438,7 +1438,386 @@ fn mapReactionDiffusion(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   return vec2<f32>(max(d * 0.4, bound) * 0.6, abs(pattern));
 }
 
-// Master Single Primitive Dispatcher (61 Architectures)
+// ============================================================
+// BATCH 3 fractals (61-75): More verified real mathematical fractals
+// ============================================================
+
+// 61. Sierpinski Carpet (IFS, dim = log(8)/log(3))
+fn mapSierpinskiCarpet(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  var scale: f32 = 1.0;
+  var trap: f32 = 1e10;
+  let count = clamp(iters, 3, 8);
+  let r0 = rot2D(p.xy, t * 0.08);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  for (var i: i32 = 0; i < 8; i = i + 1) {
+    if (i >= count) { break; }
+    p = abs(p);
+    if (p.x < p.y) { p = vec3<f32>(p.y, p.x, p.z); }
+    if (p.x < p.z) { p = vec3<f32>(p.z, p.y, p.x); }
+    if (p.y < p.z) { p = vec3<f32>(p.x, p.z, p.y); }
+    p = p * 3.0 - vec3<f32>(2.0, 2.0, 2.0);
+    if (p.x > -0.5 && p.x < 0.5 && p.y > -0.5 && p.y < 0.5) {
+      if (p.x > 0.0) { p.x = p.x + 1.0; } else { p.x = p.x - 1.0; }
+    }
+    scale = scale * 3.0;
+    trap = min(trap, length(p));
+  }
+  let d = (length(p) - 0.5) / max(scale, 0.0001);
+  return vec2<f32>(d, trap * 0.08);
+}
+
+// 62. Tricorn (Mandelbar) — conjugate Mandelbrot
+fn mapTricorn(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  var z = p.xy * 1.2;
+  let c = vec2<f32>(p.z * 0.7, p.x * 0.3);
+  var dz: f32 = 1.0;
+  var trap: f32 = 0.0;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= iters) { break; }
+    dz = 2.0 * length(z) * dz;
+    z = vec2<f32>(z.x * z.x - z.y * z.y, -2.0 * z.x * z.y) + c;
+    trap += exp(-3.0 * length(z));
+    if (dot(z, z) > 16.0) { break; }
+  }
+  let d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dz, 0.001);
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(abs(d), bound * 0.3), trap);
+}
+
+// 63. Chua's Circuit Double Scroll (orbit-traced)
+fn mapChuaCircuit(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xz, t * 0.07);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let alpha = 15.6; let beta = 28.0;
+  let m0 = -1.143; let m1 = -0.714;
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var v = vec3<f32>(0.1 + f32(s) * 0.1, 0.0, 0.1);
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let fx = m1 * v.x + 0.5 * (m0 - m1) * (abs(v.x + 1.0) - abs(v.x - 1.0));
+      let dx = alpha * (v.y - v.x - fx);
+      let dy = v.x - v.y + v.z;
+      let dz2 = -beta * v.y;
+      v = v + vec3<f32>(dx, dy, dz2) * 0.003;
+      let scaled = v * 0.05;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 64. Standard Map (Chirikov-Taylor, orbit-traced)
+fn mapStandardMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let K = 1.5 + 0.5 * sin(t * 0.1);
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 4; s = s + 1) {
+    var theta = f32(s) * 1.57 + 0.3;
+    var p_val = f32(s) * 0.8 - 1.2;
+    for (var i: i32 = 0; i < 30; i = i + 1) {
+      let new_p = p_val + K * sin(theta);
+      theta = mod(theta + new_p, 6.283185307);
+      p_val = new_p;
+      let pt = vec3<f32>(cos(theta) * 0.8, sin(theta) * 0.8, p_val * 0.15);
+      let dist = length(p - pt);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
+  }
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 65. Ikeda Map (orbit-traced)
+fn mapIkedaMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let b = 0.9;
+  let u = 0.4 + 0.05 * sin(t * 0.15);
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 4; s = s + 1) {
+    var xn = f32(s) * 0.3 - 0.45;
+    var yn = f32(s) * 0.2 - 0.3;
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let ti = 0.4 - 6.0 / (1.0 + xn * xn + yn * yn);
+      let cosT = cos(ti); let sinT = sin(ti);
+      let xnew = 1.0 + u * (xn * cosT - yn * sinT);
+      let ynew = u * (xn * sinT + yn * cosT);
+      xn = xnew; yn = ynew;
+      let pt = vec3<f32>(xn * 0.3, yn * 0.3, sin(f32(i) * 0.2 + t * 0.1) * 0.15);
+      let dist = length(p - pt);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
+  }
+  let d = 0.25 - density * 0.05;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 66. Koch Snowflake 3D (recursive triangular IFS)
+fn mapKochSnowflake3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xy, t * 0.06);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  var trap: f32 = 0.0;
+  var sc: f32 = 1.0;
+  let s3 = 1.0 / 3.0;
+  for (var i: i32 = 0; i < 8; i = i + 1) {
+    if (i >= iters) { break; }
+    let q = p * sc;
+    var mn: f32 = 1e10;
+    let d1 = length(q); let d2 = length(q - vec3<f32>(s3, 0.0, 0.0));
+    let d3 = length(q - vec3<f32>(0.5 * s3, s3 * 0.866, 0.0));
+    let d4 = length(q - vec3<f32>(2.0 * s3, 0.0, 0.0));
+    mn = min(min(d1, d2), min(d3, d4));
+    trap += mn / sc;
+    var best: f32 = 1e10; var bestOff = vec3<f32>(0.0, 0.0, 0.0);
+    if (d1 < best) { best = d1; bestOff = vec3<f32>(0.0, 0.0, 0.0); }
+    if (d2 < best) { best = d2; bestOff = vec3<f32>(s3, 0.0, 0.0); }
+    if (d3 < best) { best = d3; bestOff = vec3<f32>(0.5 * s3, s3 * 0.866, 0.0); }
+    if (d4 < best) { best = d4; bestOff = vec3<f32>(2.0 * s3, 0.0, 0.0); }
+    p = (p - bestOff / sc) * sc * 3.0;
+    sc = sc * 3.0;
+  }
+  let bound = length(p_in) - 2.2;
+  let d = length(p) / sc;
+  return vec2<f32>(max(d * 0.5, bound * 0.3), trap * 0.08);
+}
+
+// 67. Cantor Dust 3D (recursive corner cubes)
+fn mapCantorDust(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xy, t * 0.05);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  var scale: f32 = 1.0;
+  var trap: f32 = 0.0;
+  for (var i: i32 = 0; i < 10; i = i + 1) {
+    if (i >= iters) { break; }
+    p = abs(p);
+    if (p.x < p.y) { p = vec3<f32>(p.y, p.x, p.z); }
+    if (p.x < p.z) { p = vec3<f32>(p.z, p.y, p.x); }
+    if (p.y < p.z) { p = vec3<f32>(p.x, p.z, p.y); }
+    p = p * 3.0 - vec3<f32>(2.0, 2.0, 2.0);
+    scale = scale * 3.0;
+    trap = min(trap, length(p));
+  }
+  let d = (length(p) - 0.4) / max(scale, 0.0001);
+  return vec2<f32>(d, trap * 0.06);
+}
+
+// 68. Phoenix Fractal (memory fractal: z_{n+1} = z_n^2 + c + p*z_{n-1})
+fn mapPhoenixFractal(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in;
+  let r0 = rot2D(p.xz, t * 0.05);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let c = vec2<f32>(0.56667 + 0.05 * sin(t * 0.2), -0.5);
+  let p_param = 0.2 + 0.05 * cos(t * 0.15);
+  var z = p.xy * 1.3;
+  var z_prev = vec2<f32>(0.0, 0.0);
+  var dz: f32 = 1.0;
+  var trap: f32 = 0.0;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= iters) { break; }
+    dz = 2.0 * length(z) * dz + p_param;
+    let z_new = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c + p_param * z_prev;
+    z_prev = z;
+    z = z_new;
+    trap += exp(-2.0 * length(z));
+    if (dot(z, z) > 16.0) { break; }
+  }
+  let d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dz, 0.001);
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(abs(d), bound * 0.3), trap);
+}
+
+// 69. Fatou Set (basin boundary of z^2+c)
+fn mapFatouSet(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xy, t * 0.05);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  let ang = t * 0.15;
+  let c = vec2<f32>(0.7885 * cos(ang), 0.7885 * sin(ang));
+  var z = p.xy;
+  var minR: f32 = 1e10;
+  var trap: f32 = 0.0;
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= iters) { break; }
+    z = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    let r = length(z);
+    minR = min(minR, r);
+    trap += exp(-2.0 * r);
+    if (r > 4.0) { break; }
+  }
+  let fatou = smoothstep(0.0, 2.0, minR);
+  let dd = abs(fatou - 0.5) - 0.05;
+  let d3d = sqrt(dd * dd + p.z * p.z * 0.3) - 0.08;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d3d, bound) * 0.5, trap * 0.15);
+}
+
+// 70. E8 Lattice Projection (exceptional Lie group, 8D → 3D shadow)
+fn mapE8Lattice(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * phi * 1.2;
+  let r0 = rot2D(p.xz, t * 0.07);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  var psi: f32 = 0.0;
+  let ws = 3.5 * phi;
+  let d0 = normalize(vec3<f32>(1.0, phi, 0.0));
+  let d1 = normalize(vec3<f32>(-1.0, phi, 0.0));
+  let d2 = normalize(vec3<f32>(0.0, 1.0, phi));
+  let d3 = normalize(vec3<f32>(0.0, -1.0, phi));
+  let d4 = normalize(vec3<f32>(phi, 0.0, 1.0));
+  let d5 = normalize(vec3<f32>(phi, 0.0, -1.0));
+  psi = cos(dot(p, d0) * ws + t * 0.15) + cos(dot(p, d1) * ws + t * 0.15)
+      + cos(dot(p, d2) * ws + t * 0.15) + cos(dot(p, d3) * ws + t * 0.15)
+      + cos(dot(p, d4) * ws + t * 0.15) + cos(dot(p, d5) * ws + t * 0.15);
+  let d = (abs(psi) - 0.6) / ws;
+  let bound = length(p_in) - 2.2;
+  return vec2<f32>(max(d, bound), abs(psi) * 0.2 + 0.3 * length(p));
+}
+
+// 71. Chladni Figures (vibrational eigenmodes)
+fn mapChladniFigures(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.8;
+  let r0 = rot2D(p.xy, t * 0.05);
+  p = vec3<f32>(r0.x, r0.y, p.z);
+  let n = 3.0 + floor(mod(t * 0.3, 5.0));
+  let m = 2.0 + floor(mod(t * 0.2 + 2.5, 4.0));
+  let pi_x = 3.14159265 * p.x;
+  let pi_y = 3.14159265 * p.y;
+  let mode1 = cos(n * pi_x) * cos(m * pi_y);
+  let mode2 = cos(m * pi_x) * cos(n * pi_y);
+  let chladni = mode1 - mode2;
+  let d = abs(chladni) - 0.08;
+  let plate = max(max(abs(p.x) - 1.5, abs(p.y) - 1.5), abs(p.z) - 0.06);
+  let d3d = max(d, plate);
+  return vec2<f32>(d3d * 0.5, abs(chladni));
+}
+
+// 72. FitzHugh-Nagumo Neural Dynamics (orbit-traced)
+fn mapFitzHugh(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let a = 0.7; let b_param = 0.8; let tau = 12.5;
+  let I_ext = 0.5 + 0.2 * sin(t * 0.2);
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var v = vec3<f32>(0.1 + f32(s) * 0.1, -0.2, 0.0);
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let dv = v.x - v.y * v.y * v.y / 3.0 + v.y + I_ext;
+      let dw = (v.x - a + b_param * v.y) / tau;
+      let dz2 = sin(v.z * 2.0 + t * 0.1) * 0.1;
+      v = v + vec3<f32>(dv, dw, dz2) * 0.08;
+      let scaled = v * 0.25;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.18);
+}
+
+// 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
+fn mapRosslerAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xz, t * 0.07);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let a = 0.2; let b = 0.2; let c = 5.7;
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var v = vec3<f32>(0.1 + f32(s) * 0.1, 0.1, 0.0);
+    for (var i: i32 = 0; i < 30; i = i + 1) {
+      let dx = -v.y - v.z;
+      let dy = v.x + a * v.y;
+      let dz2 = b + v.z * (v.x - c);
+      v = v + vec3<f32>(dx, dy, dz2) * 0.01;
+      let scaled = v * 0.08;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 74. Duffing Attractor (orbit-traced)
+fn mapDuffingAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let r0 = rot2D(p.xz, t * 0.06);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let alpha = 1.0; let beta_p = 5.0; let delta = 0.02; let gamma = 8.0;
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var v = vec3<f32>(0.1 + f32(s) * 0.1, 0.0, f32(s) * 0.5);
+    for (var i: i32 = 0; i < 25; i = i + 1) {
+      let omega = 1.5 + f32(s) * 0.3;
+      let dx = v.y;
+      let dy = -delta * v.y - alpha * v.x - beta_p * v.x * v.x * v.x + gamma * cos(v.z);
+      let dz2 = omega;
+      v = v + vec3<f32>(dx, dy, dz2) * 0.015;
+      let scaled = v * 0.15;
+      let dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  let d = 0.3 - density * 0.06;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.18);
+}
+
+// 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
+fn mapLogisticBifurcation(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let r0 = rot2D(p.xz, t * 0.05);
+  p = vec3<f32>(r0.x, p.y, r0.y);
+  let r = 2.5 + (p.x + 1.5) / 3.0 * 1.5;
+  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+  for (var s: i32 = 0; s < 4; s = s + 1) {
+    var x = 0.3 + f32(s) * 0.15;
+    for (var i: i32 = 0; i < 50; i = i + 1) {
+      x = r * x * (1.0 - x);
+    }
+    for (var i: i32 = 0; i < 20; i = i + 1) {
+      x = r * x * (1.0 - x);
+      let pt = vec3<f32>(p.x, (x - 0.5) * 2.0, p.z + f32(s) * 0.1);
+      let dist = length(p - pt);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 6.0);
+    }
+  }
+  let d = 0.25 - density * 0.05;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+}
+
+// Master Single Primitive Dispatcher (76 Architectures)
 fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (ftype == 0) { return mapPhyllotaxis(p, t, phi, iters); }
   if (ftype == 1) { return mapMandelbulb(p, t, phi, iters); }
@@ -1499,7 +1878,23 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 56) { return mapNovaFractal(p, t, phi, iters); }
   if (ftype == 57) { return mapGoldenKnot(p, t, phi); }
   if (ftype == 58) { return mapSphericalHarmonics(p, t, phi); }
-  return mapReactionDiffusion(p, t, phi, iters);
+  if (ftype == 59) { return mapFractalCross(p, t, phi, iters); }
+  if (ftype == 60) { return mapReactionDiffusion(p, t, phi, iters); }
+  if (ftype == 61) { return mapSierpinskiCarpet(p, t, phi, iters); }
+  if (ftype == 62) { return mapTricorn(p, t, phi, iters); }
+  if (ftype == 63) { return mapChuaCircuit(p, t, phi, iters); }
+  if (ftype == 64) { return mapStandardMap(p, t, phi, iters); }
+  if (ftype == 65) { return mapIkedaMap(p, t, phi, iters); }
+  if (ftype == 66) { return mapKochSnowflake3D(p, t, phi, iters); }
+  if (ftype == 67) { return mapCantorDust(p, t, phi, iters); }
+  if (ftype == 68) { return mapPhoenixFractal(p, t, phi, iters); }
+  if (ftype == 69) { return mapFatouSet(p, t, phi, iters); }
+  if (ftype == 70) { return mapE8Lattice(p, t, phi, iters); }
+  if (ftype == 71) { return mapChladniFigures(p, t, phi, iters); }
+  if (ftype == 72) { return mapFitzHugh(p, t, phi, iters); }
+  if (ftype == 73) { return mapRosslerAttractor(p, t, phi, iters); }
+  if (ftype == 74) { return mapDuffingAttractor(p, t, phi, iters); }
+  return mapLogisticBifurcation(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding

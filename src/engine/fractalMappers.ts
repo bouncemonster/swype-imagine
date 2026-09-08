@@ -59,7 +59,23 @@ export function getFractalIndex(type?: string): number {
     case 'novaFractal': return 56;
     case 'goldenKnot': return 57;
     case 'sphericalHarmonics': return 58;
-    case 'reactionDiffusion': return 59;
+    case 'fractalCross': return 59;
+    case 'reactionDiffusion': return 60;
+    case 'sierpinskiCarpet': return 61;
+    case 'tricorn': return 62;
+    case 'chuaCircuit': return 63;
+    case 'standardMap': return 64;
+    case 'ikedaMap': return 65;
+    case 'kochSnowflake3D': return 66;
+    case 'cantorDust': return 67;
+    case 'phoenixFractal': return 68;
+    case 'fatouSet': return 69;
+    case 'e8Lattice': return 70;
+    case 'chladniFigures': return 71;
+    case 'fitzHugh': return 72;
+    case 'rosslerAttractor': return 73;
+    case 'duffingAttractor': return 74;
+    case 'logisticBifurcation': return 75;
     default: return 0;
   }
 }

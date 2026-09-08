@@ -58,7 +58,23 @@ export type FractalType =
   | 'novaFractal'         // 56: Nova Fractal (Newton + Mandelbrot hybrid)
   | 'goldenKnot'          // 57: Golden Knot (torus knot with golden winding)
   | 'sphericalHarmonics'  // 58: Spherical Harmonics (quantum orbital shapes)
-  | 'reactionDiffusion';  // 59: Reaction-Diffusion (Gray-Scott Turing pattern)
+  | 'fractalCross'        // 59: Fractal Cross (3D plus-shaped recursive IFS)
+  | 'reactionDiffusion'   // 60: Reaction-Diffusion (Gray-Scott Turing pattern)
+  | 'sierpinskiCarpet'    // 61: Sierpinski Carpet (IFS, dim ≈ 1.893)
+  | 'tricorn'             // 62: Tricorn / Mandelbar (conjugate Mandelbrot)
+  | 'chuaCircuit'         // 63: Chua's Circuit Double Scroll Attractor
+  | 'standardMap'         // 64: Standard Map (Chirikov-Taylor Hamiltonian chaos)
+  | 'ikedaMap'            // 65: Ikeda Map (delay differential system)
+  | 'kochSnowflake3D'     // 66: Koch Snowflake 3D (recursive triangular IFS)
+  | 'cantorDust'          // 67: Cantor Dust 3D (recursive corner cubes)
+  | 'phoenixFractal'      // 68: Phoenix Fractal (memory fractal with z_{n-1} term)
+  | 'fatouSet'            // 69: Fatou Set (basin boundary of z²+c)
+  | 'e8Lattice'           // 70: E8 Lattice Projection (exceptional Lie group)
+  | 'chladniFigures'      // 71: Chladni Figures (vibrational eigenmodes)
+  | 'fitzHugh'            // 72: FitzHugh-Nagumo Neural Dynamics
+  | 'rosslerAttractor'    // 73: Rössler Attractor (a=0.2, b=0.2, c=5.7)
+  | 'duffingAttractor'    // 74: Duffing Attractor (nonlinear oscillator)
+  | 'logisticBifurcation'; // 75: Logistic Map Bifurcation (Feigenbaum cascade)
 
 export type RenderStyle = 
   | 'solid'       // 0: PBR Solid with AO, Soft Shadows & Subsurface Scattering (SSS)

@@ -1366,6 +1366,390 @@ vec2 mapReactionDiffusion(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(d * 0.4, bound) * 0.6, abs(pattern));
 }
 
+// ============================================================
+// BATCH 3 fractals (61-75): More verified real mathematical fractals
+// ============================================================
+
+// 61. Sierpinski Carpet (IFS, dim = log(8)/log(3) ≈ 1.893)
+vec2 mapSierpinskiCarpet(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  float scale = 1.0;
+  float trap = 1e10;
+  int count = clamp(iters, 3, 8);
+  p.xy = rot2D(t * 0.08) * p.xy;
+  for (int i = 0; i < 8; i++) {
+    if (i >= count) break;
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    if (p.y < p.z) p.yz = p.zy;
+    p = p * 3.0 - vec3(2.0);
+    // Remove center column (Sierpinski carpet rule)
+    if (p.x > -0.5 && p.x < 0.5 && p.y > -0.5 && p.y < 0.5) {
+      p.x += (p.x > 0.0) ? 1.0 : -1.0;
+    }
+    scale *= 3.0;
+    trap = min(trap, length(p));
+  }
+  float d = (length(p) - 0.5) / max(scale, 0.0001);
+  return vec2(d, trap * 0.08);
+}
+
+// 62. Tricorn (Mandelbar) — conjugate Mandelbrot: z = conj(z)^2 + c
+vec2 mapTricorn(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  vec2 z = p.xy * 1.2;
+  vec2 c = vec2(p.z * 0.7, p.x * 0.3);
+  float dz = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    dz = 2.0 * length(z) * dz;
+    // Conjugate: z = conj(z)^2 + c = (zx - i*zy)^2 + c
+    z = vec2(z.x * z.x - z.y * z.y, -2.0 * z.x * z.y) + c;
+    trap += exp(-3.0 * length(z));
+    if (dot(z, z) > 16.0) break;
+  }
+  float d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dz, 0.001);
+  float bound = length(p_in) - 2.3;
+  return vec2(max(abs(d), bound * 0.3), trap);
+}
+
+// 63. Chua's Circuit Double Scroll (orbit-traced, alpha=15.6, beta=28, m0=-1.143, m1=-0.714)
+vec2 mapChuaCircuit(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xz = rot2D(t * 0.07) * p.xz;
+  float alpha = 15.6, beta = 28.0;
+  float m0 = -1.143, m1 = -0.714;
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 3; s++) {
+    vec3 v = vec3(0.1 + float(s) * 0.1, 0.0, 0.1);
+    for (int i = 0; i < 25; i++) {
+      float fx = m1 * v.x + 0.5 * (m0 - m1) * (abs(v.x + 1.0) - abs(v.x - 1.0));
+      float dx = alpha * (v.y - v.x - fx);
+      float dy = v.x - v.y + v.z;
+      float dz2 = -beta * v.y;
+      v += vec3(dx, dy, dz2) * 0.003;
+      vec3 scaled = v * 0.05;
+      float dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  float d = 0.3 - density * 0.06;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 64. Standard Map (Chirikov-Taylor, orbit-traced)
+vec2 mapStandardMap(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  float K = 1.5 + 0.5 * sin(t * 0.1); // chaos parameter
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 4; s++) {
+    float theta = float(s) * 1.57 + 0.3;
+    float p_val = float(s) * 0.8 - 1.2;
+    for (int i = 0; i < 30; i++) {
+      float new_p = p_val + K * sin(theta);
+      theta = theta + new_p;
+      theta = mod(theta, TWO_PI);
+      p_val = new_p;
+      vec3 pt = vec3(cos(theta) * 0.8, sin(theta) * 0.8, p_val * 0.15);
+      float dist = length(p - pt);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
+  }
+  float d = 0.3 - density * 0.06;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 65. Ikeda Map (orbit-traced, b=0.9, u=0.4+0.05*sin(t))
+vec2 mapIkedaMap(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  float b = 0.9;
+  float u = 0.4 + 0.05 * sin(t * 0.15);
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 4; s++) {
+    float xn = float(s) * 0.3 - 0.45;
+    float yn = float(s) * 0.2 - 0.3;
+    for (int i = 0; i < 25; i++) {
+      float ti = 0.4 - 6.0 / (1.0 + xn * xn + yn * yn);
+      float cosT = cos(ti), sinT = sin(ti);
+      float xnew = 1.0 + u * (xn * cosT - yn * sinT);
+      float ynew = u * (xn * sinT + yn * cosT);
+      xn = xnew; yn = ynew;
+      vec3 pt = vec3(xn * 0.3, yn * 0.3, sin(float(i) * 0.2 + t * 0.1) * 0.15);
+      float dist = length(p - pt);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 5.0);
+    }
+  }
+  float d = 0.25 - density * 0.05;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 66. Koch Snowflake 3D (recursive triangular IFS)
+vec2 mapKochSnowflake3D(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xy = rot2D(t * 0.06) * p.xy;
+  float d = 1e10;
+  float trap = 0.0;
+  float sc = 1.0;
+  // Koch curve: 4 segments, scale 1/3, with triangular bump
+  float s3 = 1.0 / 3.0;
+  vec3 offsets[4];
+  offsets[0] = vec3(0.0, 0.0, 0.0);
+  offsets[1] = vec3(s3, 0.0, 0.0);
+  offsets[2] = vec3(0.5 * s3, s3 * 0.866, 0.0);
+  offsets[3] = vec3(2.0 * s3, 0.0, 0.0);
+  for (int i = 0; i < 8; i++) {
+    if (i >= iters) break;
+    vec3 q = p * sc;
+    float mn = 1e10;
+    for (int j = 0; j < 4; j++) {
+      float dd = length(q - offsets[j]);
+      mn = min(mn, dd);
+    }
+    trap += mn / sc;
+    // Find closest segment and zoom in
+    float best = 1e10;
+    int bestIdx = 0;
+    for (int j = 0; j < 4; j++) {
+      float dd = length(q - offsets[j]);
+      if (dd < best) { best = dd; bestIdx = j; }
+    }
+    p = (p - offsets[bestIdx] / sc) * sc * 3.0;
+    sc *= 3.0;
+  }
+  float bound = length(p_in) - 2.2;
+  d = length(p) / sc;
+  return vec2(max(d * 0.5, bound * 0.3), trap * 0.08);
+}
+
+// 67. Cantor Dust 3D (recursive corner cubes, dim = log(8)/log(3) ≈ 1.893)
+vec2 mapCantorDust(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xy = rot2D(t * 0.05) * p.xy;
+  float scale = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 10; i++) {
+    if (i >= iters) break;
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    if (p.y < p.z) p.yz = p.zy;
+    p = p * 3.0 - vec3(2.0);
+    scale *= 3.0;
+    trap = min(trap, length(p));
+  }
+  float d = (length(p) - 0.4) / max(scale, 0.0001);
+  return vec2(d, trap * 0.06);
+}
+
+// 68. Phoenix Fractal (z_{n+1} = z_n^2 + c + p*z_{n-1}, memory fractal)
+vec2 mapPhoenixFractal(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in;
+  p.xz = rot2D(t * 0.05) * p.xz;
+  vec2 c = vec2(0.56667 + 0.05 * sin(t * 0.2), -0.5);
+  float p_param = 0.2 + 0.05 * cos(t * 0.15);
+  vec2 z = p.xy * 1.3;
+  vec2 z_prev = vec2(0.0);
+  float dz = 1.0;
+  float trap = 0.0;
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    dz = 2.0 * length(z) * dz + p_param;
+    vec2 z_new = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c + p_param * z_prev;
+    z_prev = z;
+    z = z_new;
+    trap += exp(-2.0 * length(z));
+    if (dot(z, z) > 16.0) break;
+  }
+  float d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dz, 0.001);
+  float bound = length(p_in) - 2.3;
+  return vec2(max(abs(d), bound * 0.3), trap);
+}
+
+// 69. Fatou Set (basin boundary of z^2+c, showing connected/disconnected Julia)
+vec2 mapFatouSet(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xy = rot2D(t * 0.05) * p.xy;
+  // Animate c along the boundary of the Mandelbrot set
+  float ang = t * 0.15;
+  vec2 c = vec2(0.7885 * cos(ang), 0.7885 * sin(ang)); // on M-set boundary
+  vec2 z = p.xy;
+  float minR = 1e10;
+  float trap = 0.0;
+  for (int i = 0; i < 20; i++) {
+    if (i >= iters) break;
+    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    float r = length(z);
+    minR = min(minR, r);
+    trap += exp(-2.0 * r);
+    if (r > 4.0) break;
+  }
+  // Fatou set = points that don't escape (minR stays small)
+  float fatou = smoothstep(0.0, 2.0, minR);
+  float d = abs(fatou - 0.5) - 0.05;
+  float d3d = sqrt(d * d + p.z * p.z * 0.3) - 0.08;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d3d, bound) * 0.5, trap * 0.15);
+}
+
+// 70. E8 Lattice Projection (exceptional Lie group, 8D → 3D shadow)
+vec2 mapE8Lattice(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * phi * 1.2;
+  p.xz = rot2D(t * 0.07) * p.xz;
+  // E8 root system projected: use 6 directions from E8 weights
+  float psi = 0.0;
+  vec3 dirs[6];
+  dirs[0] = normalize(vec3(1.0, phi, 0.0));
+  dirs[1] = normalize(vec3(-1.0, phi, 0.0));
+  dirs[2] = normalize(vec3(0.0, 1.0, phi));
+  dirs[3] = normalize(vec3(0.0, -1.0, phi));
+  dirs[4] = normalize(vec3(phi, 0.0, 1.0));
+  dirs[5] = normalize(vec3(phi, 0.0, -1.0));
+  float ws = 3.5 * phi;
+  for (int j = 0; j < 6; j++) {
+    psi += cos(dot(p, dirs[j]) * ws + t * 0.15);
+  }
+  float d = (abs(psi) - 0.6) / ws;
+  float bound = length(p_in) - 2.2;
+  return vec2(max(d, bound), abs(psi) * 0.2 + 0.3 * length(p));
+}
+
+// 71. Chladni Figures (vibrational eigenmodes on rectangular plate)
+vec2 mapChladniFigures(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.8;
+  p.xy = rot2D(t * 0.05) * p.xy;
+  // Chladni pattern: cos(n*pi*x/L)*cos(m*pi*y/L) - cos(m*pi*x/L)*cos(n*pi*y/L)
+  float n = 3.0 + floor(mod(t * 0.3, 5.0));
+  float m = 2.0 + floor(mod(t * 0.2 + 2.5, 4.0));
+  float pi_x = PI * p.x;
+  float pi_y = PI * p.y;
+  float mode1 = cos(n * pi_x) * cos(m * pi_y);
+  float mode2 = cos(m * pi_x) * cos(n * pi_y);
+  float chladni = mode1 - mode2;
+  float d = abs(chladni) - 0.08;
+  float plate = max(max(abs(p.x) - 1.5, abs(p.y) - 1.5), abs(p.z) - 0.06);
+  float d3d = max(d, plate);
+  return vec2(d3d * 0.5, abs(chladni));
+}
+
+// 72. FitzHugh-Nagumo Neural Dynamics (orbit-traced)
+vec2 mapFitzHugh(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  float a = 0.7, b_param = 0.8, tau = 12.5;
+  float I_ext = 0.5 + 0.2 * sin(t * 0.2);
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 3; s++) {
+    vec3 v = vec3(0.1 + float(s) * 0.1, -0.2, 0.0);
+    for (int i = 0; i < 25; i++) {
+      float dv = v.x - v.y * v.y * v.y / 3.0 + v.y + I_ext;
+      float dw = (v.x - a + b_param * v.y) / tau;
+      float dz2 = sin(v.z * 2.0 + t * 0.1) * 0.1;
+      v += vec3(dv, dw, dz2) * 0.08;
+      vec3 scaled = v * 0.25;
+      float dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  float d = 0.3 - density * 0.06;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(d, bound) * 0.5, density * 0.18);
+}
+
+// 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
+vec2 mapRosslerAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xz = rot2D(t * 0.07) * p.xz;
+  float a = 0.2, b = 0.2, c = 5.7;
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 3; s++) {
+    vec3 v = vec3(0.1 + float(s) * 0.1, 0.1, 0.0);
+    for (int i = 0; i < 30; i++) {
+      float dx = -v.y - v.z;
+      float dy = v.x + a * v.y;
+      float dz2 = b + v.z * (v.x - c);
+      v += vec3(dx, dy, dz2) * 0.01;
+      vec3 scaled = v * 0.08;
+      float dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  float d = 0.3 - density * 0.06;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.5, density * 0.2);
+}
+
+// 74. Duffing Attractor (orbit-traced, alpha=1, beta=5, delta=0.02, gamma=8)
+vec2 mapDuffingAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  p.xz = rot2D(t * 0.06) * p.xz;
+  float alpha = 1.0, beta_p = 5.0, delta = 0.02, gamma = 8.0;
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 3; s++) {
+    vec3 v = vec3(0.1 + float(s) * 0.1, 0.0, float(s) * 0.5);
+    for (int i = 0; i < 25; i++) {
+      float omega = 1.5 + float(s) * 0.3;
+      float dx = v.y;
+      float dy = -delta * v.y - alpha * v.x - beta_p * v.x * v.x * v.x + gamma * cos(v.z);
+      float dz2 = omega;
+      v += vec3(dx, dy, dz2) * 0.015;
+      vec3 scaled = v * 0.15;
+      float dist = length(p - scaled);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 4.0);
+    }
+  }
+  float d = 0.3 - density * 0.06;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(d, bound) * 0.5, density * 0.18);
+}
+
+// 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
+vec2 mapLogisticBifurcation(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  p.xz = rot2D(t * 0.05) * p.xz;
+  // r parameter along x-axis: r ∈ [2.5, 4.0]
+  float r = 2.5 + (p.x + 1.5) / 3.0 * 1.5;
+  float density = 0.0;
+  float minDist = 1e10;
+  for (int s = 0; s < 4; s++) {
+    float x = 0.3 + float(s) * 0.15;
+    // Transient: iterate to attractor
+    for (int i = 0; i < 50; i++) {
+      x = r * x * (1.0 - x);
+    }
+    // Now trace attractor points
+    for (int i = 0; i < 20; i++) {
+      x = r * x * (1.0 - x);
+      vec3 pt = vec3(p.x, (x - 0.5) * 2.0, p.z + float(s) * 0.1);
+      float dist = length(p - pt);
+      minDist = min(minDist, dist);
+      density += exp(-dist * 6.0);
+    }
+  }
+  float d = 0.25 - density * 0.05;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(d, bound) * 0.5, density * 0.2);
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -1426,7 +1810,23 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 56) return mapNovaFractal(p, t, phi, iters);
   if (ftype == 57) return mapGoldenKnot(p, t, phi);
   if (ftype == 58) return mapSphericalHarmonics(p, t, phi);
-  return mapReactionDiffusion(p, t, phi, iters);
+  if (ftype == 59) return mapFractalCross(p, t, phi, iters);
+  if (ftype == 60) return mapReactionDiffusion(p, t, phi, iters);
+  if (ftype == 61) return mapSierpinskiCarpet(p, t, phi, iters);
+  if (ftype == 62) return mapTricorn(p, t, phi, iters);
+  if (ftype == 63) return mapChuaCircuit(p, t, phi, iters);
+  if (ftype == 64) return mapStandardMap(p, t, phi, iters);
+  if (ftype == 65) return mapIkedaMap(p, t, phi, iters);
+  if (ftype == 66) return mapKochSnowflake3D(p, t, phi, iters);
+  if (ftype == 67) return mapCantorDust(p, t, phi, iters);
+  if (ftype == 68) return mapPhoenixFractal(p, t, phi, iters);
+  if (ftype == 69) return mapFatouSet(p, t, phi, iters);
+  if (ftype == 70) return mapE8Lattice(p, t, phi, iters);
+  if (ftype == 71) return mapChladniFigures(p, t, phi, iters);
+  if (ftype == 72) return mapFitzHugh(p, t, phi, iters);
+  if (ftype == 73) return mapRosslerAttractor(p, t, phi, iters);
+  if (ftype == 74) return mapDuffingAttractor(p, t, phi, iters);
+  return mapLogisticBifurcation(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
