@@ -2840,10 +2840,38 @@ void main() {
     float trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
-    // Reduced trap weight to prevent horizontal banding; added position-based variation
+    // FIX: Added high-frequency hash noise to break up uniform color zones on IFS fractals
+    // IFS fractals (Mandelbox, KIFS) have flat faces with uniform normals/positions
+    // This caused each face to get a single dominant color with sharp boundaries
     float seedAnim = u_palette_seed + u_palette_rotation * u_time * 2.5;
     float trapSmooth = effectiveTrap / (1.0 + effectiveTrap); // Soft saturation, no jumps
-    float phase = fract(trapSmooth * 0.8 + curvNorm * 1.2 + p.y * 0.5 + p.x * 0.3 + length(p - ro) * 0.15 + u_time * 0.04 + seedAnim * 0.01);
+    
+    // High-frequency hash noise for color variation within each face
+    // Uses surface position to create unique pattern per point
+    // Multiple octaves for natural-looking variation
+    float hashNoise = fract(sin(dot(p * 17.3, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+    float hashNoise2 = fract(sin(dot(p * 31.7, vec3(63.726, 10.873, 91.345))) * 23421.6312);
+    float hashNoise3 = fract(sin(dot(p * 47.1, vec3(23.456, 89.012, 34.567))) * 54321.9876);
+    
+    // CRITICAL FIX: Add view-dependent variation to break horizontal splits
+    // The dot product of normal and view direction varies across the surface
+    float viewDependent = dot(n, rd) * 0.5 + 0.5; // [0, 1] range
+    float viewHash = fract(sin(dot(n * 23.7, vec3(45.678, 12.345, 67.890))) * 98765.4321);
+    
+    // Phase with VERY strong high-frequency variation
+    // CRITICAL: Noise dominates to prevent ANY uniform zones
+    float phase = fract(
+      hashNoise * 0.6 +            // Primary noise (INCREASED)
+      hashNoise2 * 0.35 +          // Secondary noise (INCREASED)
+      hashNoise3 * 0.2 +           // Tertiary noise (INCREASED)
+      viewHash * 0.25 +            // View-dependent noise (NEW)
+      viewDependent * 0.15 +       // View angle (NEW)
+      trapSmooth * 0.3 +           // Orbit trap (FURTHER REDUCED)
+      curvNorm * 0.4 +             // Curvature (FURTHER REDUCED)
+      p.y * 0.08 + p.x * 0.06 + p.z * 0.05 +  // Position (FURTHER REDUCED)
+      length(p - ro) * 0.03 +      // Distance (FURTHER REDUCED)
+      u_time * 0.04 + seedAnim * 0.01  // Animation
+    );
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
