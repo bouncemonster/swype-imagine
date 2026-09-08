@@ -2283,7 +2283,7 @@ fn mapMandelbulbPower4(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     if (i >= maxIter) { break; }
     r = length(z);
     if (r > 2.0) { break; }
-    let theta = acos(z.z / r);
+    let theta = acos(z.z / max(r, 0.001));
     let phiAngle = atan2(z.y, z.x);
     dr = pow(r, 3.0) * 4.0 * dr + 1.0;
     let zr = pow(r, 4.0);
@@ -2303,7 +2303,7 @@ fn mapMandelbulbPower12(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     if (i >= maxIter) { break; }
     r = length(z);
     if (r > 2.0) { break; }
-    let theta = acos(z.z / r);
+    let theta = acos(z.z / max(r, 0.001));
     let phiAngle = atan2(z.y, z.x);
     dr = pow(r, 11.0) * 12.0 * dr + 1.0;
     let zr = pow(r, 12.0);
@@ -2344,7 +2344,7 @@ fn mapMultibrot3Advanced(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     if (i >= maxIter) { break; }
     r = length(z);
     if (r > 2.0) { break; }
-    let theta = acos(z.z / r);
+    let theta = acos(z.z / max(r, 0.001));
     let phiAngle = atan2(z.y, z.x);
     dr = 3.0 * pow(r, 2.0) * dr + 1.0;
     let zr = pow(r, 3.0);
@@ -2542,26 +2542,26 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 83) { return mapBedheadAttractor(p, t, phi, iters); }
   if (ftype == 84) { return mapFourSpotAttractor(p, t, phi, iters); }
   if (ftype == 85) { return mapSvenssonAttractor(p, t, phi, iters); }
-  // NEW BEAUTIFUL FRACTALS
-  if (ftype == 86) { return mapKaleidoscopicIFS(p, t, phi, iters); }
-  if (ftype == 87) { return mapFlowerOfLife(p, t, phi); }
-  if (ftype == 88) { return mapCosmicSpiral(p, t, phi); }
-  if (ftype == 89) { return mapCrystalGrowth(p, t, phi, iters); }
-  if (ftype == 90) { return mapQuantumFoam(p, t, phi); }
-  if (ftype == 91) { return mapFractalCoral(p, t, phi, iters); }
-  if (ftype == 92) { return mapNebulaCloud(p, t, phi, iters); }
-  if (ftype == 93) { return mapHyperbolicTiling(p, t, phi); }
-  if (ftype == 94) { return mapOrganicCell(p, t, phi); }
-  if (ftype == 95) { return mapGoldenHelix(p, t, phi); }
+  // NEW BEAUTIFUL FRACTALS (return f32 → wrap to vec2<f32> with trap=0)
+  if (ftype == 86) { return vec2<f32>(mapKaleidoscopicIFS(p, t, phi, iters), 0.0); }
+  if (ftype == 87) { return vec2<f32>(mapFlowerOfLife(p, t, phi), 0.0); }
+  if (ftype == 88) { return vec2<f32>(mapCosmicSpiral(p, t, phi), 0.0); }
+  if (ftype == 89) { return vec2<f32>(mapCrystalGrowth(p, t, phi, iters), 0.0); }
+  if (ftype == 90) { return vec2<f32>(mapQuantumFoam(p, t, phi), 0.0); }
+  if (ftype == 91) { return vec2<f32>(mapFractalCoral(p, t, phi, iters), 0.0); }
+  if (ftype == 92) { return vec2<f32>(mapNebulaCloud(p, t, phi, iters), 0.0); }
+  if (ftype == 93) { return vec2<f32>(mapHyperbolicTiling(p, t, phi), 0.0); }
+  if (ftype == 94) { return vec2<f32>(mapOrganicCell(p, t, phi), 0.0); }
+  if (ftype == 95) { return vec2<f32>(mapGoldenHelix(p, t, phi), 0.0); }
   // MODERN FRACTALS WITH ADVANCED TECHNIQUES
-  if (ftype == 96) { return mapMandelbulbPower4(p, t, phi, iters); }
-  if (ftype == 97) { return mapMandelbulbPower12(p, t, phi, iters); }
-  if (ftype == 98) { return mapHybridMandelboxKIFS(p, t, phi, iters); }
-  if (ftype == 99) { return mapMultibrot3Advanced(p, t, phi, iters); }
-  if (ftype == 100) { return mapFractalFlameIFS(p, t, phi, iters); }
-  if (ftype == 101) { return mapAmazingBox(p, t, phi, iters); }
-  if (ftype == 102) { return mapMandelbulbMandelboxHybrid(p, t, phi, iters); }
-  if (ftype == 103) { return mapMengerMandelboxHybrid(p, t, phi, iters); }
+  if (ftype == 96) { return vec2<f32>(mapMandelbulbPower4(p, t, phi, iters), 0.0); }
+  if (ftype == 97) { return vec2<f32>(mapMandelbulbPower12(p, t, phi, iters), 0.0); }
+  if (ftype == 98) { return vec2<f32>(mapHybridMandelboxKIFS(p, t, phi, iters), 0.0); }
+  if (ftype == 99) { return vec2<f32>(mapMultibrot3Advanced(p, t, phi, iters), 0.0); }
+  if (ftype == 100) { return vec2<f32>(mapFractalFlameIFS(p, t, phi, iters), 0.0); }
+  if (ftype == 101) { return vec2<f32>(mapAmazingBox(p, t, phi, iters), 0.0); }
+  if (ftype == 102) { return vec2<f32>(mapMandelbulbMandelboxHybrid(p, t, phi, iters), 0.0); }
+  if (ftype == 103) { return vec2<f32>(mapMengerMandelboxHybrid(p, t, phi, iters), 0.0); }
   return mapPhyllotaxis(p, t, phi, iters); // Default fallback
 }
 
