@@ -650,6 +650,8 @@ export class NeuroAestheticsEngine {
   // EXPLORATION MODE: Ensure all fractal types are shown
   private explorationIndex = 0;
   private readonly EXPLORATION_MODE = true; // Show all types sequentially first
+  // RANDOM HYBRID MODE: Allow any combination for thousands of hybrids
+  private readonly RANDOM_HYBRID_MODE = true; // Allow any fractal combination
 
   constructor() {
     this.taste = this.loadTasteProfile();
@@ -911,34 +913,38 @@ export class NeuroAestheticsEngine {
     let specimenName = `${FRACTAL_NAMES[selectedType]} • φ-${this.currentGeneration}`;
 
     if (isHybrid) {
-      const compat = COMPATIBLE_HYBRIDS[selectedType] || {
-        partners: ALL_FRACTAL_TYPES.filter(t => t !== selectedType),
-        ops: ['smoothUnion', 'smoothMorph', 'domainWarp']
-      };
+      // RANDOM HYBRID MODE: Allow ANY combination for thousands of hybrids
+      if (this.RANDOM_HYBRID_MODE && Math.random() < 0.6) {
+        // 60% chance: completely random partner from ALL types
+        const allPartners = ALL_FRACTAL_TYPES.filter(t => t !== selectedType);
+        hybridType = allPartners[Math.floor(Math.random() * allPartners.length)];
+        console.info(`[NeuroAesthetics] Random hybrid: ${selectedType} + ${hybridType}`);
+      } else {
+        // 40% chance: use compatibility matrix for curated hybrids
+        const compat = COMPATIBLE_HYBRIDS[selectedType] || {
+          partners: ALL_FRACTAL_TYPES.filter(t => t !== selectedType),
+          ops: ['smoothUnion', 'smoothMorph', 'domainWarp']
+        };
 
-      // IMPROVED HYBRID SELECTION: Score each partner by archetype match + user affinity + exploration
-      const selectedArch = getFractalArchetype(selectedType);
-      let bestPartner = compat.partners[0];
-      let bestScore = -1;
-      for (const partner of compat.partners) {
-        const partnerArch = getFractalArchetype(partner);
-        // Archetype match bonus: same archetype = higher visual coherence
-        const archMatch = selectedArch === partnerArch ? 1.5 : 0.8;
-        // User affinity: prefer partners the user has shown interest in
-        const userAffinity = Math.max(0.2, this.taste.typeAffinities[partner] || 1.0);
-        // Exploration bonus: prefer unexplored partners
-        const explored = this.history.some(s => s.hybridType === partner && s.type === selectedType);
-        const explorationBonus = explored ? 0.5 : 1.3;
-        // Composite operator synergy: some ops work better with certain archetypes
-        const opSynergy = this.getOpSynergy(selectedArch, partnerArch);
-        // Total score
-        const score = archMatch * userAffinity * explorationBonus * opSynergy;
-        if (score > bestScore) {
-          bestScore = score;
-          bestPartner = partner;
+        // IMPROVED HYBRID SELECTION: Score each partner by archetype match + user affinity + exploration
+        const selectedArch = getFractalArchetype(selectedType);
+        let bestPartner = compat.partners[0];
+        let bestScore = -1;
+        for (const partner of compat.partners) {
+          const partnerArch = getFractalArchetype(partner);
+          const archMatch = selectedArch === partnerArch ? 1.5 : 0.8;
+          const userAffinity = Math.max(0.2, this.taste.typeAffinities[partner] || 1.0);
+          const explored = this.history.some(s => s.hybridType === partner && s.type === selectedType);
+          const explorationBonus = explored ? 0.5 : 1.3;
+          const opSynergy = this.getOpSynergy(selectedArch, partnerArch);
+          const score = archMatch * userAffinity * explorationBonus * opSynergy;
+          if (score > bestScore) {
+            bestScore = score;
+            bestPartner = partner;
+          }
         }
+        hybridType = bestPartner;
       }
-      hybridType = bestPartner;
 
       // Select composite operator based on archetype synergy
       const partnerArch = getFractalArchetype(hybridType);
