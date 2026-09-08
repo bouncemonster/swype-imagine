@@ -2207,6 +2207,108 @@ fn mapGoldenHelix(p: vec3<f32>, t: f32, phi: f32) -> f32 {
   return min(min(helix1, helix2), bridge) * 0.8;
 }
 
+// 96: Mandelbulb Power 4
+fn mapMandelbulbPower4(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var z = p;
+  var dr = 1.0;
+  var r = 0.0;
+  let maxIter = i32(clamp(f32(iters), 6.0, 16.0));
+  for (var i = 0; i < 16; i++) {
+    if (i >= maxIter) { break; }
+    r = length(z);
+    if (r > 2.0) { break; }
+    let theta = acos(z.z / r);
+    let phiAngle = atan2(z.y, z.x);
+    dr = pow(r, 3.0) * 4.0 * dr + 1.0;
+    let zr = pow(r, 4.0);
+    z = zr * vec3<f32>(sin(theta * 4.0) * cos(phiAngle * 4.0), sin(phiAngle * 4.0) * sin(theta * 4.0), cos(theta * 4.0));
+    z = z + p;
+  }
+  return 0.5 * log(r) * r / dr;
+}
+
+// 97: Mandelbulb Power 12
+fn mapMandelbulbPower12(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var z = p;
+  var dr = 1.0;
+  var r = 0.0;
+  let maxIter = i32(clamp(f32(iters), 6.0, 16.0));
+  for (var i = 0; i < 16; i++) {
+    if (i >= maxIter) { break; }
+    r = length(z);
+    if (r > 2.0) { break; }
+    let theta = acos(z.z / r);
+    let phiAngle = atan2(z.y, z.x);
+    dr = pow(r, 11.0) * 12.0 * dr + 1.0;
+    let zr = pow(r, 12.0);
+    z = zr * vec3<f32>(sin(theta * 12.0) * cos(phiAngle * 12.0), sin(phiAngle * 12.0) * sin(theta * 12.0), cos(theta * 12.0));
+    z = z + p;
+  }
+  return 0.5 * log(r) * r / dr;
+}
+
+// 98: Hybrid Mandelbox-KIFS
+fn mapHybridMandelboxKIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var pos = p;
+  let scale = phi;
+  let offset = vec3<f32>(1.0);
+  var minDist = 1e10;
+  let maxIter = i32(clamp(f32(iters), 6.0, 14.0));
+  for (var i = 0; i < 14; i++) {
+    if (i >= maxIter) { break; }
+    pos = abs(pos) - offset * 0.5;
+    pos = clamp(pos, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - pos;
+    let r2 = dot(pos, pos);
+    if (r2 < 0.25) { pos = pos * 4.0; }
+    else if (r2 < 1.0) { pos = pos / r2; }
+    pos = pos * scale + offset * (1.0 - scale);
+    pos = vec3<f32>(rot2D(t * 0.05 + f32(i) * 0.3) * pos.xy, pos.z);
+    minDist = min(minDist, length(pos) * pow(scale, -f32(i + 1)));
+  }
+  return minDist * 0.5;
+}
+
+// 99: Multibrot Power 3
+fn mapMultibrot3Advanced(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var z = p;
+  var dr = 1.0;
+  var r = 0.0;
+  let maxIter = i32(clamp(f32(iters), 8.0, 20.0));
+  for (var i = 0; i < 20; i++) {
+    if (i >= maxIter) { break; }
+    r = length(z);
+    if (r > 2.0) { break; }
+    let theta = acos(z.z / r);
+    let phiAngle = atan2(z.y, z.x);
+    dr = 3.0 * pow(r, 2.0) * dr + 1.0;
+    let zr = pow(r, 3.0);
+    z = zr * vec3<f32>(sin(theta * 3.0) * cos(phiAngle * 3.0), sin(phiAngle * 3.0) * sin(theta * 3.0), cos(theta * 3.0));
+    z = z + p;
+  }
+  return 0.5 * log(r) * r / dr;
+}
+
+// 100: Fractal Flame IFS
+fn mapFractalFlameIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var z = p;
+  var color = 0.0;
+  var minDist = 1e10;
+  let maxIter = i32(clamp(f32(iters), 8.0, 18.0));
+  for (var i = 0; i < 18; i++) {
+    if (i >= maxIter) { break; }
+    z = vec3<f32>(
+      sin(z.x * phi + t * 0.1) + cos(z.y * 1.3),
+      sin(z.y * phi * 0.8 + t * 0.08) + cos(z.z * 1.5),
+      sin(z.z * phi * 0.6 + t * 0.12) + cos(z.x * 1.7)
+    ) * 0.5;
+    z = abs(z) - vec3<f32>(1.0, 0.8, 0.9);
+    z = z * phi * 0.7;
+    color = color + length(z) * 0.1;
+    minDist = min(minDist, length(z - p) * pow(phi * 0.7, -f32(i + 1)));
+  }
+  return minDist * 0.4;
+}
+
 // Master Single Primitive Dispatcher (86 Architectures)
 fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (ftype == 0) { return mapPhyllotaxis(p, t, phi, iters); }
@@ -2305,7 +2407,13 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 92) { return mapNebulaCloud(p, t, phi, iters); }
   if (ftype == 93) { return mapHyperbolicTiling(p, t, phi); }
   if (ftype == 94) { return mapOrganicCell(p, t, phi); }
-  return mapGoldenHelix(p, t, phi);
+  if (ftype == 95) { return mapGoldenHelix(p, t, phi); }
+  // MODERN FRACTALS WITH ADVANCED TECHNIQUES
+  if (ftype == 96) { return mapMandelbulbPower4(p, t, phi, iters); }
+  if (ftype == 97) { return mapMandelbulbPower12(p, t, phi, iters); }
+  if (ftype == 98) { return mapHybridMandelboxKIFS(p, t, phi, iters); }
+  if (ftype == 99) { return mapMultibrot3Advanced(p, t, phi, iters); }
+  return mapFractalFlameIFS(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding

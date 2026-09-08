@@ -2113,6 +2113,126 @@ float mapGoldenHelix(vec3 p, float t, float phi) {
   return min(min(helix1, helix2), bridge) * 0.8;
 }
 
+// ==========================================
+// MODERN FRACTALS WITH ADVANCED TECHNIQUES (96-100)
+// ==========================================
+
+// 96: Mandelbulb Power 4 — Spiky variant
+float mapMandelbulbPower4(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  int maxIter = int(clamp(float(iters), 6.0, 16.0));
+  for (int i = 0; i < 16; i++) {
+    if (i >= maxIter) break;
+    r = length(z);
+    if (r > 2.0) break;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    dr = pow(r, 3.0) * 4.0 * dr + 1.0;
+    float zr = pow(r, 4.0);
+    theta = theta * 4.0;
+    phiAngle = phiAngle * 4.0;
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(phiAngle) * sin(theta), cos(theta));
+    z += p;
+  }
+  return 0.5 * log(r) * r / dr;
+}
+
+// 97: Mandelbulb Power 12 — Sea urchin variant
+float mapMandelbulbPower12(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  int maxIter = int(clamp(float(iters), 6.0, 16.0));
+  for (int i = 0; i < 16; i++) {
+    if (i >= maxIter) break;
+    r = length(z);
+    if (r > 2.0) break;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    dr = pow(r, 11.0) * 12.0 * dr + 1.0;
+    float zr = pow(r, 12.0);
+    theta = theta * 12.0;
+    phiAngle = phiAngle * 12.0;
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(phiAngle) * sin(theta), cos(theta));
+    z += p;
+  }
+  return 0.5 * log(r) * r / dr;
+}
+
+// 98: Hybrid Mandelbox-KIFS — Modern hybrid fractal
+float mapHybridMandelboxKIFS(vec3 p, float t, float phi, int iters) {
+  float scale = phi;
+  vec3 offset = vec3(1.0);
+  float minDist = 1e10;
+  int maxIter = int(clamp(float(iters), 6.0, 14.0));
+  for (int i = 0; i < 14; i++) {
+    if (i >= maxIter) break;
+    // Kaleidoscopic fold
+    p = abs(p) - offset * 0.5;
+    // Mandelbox box fold
+    p = clamp(p, -1.0, 1.0) * 2.0 - p;
+    // Sphere fold
+    float r2 = dot(p, p);
+    if (r2 < 0.25) p *= 4.0;
+    else if (r2 < 1.0) p /= r2;
+    p = p * scale + offset * (1.0 - scale);
+    // Rotation for animation
+    p.xy = rot2D(t * 0.05 + float(i) * 0.3) * p.xy;
+    minDist = min(minDist, length(p) * pow(scale, -float(i + 1)));
+  }
+  return minDist * 0.5;
+}
+
+// 99: Multibrot Power 3 — 3D extension of Mandelbrot with power 3
+float mapMultibrot3Advanced(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  int maxIter = int(clamp(float(iters), 8.0, 20.0));
+  for (int i = 0; i < 20; i++) {
+    if (i >= maxIter) break;
+    r = length(z);
+    if (r > 2.0) break;
+    // Power 3 in spherical coordinates
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    dr = 3.0 * pow(r, 2.0) * dr + 1.0;
+    float zr = pow(r, 3.0);
+    theta = theta * 3.0;
+    phiAngle = phiAngle * 3.0;
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(phiAngle) * sin(theta), cos(theta));
+    z += p;
+  }
+  return 0.5 * log(r) * r / dr;
+}
+
+// 100: Fractal Flame IFS — Modern flame fractal in 3D
+float mapFractalFlameIFS(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float color = 0.0;
+  float minDist = 1e10;
+  int maxIter = int(clamp(float(iters), 8.0, 18.0));
+  for (int i = 0; i < 18; i++) {
+    if (i >= maxIter) break;
+    // Nonlinear variations
+    float fi = float(i);
+    z = vec3(
+      sin(z.x * phi + t * 0.1) + cos(z.y * 1.3),
+      sin(z.y * phi * 0.8 + t * 0.08) + cos(z.z * 1.5),
+      sin(z.z * phi * 0.6 + t * 0.12) + cos(z.x * 1.7)
+    ) * 0.5;
+    // Fold
+    z = abs(z) - vec3(1.0, 0.8, 0.9);
+    // Scale
+    z *= phi * 0.7;
+    color += length(z) * 0.1;
+    minDist = min(minDist, length(z - p) * pow(phi * 0.7, -float(i + 1)));
+  }
+  return minDist * 0.4;
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -2210,7 +2330,13 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 92) return mapNebulaCloud(p, t, phi, iters);
   if (ftype == 93) return mapHyperbolicTiling(p, t, phi);
   if (ftype == 94) return mapOrganicCell(p, t, phi);
-  return mapGoldenHelix(p, t, phi);
+  if (ftype == 95) return mapGoldenHelix(p, t, phi);
+  // MODERN FRACTALS WITH ADVANCED TECHNIQUES
+  if (ftype == 96) return mapMandelbulbPower4(p, t, phi, iters);
+  if (ftype == 97) return mapMandelbulbPower12(p, t, phi, iters);
+  if (ftype == 98) return mapHybridMandelboxKIFS(p, t, phi, iters);
+  if (ftype == 99) return mapMultibrot3Advanced(p, t, phi, iters);
+  return mapFractalFlameIFS(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
