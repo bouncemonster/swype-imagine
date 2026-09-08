@@ -3238,18 +3238,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let trapSmooth = effectiveTrap / (1.0 + effectiveTrap); // Soft saturation, no jumps
     
     // High-frequency hash noise for color variation within each face
-    let hashNoise = fract(sin(dot(p * 17.3, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
-    let hashNoise2 = fract(sin(dot(p * 31.7, vec3<f32>(63.726, 10.873, 91.345))) * 23421.6312);
-    let hashNoise3 = fract(sin(dot(p * 47.1, vec3<f32>(23.456, 89.012, 34.567))) * 54321.9876);
+    let hashNoise = fract(sin(dot(p * 17.3 + 127.1, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+    let hashNoise2 = fract(sin(dot(p * 31.7 + 269.5, vec3<f32>(63.726, 10.873, 91.345))) * 23421.6312);
+    let hashNoise3 = fract(sin(dot(p * 47.1 + 419.2, vec3<f32>(23.456, 89.012, 34.567))) * 54321.9876);
     
     // CRITICAL FIX: Use normal-based coloring to break horizontal symmetry
     let normalPhase = dot(n, vec3<f32>(1.0, 0.0, 0.0)) * 0.5 + 0.5;
     let normalPhase2 = dot(n, vec3<f32>(0.0, 1.0, 0.0)) * 0.5 + 0.5;
     let normalPhase3 = dot(n, vec3<f32>(0.0, 0.0, 1.0)) * 0.5 + 0.5;
-    
-    let hashNoise = fract(sin(dot(p * 17.3 + 127.1, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
-    let hashNoise2 = fract(sin(dot(p * 31.7 + 269.5, vec3<f32>(63.726, 10.873, 91.345))) * 23421.6312);
-    let hashNoise3 = fract(sin(dot(p * 47.1 + 419.2, vec3<f32>(23.456, 89.012, 34.567))) * 54321.9876);
     
     // Phase with normal-based dominance to break horizontal splits
     let phase = fract(
