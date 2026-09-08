@@ -43,7 +43,8 @@ struct Uniforms {
   ambient_color: vec3<f32>,
   palette_seed: f32,
 
-  pad4: vec4<f32>,
+  palette_rotation: f32,
+  pad5: vec3<f32>,
 };
 
 @group(0) @binding(0) var<uniform> u: Uniforms;
@@ -2582,7 +2583,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
     // curvNorm provides surface variation; length(p-ro) is ray distance (always meaningful)
-    let phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u.time * 0.04 + u.palette_seed * 0.01);
+    // palette_rotation animates the seed over time for dynamic color cycling
+    let seedAnim = u.palette_seed + u.palette_rotation * u.time * 2.5;
+    let phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u.time * 0.04 + seedAnim * 0.01);
     let w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     let w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     let w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));

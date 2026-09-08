@@ -148,7 +148,7 @@ export class WebGLEngine extends FractalEngineBase {
       'u_box_fold', 'u_sphere_fold', 'u_interior_cut',
       'u_primary_color', 'u_secondary_color', 'u_accent_color',
       'u_cam_mode', 'u_cam_pos', 'u_slice_plane', 'u_slice_axis', 'u_render_style',
-      'u_headlamp_power', 'u_volumetric_fog', 'u_palette_seed'
+      'u_headlamp_power', 'u_volumetric_fog', 'u_palette_seed', 'u_palette_rotation'
     ];
 
     uniformNames.forEach(name => {
@@ -256,6 +256,7 @@ export class WebGLEngine extends FractalEngineBase {
     set('u_render_style', packed[39]);
     // Ambient color not a separate GLSL uniform — palette colors used directly in shader
     set('u_palette_seed', packed[43]);
+    set('u_palette_rotation', packed[44]);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

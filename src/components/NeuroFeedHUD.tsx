@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FractalSpecimen } from '../types/fractal';
+import { FractalSpecimen, FractalParams } from '../types/fractal';
 import { 
   Heart, ChevronRight, ChevronLeft, User, 
   Info, Volume2, VolumeX, Compass, BookOpen, Sparkles, MoreHorizontal, Layers,
@@ -22,6 +22,7 @@ interface NeuroFeedHUDProps {
   isFeedOpen?: boolean;
   onToggleFeed?: () => void;
   isCurrentLiked?: boolean;
+  params?: FractalParams;
 }
 
 const FRIENDLY_COMPOSITE_NAMES: Record<string, string> = {
@@ -51,6 +52,7 @@ export const NeuroFeedHUD: React.FC<NeuroFeedHUDProps> = ({
   isFeedOpen,
   onToggleFeed,
   isCurrentLiked = false,
+  params,
 }) => {
   const [hasFavorited, setHasFavorited] = useState(false);
   const [showTopBar, setShowTopBar] = useState(false);
@@ -124,8 +126,10 @@ export const NeuroFeedHUD: React.FC<NeuroFeedHUDProps> = ({
 
   const handleShare = () => {
     if (!specimen) return;
-    // Encode fractal params into URL hash for sharing
-    const params = new URLSearchParams({
+    // Encode ALL fractal params into URL hash for complete state preservation
+    const p = params;
+    const urlParams = new URLSearchParams({
+      // Core fractal genome
       type: specimen.type,
       hybrid: specimen.hybridType,
       tertiary: specimen.tertiaryType,
@@ -138,15 +142,36 @@ export const NeuroFeedHUD: React.FC<NeuroFeedHUDProps> = ({
       boxFold: specimen.boxFold.toFixed(3),
       sphereFold: specimen.sphereFold.toFixed(3),
       interiorCut: specimen.interiorCut.toFixed(3),
-      palette: specimen.palette.id,
       iterations: String(specimen.iterations),
       phi: specimen.phiMultiplier.toFixed(9),
       morphSpeed: specimen.morphSpeed.toFixed(3),
       glow: specimen.glowIntensity.toFixed(3),
       zoom: specimen.zoom.toFixed(3),
       name: specimen.name,
+      // Palette & coloring
+      palette: specimen.palette.id,
+      paletteSeed: String(p?.paletteSeed ?? 0),
+      paletteRotation: p?.paletteRotation ? '1' : '0',
+      // Render style & camera
+      renderStyle: p?.renderStyle ?? 'solid',
+      cameraMode: p?.cameraMode ?? 'orbit',
+      camX: (p?.camPosX ?? 0).toFixed(3),
+      camY: (p?.camPosY ?? 0).toFixed(3),
+      camZ: (p?.camPosZ ?? -3.2).toFixed(3),
+      // Lighting & atmosphere
+      headlamp: (p?.headlampPower ?? 0).toFixed(3),
+      fog: (p?.volumetricFog ?? 0.4).toFixed(3),
+      // Slice & cross-section
+      slicePlane: (p?.slicePlane ?? 0).toFixed(3),
+      sliceAxis: p?.sliceAxis ?? 'golden',
+      // Audio state
+      audio: p?.enableAudio ? '1' : '0',
+      audioVol: (p?.audioVolume ?? 0.65).toFixed(2),
+      audioTuning: p?.audioTuning ?? 'phi432',
+      // Performance
+      drs: p?.drsEnabled ? '1' : '0',
     });
-    const shareUrl = `${window.location.origin}${window.location.pathname}#${params.toString()}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#${urlParams.toString()}`;
     
     if (navigator.share) {
       // Native share on mobile

@@ -52,6 +52,7 @@ uniform float u_render_style;
 uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
 uniform float u_palette_seed;
+uniform float u_palette_rotation;
 
 const float PI = 3.141592653589793;
 const float TWO_PI = 6.283185307179586;
@@ -2478,7 +2479,9 @@ void main() {
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
     // curvNorm provides surface variation; length(p-ro) is ray distance (always meaningful)
-    float phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u_time * 0.04 + u_palette_seed * 0.01);
+    // palette_rotation animates the seed over time for dynamic color cycling
+    float seedAnim = u_palette_seed + u_palette_rotation * u_time * 2.5;
+    float phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u_time * 0.04 + seedAnim * 0.01);
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));

@@ -4,6 +4,7 @@
 // Hybrid Cross-Blending, Spatial Binaural Entrainment, and Velvet Soft-Knee Limiting.
 
 import { FractalParams, FractalType } from '../types/fractal';
+import { getFractalIndex } from '../engine/fractalMappers';
 
 export type AudioTuningMode = 'phi432' | 'fibonacci' | 'zenChimes';
 
@@ -150,21 +151,28 @@ class GoldenAudioEngine {
   }
 
   // Calculate mathematical frequency intervals directly derived from the fractal family
+  // Each individual fractal type gets a unique microtonal signature via golden-angle offset
   private getChordFrequenciesForFamily(
     family: FractalHarmonicFamily,
-    tuning: AudioTuningMode
+    tuning: AudioTuningMode,
+    fractalType?: FractalType
   ): { ratio: number; wave: OscillatorType; vol: number; pan: number; role: HarmonicVoice['role'] }[] {
     const phi = 1.61803398875;
+    // Per-fractal microtonal offset using golden angle — makes each of 86 SDFs audibly unique
+    const fractalIdx = fractalType ? getFractalIndex(fractalType) : 0;
+    const goldenAngleCents = 137.507764;
+    const microtonalCents = ((fractalIdx * goldenAngleCents) % 50) - 25; // -25 to +25 cents
+    const microtonalRatio = Math.pow(2, microtonalCents / 1200); // Convert cents to frequency ratio
 
     if (family === 'sacred') {
       // Golden Pentatonic Spiral (Phyllotaxis, Icosahedron, Fibonacci)
       // Pure crystalline golden intervals
       return [
-        { ratio: 0.5, wave: 'sine', vol: 0.38, pan: 0.0, role: 'sub' },                   // 54.0 Hz (Warm velvet sub-root)
-        { ratio: 1.0, wave: 'sine', vol: 0.32, pan: -0.15, role: 'root' },                // 108.0 Hz (432 / 4 fundamental)
-        { ratio: phi, wave: 'sine', vol: 0.22, pan: 0.35, role: 'golden' },               // 174.7 Hz (Golden ratio resonant interval)
-        { ratio: 1.5, wave: 'sine', vol: 0.18, pan: -0.35, role: 'fifth' },               // 162.0 Hz (Pure 5th)
-        { ratio: phi * phi * 0.5, wave: 'triangle', vol: 0.08, pan: 0.2, role: 'shimmer' },// 130.9 Hz (Fibonacci golden major)
+        { ratio: 0.5 * microtonalRatio, wave: 'sine', vol: 0.38, pan: 0.0, role: 'sub' },                   // 54.0 Hz (Warm velvet sub-root)
+        { ratio: 1.0 * microtonalRatio, wave: 'sine', vol: 0.32, pan: -0.15, role: 'root' },                // 108.0 Hz (432 / 4 fundamental)
+        { ratio: phi * microtonalRatio, wave: 'sine', vol: 0.22, pan: 0.35, role: 'golden' },               // 174.7 Hz (Golden ratio resonant interval)
+        { ratio: 1.5 * microtonalRatio, wave: 'sine', vol: 0.18, pan: -0.35, role: 'fifth' },               // 162.0 Hz (Pure 5th)
+        { ratio: phi * phi * 0.5 * microtonalRatio, wave: fractalIdx % 2 === 0 ? 'triangle' : 'sine', vol: 0.08, pan: 0.2, role: 'shimmer' },// 130.9 Hz (Fibonacci golden major)
       ];
     }
 
@@ -172,11 +180,11 @@ class GoldenAudioEngine {
       // Algebraic Mandelbrot & Quaternion Power Spectrum
       // Deep fifth-based power drone reflecting multi-scale self-similarity
       return [
-        { ratio: 0.5, wave: 'sine', vol: 0.42, pan: 0.0, role: 'sub' },                   // 54.0 Hz (Deep ground)
-        { ratio: 1.0, wave: 'sine', vol: 0.34, pan: -0.2, role: 'root' },                 // 108.0 Hz
-        { ratio: 1.5, wave: 'sine', vol: 0.26, pan: 0.2, role: 'fifth' },                 // 162.0 Hz (Pure Pythagorean fifth)
-        { ratio: 2.0, wave: 'triangle', vol: 0.12, pan: -0.4, role: 'shimmer' },          // 216.0 Hz (Octave)
-        { ratio: 3.0 * 0.5, wave: 'sine', vol: 0.14, pan: 0.4, role: 'golden' },          // 162.0 Hz harmonic
+        { ratio: 0.5 * microtonalRatio, wave: 'sine', vol: 0.42, pan: 0.0, role: 'sub' },                   // 54.0 Hz (Deep ground)
+        { ratio: 1.0 * microtonalRatio, wave: 'sine', vol: 0.34, pan: -0.2, role: 'root' },                 // 108.0 Hz
+        { ratio: 1.5 * microtonalRatio, wave: 'sine', vol: 0.26, pan: 0.2, role: 'fifth' },                 // 162.0 Hz (Pure Pythagorean fifth)
+        { ratio: 2.0 * microtonalRatio, wave: fractalIdx % 3 === 0 ? 'sawtooth' : 'triangle', vol: 0.12, pan: -0.4, role: 'shimmer' },          // 216.0 Hz (Octave)
+        { ratio: 3.0 * 0.5 * microtonalRatio, wave: 'sine', vol: 0.14, pan: 0.4, role: 'golden' },          // 162.0 Hz harmonic
       ];
     }
 
@@ -184,11 +192,11 @@ class GoldenAudioEngine {
       // TPMS Minimal Surfaces (Gyroid, Neovius, Calabi-Yau)
       // Floating Tibetan Singing-Bowl resonance based on transcendental proportions
       return [
-        { ratio: 0.75, wave: 'sine', vol: 0.36, pan: 0.0, role: 'sub' },                  // 81.0 Hz (Sub-fourth)
-        { ratio: 1.0, wave: 'sine', vol: 0.30, pan: -0.25, role: 'root' },                // 108.0 Hz
-        { ratio: 1.25, wave: 'sine', vol: 0.20, pan: 0.25, role: 'fifth' },               // 135.0 Hz (Just Major Third)
-        { ratio: Math.sqrt(2), wave: 'sine', vol: 0.14, pan: -0.4, role: 'golden' },      // 152.7 Hz (Zero-mean curvature mode)
-        { ratio: phi * 1.2, wave: 'triangle', vol: 0.06, pan: 0.35, role: 'shimmer' },    // 209.7 Hz (Glass overtone)
+        { ratio: 0.75 * microtonalRatio, wave: 'sine', vol: 0.36, pan: 0.0, role: 'sub' },                  // 81.0 Hz (Sub-fourth)
+        { ratio: 1.0 * microtonalRatio, wave: 'sine', vol: 0.30, pan: -0.25, role: 'root' },                // 108.0 Hz
+        { ratio: 1.25 * microtonalRatio, wave: 'sine', vol: 0.20, pan: 0.25, role: 'fifth' },               // 135.0 Hz (Just Major Third)
+        { ratio: Math.sqrt(2) * microtonalRatio, wave: 'sine', vol: 0.14, pan: -0.4, role: 'golden' },      // 152.7 Hz (Zero-mean curvature mode)
+        { ratio: phi * 1.2 * microtonalRatio, wave: fractalIdx % 2 === 0 ? 'sine' : 'triangle', vol: 0.06, pan: 0.35, role: 'shimmer' },    // 209.7 Hz (Glass overtone)
       ];
     }
 
@@ -201,22 +209,22 @@ class GoldenAudioEngine {
       const zeta3 = 1.0 + 25.0108 / 100.0; // 1.2501
 
       return [
-        { ratio: 0.5, wave: 'sine', vol: 0.36, pan: 0.0, role: 'sub' },
-        { ratio: 1.0, wave: 'sine', vol: 0.32, pan: -0.2, role: 'root' },
-        { ratio: zeta1, wave: 'sine', vol: 0.18, pan: 0.3, role: 'golden' },              // Riemann zero 1
-        { ratio: zeta2, wave: 'sine', vol: 0.14, pan: -0.3, role: 'fifth' },              // Riemann zero 2
-        { ratio: zeta3, wave: 'triangle', vol: 0.08, pan: 0.4, role: 'shimmer' },         // Riemann zero 3
+        { ratio: 0.5 * microtonalRatio, wave: 'sine', vol: 0.36, pan: 0.0, role: 'sub' },
+        { ratio: 1.0 * microtonalRatio, wave: 'sine', vol: 0.32, pan: -0.2, role: 'root' },
+        { ratio: zeta1 * microtonalRatio, wave: 'sine', vol: 0.18, pan: 0.3, role: 'golden' },              // Riemann zero 1
+        { ratio: zeta2 * microtonalRatio, wave: 'sine', vol: 0.14, pan: -0.3, role: 'fifth' },              // Riemann zero 2
+        { ratio: zeta3 * microtonalRatio, wave: fractalIdx % 2 === 0 ? 'triangle' : 'sine', vol: 0.08, pan: 0.4, role: 'shimmer' },         // Riemann zero 3
       ];
     }
 
     // Default: 'attractors' & Chaos Dynamics (Lorenz, Hopf, Hofstadter)
     // Undulating microtonal intervals driven by 137.5° golden angle phases
     return [
-      { ratio: 0.5, wave: 'sine', vol: 0.38, pan: 0.0, role: 'sub' },
-      { ratio: 1.0, wave: 'sine', vol: 0.30, pan: -0.3, role: 'root' },
-      { ratio: 1.382, wave: 'sine', vol: 0.20, pan: 0.3, role: 'golden' },               // 2 - 1/phi
-      { ratio: 1.618, wave: 'sine', vol: 0.16, pan: -0.2, role: 'fifth' },
-      { ratio: 1.618 * 1.5 * 0.5, wave: 'triangle', vol: 0.07, pan: 0.4, role: 'shimmer' },
+      { ratio: 0.5 * microtonalRatio, wave: 'sine', vol: 0.38, pan: 0.0, role: 'sub' },
+      { ratio: 1.0 * microtonalRatio, wave: 'sine', vol: 0.30, pan: -0.3, role: 'root' },
+      { ratio: 1.382 * microtonalRatio, wave: 'sine', vol: 0.20, pan: 0.3, role: 'golden' },               // 2 - 1/phi
+      { ratio: 1.618 * microtonalRatio, wave: 'sine', vol: 0.16, pan: -0.2, role: 'fifth' },
+      { ratio: 1.618 * 1.5 * 0.5 * microtonalRatio, wave: fractalIdx % 3 === 0 ? 'square' : 'triangle', vol: 0.07, pan: 0.4, role: 'shimmer' },
     ];
   }
 
@@ -250,7 +258,7 @@ class GoldenAudioEngine {
       } catch {}
     });
 
-    const specsA = this.getChordFrequenciesForFamily(familyA, this.tuningMode);
+    const specsA = this.getChordFrequenciesForFamily(familyA, this.tuningMode, typeA);
     
     // Create base voices from primary geometry
     const newVoices: HarmonicVoice[] = specsA.map((spec, idx) => {
@@ -300,7 +308,7 @@ class GoldenAudioEngine {
 
     // If there is a secondary hybrid geometry with notable blend, add a dedicated hybrid voice!
     if (typeB && typeB !== typeA) {
-      const specsB = this.getChordFrequenciesForFamily(familyB, this.tuningMode);
+      const specsB = this.getChordFrequenciesForFamily(familyB, this.tuningMode, typeB);
       const hybridSpec = specsB[2] || specsB[1]; // Pick harmonic interval from second shape
 
       const osc = this.ctx.createOscillator();

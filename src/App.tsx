@@ -181,6 +181,25 @@ export default function App() {
           orbitInteractions: 0,
         };
         applySpecimen(sharedSpecimen);
+        // Apply ALL render params that were shared (not just specimen genome)
+        setParams(prev => ({
+          ...prev,
+          paletteSeed: parseInt(params.get('paletteSeed') || '0'),
+          paletteRotation: params.get('paletteRotation') === '1',
+          renderStyle: (params.get('renderStyle') as any) || prev.renderStyle,
+          cameraMode: (params.get('cameraMode') as any) || prev.cameraMode,
+          camPosX: parseFloat(params.get('camX') || '0'),
+          camPosY: parseFloat(params.get('camY') || '0'),
+          camPosZ: parseFloat(params.get('camZ') || '-3.2'),
+          headlampPower: parseFloat(params.get('headlamp') || '0'),
+          volumetricFog: parseFloat(params.get('fog') || '0.4'),
+          slicePlane: parseFloat(params.get('slicePlane') || '0'),
+          sliceAxis: (params.get('sliceAxis') as any) || 'golden',
+          enableAudio: params.get('audio') === '1',
+          audioVolume: parseFloat(params.get('audioVol') || '0.65'),
+          audioTuning: (params.get('audioTuning') as any) || 'phi432',
+          drsEnabled: params.get('drs') !== '0',
+        }));
         // Clear hash after loading
         window.history.replaceState(null, '', window.location.pathname);
         return;
@@ -432,6 +451,7 @@ export default function App() {
         isFeedOpen={isFeedOpen}
         onToggleFeed={() => setIsFeedOpen(prev => !prev)}
         isCurrentLiked={currentSpecimen ? likedIds.has(currentSpecimen.id) : false}
+        params={params}
       />
 
       {/* Spatial Probe Reticle & Dimension Inspector */}

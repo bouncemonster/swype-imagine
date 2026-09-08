@@ -131,8 +131,8 @@ export abstract class FractalEngineBase {
     out[42] = palette.ambient ? palette.ambient[2] : 0.02;
     out[43] = params.paletteSeed ?? 0.0;
 
-    // [44-47] padding
-    out[44] = 0.0;
+    // [44-47] palette rotation + padding
+    out[44] = params.paletteRotation ? 1.0 : 0.0;
     out[45] = 0.0;
     out[46] = 0.0;
     out[47] = 0.0;

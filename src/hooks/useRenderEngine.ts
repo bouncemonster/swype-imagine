@@ -97,6 +97,7 @@ export function useRenderEngine(
   // Performance telemetry refs
   const frameTimesRef = useRef<number[]>([]);
   const lastTelemetryDispatchRef = useRef<number>(0);
+  const lastHealthLogRef = useRef<number>(0);
   const rafIdRef = useRef<number | null>(null);
   const simTimeRef = useRef<number>(0);
 
@@ -209,6 +210,7 @@ export function useRenderEngine(
           setBackendLabel('WebGPU (WGSL)');
           setAdapterInfoState(gpuEngine.adapterInfo);
           setIsCompiling(false);
+          console.info(`[DIAG] Engine ready: WebGPU | ${gpuEngine.adapterInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
           onEngineReady?.();
           return;
         } else {
@@ -234,6 +236,7 @@ export function useRenderEngine(
         setBackendLabel('WebGL2 (GLSL)');
         setAdapterInfoState(glEngine.rendererInfo);
         setIsCompiling(false);
+        console.info(`[DIAG] Engine ready: WebGL2 | ${glEngine.rendererInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
         onEngineReady?.();
       } else {
         setIsCompiling(false);
@@ -455,6 +458,14 @@ export function useRenderEngine(
           setFrameTimeState(parseFloat(deltaMs.toFixed(2)));
           setOnePercentLowState(onePercentLow);
           setResolutionState([curCanvas?.width || 0, curCanvas?.height || 0]);
+
+          // Periodic health diagnostic every 30s
+          if (!lastHealthLogRef.current) lastHealthLogRef.current = timestamp;
+          if (timestamp - lastHealthLogRef.current > 30000) {
+            lastHealthLogRef.current = timestamp;
+            const p = paramsRef.current;
+            console.info(`[DIAG] Health: fps=${currentFps} avg=${avgFps} 1%=${onePercentLow} | fractal=${p.type} hybrid=${p.hybridType} | style=${p.renderStyle} cam=${p.cameraMode} | palette=${p.paletteId} seed=${p.paletteSeed ?? 0} rot=${p.paletteRotation} | audio=${p.enableAudio} tuning=${p.audioTuning} | res=${curCanvas?.width}x${curCanvas?.height}`);
+          }
         }
       }
 
