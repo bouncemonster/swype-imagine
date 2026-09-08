@@ -112,10 +112,10 @@ export const NeuroFeedHUD: React.FC<NeuroFeedHUDProps> = ({
       scheduleHide();
     };
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true, capture: true });
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchstart', handleTouchStart, { capture: true });
     };
   }, []);
 
