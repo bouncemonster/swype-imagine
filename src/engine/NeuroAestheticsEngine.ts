@@ -716,6 +716,98 @@ export class NeuroAestheticsEngine {
     return { ...this.taste };
   }
 
+  // Get operator synergy multiplier for two archetypes
+  // Some composite operators work better with certain archetype combinations
+  private getOpSynergy(arch1: AestheticArchetype, arch2: AestheticArchetype): number {
+    // Same archetype: smooth morphing works best
+    if (arch1 === arch2) return 1.2;
+    // Geometry + Complex: domain warp creates interesting hybrids
+    if ((arch1 === 'geometry' && arch2 === 'complex') || (arch1 === 'complex' && arch2 === 'geometry')) return 1.1;
+    // Primes + Attractors: quantum resonance creates spectral patterns
+    if ((arch1 === 'primes' && arch2 === 'attractors') || (arch1 === 'attractors' && arch2 === 'primes')) return 1.15;
+    // Minimal + Geometry: lattice operations work well
+    if ((arch1 === 'minimal' && arch2 === 'geometry') || (arch1 === 'geometry' && arch2 === 'minimal')) return 1.1;
+    // Default: smooth union is always safe
+    return 1.0;
+  }
+
+  // Get preferred composite operators for two archetype combination
+  private getPreferredOps(arch1: AestheticArchetype, arch2: AestheticArchetype, availableOps: CompositeOp[]): CompositeOp[] {
+    // Same archetype: morphing and smooth union preserve structure
+    if (arch1 === arch2) {
+      const preferred = availableOps.filter(op => op === 'smoothMorph' || op === 'smoothUnion');
+      return preferred.length > 0 ? preferred : availableOps;
+    }
+    // Geometry + Complex: domain warp creates interesting spatial distortion
+    if ((arch1 === 'geometry' && arch2 === 'complex') || (arch1 === 'complex' && arch2 === 'geometry')) {
+      const preferred = availableOps.filter(op => op === 'domainWarp' || op === 'smoothUnion');
+      return preferred.length > 0 ? preferred : availableOps;
+    }
+    // Primes + Attractors: quantum resonance for spectral patterns
+    if ((arch1 === 'primes' && arch2 === 'attractors') || (arch1 === 'attractors' && arch2 === 'primes')) {
+      const preferred = availableOps.filter(op => op === 'quantumResonance' || op === 'smoothMorph');
+      return preferred.length > 0 ? preferred : availableOps;
+    }
+    // Minimal + anything: lattice or smooth union for clean combinations
+    if (arch1 === 'minimal' || arch2 === 'minimal') {
+      const preferred = availableOps.filter(op => op === 'fractalLattice' || op === 'smoothUnion');
+      return preferred.length > 0 ? preferred : availableOps;
+    }
+    // Default: return all available
+    return availableOps;
+  }
+
+  // Get personalized hybrid recommendations based on user taste profile
+  // Returns top-N hybrid combinations the user is most likely to enjoy
+  public getHybridRecommendations(count: number = 5): { type: FractalType; partner: FractalType; op: CompositeOp; score: number; reason: string }[] {
+    const recommendations: { type: FractalType; partner: FractalType; op: CompositeOp; score: number; reason: string }[] = [];
+    
+    // Get user's top preferred types
+    const typeScores = ALL_FRACTAL_TYPES.map(t => ({
+      type: t,
+      affinity: this.taste.typeAffinities[t] || 1.0,
+      arch: getFractalArchetype(t),
+    })).sort((a, b) => b.affinity - a.affinity);
+    
+    // For each top type, find best hybrid partners
+    for (const { type, affinity, arch } of typeScores.slice(0, 8)) {
+      const compat = COMPATIBLE_HYBRIDS[type];
+      if (!compat) continue;
+      
+      for (const partner of compat.partners) {
+        const partnerAffinity = this.taste.typeAffinities[partner] || 1.0;
+        const partnerArch = getFractalArchetype(partner);
+        
+        // Score: user affinity for both types * archetype synergy * novelty
+        const alreadySeen = this.history.some(s => 
+          (s.type === type && s.hybridType === partner) || 
+          (s.type === partner && s.hybridType === type)
+        );
+        const noveltyBonus = alreadySeen ? 0.6 : 1.4;
+        const archSynergy = this.getOpSynergy(arch, partnerArch);
+        const score = affinity * partnerAffinity * noveltyBonus * archSynergy;
+        
+        // Pick best operator for this combination
+        const preferredOps = this.getPreferredOps(arch, partnerArch, compat.ops);
+        const op = preferredOps[0];
+        
+        // Generate reason string
+        let reason = '';
+        if (arch === partnerArch) reason = `Same archetype (${arch}) — natural visual harmony`;
+        else if (affinity > 2.0 && partnerAffinity > 2.0) reason = `Both types in your taste profile`;
+        else if (affinity > 2.0) reason = `Matches your love of ${arch} fractals`;
+        else if (partnerAffinity > 2.0) reason = `Pairs with your interest in ${partnerArch} patterns`;
+        else reason = `Unexplored ${arch}+${partnerArch} combination`;
+        
+        recommendations.push({ type, partner, op, score, reason });
+      }
+    }
+    
+    // Sort by score and return top N
+    recommendations.sort((a, b) => b.score - a.score);
+    return recommendations.slice(0, count);
+  }
+
   // Generate a new evolved specimen based on taste profile & genetic breeding
   public breedNextSpecimen(forceType?: FractalType): FractalSpecimen {
     this.currentGeneration++;
@@ -815,14 +907,40 @@ export class NeuroAestheticsEngine {
         ops: ['smoothUnion', 'smoothMorph', 'domainWarp']
       };
 
-      hybridType = compat.partners[Math.floor(Math.random() * compat.partners.length)];
-      compositeOp = compat.ops[Math.floor(Math.random() * compat.ops.length)];
+      // IMPROVED HYBRID SELECTION: Score each partner by archetype match + user affinity + exploration
+      const selectedArch = getFractalArchetype(selectedType);
+      let bestPartner = compat.partners[0];
+      let bestScore = -1;
+      for (const partner of compat.partners) {
+        const partnerArch = getFractalArchetype(partner);
+        // Archetype match bonus: same archetype = higher visual coherence
+        const archMatch = selectedArch === partnerArch ? 1.5 : 0.8;
+        // User affinity: prefer partners the user has shown interest in
+        const userAffinity = Math.max(0.2, this.taste.typeAffinities[partner] || 1.0);
+        // Exploration bonus: prefer unexplored partners
+        const explored = this.history.some(s => s.hybridType === partner && s.type === selectedType);
+        const explorationBonus = explored ? 0.5 : 1.3;
+        // Composite operator synergy: some ops work better with certain archetypes
+        const opSynergy = this.getOpSynergy(selectedArch, partnerArch);
+        // Total score
+        const score = archMatch * userAffinity * explorationBonus * opSynergy;
+        if (score > bestScore) {
+          bestScore = score;
+          bestPartner = partner;
+        }
+      }
+      hybridType = bestPartner;
 
-      // FIX: Wider blend range for more dramatic hybrid expressions
+      // Select composite operator based on archetype synergy
+      const partnerArch = getFractalArchetype(hybridType);
+      const preferredOps = this.getPreferredOps(selectedArch, partnerArch, compat.ops);
+      compositeOp = preferredOps[Math.floor(Math.random() * preferredOps.length)];
+
+      // Wider blend range for more dramatic hybrid expressions
       hybridBlend = parseFloat((0.15 + Math.random() * 0.55).toFixed(3));
       smoothK = parseFloat((0.20 + Math.random() * 0.35).toFixed(3));
       warpStrength = parseFloat((0.15 + Math.random() * 0.40).toFixed(3));
-      // FIX: Enable multi-scale octaves more often for real hierarchical detail
+      // Enable multi-scale octaves more often for real hierarchical detail
       octaveLayers = Math.random() < 0.4 ? 2 : 1;
 
       const sym = COMPOSITE_OP_SYMBOLS[compositeOp];
@@ -838,7 +956,21 @@ export class NeuroAestheticsEngine {
         };
         const tertiaryCandidates = compatC.partners.filter(t => t !== selectedType && t !== hybridType);
         if (tertiaryCandidates.length > 0) {
-          tertiaryType = tertiaryCandidates[Math.floor(Math.random() * tertiaryCandidates.length)];
+          // Score tertiary candidates too
+          let bestTertiary = tertiaryCandidates[0];
+          let bestTertiaryScore = -1;
+          for (const tc of tertiaryCandidates) {
+            const tcArch = getFractalArchetype(tc);
+            const tcAffinity = Math.max(0.2, this.taste.typeAffinities[tc] || 1.0);
+            const tcExplored = this.history.some(s => s.tertiaryType === tc);
+            const tcExplorationBonus = tcExplored ? 0.5 : 1.2;
+            const tcScore = tcAffinity * tcExplorationBonus * (selectedArch === tcArch ? 1.3 : 0.9);
+            if (tcScore > bestTertiaryScore) {
+              bestTertiaryScore = tcScore;
+              bestTertiary = tc;
+            }
+          }
+          tertiaryType = bestTertiary;
           tertiaryBlend = parseFloat((0.10 + Math.random() * 0.30).toFixed(3));
           const name3 = FRACTAL_NAMES[tertiaryType].split(' ')[0];
           specimenName = `${name1} ${sym} ${name2} ⊕ ${name3} • φ-${this.currentGeneration}`;
@@ -1026,13 +1158,33 @@ export class NeuroAestheticsEngine {
     }));
   }
 
-  // Suggest a render style that varies with each specimen for maximum visual diversity
-  suggestRenderStyle(): RenderStyle {
+  // Suggest a render style based on fractal archetype and user preferences
+  // Each archetype has natural render style affinities for maximum visual impact
+  suggestRenderStyle(specimenType?: FractalType): RenderStyle {
     const styles: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
-    // Weight 'solid' higher (40%) as it's the most visually rich, distribute rest evenly
+    
+    // If we have a specimen type, use archetype-based suggestion
+    if (specimenType) {
+      const arch = getFractalArchetype(specimenType);
+      // Each archetype has natural render style affinities
+      const archetypeStyles: Record<AestheticArchetype, RenderStyle[]> = {
+        geometry: ['solid', 'gemstone', 'topo'], // Geometric fractals look great with PBR and crystal
+        complex: ['hologram', 'quantum', 'iridescent'], // Complex fractals shine with holographic effects
+        minimal: ['topo', 'solid', 'gemstone'], // Minimal fractals benefit from topographic clarity
+        primes: ['quantum', 'hologram', 'iridescent'], // Prime fractals have spectral quality
+        attractors: ['xray', 'quantum', 'hologram'], // Attractors look like medical scans
+      };
+      const preferred = archetypeStyles[arch] || styles;
+      // 60% chance to pick from archetype-preferred styles, 40% random for variety
+      if (Math.random() < 0.6 && preferred.length > 0) {
+        return preferred[Math.floor(Math.random() * preferred.length)];
+      }
+    }
+    
+    // Fallback: weighted random with 'solid' as most visually rich
     const r = Math.random();
-    if (r < 0.40) return 'solid';
-    const idx = Math.floor((r - 0.40) / 0.60 * (styles.length - 1));
+    if (r < 0.35) return 'solid';
+    const idx = Math.floor((r - 0.35) / 0.65 * (styles.length - 1));
     return styles[Math.min(idx + 1, styles.length - 1)];
   }
 }

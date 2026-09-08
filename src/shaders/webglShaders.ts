@@ -2636,6 +2636,26 @@ vec2 sceneSDF(vec3 p_world) {
   int compOp = int(u_compose_op + 0.5);
   float k = max(0.04, u_smooth_k * 0.45);
 
+  // FRACTAL BREATHING: Organic radial pulsation at golden-ratio frequencies
+  // Creates living, breathing geometry that subtly grows and contracts
+  float breathPrimary = sin(u_time * 0.4) * 0.5 + 0.5; // 0-1, ~15.7s period
+  float breathSecondary = sin(u_time * 0.4 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
+  float breathTertiary = sin(u_time * 0.4 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
+  // Combine for non-repeating organic motion (sum of golden-ratio frequencies)
+  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.025;
+  // Distance-weighted: surface breathes more than interior
+  float breathWeight = 1.0 - exp(-r_bound * 0.8);
+  p_eval *= 1.0 + breathAmount * breathWeight;
+
+  // ORBITAL PRECESSION: Slow rotation of evaluation space
+  // Creates gentle tumbling motion that reveals hidden symmetry
+  float precessAngle = u_time * 0.06; // Very slow: ~104s per revolution
+  float precessY = u_time * 0.037; // Different speed on Y axis
+  float cp = cos(precessAngle), sp = sin(precessAngle);
+  float cq = cos(precessY), sq = sin(precessY);
+  // Rotate around Y axis
+  p_eval = vec3(p_eval.x * cp + p_eval.z * sp, p_eval.y * cq - p_eval.x * sq * 0.3, -p_eval.x * sp + p_eval.z * cp);
+
   // 1. Recursive Space-Folding Domain Warp
   vec3 p_warped = p_eval;
   if (compOp == 4 || u_warp_strength > 0.05) {
@@ -3267,57 +3287,104 @@ void main() {
     // Curvature and trapDetail already computed above for palette engine
 
     if (u_render_style > 0.5 && u_render_style < 1.5) {
-      // 1. X-Ray Томография: Curvature bone density + orbit trap vasculature
+      // 1. X-Ray Томография: Volumetric scattering + beam hardening + bone density
       float dens = clamp(float(steps) / 65.0, 0.0, 1.0);
-      float boneDensity = mix(0.2, 1.0, curvNorm * 0.6 + ao * 0.4);
-      vec3 xrayCore = u_accent_color * boneDensity * (0.4 + trapDetail * 0.8);
-      vec3 xrayVessel = u_primary_color * trapDetail * (0.3 + dens * 0.7);
-      float edgeGlow = pow(1.0 - ao, 2.5) * (0.5 + curvNorm * 0.5);
+      // Volumetric path-length density (deeper = more absorption)
+      float pathLen = clamp(t / 12.0, 0.0, 1.0);
+      // Beam hardening: high-density regions absorb low-energy photons first
+      float beamHardening = mix(1.0, 0.6, pathLen * curvNorm);
+      // Bone density map: curvature = cortical bone, trap = trabecular structure
+      float boneDensity = mix(0.15, 1.0, curvNorm * 0.55 + ao * 0.35 + trapDetail * 0.1);
+      // Core: dense bone with volumetric attenuation
+      vec3 xrayCore = u_accent_color * boneDensity * (0.3 + trapDetail * 0.7) * beamHardening;
+      // Vasculature: orbit trap channels (vascular network)
+      vec3 xrayVessel = u_primary_color * trapDetail * (0.25 + dens * 0.75);
+      // Edge glow: surface boundary enhancement (periosteum)
+      float edgeGlow = pow(1.0 - ao, 2.0) * (0.4 + curvNorm * 0.6);
       vec3 xrayShell = u_secondary_color * edgeGlow;
-      vec3 xrayCol = mix(xrayVessel, xrayCore, boneDensity) + xrayShell * 0.6;
-      xrayCol += u_accent_color * curvNorm * 0.4; // Curvature highlights
-      col = mix(col * 0.15, xrayCol * 1.5, 0.75 + 0.25 * ao);
+      // Depth-based scatter: deeper = more Compton scatter (bluish haze)
+      vec3 scatterCol = vec3(0.6, 0.7, 0.9) * pathLen * 0.15 * (1.0 - boneDensity);
+      vec3 xrayCol = mix(xrayVessel, xrayCore, boneDensity * 0.85) + xrayShell * 0.5 + scatterCol;
+      xrayCol += u_accent_color * curvNorm * 0.35;
+      col = mix(col * 0.12, xrayCol * 1.6, 0.78 + 0.22 * ao);
     } else if (u_render_style > 1.5 && u_render_style < 2.5) {
-      // 2. Топография: Curvature-enhanced ridges + multi-scale contours
-      float elevation = dot(n, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
-      float contour1 = abs(fract(elevation * 14.0) - 0.5) * 2.0;
-      float contour2 = abs(fract(elevation * 5.0 + curvNorm * 0.4) - 0.5) * 2.0;
-      float contour = min(contour1, contour2);
-      contour = smoothstep(0.0, 0.06, contour);
-      float ridgeLine = smoothstep(0.35, 0.65, curvNorm); // Curvature ridges
-      vec3 topoLow = u_secondary_color * (0.3 + trapDetail * 0.2);
-      vec3 topoHigh = u_primary_color * (0.5 + elevation * 0.9);
-      vec3 topoRidge = u_accent_color * (0.7 + curvNorm * 1.3);
-      vec3 topoCol = mix(topoLow, topoHigh, elevation);
-      topoCol = mix(topoCol, topoRidge, ridgeLine * 0.6 + elevation * 0.3);
-      topoCol = mix(topoCol, topoCol * 2.0, (1.0 - contour) * 0.45);
+      // 2. Топография: Height-based terrain + multi-scale contours + ridge detection
+      // Use world-space Y as elevation (real terrain height, not normal Y)
+      float height = p.y * 0.5 + 0.5;
+      // Multi-scale contour lines at different frequencies
+      float contourFine = abs(fract(height * 20.0) - 0.5) * 2.0;
+      float contourMed = abs(fract(height * 8.0) - 0.5) * 2.0;
+      float contourCoarse = abs(fract(height * 3.0 + curvNorm * 0.3) - 0.5) * 2.0;
+      // Combine scales: fine contours are thinner, coarse are wider
+      float contourF = smoothstep(0.0, 0.035, contourFine);
+      float contourM = smoothstep(0.0, 0.07, contourMed);
+      float contourC = smoothstep(0.0, 0.12, contourCoarse);
+      float contour = min(contourF, min(contourM, contourC));
+      // Ridge detection: high curvature = mountain ridges
+      float ridgeLine = smoothstep(0.25, 0.75, curvNorm);
+      // Valley detection: low curvature + low elevation = valleys
+      float valleyLine = smoothstep(0.35, 0.0, curvNorm) * smoothstep(0.6, 0.2, height);
+      // Slope shading: steep slopes are darker
       float slope = 1.0 - abs(dot(n, vec3(0.0, 1.0, 0.0)));
-      topoCol *= (0.4 + 0.6 * slope);
-      col = topoCol * (0.4 + 0.6 * ao);
+      float slopeShade = pow(slope, 0.6);
+      // Color zones by elevation (like real topographic maps)
+      vec3 waterZone = u_secondary_color * 0.35; // Low elevation = water/valley
+      vec3 lowlandZone = mix(u_secondary_color, u_primary_color, 0.3) * (0.5 + height * 0.4);
+      vec3 highlandZone = u_primary_color * (0.6 + height * 0.8);
+      vec3 peakZone = u_accent_color * (0.8 + curvNorm * 1.2);
+      // Blend zones by elevation
+      vec3 topoCol = mix(waterZone, lowlandZone, smoothstep(0.15, 0.35, height));
+      topoCol = mix(topoCol, highlandZone, smoothstep(0.40, 0.65, height));
+      topoCol = mix(topoCol, peakZone, smoothstep(0.70, 0.90, height) * ridgeLine);
+      // Add ridge highlights
+      topoCol = mix(topoCol, peakZone * 1.5, ridgeLine * 0.45);
+      // Add valley shadows
+      topoCol *= (0.7 + 0.3 * (1.0 - valleyLine));
+      // Apply contour lines (darken along contours)
+      topoCol = mix(topoCol, topoCol * 0.35, (1.0 - contour) * 0.5);
+      // Slope shading
+      topoCol *= (0.55 + 0.45 * slopeShade);
+      // Ambient occlusion
+      col = topoCol * (0.45 + 0.55 * ao);
     } else if (u_render_style > 2.5 && u_render_style < 3.5) {
-      // 3. Голографическая проекция: Curvature wireframe + data glitch + scan lines
+      // 3. Голографическая проекция: Chromatic aberration + interference + hex grid
       float depthNorm = clamp(t / 20.0, 0.0, 1.0);
-      float rOff = sin(depthNorm * 20.0 + u_time * 3.0) * 0.025;
-      float gOff = sin(depthNorm * 20.0 + u_time * 3.0 + 2.094) * 0.025;
-      float bOff = sin(depthNorm * 20.0 + u_time * 3.0 + 4.189) * 0.025;
+      // Chromatic aberration: per-channel offset based on depth
+      float rOff = sin(depthNorm * 25.0 + u_time * 3.5) * 0.03;
+      float gOff = sin(depthNorm * 25.0 + u_time * 3.5 + 2.094) * 0.03;
+      float bOff = sin(depthNorm * 25.0 + u_time * 3.5 + 4.189) * 0.03;
       vec3 holoBase = u_primary_color * vec3(1.0 + rOff, 1.0 + gOff, 1.0 + bOff);
+      // Fresnel edge glow
       float holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
-      float scanFreq = 180.0 + depthNorm * 120.0;
-      float scanline = 0.82 + 0.18 * sin(v_uv.y * scanFreq + u_time * 8.0);
-      float wireframe = smoothstep(0.3, 0.7, curvNorm); // Curvature wireframe
-      float glitch = step(0.96, fract(sin(dot(p, vec3(12.9898, 78.233, 45.164)) + u_time * 2.0) * 43758.5));
-      float shimmer = 0.88 + 0.12 * sin(u_time * 5.0 + length(p) * 10.0);
-      vec3 holoCol = holoBase * (0.35 + holoFres * 1.4 + wireframe * 0.5) * scanline * shimmer;
-      holoCol += u_accent_color * wireframe * 1.2; // Curvature edge glow
-      holoCol += vec3(0.15, 0.4, 0.7) * holoFres * 1.5;
-      holoCol += u_accent_color * glitch * 3.0; // Data glitch bursts
-      holoCol += u_primary_color * trapDetail * 0.3; // Internal structure
-      col = mix(col * 0.08, holoCol, 0.93);
+      // Scan lines with depth-varying frequency
+      float scanFreq = 200.0 + depthNorm * 150.0;
+      float scanline = 0.80 + 0.20 * sin(v_uv.y * scanFreq + u_time * 10.0);
+      // Curvature wireframe
+      float wireframe = smoothstep(0.25, 0.75, curvNorm);
+      // Data glitch bursts
+      float glitch = step(0.965, fract(sin(dot(p, vec3(12.9898, 78.233, 45.164)) + u_time * 2.5) * 43758.5));
+      // Hexagonal grid overlay (holographic data mesh)
+      float hexScale = 25.0;
+      vec3 hexP = p * hexScale;
+      float hx = abs(fract(hexP.x * 0.5) - 0.5) * 2.0;
+      float hy = abs(fract(hexP.y * 0.866) - 0.5) * 2.0;
+      float hexGrid = min(hx, hy);
+      float hexLine = smoothstep(0.0, 0.08, hexGrid);
+      // Shimmer
+      float shimmer = 0.85 + 0.15 * sin(u_time * 6.0 + length(p) * 12.0);
+      vec3 holoCol = holoBase * (0.30 + holoFres * 1.5 + wireframe * 0.6) * scanline * shimmer;
+      holoCol += u_accent_color * wireframe * 1.4;
+      holoCol += vec3(0.12, 0.35, 0.75) * holoFres * 1.8;
+      holoCol += u_accent_color * glitch * 3.5;
+      holoCol += u_primary_color * trapDetail * 0.35;
+      // Hex grid lines
+      holoCol += u.secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
+      col = mix(col * 0.06, holoCol, 0.94);
     } else if (u_render_style > 3.5 && u_render_style < 4.5) {
-      // 4. Радужная интерференция: IMPROVED thin-film interference
+      // 4. Радужная интерференция: Thin-film + Fresnel + 5-order interference
       float nv = max(dot(n, -rd), 0.0);
       float filmThickness = 0.5 + curvNorm * 0.8 + trapDetail * 0.3;
-      // IMPROVED: 5 interference orders for richer rainbow (was 3)
+      // 5 interference orders for rich rainbow
       float order1 = nv * 3.0 * filmThickness + min_trap * 0.5;
       float order2 = nv * 5.0 * filmThickness + min_trap * 0.3 + u_time * 0.08;
       float order3 = nv * 7.0 * filmThickness + min_trap * 0.2;
@@ -3327,56 +3394,70 @@ void main() {
       float iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33 + order5 * 0.08));
       float iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
       vec3 iridCol = vec3(iridR, iridG, iridB);
-      // IMPROVED specular: removed dead sh1 variable, use proper Blinn-Phong
+      // Fresnel-weighted specular
       vec3 hIrid = normalize(light1 - rd);
       float specAngle = max(dot(n, hIrid), 0.0);
       vec3 specIrid = vec3(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * 2.5;
-      // Add subtle diffuse lighting to ground the iridescence
+      // Diffuse grounding
       float iridDiff = max(dot(n, light1), 0.0) * 0.3;
       iridCol *= (0.6 + trapDetail * 0.3 + iridDiff);
+      // Fresnel rim for iridescence
+      iridCol += u_accent_color * pow(fresnel, 1.5) * 0.4;
       col = iridCol * (0.45 + 0.55 * ao) + specIrid;
     } else if (u_render_style > 4.5 && u_render_style < 5.5) {
-      // 5. Квантовое поле: IMPROVED with PBR integration
+      // 5. Квантовое поле: Energy field + magnetic flux + PBR
       float wave1 = sin(length(p) * 12.0 - u_time * 3.5);
       float wave2 = cos(dot(p, normalize(vec3(1.618, 1.0, 0.618))) * 7.0 + u_time * 2.2);
       float wave3 = sin(dot(p, normalize(vec3(-0.618, 1.618, 1.0))) * 9.0 - u_time * 1.8);
       float interference = (wave1 + wave2 + wave3) / 3.0;
-      float probability = trapDetail * 0.6 + (0.5 + 0.5 * interference) * 0.4;
+      // Magnetic flux lines (curl-like field visualization)
+      float flux1 = sin(p.x * 8.0 + u_time * 1.5) * cos(p.z * 6.0 - u_time * 1.2);
+      float flux2 = cos(p.y * 7.0 - u_time * 1.8) * sin(p.x * 5.0 + u_time * 0.9);
+      float flux = (flux1 + flux2) * 0.5;
+      float probability = trapDetail * 0.5 + (0.5 + 0.5 * interference) * 0.35 + flux * 0.15;
       float energy = pow(abs(interference), 0.7) * (0.5 + curvNorm * 0.5);
-      vec3 plasmaCold = u_secondary_color * (0.25 + probability * 0.5);
+      vec3 plasmaCold = u_secondary_color * (0.20 + probability * 0.5);
       vec3 plasmaHot = u_accent_color * (0.6 + energy * 1.8);
       vec3 qCol = mix(plasmaCold, plasmaHot, energy);
-      // IMPROVED: Add PBR diffuse lighting to plasma
+      // PBR diffuse
       float plasmaDiff = max(dot(n, light1), 0.0) * 0.4 + max(dot(n, light2), 0.0) * 0.15;
       qCol *= (0.7 + plasmaDiff * 0.3);
-      // IMPROVED: Add specular highlights to plasma
+      // Specular
       vec3 hPlasma = normalize(light1 - rd);
       float plasmaSpec = pow(max(dot(n, hPlasma), 0.0), 32.0);
       qCol += vec3(0.8, 0.9, 1.0) * plasmaSpec * 0.5;
+      // Flux lines visualization
+      qCol += u_secondary_color * abs(flux) * 0.2 * (0.5 + curvNorm * 0.5);
       qCol += u_accent_color * pow(fresnel, 2.0) * 1.2;
       qCol += u_primary_color * curvNorm * 0.35;
       qCol *= (0.6 + trapDetail * 0.4);
       col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
     } else if (u_render_style > 5.5) {
-      // 6. Кристалл: IMPROVED with internal reflections + better Beer-Lambert
+      // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       float beerDist = min(max(t - 0.5, 0.0), 20.0);
-      // IMPROVED: Asymmetric absorption — red penetrates deepest, blue absorbs fastest
-      vec3 beer = exp(-beerDist * vec3(0.06, 0.18, 0.7));
+      // Asymmetric absorption: red penetrates deepest, blue absorbs fastest
+      vec3 beer = exp(-beerDist * vec3(0.05, 0.15, 0.6));
+      // Caustics: focused light through crystal facets
       float caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
       float caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       float caustic = caustic1 + caustic2;
       float facetStrength = 0.3 + curvNorm * 0.7;
       vec3 refractCol = mix(u_primary_color, u_accent_color, fresnel * facetStrength);
       vec3 gemCol = refractCol * beer;
-      // IMPROVED: Internal reflection — bounce light inside the gem
+      // Internal reflection: bounce light inside the gem
       vec3 internalReflDir = reflect(rd, n);
       float internalRefl = clamp(1.0 - sceneSDF(p + internalReflDir * 0.15).x * 6.0, 0.0, 1.0);
       gemCol += u_accent_color * internalRefl * beer * 0.2;
+      // Second internal bounce for deeper light transport
+      vec3 bounce2Dir = reflect(internalReflDir, n);
+      float bounce2Refl = clamp(1.0 - sceneSDF(p + bounce2Dir * 0.1).x * 8.0, 0.0, 1.0);
+      gemCol += u_primary_color * bounce2Refl * beer * 0.1;
       vec3 gemSpec = vec3(1.0, 0.96, 0.82) * spec1 * 2.2;
+      // Dispersion: wavelength-dependent refraction
       float dispersion = fresnel * (0.1 + curvNorm * 0.15);
       gemCol.r *= (1.0 + dispersion);
       gemCol.b *= (1.0 - dispersion * 0.5);
-      gemCol += u_secondary_color * trapDetail * 0.25 * beer; // Stronger inclusions
+      gemCol += u_secondary_color * trapDetail * 0.25 * beer;
       gemCol *= facetStrength;
       col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u_accent_color * caustic * 0.6;
     }

@@ -176,8 +176,8 @@ export default function App() {
     setCurrentSpecimen(specimen);
     setResonanceScore(specimen.affinityScore);
 
-    // Suggest a varied render style for visual diversity
-    const suggestedStyle = neuroEngine?.suggestRenderStyle() || 'solid';
+    // Suggest a varied render style based on fractal archetype
+    const suggestedStyle = neuroEngine?.suggestRenderStyle(specimen.type) || 'solid';
 
     setParams(prev => ({
       ...prev,
