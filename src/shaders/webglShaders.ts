@@ -2661,18 +2661,8 @@ vec3 calcNormal(vec3 p, float eps) {
   return len > 0.00001 ? n / len : vec3(0.0, 1.0, 0.0);
 }
 
-float calcSoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
-  float res = 1.0;
-  float t = mint;
-  for (int i = 0; i < 12; i++) {
-    if (t >= maxt) break;
-    float h = sceneSDF(ro + rd * t).x;
-    if (h < 0.0005) return smoothstep(0.0, 0.002, h); // Smooth shadow termination
-    res = min(res, k * h / t);
-    t += max(h * 0.85, 0.02);
-  }
-  return clamp(res, 0.0, 1.0);
-}
+// calcSoftShadow removed - was dead code (not used since Phase 4.15)
+// Kept for reference but commented out to save shader compilation time
 
 float calcAO(vec3 p, vec3 n, float t) {
   float aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive: scale down at close range
@@ -2684,6 +2674,9 @@ float calcAO(vec3 p, vec3 n, float t) {
     occ += (h - d) * sca;
     sca *= 0.74;
   }
+  // Clamp occ to prevent negative values or overflow
+  occ = clamp(occ, 0.0, 2.0);
+  
   // IQ multi-distance AO: distance-scaled for consistent behavior at all ranges
   float ao1 = clamp(1.0 - 4.0 * max(0.005 * aoScale - sceneSDF(p + n * 0.005 * aoScale).x, 0.0), 0.0, 1.0);
   float ao2 = clamp(1.0 - 2.5 * max(0.03  * aoScale - sceneSDF(p + n * 0.03  * aoScale).x, 0.0), 0.0, 1.0);
@@ -2848,7 +2841,8 @@ void main() {
     
     // OPTIMIZATION 6: Early Ray Termination
     // If we're moving away from surface for many steps, terminate early
-    if (d > lastD * 1.5 && d > 0.5) {
+    // FIX: Skip check on first iteration (lastD is uninitialized)
+    if (i > 0 && d > lastD * 1.5 && d > 0.5) {
       missCount++;
       if (missCount > 8) break; // Ray is clearly missing, stop
     } else {
@@ -2864,6 +2858,7 @@ void main() {
   if (!hit && t < max_dist) {
     float tLow = t - abs(lastD) * 2.0; // Lower bound
     float tHigh = t;                    // Upper bound
+    float tBest = t;                    // Best guess so far
     for (int j = 0; j < 16; j++) {
       float tMid = (tLow + tHigh) * 0.5;
       vec3 p = ro + rd * tMid;
@@ -2873,8 +2868,16 @@ void main() {
         t = tMid;
         break;
       }
+      // Track best (closest to surface) point even if we don't converge
+      if (abs(d) < abs(sceneSDF(ro + rd * tBest).x)) {
+        tBest = tMid;
+      }
       // Binary search: narrow the interval
       if (d > 0.0) tHigh = tMid; else tLow = tMid;
+    }
+    // If binary search didn't converge, use best guess to prevent black holes
+    if (!hit) {
+      t = tBest;
     }
   }
 

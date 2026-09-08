@@ -2744,18 +2744,8 @@ fn calcNormal(p: vec3<f32>, eps: f32) -> vec3<f32> {
   return vec3<f32>(0.0, 1.0, 0.0);
 }
 
-fn calcSoftShadow(ro: vec3<f32>, rd: vec3<f32>, mint: f32, maxt: f32, k: f32) -> f32 {
-  var res: f32 = 1.0;
-  var t: f32 = mint;
-  for (var i: i32 = 0; i < 12; i = i + 1) {
-    if (t >= maxt) { break; }
-    let h = sceneSDF(ro + rd * t).x;
-    if (h < 0.0005) { return smoothstep(0.0, 0.002, h); }
-    res = min(res, k * h / t);
-    t = t + max(h * 0.85, 0.02);
-  }
-  return clamp(res, 0.0, 1.0);
-}
+// calcSoftShadow removed - was dead code (not used since Phase 4.15)
+// Kept for reference but commented out to save shader compilation time
 
 fn calcAO(p: vec3<f32>, n: vec3<f32>, t: f32) -> f32 {
   let aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive: scale down at close range
@@ -2767,6 +2757,9 @@ fn calcAO(p: vec3<f32>, n: vec3<f32>, t: f32) -> f32 {
     occ = occ + (h - d) * sca;
     sca = sca * 0.74;
   }
+  // Clamp occ to prevent negative values or overflow
+  occ = clamp(occ, 0.0, 2.0);
+  
   // IQ multi-distance AO: distance-scaled for consistent behavior at all ranges
   let ao1 = clamp(1.0 - 4.0 * max(0.005 * aoScale - sceneSDF(p + n * 0.005 * aoScale).x, 0.0), 0.0, 1.0);
   let ao2 = clamp(1.0 - 2.5 * max(0.03  * aoScale - sceneSDF(p + n * 0.03  * aoScale).x, 0.0), 0.0, 1.0);
@@ -2926,7 +2919,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     t = t + step_d;
     
     // OPTIMIZATION 6: Early Ray Termination
-    if (d > lastD * 1.5 && d > 0.5) {
+    // FIX: Skip check on first iteration (lastD is uninitialized)
+    if (i > 0 && d > lastD * 1.5 && d > 0.5) {
       missCount = missCount + 1;
       if (missCount > 8) { break; }
     } else {
@@ -2944,6 +2938,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   if (!hit && t < max_dist) {
     var tLow: f32 = t - abs(lastD) * 2.0;
     var tHigh: f32 = t;
+    var tBest: f32 = t; // Best guess so far
     for (var j: i32 = 0; j < 16; j = j + 1) {
       let tMid = (tLow + tHigh) * 0.5;
       let p2 = ro + rd * tMid;
@@ -2953,7 +2948,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         t = tMid;
         break;
       }
+      // Track best (closest to surface) point even if we don't converge
+      if (abs(d2) < abs(sceneSDF(ro + rd * tBest).x)) {
+        tBest = tMid;
+      }
       if (d2 > 0.0) { tHigh = tMid; } else { tLow = tMid; }
+    }
+    // If binary search didn't converge, use best guess to prevent black holes
+    if (!hit) {
+      t = tBest;
     }
   }
 
