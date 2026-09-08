@@ -2713,7 +2713,8 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
 
   // 4. Tertiary Layer Evaluation (Only evaluated in direct proximity to surface)
   if (u.tertiary_blend > 0.03 && current_d < 0.1) {
-    let resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(iters / 2, 6, 16));
+    // FIX: Use float division to avoid integer truncation (was iters / 2)
+    let resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(i32(f32(iters) * 0.5), 6, 16));
     let blendC = clamp(u.tertiary_blend, 0.05, 0.35);
     // Apply user-selected composite operator for consistent tertiary blending
     if (compOp == 2) {
@@ -3026,7 +3027,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // CURVATURE-BASED NORMAL PERTURBATION: Add micro-detail without extra SDF calls
     var curvDetail: f32 = 0.0;
     {
-      let ce = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
+      // FIX: Use consistent epsilon with normal calculation (was max(t, 0.1), now max(t, 0.05))
+      let ce = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
       let dn1 = calcNormal(p + vec3<f32>(ce, 0.0, 0.0), ce) - base_n;
       let dn2 = calcNormal(p + vec3<f32>(0.0, ce, 0.0), ce) - base_n;
       curvDetail = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
@@ -3293,7 +3295,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   col = acesToneMap(col);
 
   // CHROMATIC ABERRATION: Subtle color fringing for realism
-  let caStrength: f32 = 0.0015;
+  // FIX: Use distance-based CA strength for more realistic effect
+  let caStrength: f32 = 0.0015 * (1.0 + t * 0.1);
   let caR = fract(sin(dot(in.uv * u.resolution + vec2<f32>(caStrength, 0.0), vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
   let caG = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
   let caB = fract(sin(dot(in.uv * u.resolution + vec2<f32>(-caStrength, 0.0), vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
@@ -5900,7 +5903,8 @@ vec2 sceneSDF(vec3 p_world) {
 
   // 4. Tertiary Layer Evaluation (Only evaluated in direct proximity to surface)
   if (u_tertiary_blend > 0.03 && current_d < 0.1) {
-    vec2 resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(iters / 2, 6, 16));
+    // FIX: Use float division to avoid integer truncation (was iters / 2)
+    vec2 resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(int(float(iters) * 0.5), 6, 16));
     float blendC = clamp(u_tertiary_blend, 0.05, 0.35);
     // Apply user-selected composite operator for consistent tertiary blending
     if (compOp == 2) {
@@ -6216,7 +6220,8 @@ void main() {
     // Uses the already-computed curvature to perturb normals for enhanced surface detail
     float curvDetail = 0.0;
     {
-      float ce = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
+      // FIX: Use consistent epsilon with normal calculation (was max(t, 0.1), now max(t, 0.05))
+      float ce = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
       vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - base_n;
       vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - base_n;
       curvDetail = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
@@ -6499,7 +6504,8 @@ void main() {
 
   // CHROMATIC ABERRATION: Subtle color fringing for realism
   // Simulates lens dispersion - different wavelengths focus at different distances
-  float caStrength = 0.0015; // Very subtle
+  // FIX: Use distance-based CA strength for more realistic effect
+  float caStrength = 0.0015 * (1.0 + t * 0.1); // Stronger CA at distance
   float caR = fract(sin(dot(v_uv * u_resolution + vec2(caStrength, 0.0), vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
   float caG = fract(sin(dot(v_uv * u_resolution, vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
   float caB = fract(sin(dot(v_uv * u_resolution + vec2(-caStrength, 0.0), vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
