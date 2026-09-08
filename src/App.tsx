@@ -39,7 +39,7 @@ const INITIAL_PARAMS: FractalParams = {
   boxFold: 1.2,
   sphereFold: 0.65,
   interiorCut: 0.0,
-  paletteId: 'gold-obsidian',
+  paletteId: 'lapis-lazuli',
   iterations: 20,
   phiMultiplier: 1.61803398875,
   morphSpeed: 0.45,

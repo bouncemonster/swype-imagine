@@ -2320,7 +2320,7 @@ float calcAO(vec3 p, vec3 n) {
   float ao2 = clamp(1.0 - 2.5 * max(0.03  - sceneSDF(p + n * 0.03).x,  0.0), 0.0, 1.0);
   float ao3 = clamp(1.0 - 1.5 * max(0.12  - sceneSDF(p + n * 0.12).x,  0.0), 0.0, 1.0);
   float multiAO = ao1 * 0.25 + ao2 * 0.40 + ao3 * 0.35;
-  return clamp(multiAO * (1.0 - 1.5 * occ), 0.06, 1.0);
+  return clamp(multiAO * (1.0 - 0.8 * occ), 0.15, 1.0);
 }
 
 vec3 acesToneMap(vec3 x) {
@@ -2474,18 +2474,31 @@ void main() {
     vec3 h1 = normalize(light1 - rd);
     float spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
     
+    // Surface curvature from normal variation (2 extra SDF calls)
+    // Moved before palette engine — trapDetail needed for orbit trap coloring
+    float curv = 0.0;
+    {
+      float ce = min(0.001 * t + 0.0005, 0.003);
+      vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - n;
+      vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - n;
+      curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
+    }
+    float curvNorm = clamp(curv / 5.0, 0.0, 1.0);
+    float trapDetail = clamp(1.0 / (1.0 + min_trap * 2.0), 0.0, 1.0);
+
     // Harmonic Cosine Palette Engine with Golden Ratio phase distribution
-    float phase = fract(min_trap * 0.85 + length(p) * 0.18 + u_time * 0.02);
+    // Strong spatial modulation for rich color variation across the surface
+    float phase = fract(min_trap * 1.8 + length(p) * 0.55 + dot(p, n) * 0.3 + u_time * 0.03);
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
     vec3 mat_col = u_primary_color * w_primary + u_secondary_color * w_secondary;
-    mat_col = mix(mat_col, u_accent_color, w_accent * 0.12); // Subtle accent — high values wash out to white
-    mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.08); // Low-edge accent tint
+    mat_col = mix(mat_col, u_accent_color, w_accent * 0.30); // Stronger accent mixing
+    mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.18); // Edge accent boost
     // Orbit trap direct coloring: fine fractal structure modulates material (Syntopia/IQ technique)
-    float trapWeight = clamp(0.25 / (1.0 + min_trap * 3.0), 0.0, 0.35);
-    mat_col = mix(mat_col, u_accent_color * (0.6 + trapDetail * 0.4), trapWeight);
+    float trapWeight = clamp(0.30 / (1.0 + min_trap * 2.5), 0.0, 0.40);
+    mat_col = mix(mat_col, u_accent_color * (0.5 + trapDetail * 0.5), trapWeight);
 
     // Environment ambient: sample SDF along normal for color-bleeding approximation
     float envOcc = sceneSDF(p + n * 0.15).x;
@@ -2499,12 +2512,12 @@ void main() {
     vec3 bounceCol = u_secondary_color * bounce * bounceOcc * ao;
 
     vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    vec3 specular = mat_col * spec1 * 0.35 * ao; // Tinted by material color — never white
-    vec3 rim = u_accent_color * fresnel * 0.18 * (0.3 + 0.7 * ao); // Subtle rim — high values create white edges
+    vec3 specular = vec3(1.0, 0.97, 0.92) * spec1 * 0.55 * ao; // Near-white specular for visible highlights
+    vec3 rim = u_accent_color * fresnel * 0.28 * (0.3 + 0.7 * ao); // Stronger rim for edge definition
 
     // Full lighting: ambient + diffuse + bounce + specular + rim + SSS
     col = ambient + diffuse + bounceCol + specular + rim + sssCol;
-    col *= (0.22 + 0.78 * ao); // Stronger AO contrast for depth
+    col *= (0.35 + 0.65 * ao); // Balanced AO — preserves brightness while adding depth
 
     // If slice plane is active, highlight the glowing cut rim
     if (u_slice_plane > 0.01) {
@@ -2525,16 +2538,7 @@ void main() {
     // Curvature-enhanced: uses normal variation for rich surface detail
     // ===================================================================
 
-    // Surface curvature from normal variation (2 extra SDF calls)
-    float curv = 0.0;
-    {
-      float ce = min(0.001 * t + 0.0005, 0.003);
-      vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - n;
-      vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - n;
-      curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
-    }
-    float curvNorm = clamp(curv / 5.0, 0.0, 1.0);
-    float trapDetail = clamp(1.0 / (1.0 + min_trap * 2.0), 0.0, 1.0);
+    // Curvature and trapDetail already computed above for palette engine
 
     if (u_render_style > 0.5 && u_render_style < 1.5) {
       // 1. X-Ray Томография: Curvature bone density + orbit trap vasculature
