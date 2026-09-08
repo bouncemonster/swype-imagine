@@ -971,21 +971,19 @@ vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
   p.xz = rot2D(t * 0.08) * p.xz;
   float a = 0.95, b = 0.7, c = 0.6, dd = 3.5, e = 0.25, f = 0.1;
   float density = 0.0;
-  float minDist = 1e10;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, 0.05 * float(s), 0.5 + float(s) * 0.25);
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 60; i++) {
       float dx = (v.z - b) * v.x - dd * v.y;
       float dy = dd * v.x + (v.z - b) * v.y;
       float dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
       v += vec3(dx, dy, dz) * 0.05;
       vec3 scaled = v * 1.0;
       float dist = length(p - scaled);
-      minDist = min(minDist, dist);
       density += exp(-dist * 3.5);
     }
   }
-  float d = 0.4 - density * 0.1;
+  float d = 0.5 - density * 0.12;
   float bound = length(p_in) - 2.5;
   return vec2(max(d, bound) * 0.5, density * 0.25);
 }
@@ -1554,29 +1552,27 @@ vec2 mapPhoenixFractal(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(abs(d), bound * 0.3), trap);
 }
 
-// 69. Fatou Set (orbit-trap 3D rendering of Julia basin boundary)
+// 69. Fatou Set (Julia basin boundary — 3D volumetric extrusion)
 vec2 mapFatouSet(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xy = rot2D(t * 0.05) * p.xy;
   float ang = t * 0.15;
   vec2 c = vec2(0.7885 * cos(ang), 0.7885 * sin(ang));
   vec2 z = p.xy;
-  float minR = 1e10;
-  float trap = 0.0;
+  float trap = 1e10;
   for (int i = 0; i < 20; i++) {
     if (i >= iters) break;
     z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
     float r = length(z);
-    minR = min(minR, r);
-    trap += exp(-2.0 * r);
+    trap = min(trap, r);
     if (r > 4.0) break;
   }
-  // Use orbit trap directly for 3D SDF instead of thin boundary
-  float d = 0.5 - trap * 0.08;
-  // Thicken with z-axis for 3D volume
-  float d3d = sqrt(d * d + p.z * p.z * 0.2) - 0.1;
+  // 3D volumetric extrusion: Julia distance extended into z-axis with smooth falloff
+  float juliaD2d = 0.5 * log(max(trap, 1.0001)) / 4.0;
+  float zFade = 1.0 / (1.0 + p.z * p.z * 4.0);
+  float d = juliaD2d * zFade + abs(p.z) * 0.12 - 0.02;
   float bound = length(p_in) - 2.5;
-  return vec2(max(max(d3d, 0.001), bound) * 0.5, trap * 0.15);
+  return vec2(max(max(d, 0.001), bound) * 0.5, trap * 0.15);
 }
 
 // 70. E8 Lattice Projection (exceptional Lie group, 8D → 3D shadow)
@@ -1758,9 +1754,9 @@ vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
       density += exp(-dist * 3.5);
     }
   }
-  float dd = 0.5 - density * 0.1;
+  float dd = 0.5 - density * 0.12;
   float bound = length(p_in) - 2.5;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.2);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 78. Pickover Attractor (x'=sin(a*y)+c*cos(a*x), y'=sin(b*x)+d*cos(b*y))

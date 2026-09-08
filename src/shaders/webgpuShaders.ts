@@ -1063,21 +1063,19 @@ fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 0.95; let b = 0.7; let c = 0.6; let dd = 3.5; let e = 0.25; let f = 0.1;
   var density: f32 = 0.0;
-  var minDist: f32 = 1e10;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.05 * f32(s), 0.5 + f32(s) * 0.25);
-    for (var i: i32 = 0; i < 30; i = i + 1) {
+    for (var i: i32 = 0; i < 60; i = i + 1) {
       let dx = (v.z - b) * v.x - dd * v.y;
       let dy = dd * v.x + (v.z - b) * v.y;
       let dz = c + a * v.z - v.z * v.z * v.z / 3.0 - (v.x * v.x + v.y * v.y) * (1.0 + e * v.z) + f * v.z * v.x * v.x * v.x;
       v = v + vec3<f32>(dx, dy, dz) * 0.05;
       let scaled = v * 1.0;
       let dist = length(p - scaled);
-      minDist = min(minDist, dist);
       density += exp(-dist * 3.5);
     }
   }
-  let d = 0.4 - density * 0.1;
+  let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
   return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
 }
@@ -1665,20 +1663,20 @@ fn mapFatouSet(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let ang = t * 0.15;
   let c = vec2<f32>(0.7885 * cos(ang), 0.7885 * sin(ang));
   var z = p.xy;
-  var minR: f32 = 1e10;
-  var trap: f32 = 0.0;
+  var trap: f32 = 1e10;
   for (var i: i32 = 0; i < 20; i = i + 1) {
     if (i >= iters) { break; }
     z = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
     let r = length(z);
-    minR = min(minR, r);
-    trap += exp(-2.0 * r);
+    trap = min(trap, r);
     if (r > 4.0) { break; }
   }
-  let d = 0.5 - trap * 0.08;
-  let d3d = sqrt(d * d + p.z * p.z * 0.2) - 0.1;
+  // 3D volumetric extrusion: Julia distance extended into z-axis with smooth falloff
+  let juliaD2d = 0.5 * log(max(trap, 1.0001)) / 4.0;
+  let zFade = 1.0 / (1.0 + p.z * p.z * 4.0);
+  let d = juliaD2d * zFade + abs(p.z) * 0.12 - 0.02;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(max(d3d, 0.001), bound) * 0.5, trap * 0.15);
+  return vec2<f32>(max(max(d, 0.001), bound) * 0.5, trap * 0.15);
 }
 
 // 70. E8 Lattice Projection (exceptional Lie group, 8D → 3D shadow)
@@ -1864,9 +1862,9 @@ fn mapDeJongAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       density = density + exp(-dist * 3.5);
     }
   }
-  let dd = 0.5 - density * 0.1;
+  let dd = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.2);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 78. Pickover Attractor
