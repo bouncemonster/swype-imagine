@@ -13,6 +13,7 @@ import { STOCHASTIC_FRACTALS } from './categories/stochasticFractals';
 import { PHYSICAL_FRACTALS } from './categories/physicalFractals';
 import { EXPANDED_REAL_FRACTALS } from './categories/expandedRealFractals';
 import { VISUALLY_DISTINCT_FRACTALS } from './categories/visuallyDistinctFractals';
+import { MANDALAS_3D } from './categories/mandalas3D';
 
 // Compose catalog from modular categories
 export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
@@ -25,6 +26,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
   ...PHYSICAL_FRACTALS,
   ...EXPANDED_REAL_FRACTALS,
   ...VISUALLY_DISTINCT_FRACTALS,
+  ...MANDALAS_3D,
 ];
 
 // Legacy inline definitions (to be removed after full extraction)

@@ -15,6 +15,10 @@ import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle
 import { NeuroAestheticsEngine } from './engine/NeuroAestheticsEngine';
 import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
+import { PROCEDURAL_PALETTES } from './palettesProcedural';
+
+// Combine hand-crafted and procedural palettes
+const ALL_COLOR_PALETTES = [...COLOR_PALETTES, ...PROCEDURAL_PALETTES];
 
 const INITIAL_PARAMS: FractalParams = {
   type: 'phyllotaxis',
@@ -237,7 +241,7 @@ export default function App() {
       const compositeOp = params.get('op');
       
       if (type) {
-        const palette = COLOR_PALETTES.find(p => p.id === params.get('palette')) || COLOR_PALETTES[0];
+        const palette = ALL_COLOR_PALETTES.find(p => p.id === params.get('palette')) || ALL_COLOR_PALETTES[0];
         const sharedSpecimen: FractalSpecimen = {
           id: `shared-${Date.now().toString(36)}`,
           seed: Math.floor(Math.random() * 1000000),
@@ -444,7 +448,7 @@ export default function App() {
       boxFold: params.boxFold,
       sphereFold: params.sphereFold,
       interiorCut: params.interiorCut,
-      palette: params.customPalette || COLOR_PALETTES.find(p => p.id === params.paletteId) || COLOR_PALETTES[0],
+      palette: params.customPalette || ALL_COLOR_PALETTES.find(p => p.id === params.paletteId) || ALL_COLOR_PALETTES[0],
       iterations: params.iterations,
       phiMultiplier: params.phiMultiplier,
       morphSpeed: params.morphSpeed,
