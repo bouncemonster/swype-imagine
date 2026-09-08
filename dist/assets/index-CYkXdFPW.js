@@ -2210,7 +2210,7 @@ fn opSmoothIntersection(d1: f32, d2: f32, k: f32) -> f32 {
 }
 
 fn opSmoothSubtraction(d1: f32, d2: f32, k: f32) -> f32 {
-  let h = clamp(0.5 - 0.5 * (d2 + d1) / max(k, 0.0001), 0.0, 1.0);
+  let h = clamp(0.5 - 0.5 * (d2 - d1) / max(k, 0.0001), 0.0, 1.0);
   return mix(d2, -d1, h) + k * h * (1.0 - h);
 }
 
@@ -2321,8 +2321,8 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
       current_d = mix(dB, current_d, h) + k * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, h);
     } else if (compOp == 3) {
-      // 3: Smooth Vault Carving (ssub)
-      let h = clamp(0.5 - 0.5 * (dB + current_d) / k, 0.0, 1.0);
+      // 3: Smooth Vault Carving (ssub) — IQ formulation: (d2 - d1)
+      let h = clamp(0.5 - 0.5 * (dB - current_d) / k, 0.0, 1.0);
       current_d = mix(current_d, -dB, h) + k * h * (1.0 - h);
       current_trap = mix(current_trap, trapB, h);
     } else if (compOp == 4) {
@@ -2359,7 +2359,7 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
       let h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
       current_d = mix(resC.x, current_d, h) + k * h * (1.0 - h);
     } else if (compOp == 3) {
-      let h = clamp(0.5 - 0.5 * (resC.x + current_d) / k, 0.0, 1.0);
+      let h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
       current_d = mix(current_d, -resC.x, h) + k * h * (1.0 - h);
     } else if (compOp == 0) {
       current_d = mix(current_d, resC.x, blendC * 0.5);
@@ -4921,7 +4921,7 @@ float opSmoothIntersection(float d1, float d2, float k) {
 }
 
 float opSmoothSubtraction(float d1, float d2, float k) {
-  float h = clamp(0.5 - 0.5 * (d2 + d1) / max(k, 0.0001), 0.0, 1.0);
+  float h = clamp(0.5 - 0.5 * (d2 - d1) / max(k, 0.0001), 0.0, 1.0);
   return mix(d2, -d1, h) + k * h * (1.0 - h);
 }
 
@@ -5026,8 +5026,8 @@ vec2 sceneSDF(vec3 p_world) {
       current_d = mix(dB, current_d, h) + k * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, h);
     } else if (compOp == 3) {
-      // 3: Smooth Vault Carving (ssub)
-      float h = clamp(0.5 - 0.5 * (dB + current_d) / k, 0.0, 1.0);
+      // 3: Smooth Vault Carving (ssub) — IQ formulation: (d2 - d1)
+      float h = clamp(0.5 - 0.5 * (dB - current_d) / k, 0.0, 1.0);
       current_d = mix(current_d, -dB, h) + k * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, h);
     } else if (compOp == 4) {
@@ -5064,7 +5064,7 @@ vec2 sceneSDF(vec3 p_world) {
       float h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
       current_d = mix(resC.x, current_d, h) + k * h * (1.0 - h);
     } else if (compOp == 3) {
-      float h = clamp(0.5 - 0.5 * (resC.x + current_d) / k, 0.0, 1.0);
+      float h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
       current_d = mix(current_d, -resC.x, h) + k * h * (1.0 - h);
     } else if (compOp == 0) {
       current_d = mix(current_d, resC.x, blendC * 0.5);
