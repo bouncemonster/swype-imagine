@@ -2233,6 +2233,86 @@ float mapFractalFlameIFS(vec3 p, float t, float phi, int iters) {
   return minDist * 0.4;
 }
 
+// 101: Amazing Box — Mandelbox variation with spherical fold
+float mapAmazingBox(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float scale = 2.0;
+  float minDist = 1e10;
+  int maxIter = int(clamp(float(iters), 8.0, 15.0));
+  for (int i = 0; i < 15; i++) {
+    if (i >= maxIter) break;
+    // Box fold
+    z = clamp(z, -1.0, 1.0) * 2.0 - z;
+    // Spherical fold (Amazing Box variation)
+    float r2 = dot(z, z);
+    float r = sqrt(r2);
+    if (r < 0.5) {
+      z *= 4.0;
+    } else if (r < 1.0) {
+      z /= r2;
+    }
+    // Scale and translate
+    z = z * scale + p;
+    minDist = min(minDist, length(z) * pow(scale, -float(i + 1)));
+  }
+  return minDist * 0.5;
+}
+
+// 102: Mandelbulb-Mandelbox Hybrid — Best of both worlds
+float mapMandelbulbMandelboxHybrid(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float minDist = 1e10;
+  int maxIter = int(clamp(float(iters), 8.0, 12.0));
+  for (int i = 0; i < 12; i++) {
+    if (i >= maxIter) break;
+    float fi = float(i);
+    // Alternate between Mandelbulb and Mandelbox operations
+    if (i % 2 == 0) {
+      // Mandelbulb: spherical coordinates
+      float r = length(z);
+      float theta = acos(z.z / max(r, 0.001));
+      float phi_angle = atan(z.y, z.x);
+      dr = pow(r, 7.0) * 8.0 * dr + 1.0;
+      float zr = pow(r, 8.0);
+      theta = theta * 8.0;
+      phi_angle = phi_angle * 8.0;
+      z = zr * vec3(sin(theta) * cos(phi_angle), sin(theta) * sin(phi_angle), cos(theta));
+      z += p;
+    } else {
+      // Mandelbox: box fold + sphere fold
+      z = clamp(z, -1.0, 1.0) * 2.0 - z;
+      float r2 = dot(z, z);
+      if (r2 < 0.25) z *= 4.0;
+      else if (r2 < 1.0) z /= r2;
+      z = z * 2.0 + p;
+    }
+    minDist = min(minDist, length(z) * 0.5);
+  }
+  return 0.5 * log(length(z)) * length(z) / dr;
+}
+
+// 103: Menger-Mandelbox Hybrid — Sponge meets box
+float mapMengerMandelboxHybrid(vec3 p, float t, float phi, int iters) {
+  vec3 z = abs(p);
+  float scale = 3.0;
+  float minDist = 1e10;
+  int maxIter = int(clamp(float(iters), 6.0, 10.0));
+  for (int i = 0; i < 10; i++) {
+    if (i >= maxIter) break;
+    // Menger sponge iteration
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    if (z.x < z.z) z.xz = z.zx;
+    if (z.y < z.z) z.yz = z.zy;
+    z = z * scale - vec3(2.0, 2.0, 0.0);
+    // Mandelbox influence
+    z = clamp(z, -1.5, 1.5) * 2.0 - z;
+    minDist = min(minDist, length(z) * pow(scale, -float(i + 1)));
+  }
+  return minDist * 0.4;
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -2336,7 +2416,11 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 97) return mapMandelbulbPower12(p, t, phi, iters);
   if (ftype == 98) return mapHybridMandelboxKIFS(p, t, phi, iters);
   if (ftype == 99) return mapMultibrot3Advanced(p, t, phi, iters);
-  return mapFractalFlameIFS(p, t, phi, iters);
+  if (ftype == 100) return mapFractalFlameIFS(p, t, phi, iters);
+  if (ftype == 101) return mapAmazingBox(p, t, phi, iters);
+  if (ftype == 102) return mapMandelbulbMandelboxHybrid(p, t, phi, iters);
+  if (ftype == 103) return mapMengerMandelboxHybrid(p, t, phi, iters);
+  return mapPhyllotaxis(p, t, phi, iters); // Default fallback
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
