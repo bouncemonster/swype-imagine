@@ -1781,12 +1781,12 @@ vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
       z = nz;
       vec3 pt = vec3(z * 0.8, sin(float(s) + t * 0.1) * 0.5);
       float dist = length(p - pt);
-      density += exp(-dist * 4.0);
+      density += exp(-dist * 3.5);
     }
   }
-  float dd = 0.35 - density * 0.06;
+  float dd = 0.5 - density * 0.12;
   float bound = length(p_in) - 2.3;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 79. Vicsek Fractal (3D cross-shaped IFS, dim ~ 1.465)
@@ -1909,9 +1909,9 @@ vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
       density += exp(-dist * 3.5);
     }
   }
-  float dd = 0.5 - density * 0.1;
+  float dd = 0.5 - density * 0.12;
   float bound = length(p_in) - 2.3;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.2);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic attractor)
@@ -1936,12 +1936,12 @@ vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
       z = clamp(z, vec3(-5.0), vec3(5.0));
       vec3 scaled = z * 0.4;
       float dist = length(p - scaled);
-      density += exp(-dist * 4.0);
+      density += exp(-dist * 3.5);
     }
   }
-  float dd = 0.35 - density * 0.07;
+  float dd = 0.5 - density * 0.12;
   float bound = length(p_in) - 2.5;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 85. Svensson Attractor (x'=d*sin(a*y)-c, y'=b-x)
@@ -1963,12 +1963,12 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
       z = clamp(z, vec2(-5.0), vec2(5.0));
       vec3 pt = vec3(z * 0.8, sin(float(s) * 1.5 + t * 0.1) * 0.4);
       float dist = length(p - pt);
-      density += exp(-dist * 4.0);
+      density += exp(-dist * 3.5);
     }
   }
-  float dd = 0.35 - density * 0.06;
+  float dd = 0.5 - density * 0.12;
   float bound = length(p_in) - 2.3;
-  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {

@@ -1886,12 +1886,12 @@ fn mapPickoverAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       z = nz;
       let pt = vec3<f32>(z * 0.8, sin(f32(s) + t * 0.1) * 0.5);
       let dist = length(p - pt);
-      density = density + exp(-dist * 4.0);
+      density = density + exp(-dist * 3.5);
     }
   }
-  let dd = 0.35 - density * 0.06;
+  let dd = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 79. Vicsek Fractal (3D cross IFS, dim ~1.465)
@@ -2007,9 +2007,9 @@ fn mapBedheadAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
       density = density + exp(-dist * 3.5);
     }
   }
-  let dd = 0.5 - density * 0.1;
+  let dd = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.2);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic)
@@ -2027,12 +2027,12 @@ fn mapFourSpotAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       z = clamp(z, vec3<f32>(-5.0), vec3<f32>(5.0));
       let scaled = z * 0.4;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 4.0);
+      density = density + exp(-dist * 3.5);
     }
   }
-  let dd = 0.35 - density * 0.07;
+  let dd = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // 85. Svensson Attractor
@@ -2053,12 +2053,12 @@ fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       z = clamp(z, vec2<f32>(-5.0), vec2<f32>(5.0));
       let pt = vec3<f32>(z * 0.8, sin(f32(s) * 1.5 + t * 0.1) * 0.4);
       let dist = length(p - pt);
-      density = density + exp(-dist * 4.0);
+      density = density + exp(-dist * 3.5);
     }
   }
-  let dd = 0.35 - density * 0.06;
+  let dd = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
 // Master Single Primitive Dispatcher (86 Architectures)
