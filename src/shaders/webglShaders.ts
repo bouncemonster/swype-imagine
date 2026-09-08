@@ -775,7 +775,8 @@ vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xz = rot2D(t * 0.08) * p.xz;
   float sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 q = vec3(0.1 + float(s) * 0.1, 0.0, 25.0 - float(s) * 5.0);
     for (int i = 0; i < 80; i++) {
@@ -785,13 +786,16 @@ vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
       q += vec3(dx, dy, dz) * 0.008;
       vec3 scaled = q * 0.08;
       float dist = length(p - scaled);
-      density += exp(-dist * 4.0);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 4.0));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32 FIX: Proper SDF using minimum distance to orbit points
+  // Density-based approach created smooth blobs — replaced with tube SDF
+  float tubeR = 0.10 + maxDensity * 0.06; // Tube radius modulated by orbit density
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  // FIX: Ensure positive distance estimate
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -896,7 +900,8 @@ vec2 mapCliffordAttractor(vec3 p, float t, float phi, int iters) {
   float bb = 1.6 + 0.1 * cos(t * 0.15);
   float cc = 1.0 * phi;
   float dd = 0.7;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 q = vec3(float(s) * 0.5 - 0.75, float(s & 1) * 0.3 - 0.15, float(s) * 0.4);
     for (int i = 0; i < 60; i++) {
@@ -905,12 +910,15 @@ vec2 mapCliffordAttractor(vec3 p, float t, float phi, int iters) {
       float zn = sin(q.z * 1.5 + t * 0.1 + float(i) * 0.05) * 0.5;
       q = vec3(xn, yn, zn);
       float dist = length(p - q);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p) - 2.5;
-  return vec2(max(d, bound) * 0.5, max(density * 0.3, 0.001));
+  return vec2(max(d, bound) * 0.5, max(maxDensity * 0.3, 0.001));
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -985,7 +993,8 @@ vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.2;
   p.xz = rot2D(t * 0.07) * p.xz;
   float a = 1.4, b = 0.3;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, 0.1 - float(s) * 0.08, float(s) * 0.3);
     for (int i = 0; i < 60; i++) {
@@ -995,12 +1004,15 @@ vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
       v = vec3(x, y, z);
       vec3 scaled = v * 0.5;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
@@ -1008,7 +1020,8 @@ vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.2;
   p.xz = rot2D(t * 0.08) * p.xz;
   float a = 0.95, b = 0.7, c = 0.6, dd = 3.5, e = 0.25, f = 0.1;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, 0.05 * float(s), 0.5 + float(s) * 0.25);
     for (int i = 0; i < 60; i++) {
@@ -1018,12 +1031,15 @@ vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dx, dy, dz) * 0.05;
       vec3 scaled = v * 1.0;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
@@ -1031,7 +1047,8 @@ vec2 mapThomasAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.0;
   p.yz = rot2D(t * 0.06) * p.yz;
   float b = 0.208186;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(1.0 + float(s) * 0.3, 0.0, -1.0 + float(s) * 0.5);
     for (int i = 0; i < 60; i++) {
@@ -1041,12 +1058,15 @@ vec2 mapThomasAttractor(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dx, dy, dz) * 0.1;
       vec3 scaled = v * 0.45;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 44. Halvorsen 3-Fold Chaotic Attractor (orbit-traced, a=1.89)
@@ -1054,7 +1074,8 @@ vec2 mapHalvorsenAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.0;
   p.xy = rot2D(t * 0.07) * p.xy;
   float a = 1.89;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(-1.0 + float(s) * 0.5, -1.0 + float(s) * 0.3, -1.0);
     for (int i = 0; i < 60; i++) {
@@ -1064,12 +1085,15 @@ vec2 mapHalvorsenAttractor(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dx, dy, dz) * 0.04;
       vec3 scaled = v * 0.25;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 45. Julia Set 3D (c = -0.7 + 0.27i, thick 3D extrusion with orbit trap)
@@ -1246,7 +1270,8 @@ vec2 mapApollonianGasket(vec3 p_in, float t, float phi, int iters) {
 vec2 mapBarnsleyFern3D(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.2;
   p.xz = rot2D(t * 0.06) * p.xz;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 5; s++) {
     vec3 q = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < 40; i++) {
@@ -1263,12 +1288,15 @@ vec2 mapBarnsleyFern3D(vec3 p_in, float t, float phi, int iters) {
       }
       vec3 scaled = q * 0.15;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.2;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 54. Klein Quartic Surface (genus-3 Hurwitz surface)
@@ -1455,7 +1483,8 @@ vec2 mapChuaCircuit(vec3 p_in, float t, float phi, int iters) {
   p.xz = rot2D(t * 0.07) * p.xz;
   float alpha = 15.6, beta = 28.0;
   float m0 = -1.143, m1 = -0.714;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, 0.0, 0.1 + float(s) * 0.2);
     for (int i = 0; i < 60; i++) {
@@ -1466,12 +1495,15 @@ vec2 mapChuaCircuit(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dx, dy, dz2) * 0.008;
       vec3 scaled = v * 0.1;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 64. Standard Map (Chirikov-Taylor, orbit-traced)
@@ -1479,7 +1511,8 @@ vec2 mapStandardMap(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.0;
   p.xz = rot2D(t * 0.06) * p.xz;
   float K = 1.5 + 0.5 * sin(t * 0.1);
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     float theta = float(s) * 1.57 + 0.3;
     float p_val = float(s) * 0.8 - 1.2;
@@ -1490,12 +1523,15 @@ vec2 mapStandardMap(vec3 p_in, float t, float phi, int iters) {
       p_val = new_p;
       vec3 pt = vec3(cos(theta) * 0.8, sin(theta) * 0.8, p_val * 0.5 + float(s) * 0.2);
       float dist = length(p - pt);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 65. Ikeda Map (orbit-traced, b=0.9, u=0.4+0.05*sin(t))
@@ -1504,7 +1540,8 @@ vec2 mapIkedaMap(vec3 p_in, float t, float phi, int iters) {
   p.xz = rot2D(t * 0.06) * p.xz;
   float b = 0.9;
   float u = 0.4 + 0.05 * sin(t * 0.15);
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     float xn = float(s) * 0.3 - 0.45;
     float yn = float(s) * 0.2 - 0.3;
@@ -1516,12 +1553,15 @@ vec2 mapIkedaMap(vec3 p_in, float t, float phi, int iters) {
       xn = xnew; yn = ynew;
       vec3 pt = vec3(xn * 0.5, yn * 0.5, sin(float(i) * 0.15 + t * 0.1 + float(s) * 0.5) * 0.4);
       float dist = length(p - pt);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 66. Koch Snowflake 3D (recursive triangular SDF)
@@ -1659,7 +1699,8 @@ vec2 mapFitzHugh(vec3 p_in, float t, float phi, int iters) {
   p.xz = rot2D(t * 0.06) * p.xz;
   float a = 0.7, b_param = 0.8, tau = 12.5;
   float I_ext = 0.5 + 0.2 * sin(t * 0.2);
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, -0.2, float(s) * 0.3);
     for (int i = 0; i < 60; i++) {
@@ -1669,12 +1710,15 @@ vec2 mapFitzHugh(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dv, dw, dz2) * 0.08;
       vec3 scaled = v * 0.45;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
@@ -1682,7 +1726,8 @@ vec2 mapRosslerAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.2;
   p.xz = rot2D(t * 0.07) * p.xz;
   float a = 0.2, b = 0.2, c = 5.7;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, 0.1, float(s) * 0.3);
     for (int i = 0; i < 80; i++) {
@@ -1692,12 +1737,15 @@ vec2 mapRosslerAttractor(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dx, dy, dz2) * 0.015;
       vec3 scaled = v * 0.15;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 74. Duffing Attractor (orbit-traced, alpha=1, beta=5, delta=0.02, gamma=8)
@@ -1705,7 +1753,8 @@ vec2 mapDuffingAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.0;
   p.xz = rot2D(t * 0.06) * p.xz;
   float alpha = 1.0, beta_p = 5.0, delta = 0.02, gamma = 8.0;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 v = vec3(0.1 + float(s) * 0.15, 0.0, float(s) * 0.5);
     for (int i = 0; i < 60; i++) {
@@ -1716,12 +1765,15 @@ vec2 mapDuffingAttractor(vec3 p_in, float t, float phi, int iters) {
       v += vec3(dx, dy, dz2) * 0.015;
       vec3 scaled = v * 0.3;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
@@ -1729,7 +1781,8 @@ vec2 mapLogisticBifurcation(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.2;
   p.xz = rot2D(t * 0.05) * p.xz;
   float r = 2.5 + (p.x + 1.5) / 3.0 * 1.5;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 6; s++) {
     float x = 0.3 + float(s) * 0.1;
     for (int i = 0; i < 50; i++) {
@@ -1739,12 +1792,15 @@ vec2 mapLogisticBifurcation(vec3 p_in, float t, float phi, int iters) {
       x = r * x * (1.0 - x);
       vec3 pt = vec3(p.x, (x - 0.5) * 2.0, float(s) * 0.3 - 0.75);
       float dist = length(p - pt);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float d = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, density * 0.25);
+  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 76. Fractal Spire (Exponential spiral tower z -> e^z + c)
@@ -1777,7 +1833,8 @@ vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
   float b = -0.43 + cos(t * 0.07) * 0.3;
   float c_ = -0.65 + sin(t * 0.03) * 0.4;
   float d_ = 2.43 + cos(t * 0.04) * 0.3;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   vec2 seeds[4];
   seeds[0] = vec2(0.1, 0.1); seeds[1] = vec2(-0.3, 0.5); seeds[2] = vec2(0.4, -0.2); seeds[3] = vec2(-0.5, -0.4);
   int count = clamp(iters, 8, 50);
@@ -1789,12 +1846,15 @@ vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
       z = nz;
       vec3 pt = vec3(z * 0.7, float(s) * 0.25 - 0.375);
       float dist = length(p - pt);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float dd = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float dd = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(dd, bound) * 0.5, density * 0.25);
+  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 78. Pickover Attractor (x'=sin(a*y)+c*cos(a*x), y'=sin(b*x)+d*cos(b*y))
@@ -1804,7 +1864,8 @@ vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
   float b = 1.9 + cos(t * 0.06) * 0.3;
   float c_ = -0.31 + sin(t * 0.05) * 0.3;
   float d_ = 0.72 + cos(t * 0.03) * 0.2;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   int count = clamp(iters, 10, 40);
   // Multiple seeds for better orbit coverage
   for (int s = 0; s < 3; s++) {
@@ -1815,12 +1876,15 @@ vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
       z = nz;
       vec3 pt = vec3(z * 0.8, sin(float(s) + t * 0.1) * 0.5);
       float dist = length(p - pt);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float dd = 0.5 - density * 0.12;
+  // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float dd = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, density * 0.25);
+  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 79. Vicsek Fractal (3D cross-shaped IFS, dim ~ 1.465)
@@ -1928,7 +1992,8 @@ vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
   float a = 0.95 + sin(t * 0.04) * 0.2;
   float b = 0.7 + cos(t * 0.06) * 0.15;
   float c_ = 0.6 + sin(t * 0.05) * 0.2;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   for (int s = 0; s < 4; s++) {
     vec3 z = vec3(0.1 + float(s) * 0.15, 0.1, 0.1 + float(s) * 0.1);
     for (int i = 0; i < 60; i++) {
@@ -1940,19 +2005,23 @@ vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
       z = nz;
       z = clamp(z, vec3(-5.0), vec3(5.0));
       float dist = length(p - z * 0.7);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float dd = 0.5 - density * 0.12;
+  // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float dd = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, density * 0.25);
+  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic attractor)
 vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.0;
   float a = 2.0 + sin(t * 0.05) * 0.5;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   int count = clamp(iters, 8, 30);
   // Multiple seeds for dense orbit coverage
   for (int s = 0; s < 4; s++) {
@@ -1970,12 +2039,15 @@ vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
       z = clamp(z, vec3(-5.0), vec3(5.0));
       vec3 scaled = z * 0.4;
       float dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float dd = 0.5 - density * 0.12;
+  // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float dd = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(dd, bound) * 0.5, density * 0.25);
+  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 85. Svensson Attractor (x'=d*sin(a*y)-c, y'=b-x)
@@ -1985,7 +2057,8 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
   float b = 0.2 + cos(t * 0.06) * 0.1;
   float c_ = 1.57 + sin(t * 0.05) * 0.2;
   float d_ = 1.4 + cos(t * 0.03) * 0.3;
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   int count = clamp(iters, 10, 35);
   for (int s = 0; s < 3; s++) {
     vec2 z = vec2(0.1 + float(s) * 0.2, 0.1 + float(s) * 0.15);
@@ -1997,12 +2070,15 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
       z = clamp(z, vec2(-5.0), vec2(5.0));
       vec3 pt = vec3(z * 0.8, sin(float(s) * 1.5 + t * 0.1) * 0.4);
       float dist = length(p - pt);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  float dd = 0.5 - density * 0.12;
+  // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  float tubeR = 0.10 + maxDensity * 0.06;
+  float dd = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, density * 0.25);
+  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 86: Kaleidoscopic IFS
@@ -2094,15 +2170,19 @@ float mapFractalCoral(vec3 p, float t, float phi, int iters) {
 
 // 92: Nebula Cloud
 float mapNebulaCloud(vec3 p, float t, float phi, int iters) {
-  float density = 0.0;
+  float minDist = 1e10;
+  float maxDensity = 0.0;
   vec3 q = p;
   for (int i = 0; i < 8; i++) {
     q = abs(q) - vec3(0.5, 0.3, 0.4);
     q.xy = rot2D(t * 0.1 + float(i)) * q.xy;
     q.yz = rot2D(t * 0.08) * q.yz;
-    density += exp(-length(q) * 2.0);
+    minDist = min(minDist, length(q));
+    maxDensity = max(maxDensity, exp(-length(q) * 2.0));
   }
-  float d = 0.5 - density * 0.15;
+  // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  float tubeR = 0.08 + maxDensity * 0.05;
+  float d = minDist - tubeR;
   float bound = length(p) - 2.0;
   return max(d * 0.6, bound) * 0.7;
 }
@@ -3093,13 +3173,6 @@ void main() {
     // This caused each face to get a single dominant color with sharp boundaries
     float seedAnim = u_palette_seed + u_palette_rotation * u_time * 2.5;
     float trapSmooth = effectiveTrap / (1.0 + effectiveTrap); // Soft saturation, no jumps
-    
-    // High-frequency hash noise for color variation within each face
-    // Uses surface position to create unique pattern per point
-    // Multiple octaves for natural-looking variation
-    float hashNoise = fract(sin(dot(p * 17.3, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
-    float hashNoise2 = fract(sin(dot(p * 31.7, vec3(63.726, 10.873, 91.345))) * 23421.6312);
-    float hashNoise3 = fract(sin(dot(p * 47.1, vec3(23.456, 89.012, 34.567))) * 54321.9876);
     
     // CRITICAL FIX: Use normal-based coloring to break horizontal symmetry
     // Position-based noise creates horizontal splits due to fractal symmetry

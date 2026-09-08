@@ -827,7 +827,8 @@ fn mapLorenzAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   let r0 = rot2D(p.xz, t * 0.08);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let sigma = 10.0; let rho = 28.0; let beta = 8.0 / 3.0;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var q = vec3<f32>(0.1 + f32(s) * 0.1, 0.0, 25.0 - f32(s) * 5.0);
     for (var i: i32 = 0; i < 80; i = i + 1) {
@@ -837,12 +838,14 @@ fn mapLorenzAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       q = q + vec3<f32>(dx, dy, dz) * 0.008;
       let scaled = q * 0.08;
       let dist = length(p - scaled);
-      density += exp(-dist * 4.0);
+      minDist = min(minDist, dist);
+            maxDensity = max(maxDensity, exp(-dist * 4.0));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -948,7 +951,8 @@ fn mapCliffordAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   let bb = 1.6 + 0.1 * cos(t * 0.15);
   let cc = 1.0 * phi;
   let dd: f32 = 0.7;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var q = vec3<f32>(f32(s) * 0.5 - 0.75, f32(s & 1) * 0.3 - 0.15, f32(s) * 0.4);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -957,12 +961,14 @@ fn mapCliffordAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       let zn = sin(q.z * 1.5 + t * 0.1 + f32(i) * 0.05) * 0.5;
       q = vec3<f32>(xn, yn, zn);
       let dist = length(p_in - q);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.3);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.3);
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -1039,7 +1045,8 @@ fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
   let r0 = rot2D(p.xz, t * 0.07);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 1.4; let b = 0.3;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.1 - f32(s) * 0.08, f32(s) * 0.3);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1049,12 +1056,14 @@ fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
       v = vec3<f32>(x, y, z);
       let scaled = v * 0.5;
       let dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+            maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
@@ -1063,7 +1072,8 @@ fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   let r0 = rot2D(p.xz, t * 0.08);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 0.95; let b = 0.7; let c = 0.6; let dd = 3.5; let e = 0.25; let f = 0.1;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.05 * f32(s), 0.5 + f32(s) * 0.25);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1073,12 +1083,14 @@ fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       v = v + vec3<f32>(dx, dy, dz) * 0.05;
       let scaled = v * 1.0;
       let dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+            maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
@@ -1087,7 +1099,8 @@ fn mapThomasAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   let r0 = rot2D(p.yz, t * 0.06);
   p = vec3<f32>(p.x, r0.x, r0.y);
   let b = 0.208186;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(1.0 + f32(s) * 0.3, 0.0, -1.0 + f32(s) * 0.5);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1097,12 +1110,14 @@ fn mapThomasAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       v = v + vec3<f32>(dx, dy, dz) * 0.1;
       let scaled = v * 0.45;
       let dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+            maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 44. Halvorsen 3-Fold Chaotic Attractor (orbit-traced, a=1.89)
@@ -1111,7 +1126,8 @@ fn mapHalvorsenAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<
   let r0 = rot2D(p.xy, t * 0.07);
   p = vec3<f32>(r0.x, r0.y, p.z);
   let a = 1.89;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(-1.0 + f32(s) * 0.5, -1.0 + f32(s) * 0.3, -1.0);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1121,12 +1137,14 @@ fn mapHalvorsenAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<
       v = v + vec3<f32>(dx, dy, dz) * 0.04;
       let scaled = v * 0.25;
       let dist = length(p - scaled);
-      density += exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+            maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 45. Julia Set 3D (c = -0.7 + 0.27i)
@@ -1310,7 +1328,8 @@ fn mapBarnsleyFern3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
   var p = p_in * 1.2;
   let r0 = rot2D(p.xz, t * 0.06);
   p = vec3<f32>(r0.x, p.y, r0.y);
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 5; s = s + 1) {
     var q = vec3<f32>(0.0, 0.0, 0.0);
     for (var i: i32 = 0; i < 40; i = i + 1) {
@@ -1322,12 +1341,14 @@ fn mapBarnsleyFern3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
       else { q = vec3<f32>(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.3 * q.z); }
       let scaled = q * 0.15;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 54. Klein Quartic Surface (genus-3)
@@ -1520,7 +1541,8 @@ fn mapChuaCircuit(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   p = vec3<f32>(r0.x, p.y, r0.y);
   let alpha = 15.6; let beta = 28.0;
   let m0 = -1.143; let m1 = -0.714;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.0, 0.1 + f32(s) * 0.2);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1531,12 +1553,14 @@ fn mapChuaCircuit(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       v = v + vec3<f32>(dx, dy, dz2) * 0.008;
       let scaled = v * 0.1;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 64. Standard Map (Chirikov-Taylor, orbit-traced)
@@ -1545,7 +1569,8 @@ fn mapStandardMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let r0 = rot2D(p.xz, t * 0.06);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let K = 1.5 + 0.5 * sin(t * 0.1);
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var theta = f32(s) * 1.57 + 0.3;
     var p_val = f32(s) * 0.8 - 1.2;
@@ -1555,12 +1580,14 @@ fn mapStandardMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       p_val = new_p;
       let pt = vec3<f32>(cos(theta) * 0.8, sin(theta) * 0.8, p_val * 0.5 + f32(s) * 0.2);
       let dist = length(p - pt);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 65. Ikeda Map (orbit-traced)
@@ -1570,7 +1597,8 @@ fn mapIkedaMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   p = vec3<f32>(r0.x, p.y, r0.y);
   let b = 0.9;
   let u = 0.4 + 0.05 * sin(t * 0.15);
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var xn = f32(s) * 0.3 - 0.45;
     var yn = f32(s) * 0.2 - 0.3;
@@ -1582,12 +1610,14 @@ fn mapIkedaMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       xn = xnew; yn = ynew;
       let pt = vec3<f32>(xn * 0.5, yn * 0.5, sin(f32(i) * 0.15 + t * 0.1 + f32(s) * 0.5) * 0.4);
       let dist = length(p - pt);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.2);
 }
 
 // 66. Koch Snowflake 3D (recursive triangular IFS)
@@ -1727,7 +1757,8 @@ fn mapFitzHugh(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 0.7; let b_param = 0.8; let tau = 12.5;
   let I_ext = 0.5 + 0.2 * sin(t * 0.2);
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, -0.2, f32(s) * 0.3);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1737,12 +1768,14 @@ fn mapFitzHugh(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       v = v + vec3<f32>(dv, dw, dz2) * 0.08;
       let scaled = v * 0.45;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
@@ -1751,7 +1784,8 @@ fn mapRosslerAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   let r0 = rot2D(p.xz, t * 0.07);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let a = 0.2; let b = 0.2; let c = 5.7;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.1, f32(s) * 0.3);
     for (var i: i32 = 0; i < 80; i = i + 1) {
@@ -1761,12 +1795,14 @@ fn mapRosslerAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
       v = v + vec3<f32>(dx, dy, dz2) * 0.015;
       let scaled = v * 0.15;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 74. Duffing Attractor (orbit-traced)
@@ -1775,7 +1811,8 @@ fn mapDuffingAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   let r0 = rot2D(p.xz, t * 0.06);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let alpha = 1.0; let beta_p = 5.0; let delta = 0.02; let gamma = 8.0;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var v = vec3<f32>(0.1 + f32(s) * 0.15, 0.0, f32(s) * 0.5);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -1786,12 +1823,14 @@ fn mapDuffingAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
       v = v + vec3<f32>(dx, dy, dz2) * 0.015;
       let scaled = v * 0.3;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
@@ -1800,7 +1839,8 @@ fn mapLogisticBifurcation(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2
   let r0 = rot2D(p.xz, t * 0.05);
   p = vec3<f32>(r0.x, p.y, r0.y);
   let r = 2.5 + (p.x + 1.5) / 3.0 * 1.5;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 6; s = s + 1) {
     var x = 0.3 + f32(s) * 0.1;
     for (var i: i32 = 0; i < 50; i = i + 1) {
@@ -1810,12 +1850,14 @@ fn mapLogisticBifurcation(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2
       x = r * x * (1.0 - x);
       let pt = vec3<f32>(p.x, (x - 0.5) * 2.0, f32(s) * 0.3 - 0.75);
       let dist = length(p - pt);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let d = 0.5 - density * 0.12;
+  let tubeR = 0.10 + maxDensity * 0.06;
+  let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 76. Fractal Spire (Exponential spiral tower)
@@ -1848,7 +1890,8 @@ fn mapDeJongAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   let b = -0.43 + cos(t * 0.07) * 0.3;
   let c_ = -0.65 + sin(t * 0.03) * 0.4;
   let d_ = 2.43 + cos(t * 0.04) * 0.3;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   var z0 = vec2<f32>(0.1, 0.1); var z1 = vec2<f32>(-0.3, 0.5); var z2 = vec2<f32>(0.4, -0.2); var z3 = vec2<f32>(-0.5, -0.4);
   let count = clamp(iters, 8, 50);
   for (var s: i32 = 0; s < 4; s = s + 1) {
@@ -1860,12 +1903,15 @@ fn mapDeJongAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       z = nz;
       let pt = vec3<f32>(z * 0.7, f32(s) * 0.25 - 0.375);
       let dist = length(p - pt);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let dd = 0.5 - density * 0.12;
+    // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let dd = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 78. Pickover Attractor
@@ -1875,7 +1921,8 @@ fn mapPickoverAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   let b = 1.9 + cos(t * 0.06) * 0.3;
   let c_ = -0.31 + sin(t * 0.05) * 0.3;
   let d_ = 0.72 + cos(t * 0.03) * 0.2;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   let count = clamp(iters, 10, 40);
   for (var s: i32 = 0; s < 3; s = s + 1) {
     var z = vec2<f32>(0.1 + f32(s) * 0.3, 0.1 + f32(s) * 0.2);
@@ -1885,12 +1932,15 @@ fn mapPickoverAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       z = nz;
       let pt = vec3<f32>(z * 0.8, sin(f32(s) + t * 0.1) * 0.5);
       let dist = length(p - pt);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let dd = 0.5 - density * 0.12;
+    // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let dd = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 79. Vicsek Fractal (3D cross IFS, dim ~1.465)
@@ -1991,7 +2041,8 @@ fn mapBedheadAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   let a = 0.95 + sin(t * 0.04) * 0.2;
   let b = 0.7 + cos(t * 0.06) * 0.15;
   let c_ = 0.6 + sin(t * 0.05) * 0.2;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var z = vec3<f32>(0.1 + f32(s) * 0.15, 0.1, 0.1 + f32(s) * 0.1);
     for (var i: i32 = 0; i < 60; i = i + 1) {
@@ -2003,19 +2054,23 @@ fn mapBedheadAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
       z = nz;
       z = clamp(z, vec3<f32>(-5.0), vec3<f32>(5.0));
       let dist = length(p - z * 0.7);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let dd = 0.5 - density * 0.12;
+    // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let dd = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic)
 fn mapFourSpotAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let p = p_in * 1.0;
   let a = 2.0 + sin(t * 0.05) * 0.5;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   let count = clamp(iters, 8, 30);
   for (var s: i32 = 0; s < 4; s = s + 1) {
     var z = vec3<f32>(0.5 + f32(s) * 0.2, 0.5, 0.5 + f32(s) * 0.1);
@@ -2026,12 +2081,15 @@ fn mapFourSpotAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       z = clamp(z, vec3<f32>(-5.0), vec3<f32>(5.0));
       let scaled = z * 0.4;
       let dist = length(p - scaled);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let dd = 0.5 - density * 0.12;
+    // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let dd = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 85. Svensson Attractor
@@ -2041,7 +2099,8 @@ fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   let b = 0.2 + cos(t * 0.06) * 0.1;
   let c_ = 1.57 + sin(t * 0.05) * 0.2;
   let d_ = 1.4 + cos(t * 0.03) * 0.3;
-  var density: f32 = 0.0;
+  var minDist: f32 = 1e10;
+    var maxDensity: f32 = 0.0;
   let count = clamp(iters, 10, 35);
   for (var s: i32 = 0; s < 3; s = s + 1) {
     var z = vec2<f32>(0.1 + f32(s) * 0.2, 0.1 + f32(s) * 0.15);
@@ -2052,12 +2111,15 @@ fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       z = clamp(z, vec2<f32>(-5.0), vec2<f32>(5.0));
       let pt = vec3<f32>(z * 0.8, sin(f32(s) * 1.5 + t * 0.1) * 0.4);
       let dist = length(p - pt);
-      density = density + exp(-dist * 3.5);
+      minDist = min(minDist, dist);
+      maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let dd = 0.5 - density * 0.12;
+    // PHASE 4.32: min-dist SDF with density-modulated tube radius
+  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let dd = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
 }
 
 // 86: Kaleidoscopic IFS
@@ -2151,15 +2213,19 @@ fn mapFractalCoral(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
 
 // 92: Nebula Cloud
 fn mapNebulaCloud(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
-  var density = 0.0;
+  var minDist2: f32 = 1e10;
+  var maxDensity: f32 = 0.0;
   var q = p;
   for (var i = 0; i < 8; i++) {
     q = abs(q) - vec3<f32>(0.5, 0.3, 0.4);
     q = vec3<f32>(rot2D(t * 0.1 + f32(i)) * q.xy, q.z);
     q = vec3<f32>(q.x, rot2D(t * 0.08) * q.yz);
-    density = density + exp(-length(q) * 2.0);
+    let qlen = length(q);
+    minDist2 = min(minDist2, qlen);
+    maxDensity = max(maxDensity, exp(-qlen * 2.0));
   }
-  let d = 0.5 - density * 0.15;
+  let tubeR = 0.15 + maxDensity * 0.1;
+  let d = minDist2 - tubeR;
   let bound = length(p) - 2.0;
   return max(d * 0.6, bound) * 0.7;
 }
