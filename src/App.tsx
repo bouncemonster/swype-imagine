@@ -40,7 +40,7 @@ const INITIAL_PARAMS: FractalParams = {
   sphereFold: 0.65,
   interiorCut: 0.0,
   paletteId: 'lapis-lazuli',
-  iterations: 20,
+  iterations: 28,
   phiMultiplier: 1.61803398875,
   morphSpeed: 0.45,
   glowIntensity: 1.1,

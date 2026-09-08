@@ -69,8 +69,9 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
 
   const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling } = engine;
 
-  // Native wheel/touch listeners with passive:false — fixes Chrome "Unable to preventDefault"
-  // React synthetic events are registered as passive, so preventDefault() fails silently
+  // Native wheel/touch listeners with passive:false + capture:true
+  // capture:true ensures our listeners fire BEFORE React's document-level passive listeners
+  // This is the only reliable way to preventDefault() wheel/touch in React 19
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -85,7 +86,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       }));
       userPrefEngine.recordInteraction('zoom', Math.log(zoomFactor) * 10);
     };
-    canvas.addEventListener('wheel', wheelHandler, { passive: false });
+    canvas.addEventListener('wheel', wheelHandler, { passive: false, capture: true });
 
     const touchStartHandler = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -94,7 +95,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         touchDistanceRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       }
     };
-    canvas.addEventListener('touchstart', touchStartHandler, { passive: false });
+    canvas.addEventListener('touchstart', touchStartHandler, { passive: false, capture: true });
 
     const touchMoveHandler = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -113,12 +114,12 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         touchDistanceRef.current = dist;
       }
     };
-    canvas.addEventListener('touchmove', touchMoveHandler, { passive: false });
+    canvas.addEventListener('touchmove', touchMoveHandler, { passive: false, capture: true });
 
     return () => {
-      canvas.removeEventListener('wheel', wheelHandler);
-      canvas.removeEventListener('touchstart', touchStartHandler);
-      canvas.removeEventListener('touchmove', touchMoveHandler);
+      canvas.removeEventListener('wheel', wheelHandler, { capture: true });
+      canvas.removeEventListener('touchstart', touchStartHandler, { capture: true });
+      canvas.removeEventListener('touchmove', touchMoveHandler, { capture: true });
     };
   }, [canvasRef, onParamsChange, onInteraction]);
 

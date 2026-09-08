@@ -2232,7 +2232,7 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   let ftypeA = i32(u.fractal_type + 0.5);
   let ftypeB = i32(u.hybrid_type + 0.5);
   let ftypeC = i32(u.tertiary_type + 0.5);
-  let iters = i32(clamp(u.iterations, 4.0, 32.0));
+  let iters = i32(clamp(u.iterations, 6.0, 48.0));
   let t = u.time * u.morph_speed;
   let phi = u.phi_val;
   let compOp = i32(u.compose_op + 0.5);
@@ -2507,11 +2507,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   var steps: i32 = 0;
 
   // Adaptive step budget: complex fractals at close zoom need many more steps
-  let maxSteps: i32 = select(select(select(128, 160, cam_dist < 3.0), 200, cam_dist < 1.0), 200, false);
+  let maxSteps: i32 = select(select(select(160, 200, cam_dist < 3.0), 256, cam_dist < 1.0), 256, false);
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   let hitScale = max(cam_dist * 0.0003, 0.0001);
 
-  for (var i: i32 = 0; i < 200; i = i + 1) {
+  for (var i: i32 = 0; i < 256; i = i + 1) {
     if (i >= maxSteps) { break; }
     let p = ro + rd * t;
     let res = sceneSDF(p);

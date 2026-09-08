@@ -2133,7 +2133,7 @@ vec2 sceneSDF(vec3 p_world) {
   int ftypeA = int(u_fractal_type + 0.5);
   int ftypeB = int(u_hybrid_type + 0.5);
   int ftypeC = int(u_tertiary_type + 0.5);
-  int iters = int(clamp(u_iterations, 4.0, 32.0));
+  int iters = int(clamp(u_iterations, 6.0, 48.0));
   float t = u_time * u_morph_speed;
   float phi = u_phi_val;
   int compOp = int(u_compose_op + 0.5);
@@ -2403,11 +2403,11 @@ void main() {
   int steps = 0;
 
   // Adaptive step budget: complex fractals at close zoom need many more steps
-  int maxSteps = (cam_dist < 1.0) ? 200 : (cam_dist < 3.0) ? 160 : 128;
+  int maxSteps = (cam_dist < 1.0) ? 256 : (cam_dist < 3.0) ? 200 : 160;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
 
-  for (int i = 0; i < 200; i++) {
+  for (int i = 0; i < 256; i++) {
     if (i >= maxSteps) break;
     vec3 p = ro + rd * t;
     vec2 res = sceneSDF(p);
