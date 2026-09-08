@@ -3,7 +3,27 @@ export type { FractalCategoryKey, CanonicalFractal } from './fractalCatalogTypes
 export { FRACTAL_CATEGORIES } from './fractalCatalogTypes';
 import { CanonicalFractal } from './fractalCatalogTypes';
 
+// Import modular fractal categories
+import { GEOMETRIC_CURVES } from './categories/geometricCurves';
+import { CONSTRUCTIVE_FRACTALS } from './categories/constructiveFractals';
+import { ALGEBRAIC_FRACTALS } from './categories/algebraicFractals';
+import { MULTIDIMENSIONAL_FRACTALS } from './categories/multidimensionalFractals';
+import { IFS_FRACTALS } from './categories/ifsFractals';
+import { STOCHASTIC_FRACTALS } from './categories/stochasticFractals';
+
+// Compose catalog from modular categories
 export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
+  ...GEOMETRIC_CURVES,
+  ...CONSTRUCTIVE_FRACTALS,
+  ...ALGEBRAIC_FRACTALS,
+  ...MULTIDIMENSIONAL_FRACTALS,
+  ...IFS_FRACTALS,
+  ...STOCHASTIC_FRACTALS,
+  // Remaining categories will be extracted in future iterations
+];
+
+// Legacy inline definitions (to be removed after full extraction)
+const _LEGACY_INLINE_FRACTALS: CanonicalFractal[] = [
   // ==========================================
   // 1. ГЕОМЕТРИЧЕСКИЕ КРИВЫЕ И L-СИСТЕМЫ
   // ==========================================
@@ -3201,3 +3221,6 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
     }
   },
 ];
+
+// Export legacy fractals for backward compatibility (will be removed after full extraction)
+export const LEGACY_FRACTALS = _LEGACY_INLINE_FRACTALS;
