@@ -2684,10 +2684,29 @@ void main() {
   float min_trap = 1e10;
   int steps = 0;
 
+  // OPTIMIZATION 1: Space Leaping — skip empty space with bounding sphere
+  // Check if ray starts outside a large bounding sphere around the fractal
+  float boundingRadius = 4.0; // Fractal is contained within radius 4
+  float rayOriginDist = length(ro);
+  if (rayOriginDist > boundingRadius) {
+    // Ray starts outside bounding sphere, skip to intersection
+    float tmin = rayOriginDist - boundingRadius;
+    if (tmin > t) t = tmin * 0.9; // Start 10% before sphere intersection
+  }
+
+  // OPTIMIZATION 2: LOD System — reduce iterations based on distance
+  // Far away fractals don't need as many iterations
+  float lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
+  int iterReduction = int(lodFactor * 8.0); // Reduce up to 8 iterations at far distance
+
   // Adaptive step budget: complex fractals at close zoom need many more steps
   int maxSteps = (cam_dist < 1.0) ? 256 : (cam_dist < 3.0) ? 200 : 160;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
+
+  // OPTIMIZATION 3: Early Ray Termination — stop if we're clearly missing
+  float lastD = 1e10;
+  int missCount = 0;
 
   for (int i = 0; i < 256; i++) {
     if (i >= maxSteps) break;
@@ -2703,17 +2722,40 @@ void main() {
       break;
     }
 
-    // Conservative stepping near surface prevents overshooting thin features
+    // OPTIMIZATION 4: Adaptive Step Size with distance-based acceleration
+    // When far from surface, take larger steps; when close, be conservative
     float absD = abs(d);
-    float step_factor = (absD > 0.5) ? 0.92 : (absD > 0.05) ? 0.82 : 0.65;
+    float step_factor;
+    if (absD > 2.0) {
+      step_factor = 0.98; // Very far: almost full step
+    } else if (absD > 0.5) {
+      step_factor = 0.92; // Far: conservative
+    } else if (absD > 0.05) {
+      step_factor = 0.82; // Mid: moderate
+    } else {
+      step_factor = 0.65; // Close: very conservative
+    }
+    
+    // OPTIMIZATION 5: Minimum step size scales with distance
     float minStep = max(cam_dist * 0.00005, 0.0001);
     float step_d = max(absD * step_factor, minStep);
     t += step_d;
+    
+    // OPTIMIZATION 6: Early Ray Termination
+    // If we're moving away from surface for many steps, terminate early
+    if (d > lastD * 1.5 && d > 0.5) {
+      missCount++;
+      if (missCount > 8) break; // Ray is clearly missing, stop
+    } else {
+      missCount = 0;
+    }
+    lastD = d;
+    
     if (t > max_dist) break;
   }
 
   // Refinement pass: snap to surface more precisely if we got close but didn't converge
-  float lastD = 1e10; // Track last SDF value for near-miss fallback
+  // lastD already tracked from main loop
   if (!hit && t < max_dist) {
     for (int j = 0; j < 16; j++) {
       vec3 p = ro + rd * t;

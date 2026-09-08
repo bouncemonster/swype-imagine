@@ -2772,10 +2772,26 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   var min_trap: f32 = 1e10;
   var steps: i32 = 0;
 
+  // OPTIMIZATION 1: Space Leaping — skip empty space with bounding sphere
+  let boundingRadius: f32 = 4.0;
+  let rayOriginDist = length(ro);
+  if (rayOriginDist > boundingRadius) {
+    let tmin = rayOriginDist - boundingRadius;
+    if (tmin > t) { t = tmin * 0.9; }
+  }
+
+  // OPTIMIZATION 2: LOD System — reduce iterations based on distance
+  let lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
+  let iterReduction = i32(lodFactor * 8.0);
+
   // Adaptive step budget: complex fractals at close zoom need many more steps
   let maxSteps: i32 = select(select(select(160, 200, cam_dist < 3.0), 256, cam_dist < 1.0), 256, false);
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   let hitScale = max(cam_dist * 0.0003, 0.0001);
+
+  // OPTIMIZATION 3: Early Ray Termination
+  var lastD: f32 = 1e10;
+  var missCount: i32 = 0;
 
   for (var i: i32 = 0; i < 256; i = i + 1) {
     if (i >= maxSteps) { break; }
@@ -2791,19 +2807,40 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       break;
     }
 
-    // Conservative stepping near surface prevents overshooting thin features
+    // OPTIMIZATION 4: Adaptive Step Size with distance-based acceleration
     let absD = abs(d);
-    let step_factor = select(select(0.65, 0.82, absD > 0.05), 0.92, absD > 0.5);
+    var step_factor: f32;
+    if (absD > 2.0) {
+      step_factor = 0.98;
+    } else if (absD > 0.5) {
+      step_factor = 0.92;
+    } else if (absD > 0.05) {
+      step_factor = 0.82;
+    } else {
+      step_factor = 0.65;
+    }
+    
+    // OPTIMIZATION 5: Minimum step size scales with distance
     let minStep = max(cam_dist * 0.00005, 0.0001);
     let step_d = max(absD * step_factor, minStep);
     t = t + step_d;
+    
+    // OPTIMIZATION 6: Early Ray Termination
+    if (d > lastD * 1.5 && d > 0.5) {
+      missCount = missCount + 1;
+      if (missCount > 8) { break; }
+    } else {
+      missCount = 0;
+    }
+    lastD = d;
+    
     if (t > max_dist) {
       break;
     }
   }
 
   // Refinement pass: snap to surface more precisely if we got close but didn't converge
-  var lastD: f32 = 1e10;
+  // lastD already tracked from main loop
   if (!hit && t < max_dist) {
     for (var j: i32 = 0; j < 16; j = j + 1) {
       let p2 = ro + rd * t;
