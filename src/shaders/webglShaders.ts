@@ -3325,15 +3325,36 @@ void main() {
   float min_trap = 1e10;
   int steps = 0;
 
-  // OPTIMIZATION 1: Space Leaping — skip empty space with bounding sphere
-  // FIX: Bounding radius must match sceneSDF boundary (5.0) to prevent clipping
-  float boundingRadius = 6.0; // Increased from 4.0 to match sceneSDF r_bound > 5.0
+  // OPTIMIZATION 1: HIERARCHICAL SPACE LEAPING
+  // Multi-level bounding volumes for maximum performance
+  float boundingRadius = 6.0;
   float rayOriginDist = length(ro);
+  
+  // Level 1: Large bounding sphere (fast skip)
   if (rayOriginDist > boundingRadius) {
-    // Ray starts outside bounding sphere, skip to intersection
-    // FIX: Use more conservative start (0.95 instead of 0.9) to prevent missing surface
     float tmin = rayOriginDist - boundingRadius;
-    if (tmin > t) t = tmin * 0.95; // Start 5% before sphere intersection (was 10%)
+    if (tmin > t) t = tmin * 0.95;
+  }
+  
+  // Level 2: Medium bounding sphere (refined skip)
+  float medRadius = 3.5;
+  if (rayOriginDist > medRadius && rayOriginDist < boundingRadius) {
+    float tmin = rayOriginDist - medRadius;
+    if (tmin > t) t = tmin * 0.98;
+  }
+  
+  // Level 3: Tight bounding box (final approach)
+  vec3 bboxMin = vec3(-2.5);
+  vec3 bboxMax = vec3(2.5);
+  vec3 invRd = 1.0 / rd;
+  vec3 t0 = (bboxMin - ro) * invRd;
+  vec3 t1 = (bboxMax - ro) * invRd;
+  vec3 tmin3 = min(t0, t1);
+  vec3 tmax3 = max(t0, t1);
+  float tent = max(max(tmin3.x, tmin3.y), tmin3.z);
+  float tstart3 = min(min(tmax3.x, tmax3.y), tmax3.z);
+  if (tent > 0.0 && tent > t && tent < tstart3) {
+    t = tent * 0.99;
   }
 
   // OPTIMIZATION 2: LOD System — reduce iterations based on distance
@@ -3374,6 +3395,14 @@ void main() {
     float d = res.x;
     min_trap = min(min_trap, res.y);
 
+    // ADAPTIVE STEP SIZE: Larger steps when far from surface, smaller when close
+    float adaptiveRelax = relaxationFactor;
+    if (abs(d) > 0.5) {
+      adaptiveRelax = 1.05; // Over-relax when far (speed up)
+    } else if (abs(d) < 0.1) {
+      adaptiveRelax = 0.85; // Under-relax when close (precision)
+    }
+
     // HIT DETECTION: Check if we're at the surface
     float hit_threshold = max(hitScale * 3.0, 0.002);
     if (abs(d) < hit_threshold) {
@@ -3382,13 +3411,10 @@ void main() {
       break;
     }
 
-    // STEP SIZE: Cap at 0.5 to prevent overshooting surfaces
-    // When SDF returns -2.0 (deep inside fractal), uncapped step would be
-    // abs(-2.0) * 0.95 = 1.9, jumping completely past the surface
+    // STEP SIZE: Adaptive based on distance to surface
     float absD = abs(d);
-    float step_d = min(absD * relaxationFactor, 0.5);
+    float step_d = min(absD * adaptiveRelax, 0.5);
     // IMPROVED: Smaller minimum step for extreme interior detail
-    // Was: max(cam_dist * 0.0001, 0.0005), now: max(cam_dist * 0.00005, 0.0001)
     float minStep = max(cam_dist * 0.00005, 0.0001);
     step_d = max(step_d, minStep);
     t += step_d;
