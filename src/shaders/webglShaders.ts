@@ -2948,6 +2948,18 @@ void main() {
     // Reuse curvature from normal perturbation (already computed above)
     float curv = curvDetail;
     float curvNorm = clamp(curv / 5.0, 0.0, 1.0);
+    
+    // PROCEDURAL FRACTAL TEXTURE: Add micro-detail using fractal noise
+    // Creates surface variation that scales with fractal complexity
+    float texScale = 8.0; // Texture frequency
+    float texDetail = 0.0;
+    for (int ti = 0; ti < 3; ti++) {
+      float ti_f = float(ti);
+      vec3 texP = p * texScale * pow(2.0, ti_f);
+      texDetail += sin(texP.x * 1.3 + texP.y * 0.7) * sin(texP.y * 1.1 + texP.z * 0.9) * sin(texP.z * 1.5 + texP.x * 0.8);
+      texDetail *= 0.5; // Reduce amplitude per octave
+    }
+    texDetail = texDetail * 0.15 + 0.85; // Scale to [0.85, 1.15] range for subtle variation
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     float effectiveTrap = max(min_trap, curvNorm * 0.15);
     float trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
@@ -3004,6 +3016,9 @@ void main() {
     // Orbit trap direct coloring with saturation-safe effectiveTrap
     float trapWeight = clamp(0.30 / (1.0 + effectiveTrap * 2.5), 0.0, 0.40);
     mat_col = mix(mat_col, u_accent_color * (0.5 + trapDetail * 0.5), trapWeight);
+    
+    // Apply procedural fractal texture detail
+    mat_col *= texDetail;
 
     // Environment ambient: sample SDF along normal for color-bleeding approximation
     float envOcc = sceneSDF(p + n * 0.15).x;
@@ -3183,6 +3198,18 @@ void main() {
   // Subpixel anti-aliasing boost — sharpen edges via fwidth unsharp mask
   float edgeDetect = length(fwidth(col)) * 0.5;
   col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
+
+  // DEPTH OF FIELD: Simple distance-based blur for cinematic effect
+  // Based on camera distance - objects far from focal plane get blurred
+  float focalDistance = cam_dist; // Focus on the fractal surface
+  float dofStrength = abs(t - focalDistance) * 0.015; // Blur strength based on distance from focal plane
+  dofStrength = clamp(dofStrength, 0.0, 0.4); // Limit blur amount
+  
+  // Simple box blur approximation using screen-space derivatives
+  float blurAmount = dofStrength * 0.5;
+  vec3 colBlur = col;
+  colBlur += texture2D(u_texture, v_uv + vec2(blurAmount, 0.0)).rgb * 0.25; // Sample offset
+  col = mix(col, colBlur, 0.3); // Blend blurred version
 
   fragColor = vec4(col, 1.0);
 }
