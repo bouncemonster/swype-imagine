@@ -2287,7 +2287,7 @@ float calcSoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
   for (int i = 0; i < 12; i++) {
     if (t >= maxt) break;
     float h = sceneSDF(ro + rd * t).x;
-    if (h < 0.001) return 0.0;
+    if (h < 0.0005) return smoothstep(0.0, 0.002, h); // Smooth shadow termination
     res = min(res, k * h / t);
     t += max(h * 0.85, 0.02);
   }
@@ -2402,26 +2402,46 @@ void main() {
   float min_trap = 1e10;
   int steps = 0;
 
-  for (int i = 0; i < 112; i++) {
+  // Adaptive step budget: complex fractals at close zoom need many more steps
+  int maxSteps = (cam_dist < 1.0) ? 200 : (cam_dist < 3.0) ? 160 : 128;
+  // Scale-aware hit threshold: tighter at close range for clean surface convergence
+  float hitScale = max(cam_dist * 0.0003, 0.0001);
+
+  for (int i = 0; i < 200; i++) {
+    if (i >= maxSteps) break;
     vec3 p = ro + rd * t;
     vec2 res = sceneSDF(p);
     float d = res.x;
     min_trap = min(min_trap, res.y);
 
-    // No near-plane escape — let rays march from the start to prevent slicing artifacts
-
-    float hit_threshold = 0.00075 * t + 0.00025;
+    float hit_threshold = hitScale + 0.0002;
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
       break;
     }
 
-    // Balanced step sizing: allows reaching surfaces within 112-step budget
-    float step_factor = (abs(d) > 0.2) ? 0.92 : 0.78;
-    float step_d = max(abs(d) * step_factor, 0.001);
+    // Conservative stepping near surface prevents overshooting thin features
+    float absD = abs(d);
+    float step_factor = (absD > 0.5) ? 0.92 : (absD > 0.05) ? 0.82 : 0.65;
+    float minStep = max(cam_dist * 0.00005, 0.0001);
+    float step_d = max(absD * step_factor, minStep);
     t += step_d;
     if (t > max_dist) break;
+  }
+
+  // Refinement pass: snap to surface more precisely if we got close but didn't converge
+  if (!hit && t < max_dist) {
+    for (int j = 0; j < 12; j++) {
+      vec3 p = ro + rd * t;
+      float d = sceneSDF(p).x;
+      if (abs(d) < hitScale * 0.5) {
+        hit = true;
+        break;
+      }
+      t -= d * 0.6; // Back-track and approach more carefully
+      if (t < 0.0) { t = 0.001; break; }
+    }
   }
 
   float bg_rad = length(uv);
