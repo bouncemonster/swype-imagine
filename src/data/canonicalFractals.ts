@@ -10,6 +10,7 @@ import { ALGEBRAIC_FRACTALS } from './categories/algebraicFractals';
 import { MULTIDIMENSIONAL_FRACTALS } from './categories/multidimensionalFractals';
 import { IFS_FRACTALS } from './categories/ifsFractals';
 import { STOCHASTIC_FRACTALS } from './categories/stochasticFractals';
+import { PHYSICAL_FRACTALS } from './categories/physicalFractals';
 
 // Compose catalog from modular categories
 export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
@@ -19,6 +20,7 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
   ...MULTIDIMENSIONAL_FRACTALS,
   ...IFS_FRACTALS,
   ...STOCHASTIC_FRACTALS,
+  ...PHYSICAL_FRACTALS,
   // Remaining categories will be extracted in future iterations
 ];
 

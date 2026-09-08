@@ -9,7 +9,6 @@ export { ALGEBRAIC_FRACTALS } from './algebraicFractals';
 export { MULTIDIMENSIONAL_FRACTALS } from './multidimensionalFractals';
 export { IFS_FRACTALS } from './ifsFractals';
 export { STOCHASTIC_FRACTALS } from './stochasticFractals';
+export { PHYSICAL_FRACTALS } from './physicalFractals';
 
-// TODO: Add remaining categories as they are extracted:
-// export { PHYSICAL_FRACTALS } from './physicalFractals';
-// export { EXTENDED_FRACTALS } from './extendedFractals';
+// TODO: Add extended fractals categories (8-10) as they are extracted
