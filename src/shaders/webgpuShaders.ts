@@ -2612,17 +2612,18 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   var current_trap = resA.y;
 
   // 3. Secondary Layer Evaluation & All 8 Lipschitz-Continuous Composite Operators
+  // FIX: Secondary gets FULL iterations — was starved to max 10, causing blobby hybrids
   if (u.hybrid_blend > 0.02) {
-    let resB = evalSingleFractal(ftypeB, p_eval, t, phi, clamp(iters - 2, 4, 10));
+    let resB = evalSingleFractal(ftypeB, p_eval, t, phi, iters);
     let dB = resB.x;
     let trapB = resB.y;
-    let blend = clamp(u.hybrid_blend, 0.0, 0.7);
+    let blend = clamp(u.hybrid_blend, 0.0, 1.0);
 
     if (compOp == 0) {
-      // 0: Continuous Topological Morph — stronger blend for visible transition
-      let morphBlend = blend * 0.7 + 0.15; // Minimum 15% blend even at low settings
+      // 0: Continuous Topological Morph — full range blend
+      let morphBlend = blend;
       current_d = mix(current_d, dB, morphBlend);
-      current_trap = mix(current_trap, trapB, morphBlend * 0.8);
+      current_trap = mix(current_trap, trapB, morphBlend * 0.85);
     } else if (compOp == 1) {
       // 1: Polynomial Smooth Union (smin)
       let h = clamp(0.5 + 0.5 * (dB - current_d) / k, 0.0, 1.0);
@@ -2639,15 +2640,15 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
       current_d = mix(current_d, -dB, h) + k * h * (1.0 - h);
       current_trap = mix(current_trap, trapB, h);
     } else if (compOp == 4) {
-      // 4: Domain Warp — stronger spatial distortion
-      let warpBlend = blend * 0.5 + 0.1; // Stronger base warp
+      // 4: Domain Warp — full range spatial distortion
+      let warpBlend = blend * 0.8;
       current_d = mix(current_d, dB, warpBlend);
-      current_trap = mix(current_trap, trapB, 0.55); // More trap influence
+      current_trap = mix(current_trap, trapB, blend * 0.7);
     } else if (compOp == 5) {
       // 5: Harmonic Spectral Resonance — stronger displacement
-      let disp = clamp(dB * 0.35, -0.12, 0.12) * blend; // 2x displacement range
+      let disp = clamp(dB * 0.5, -0.2, 0.2) * blend;
       current_d = current_d + disp;
-      current_trap = min(current_trap, trapB * 0.7 + current_trap * 0.3); // Blend traps
+      current_trap = mix(current_trap, trapB, blend * 0.6);
     } else if (compOp == 6) {
       // 6: Interlaced TPMS Cellular Lattice
       let lattice = abs(dB) - 0.035;
@@ -2655,19 +2656,19 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
       current_d = mix(lattice, current_d, h) + (k * 0.5) * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, 0.5);
     } else if (compOp == 7) {
-      // 7: Conformal Spiral Vortex
-      let twistFactor = clamp(blend * 0.6, 0.0, 0.75);
+      // 7: Conformal Spiral Vortex — full twist range
+      let twistFactor = blend * 0.85;
       let blended = opSmoothUnion(current_d, dB, k * 0.8);
       current_d = mix(current_d, blended, twistFactor);
-      current_trap = min(current_trap, trapB);
+      current_trap = mix(current_trap, trapB, blend * 0.6);
     }
   }
 
-  // 4. Tertiary Layer Evaluation (Only evaluated in direct proximity to surface)
-  if (u.tertiary_blend > 0.03 && current_d < 0.1) {
-    // FIX: Use float division to avoid integer truncation (was iters / 2)
-    let resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(i32(f32(iters) * 0.5), 6, 16));
-    let blendC = clamp(u.tertiary_blend, 0.05, 0.35);
+  // 4. Tertiary Layer Evaluation — FIX: Evaluate further from surface for richer topology
+  if (u.tertiary_blend > 0.02 && current_d < 0.5) {
+    // FIX: Tertiary gets 75% iterations (was 50%) for visible detail
+    let resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(i32(f32(iters) * 0.75), 8, 24));
+    let blendC = clamp(u.tertiary_blend, 0.05, 0.55);
     // Apply user-selected composite operator for consistent tertiary blending
     if (compOp == 2) {
       let h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
@@ -2683,18 +2684,20 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
     current_trap = min(current_trap, resC.y);
   }
 
-  // 5. Multi-Scale Golden Octaves
+  // 5. Multi-Scale Golden Octaves — FIX: Re-evaluate actual fractal at golden ratio scales
   let numOctaves = i32(clamp(u.octave_layers, 1.0, 4.0));
-  if (numOctaves > 1 && current_d < 0.2) {
+  if (numOctaves > 1 && current_d < 0.3) {
     var octScale = phi;
-    var octAmp = 1.0 / phi;
+    var octWeight = 0.35;
     for (var oct: i32 = 1; oct < 3; oct = oct + 1) {
       if (oct >= numOctaves) { break; }
       let p_oct = p_eval * octScale;
-      let octHarmonic = (sin(p_oct.x * phi) * cos(p_oct.y * phi) + sin(p_oct.z * phi)) / (phi * octScale);
-      current_d = current_d + octHarmonic * octAmp * 0.12;
+      let resOct = evalSingleFractal(ftypeA, p_oct, t, phi, clamp(iters / 2, 4, 12));
+      let octDist = resOct.x / octScale;
+      current_d = mix(current_d, octDist, octWeight / f32(oct + 1));
+      current_trap = mix(current_trap, resOct.y, octWeight * 0.3 / f32(oct + 1));
       octScale = octScale * phi;
-      octAmp = octAmp / phi;
+      octWeight = octWeight * 0.5;
     }
   }
 

@@ -796,7 +796,8 @@ export class NeuroAestheticsEngine {
     const zoom = DEFAULT_ZOOMS[selectedType] * (0.95 + Math.random() * 0.1);
 
     // High-performance mathematically compatible hybrid breeding
-    const isHybrid = Math.random() < 0.72;
+    // FIX: Increased hybrid chance and wider blend ranges for more dramatic combinations
+    const isHybrid = Math.random() < 0.80;
     let hybridType = selectedType;
     let tertiaryType = selectedType;
     let hybridBlend = 0.0;
@@ -817,19 +818,20 @@ export class NeuroAestheticsEngine {
       hybridType = compat.partners[Math.floor(Math.random() * compat.partners.length)];
       compositeOp = compat.ops[Math.floor(Math.random() * compat.ops.length)];
 
-      // Controlled harmonic blend: 0.22 - 0.45 preserves primary topology while infusing secondary structure
-      hybridBlend = parseFloat((0.22 + Math.random() * 0.26).toFixed(3));
-      smoothK = parseFloat((0.24 + Math.random() * 0.26).toFixed(3));
-      warpStrength = parseFloat((0.15 + Math.random() * 0.25).toFixed(3));
-      octaveLayers = 1;
+      // FIX: Wider blend range for more dramatic hybrid expressions
+      hybridBlend = parseFloat((0.15 + Math.random() * 0.55).toFixed(3));
+      smoothK = parseFloat((0.20 + Math.random() * 0.35).toFixed(3));
+      warpStrength = parseFloat((0.15 + Math.random() * 0.40).toFixed(3));
+      // FIX: Enable multi-scale octaves more often for real hierarchical detail
+      octaveLayers = Math.random() < 0.4 ? 2 : 1;
 
       const sym = COMPOSITE_OP_SYMBOLS[compositeOp];
       const name1 = FRACTAL_NAMES[selectedType].split(' ')[0];
       const name2 = FRACTAL_NAMES[hybridType].split(' ')[0];
       specimenName = `${name1} ${sym} ${name2} • φ-${this.currentGeneration}`;
 
-      // Tertiary layer: 35% chance to add a 3rd fractal for richer topology (only 4 shader iterations)
-      if (Math.random() < 0.35) {
+      // Tertiary layer: 50% chance to add a 3rd fractal for richer topology
+      if (Math.random() < 0.50) {
         const compatC = COMPATIBLE_HYBRIDS[hybridType] || {
           partners: ALL_FRACTAL_TYPES.filter(t => t !== selectedType && t !== hybridType),
           ops: ['smoothUnion']
@@ -837,7 +839,7 @@ export class NeuroAestheticsEngine {
         const tertiaryCandidates = compatC.partners.filter(t => t !== selectedType && t !== hybridType);
         if (tertiaryCandidates.length > 0) {
           tertiaryType = tertiaryCandidates[Math.floor(Math.random() * tertiaryCandidates.length)];
-          tertiaryBlend = parseFloat((0.08 + Math.random() * 0.18).toFixed(3));
+          tertiaryBlend = parseFloat((0.10 + Math.random() * 0.30).toFixed(3));
           const name3 = FRACTAL_NAMES[tertiaryType].split(' ')[0];
           specimenName = `${name1} ${sym} ${name2} ⊕ ${name3} • φ-${this.currentGeneration}`;
         }

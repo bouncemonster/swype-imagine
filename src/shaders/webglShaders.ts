@@ -2569,17 +2569,19 @@ vec2 sceneSDF(vec3 p_world) {
   float current_trap = resA.y;
 
   // 3. Secondary Layer Evaluation & All 8 Lipschitz-Continuous Composite Operators
+  // FIX: Secondary gets FULL iterations — was starved to max 10, causing blobby hybrids
   if (u_hybrid_blend > 0.02) {
-    vec2 resB = evalSingleFractal(ftypeB, p_eval, t, phi, clamp(iters - 2, 4, 10));
+    vec2 resB = evalSingleFractal(ftypeB, p_eval, t, phi, iters);
     float dB = resB.x;
     float trapB = resB.y;
-    float blend = clamp(u_hybrid_blend, 0.0, 0.7);
+    float blend = clamp(u_hybrid_blend, 0.0, 1.0);
 
     if (compOp == 0) {
-      // 0: Continuous Topological Morph — stronger blend for visible transition
-      float morphBlend = blend * 0.7 + 0.15; // Minimum 15% blend even at low settings
+      // 0: Continuous Topological Morph — full range blend for dramatic transitions
+      float morphBlend = blend;
       current_d = mix(current_d, dB, morphBlend);
-      current_trap = mix(current_trap, trapB, morphBlend * 0.8);
+      // FIX: Richer orbit trap mixing — was losing color diversity
+      current_trap = mix(current_trap, trapB, morphBlend * 0.85);
     } else if (compOp == 1) {
       // 1: Polynomial Smooth Union (smin)
       float h = clamp(0.5 + 0.5 * (dB - current_d) / k, 0.0, 1.0);
@@ -2596,15 +2598,16 @@ vec2 sceneSDF(vec3 p_world) {
       current_d = mix(current_d, -dB, h) + k * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, h);
     } else if (compOp == 4) {
-      // 4: Domain Warp — stronger spatial distortion
-      float warpBlend = blend * 0.5 + 0.1; // Stronger base warp
+      // 4: Domain Warp — full range spatial distortion
+      float warpBlend = blend * 0.8;
       current_d = mix(current_d, dB, warpBlend);
-      current_trap = mix(current_trap, trapB, 0.55); // More trap influence
+      current_trap = mix(current_trap, trapB, blend * 0.7); // Richer trap influence
     } else if (compOp == 5) {
       // 5: Harmonic Spectral Resonance — stronger displacement
-      float disp = clamp(dB * 0.35, -0.12, 0.12) * blend; // 2x displacement range
+      float disp = clamp(dB * 0.5, -0.2, 0.2) * blend; // Wider displacement range
       current_d = current_d + disp;
-      current_trap = min(current_trap, trapB * 0.7 + current_trap * 0.3); // Blend traps
+      // FIX: Better trap blending for richer color interference
+      current_trap = mix(current_trap, trapB, blend * 0.6);
     } else if (compOp == 6) {
       // 6: Interlaced TPMS Cellular Lattice
       float lattice = abs(dB) - 0.035;
@@ -2612,19 +2615,19 @@ vec2 sceneSDF(vec3 p_world) {
       current_d = mix(lattice, current_d, h) + (k * 0.5) * h * (1.0 - h);
       current_trap = mix(trapB, current_trap, 0.5);
     } else if (compOp == 7) {
-      // 7: Conformal Spiral Vortex
-      float twistFactor = clamp(blend * 0.6, 0.0, 0.75);
+      // 7: Conformal Spiral Vortex — full twist range
+      float twistFactor = blend * 0.85;
       float blended = opSmoothUnion(current_d, dB, k * 0.8);
       current_d = mix(current_d, blended, twistFactor);
-      current_trap = min(current_trap, trapB);
+      current_trap = mix(current_trap, trapB, blend * 0.6);
     }
   }
 
-  // 4. Tertiary Layer Evaluation (Only evaluated in direct proximity to surface)
-  if (u_tertiary_blend > 0.03 && current_d < 0.1) {
-    // FIX: Use float division to avoid integer truncation (was iters / 2)
-    vec2 resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(int(float(iters) * 0.5), 6, 16));
-    float blendC = clamp(u_tertiary_blend, 0.05, 0.35);
+  // 4. Tertiary Layer Evaluation — FIX: Evaluate further from surface for richer topology
+  if (u_tertiary_blend > 0.02 && current_d < 0.5) {
+    // FIX: Tertiary gets 75% iterations (was 50%) for visible detail
+    vec2 resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(int(float(iters) * 0.75), 8, 24));
+    float blendC = clamp(u_tertiary_blend, 0.05, 0.55);
     // Apply user-selected composite operator for consistent tertiary blending
     if (compOp == 2) {
       float h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
@@ -2640,18 +2643,23 @@ vec2 sceneSDF(vec3 p_world) {
     current_trap = min(current_trap, resC.y);
   }
 
-  // 5. Multi-Scale Golden Octaves
+  // 5. Multi-Scale Golden Octaves — FIX: Re-evaluate actual fractal at golden ratio scales
+  // This creates REAL hierarchical detail instead of generic sine noise
   int numOctaves = int(clamp(u_octave_layers, 1.0, 4.0));
-  if (numOctaves > 1 && current_d < 0.2) {
+  if (numOctaves > 1 && current_d < 0.3) {
     float octScale = phi;
-    float octAmp = 1.0 / phi;
+    float octWeight = 0.35; // Stronger octave influence
     for (int oct = 1; oct < 3; oct++) {
       if (oct >= numOctaves) break;
+      // Re-evaluate the PRIMARY fractal at golden-ratio scaled position
       vec3 p_oct = p_eval * octScale;
-      float octHarmonic = (sin(p_oct.x * phi) * cos(p_oct.y * phi) + sin(p_oct.z * phi)) / (phi * octScale);
-      current_d = current_d + octHarmonic * octAmp * 0.12;
+      vec2 resOct = evalSingleFractal(ftypeA, p_oct, t, phi, clamp(iters / 2, 4, 12));
+      // Blend octave detail into main distance — creates real self-similar hierarchy
+      float octDist = resOct.x / octScale; // Scale distance back to world space
+      current_d = mix(current_d, octDist, octWeight / float(oct + 1));
+      current_trap = mix(current_trap, resOct.y, octWeight * 0.3 / float(oct + 1));
       octScale *= phi;
-      octAmp /= phi;
+      octWeight *= 0.5;
     }
   }
 
