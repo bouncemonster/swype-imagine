@@ -2865,24 +2865,33 @@ void main() {
     float hashNoise2 = fract(sin(dot(p * 31.7, vec3(63.726, 10.873, 91.345))) * 23421.6312);
     float hashNoise3 = fract(sin(dot(p * 47.1, vec3(23.456, 89.012, 34.567))) * 54321.9876);
     
-    // CRITICAL FIX: Add view-dependent variation to break horizontal splits
-    // The dot product of normal and view direction varies across the surface
-    float viewDependent = dot(n, rd) * 0.5 + 0.5; // [0, 1] range
-    float viewHash = fract(sin(dot(n * 23.7, vec3(45.678, 12.345, 67.890))) * 98765.4321);
+    // CRITICAL FIX: Use normal-based coloring to break horizontal symmetry
+    // Position-based noise creates horizontal splits due to fractal symmetry
+    // Normal direction varies continuously and has no symmetry issues
     
-    // Phase with VERY strong high-frequency variation
-    // CRITICAL: Noise dominates to prevent ANY uniform zones
+    // Primary variation: normal direction (breaks horizontal symmetry)
+    float normalPhase = dot(n, vec3(1.0, 0.0, 0.0)) * 0.5 + 0.5; // X component
+    float normalPhase2 = dot(n, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5; // Y component
+    float normalPhase3 = dot(n, vec3(0.0, 0.0, 1.0)) * 0.5 + 0.5; // Z component
+    
+    // High-frequency hash noise with offset to break alignment
+    float hashNoise = fract(sin(dot(p * 17.3 + 127.1, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+    float hashNoise2 = fract(sin(dot(p * 31.7 + 269.5, vec3(63.726, 10.873, 91.345))) * 23421.6312);
+    float hashNoise3 = fract(sin(dot(p * 47.1 + 419.2, vec3(23.456, 89.012, 34.567))) * 54321.9876);
+    
+    // Phase with normal-based dominance to break horizontal splits
     float phase = fract(
-      hashNoise * 0.6 +            // Primary noise (INCREASED)
-      hashNoise2 * 0.35 +          // Secondary noise (INCREASED)
-      hashNoise3 * 0.2 +           // Tertiary noise (INCREASED)
-      viewHash * 0.25 +            // View-dependent noise (NEW)
-      viewDependent * 0.15 +       // View angle (NEW)
-      trapSmooth * 0.3 +           // Orbit trap (FURTHER REDUCED)
-      curvNorm * 0.4 +             // Curvature (FURTHER REDUCED)
-      p.y * 0.08 + p.x * 0.06 + p.z * 0.05 +  // Position (FURTHER REDUCED)
-      length(p - ro) * 0.03 +      // Distance (FURTHER REDUCED)
-      u_time * 0.04 + seedAnim * 0.01  // Animation
+      normalPhase * 0.5 +            // Normal X (NEW - breaks symmetry)
+      normalPhase2 * 0.3 +           // Normal Y (NEW)
+      normalPhase3 * 0.2 +           // Normal Z (NEW)
+      hashNoise * 0.4 +              // Primary noise
+      hashNoise2 * 0.25 +            // Secondary noise
+      hashNoise3 * 0.15 +            // Tertiary noise
+      trapSmooth * 0.2 +             // Orbit trap (further reduced)
+      curvNorm * 0.3 +               // Curvature (further reduced)
+      p.y * 0.05 + p.x * 0.03 + p.z * 0.02 +  // Position (minimal)
+      length(p - ro) * 0.02 +        // Distance (minimal)
+      u_time * 0.04 + seedAnim * 0.01 + 0.37  // Animation + constant offset
     );
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
