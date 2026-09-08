@@ -111,7 +111,7 @@ vec3 renderHologram(vec3 col, vec3 p, vec3 n, vec3 rd, float t,
   holoCol += vec3(0.12, 0.35, 0.75) * holoFres * 1.8;
   holoCol += u_accent_color * glitch * 3.5;
   holoCol += u_primary_color * trapDetail * 0.35;
-  holoCol += u.secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
+  holoCol += u_secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
   
   return mix(col * 0.06, holoCol, 0.94);
 }

@@ -3378,7 +3378,7 @@ void main() {
       holoCol += u_accent_color * glitch * 3.5;
       holoCol += u_primary_color * trapDetail * 0.35;
       // Hex grid lines
-      holoCol += u.secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
+      holoCol += u_secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
       col = mix(col * 0.06, holoCol, 0.94);
     } else if (u_render_style > 3.5 && u_render_style < 4.5) {
       // 4. Радужная интерференция: Thin-film + Fresnel + 5-order interference

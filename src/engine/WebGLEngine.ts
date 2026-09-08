@@ -3,6 +3,7 @@ import { GLSL_VERTEX_SHADER, GLSL_FRAGMENT_SHADER } from '../shaders/webglShader
 import { FractalEngineBase } from './FractalEngineBase';
 import { renderDiagnostics } from './RenderDiagnostics';
 import { validateMatrix, validateScalar, measurePerformance } from './MathValidation';
+import { userProblemLogger } from './UserProblemLogger';
 
 export class WebGLEngine extends FractalEngineBase {
   private gl: WebGL2RenderingContext | null = null;

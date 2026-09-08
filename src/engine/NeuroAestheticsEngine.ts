@@ -1013,7 +1013,7 @@ export class NeuroAestheticsEngine {
     };
 
     this.history.push(specimen);
-    if (this.history.length > 40) {
+    if (this.history.length > 100) {
       this.history.shift();
     }
     this.currentSpecimenIndex = this.history.length - 1;

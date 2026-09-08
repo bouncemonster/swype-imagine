@@ -160,27 +160,28 @@ export class UserPreferenceEngine {
   }
 
   private analyzeFractalChange(sample: InteractionSample): void {
-    const fractalIdx = String(Math.round(sample.value));
-    this.prefs.fractalWeights[fractalIdx] = (this.prefs.fractalWeights[fractalIdx] || 0) + 1;
-    this.currentFractal = fractalIdx;
+    // Use string value directly as FractalType (not numeric index)
+    const fractalType = String(sample.value);
+    this.prefs.fractalWeights[fractalType] = (this.prefs.fractalWeights[fractalType] || 0) + 1;
+    this.currentFractal = fractalType;
   }
 
   private analyzeStyleChange(sample: InteractionSample): void {
-    const styleIdx = String(Math.round(sample.value));
-    this.prefs.renderStyleWeights[styleIdx] = (this.prefs.renderStyleWeights[styleIdx] || 0) + 1;
-    this.currentStyle = styleIdx;
+    const styleId = String(sample.value);
+    this.prefs.renderStyleWeights[styleId] = (this.prefs.renderStyleWeights[styleId] || 0) + 1;
+    this.currentStyle = styleId;
   }
 
   private analyzePaletteChange(sample: InteractionSample): void {
-    const paletteIdx = String(Math.round(sample.value));
-    this.prefs.paletteWeights[paletteIdx] = (this.prefs.paletteWeights[paletteIdx] || 0) + 1;
-    this.currentPalette = paletteIdx;
+    const paletteId = String(sample.value);
+    this.prefs.paletteWeights[paletteId] = (this.prefs.paletteWeights[paletteId] || 0) + 1;
+    this.currentPalette = paletteId;
   }
 
   private analyzeCameraChange(sample: InteractionSample): void {
-    const cameraIdx = String(Math.round(sample.value));
-    this.prefs.cameraModeWeights[cameraIdx] = (this.prefs.cameraModeWeights[cameraIdx] || 0) + 1;
-    this.currentCamera = cameraIdx;
+    const cameraMode = String(sample.value);
+    this.prefs.cameraModeWeights[cameraMode] = (this.prefs.cameraModeWeights[cameraMode] || 0) + 1;
+    this.currentCamera = cameraMode;
   }
 
   /** Get the most preferred item from a weights map */
@@ -200,9 +201,9 @@ export class UserPreferenceEngine {
   getAdaptedDefaults(): Partial<{
     zoom: number;
     rotationSensitivity: number;
-    preferredFractal: number;
-    preferredStyle: number;
-    preferredPalette: number;
+    preferredFractal: string; // FractalType string, not number
+    preferredStyle: string; // RenderStyle string
+    preferredPalette: string; // Palette ID string
     preferredCamera: string;
   }> {
     const result: Record<string, number | string> = {};
@@ -212,13 +213,13 @@ export class UserPreferenceEngine {
       result.rotationSensitivity = this.prefs.rotationSpeed;
       
       const prefFractal = this.getPreferred(this.prefs.fractalWeights);
-      if (prefFractal !== null) result.preferredFractal = Number(prefFractal);
+      if (prefFractal !== null) result.preferredFractal = prefFractal; // Keep as string
       
       const prefStyle = this.getPreferred(this.prefs.renderStyleWeights);
-      if (prefStyle !== null) result.preferredStyle = Number(prefStyle);
+      if (prefStyle !== null) result.preferredStyle = prefStyle; // Keep as string
       
       const prefPalette = this.getPreferred(this.prefs.paletteWeights);
-      if (prefPalette !== null) result.preferredPalette = Number(prefPalette);
+      if (prefPalette !== null) result.preferredPalette = prefPalette; // Keep as string
       
       const prefCamera = this.getPreferred(this.prefs.cameraModeWeights);
       if (prefCamera !== null) result.preferredCamera = prefCamera;

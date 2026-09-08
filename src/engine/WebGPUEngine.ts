@@ -4,6 +4,7 @@ import { WGSL_SHADER } from '../shaders/webgpuShaders';
 import { FractalEngineBase } from './FractalEngineBase';
 import { renderDiagnostics } from './RenderDiagnostics';
 import { validateScalar, measurePerformance } from './MathValidation';
+import { userProblemLogger } from './UserProblemLogger';
 
 export class WebGPUEngine extends FractalEngineBase {
   private adapter: GPUAdapter | null = null;
