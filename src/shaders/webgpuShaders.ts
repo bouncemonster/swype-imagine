@@ -2876,9 +2876,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let light1 = normalize(vec3<f32>(cos(u.time * 0.3), 1.2, sin(u.time * 0.3)));
     let light2 = normalize(vec3<f32>(-sin(u.time * 0.25 * GOLDEN_RATIO), -0.6, cos(u.time * 0.25 * GOLDEN_RATIO)));
 
-    // Raymarched soft shadows from primary key light
-    let sh1 = calcSoftShadow(p + n * 0.005, light1, 0.02, 3.5, 12.0);
-    let sh2 = calcSoftShadow(p + n * 0.005, light2, 0.02, 2.2, 8.0);
+    // CONCEPTUAL FIX: Remove soft shadows from dynamic lights
+    // Dynamic lights can end up behind/beside the fractal, casting camera/object shadows
+    // Instead, use only Ambient Occlusion for self-shadowing
+    // This ensures only the fractal casts shadows on itself, not external objects
+    let sh1: f32 = 1.0; // No soft shadows — pure AO-based shading
+    let sh2: f32 = 1.0;
 
     // Multi-sample Subsurface Scattering
     var sssCol = vec3<f32>(0.0, 0.0, 0.0);
@@ -2894,11 +2897,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     sssCol = u.accent_color * sss * ao;
     let fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
-    let diff1 = max(dot(n, light1), 0.0) * (0.2 + 0.8 * sh1);
-    let diff2 = max(dot(n, light2), 0.0) * (0.15 + 0.85 * sh2);
+    // Diffuse lighting without soft shadows — relies on AO for depth
+    let diff1 = max(dot(n, light1), 0.0);
+    let diff2 = max(dot(n, light2), 0.0);
 
     let h1 = normalize(light1 - rd);
-    let spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
+    let spec1 = pow(max(dot(n, h1), 0.0), 32.0);
     
     // Surface curvature from normal variation (2 extra SDF calls)
     // Distance-adaptive epsilon + curvature floor prevents close-up saturation

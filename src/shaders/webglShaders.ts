@@ -2791,9 +2791,12 @@ void main() {
     vec3 light1 = normalize(vec3(cos(u_time * 0.3), 1.2, sin(u_time * 0.3)));
     vec3 light2 = normalize(vec3(-sin(u_time * 0.25 * GOLDEN_RATIO), -0.6, cos(u_time * 0.25 * GOLDEN_RATIO)));
 
-    // Raymarched soft shadows from primary key light
-    float sh1 = calcSoftShadow(p + n * 0.005, light1, 0.02, 3.5, 12.0);
-    float sh2 = calcSoftShadow(p + n * 0.005, light2, 0.02, 2.2, 8.0);
+    // CONCEPTUAL FIX: Remove soft shadows from dynamic lights
+    // Dynamic lights can end up behind/beside the fractal, casting camera/object shadows
+    // Instead, use only Ambient Occlusion for self-shadowing
+    // This ensures only the fractal casts shadows on itself, not external objects
+    float sh1 = 1.0; // No soft shadows — pure AO-based shading
+    float sh2 = 1.0;
 
     // Multi-sample Subsurface Scattering
     float sssDist = 0.06;
@@ -2808,11 +2811,12 @@ void main() {
     vec3 sssCol = u_accent_color * sss * ao;
     float fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
-    float diff1 = max(dot(n, light1), 0.0) * (0.2 + 0.8 * sh1);
-    float diff2 = max(dot(n, light2), 0.0) * (0.15 + 0.85 * sh2);
+    // Diffuse lighting without soft shadows — relies on AO for depth
+    float diff1 = max(dot(n, light1), 0.0);
+    float diff2 = max(dot(n, light2), 0.0);
 
     vec3 h1 = normalize(light1 - rd);
-    float spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
+    float spec1 = pow(max(dot(n, h1), 0.0), 32.0);
     
     // Surface curvature from normal variation (2 extra SDF calls)
     // Distance-adaptive epsilon + curvature floor prevents close-up saturation
