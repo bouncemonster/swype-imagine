@@ -2881,13 +2881,25 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   let hitScale = max(cam_dist * 0.0003, 0.0001);
 
-  // OPTIMIZATION 3: Early Ray Termination
+  // PHASE 4.31 FIX: Robust raymarching with bounded steps and sign tracking
+  // Root cause of black/flat/broken fractals: when SDF returns large negative
+  // values (e.g. -2.0 deep inside fractal), abs(d)*relaxation = 2.156 step size
+  // causes ray to JUMP from deep inside to far outside, completely overshooting
+  // the surface. Binary search then fails because it can't bracket the surface.
+  //
+  // Fixes applied:
+  // 1. Cap step size at 0.5 to prevent overshooting
+  // 2. Track sign changes for proper surface bracketing
+  // 3. Fix binary search to use tracked sign info
+  // 4. Add fine-grained fallback search for missed surfaces
+  // 5. Fix early termination to not bail on negative distances
+
   var lastD: f32 = 1e10;
   var missCount: i32 = 0;
-
-  // OPTIMIZATION 7: Over-Relaxation for Sphere Tracing
-  // Based on "Enhanced Sphere Tracing" (Keinert et al., 2014)
-  let relaxationFactor: f32 = 1.1;
+  let relaxationFactor: f32 = 0.95; // UNDER-relaxation for stability (was 1.1 over-relaxation)
+  var prevNegative: bool = false;
+  var tSignChange: f32 = -1.0; // t value where sign last changed (surface bracket)
+  var dSignChange: f32 = 0.0;  // SDF value at sign change
 
   for (var i: i32 = 0; i < 256; i = i + 1) {
     if (i >= maxSteps) { break; }
@@ -2896,77 +2908,140 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let d = res.x;
     min_trap = min(min_trap, res.y);
 
-    let hit_threshold = hitScale + 0.0002;
+    // HIT DETECTION: Check if we're at the surface
+    let hit_threshold = max(hitScale * 3.0, 0.002);
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
       break;
     }
 
-    // OPTIMIZATION 4: Adaptive Step Size with distance-based acceleration
+    // STEP SIZE: Cap at 0.5 to prevent overshooting surfaces
+    // When SDF returns -2.0 (deep inside fractal), uncapped step would be
+    // abs(-2.0) * 0.95 = 1.9, jumping completely past the surface
     let absD = abs(d);
-    var step_factor: f32;
-    if (absD > 2.0) {
-      step_factor = 0.98;
-    } else if (absD > 0.5) {
-      step_factor = 0.92;
-    } else if (absD > 0.05) {
-      step_factor = 0.82;
-    } else {
-      step_factor = 0.65;
-    }
-    
-    // OPTIMIZATION 5: Minimum step size scales with distance
-    let minStep = max(cam_dist * 0.00005, 0.0001);
-    // Apply over-relaxation: take slightly larger steps for faster convergence
-    let step_d = max(absD * step_factor * relaxationFactor, minStep);
+    var step_d = min(absD * relaxationFactor, 0.5);
+    // Minimum step: prevents infinite crawl when SDF is near zero
+    let minStep = max(cam_dist * 0.0001, 0.0005);
+    step_d = max(step_d, minStep);
     t = t + step_d;
-    
-    // OPTIMIZATION 6: Early Ray Termination
-    // FIX: More conservative thresholds to prevent premature termination
-    if (i > 0 && d > lastD * 1.5 && d > 1.0) {
+
+    // SIGN TRACKING: Record where SDF changes sign (surface crossing)
+    let curNegative = d < 0.0;
+    if (i > 0 && curNegative != prevNegative) {
+      tSignChange = t - step_d; // t before this step (where sign changed)
+      dSignChange = d;
+    }
+    prevNegative = curNegative;
+
+    // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
+    // Don't count negative distances as "increasing" — they mean we're inside
+    if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount = missCount + 1;
-      if (missCount > 12) { break; } // Increased from 8
+      if (missCount > 16) { break; }
+    } else if (d < 0.0) {
+      missCount = 0; // Inside fractal = definitely not missing
     } else {
-      missCount = 0;
+      missCount = max(0, missCount - 1); // Gradually reset
     }
     lastD = d;
-    
+
     if (t > max_dist) {
       break;
     }
   }
 
-  // Refinement pass: BINARY SEARCH for precise surface convergence
-  // Much better than linear backtracking - converges in log2(precision) steps
+  // PHASE 4.31: SIGN-AWARE BINARY SEARCH
+  // Uses tracked sign change to properly bracket the surface
   if (!hit && t < max_dist) {
-    var tLow: f32 = t - abs(lastD) * 2.0;
-    var tHigh: f32 = t;
-    var tBest: f32 = t; // Best guess so far
-    for (var j: i32 = 0; j < 16; j = j + 1) {
+    var tLow: f32;
+    var tHigh: f32;
+
+    if (tSignChange > 0.0) {
+      // We have a sign change — surface is bracketed between tSignChange and t
+      tLow = tSignChange;
+      tHigh = t;
+    } else {
+      // No sign change — try stepping back to find surface
+      tLow = max(t - 2.0, near_clip);
+      tHigh = t;
+    }
+
+    var tBest: f32 = tHigh;
+    var bestD: f32 = 1e10;
+
+    for (var j: i32 = 0; j < 20; j = j + 1) {
       let tMid = (tLow + tHigh) * 0.5;
-      let p2 = ro + rd * tMid;
-      let d2 = sceneSDF(p2).x;
-      if (abs(d2) < hitScale * 0.3) {
+      let pMid = ro + rd * tMid;
+      let dMid = sceneSDF(pMid).x;
+      let absDMid = abs(dMid);
+
+      // Track best (closest to surface) point
+      if (absDMid < bestD) {
+        bestD = absDMid;
+        tBest = tMid;
+      }
+
+      // Hit check
+      if (absDMid < hit_threshold) {
         hit = true;
         t = tMid;
         break;
       }
-      // Track best (closest to surface) point even if we don't converge
-      if (abs(d2) < abs(sceneSDF(ro + rd * tBest).x)) {
-        tBest = tMid;
+
+      // Binary search: use SIGN to determine which half contains the surface
+      // If dMid has same sign as d at tHigh, surface is in [tLow, tMid]
+      // If dMid has opposite sign from d at tHigh, surface is in [tMid, tHigh]
+      let dHigh = sceneSDF(ro + rd * tHigh).x;
+      if (dMid * dHigh > 0.0) {
+        // Same sign — surface is in lower half
+        tHigh = tMid;
+      } else {
+        // Opposite sign — surface is in upper half
+        tLow = tMid;
       }
-      if (d2 > 0.0) { tHigh = tMid; } else { tLow = tMid; }
     }
-    // If binary search didn't converge, use best guess to prevent black holes
-    if (!hit) {
+
+    if (!hit && bestD < 0.5) {
+      // Didn't converge but found a close point — use it
       t = tBest;
+      hit = true;
     }
   }
 
-  // Near-miss fallback: if we got very close to surface but didn't converge,
-  // still render as surface to prevent black holes
-  let nearMiss = !hit && abs(lastD) < hitScale * 5.0 && t < max_dist;
+  // PHASE 4.31: FINE-GRAINED FALLBACK SEARCH
+  // If main loop + binary search both failed, do a fine-grained linear search
+  // This catches surfaces that were skipped due to step size
+  if (!hit && t < max_dist) {
+    let tStart = max(t - 3.0, near_clip);
+    let fineStep: f32 = 0.02; // Small steps to catch any surface
+    var bestFineD: f32 = 1e10;
+    var bestFineT: f32 = t;
+
+    for (var k: i32 = 0; k < 80; k = k + 1) {
+      let tFine = tStart + f32(k) * fineStep;
+      if (tFine > t) { break; }
+      let dFine = sceneSDF(ro + rd * tFine).x;
+      let absDFine = abs(dFine);
+      if (absDFine < bestFineD) {
+        bestFineD = absDFine;
+        bestFineT = tFine;
+      }
+      if (absDFine < hit_threshold) {
+        hit = true;
+        t = tFine;
+        break;
+      }
+    }
+
+    if (!hit && bestFineD < 0.3) {
+      t = bestFineT;
+      hit = true;
+    }
+  }
+
+  // Near-miss fallback: if we got close to surface, still render it
+  let nearMiss = !hit && abs(lastD) < 0.5 && t < max_dist;
 
   let bg_rad = length(uv);
   var col = vec3<f32>(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u.time * 0.3));

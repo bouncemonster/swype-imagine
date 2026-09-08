@@ -2842,15 +2842,25 @@ void main() {
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
 
-  // OPTIMIZATION 3: Early Ray Termination — stop if we're clearly missing
+  // PHASE 4.31 FIX: Robust raymarching with bounded steps and sign tracking
+  // Root cause of black/flat/broken fractals: when SDF returns large negative
+  // values (e.g. -2.0 deep inside fractal), abs(d)*relaxation = 2.156 step size
+  // causes ray to JUMP from deep inside to far outside, completely overshooting
+  // the surface. Binary search then fails because it can't bracket the surface.
+  //
+  // Fixes applied:
+  // 1. Cap step size at 0.5 to prevent overshooting
+  // 2. Track sign changes for proper surface bracketing
+  // 3. Fix binary search to use tracked sign info
+  // 4. Add fine-grained fallback search for missed surfaces
+  // 5. Fix early termination to not bail on negative distances
+
   float lastD = 1e10;
   int missCount = 0;
-
-  // OPTIMIZATION 7: Over-Relaxation for Sphere Tracing
-  // Based on "Enhanced Sphere Tracing" (Keinert et al., 2014)
-  // Allows taking slightly larger steps than SDF suggests
-  // Relaxation factor > 1.0 speeds up convergence, but too high causes artifacts
-  float relaxationFactor = 1.1; // Conservative over-relaxation for stability
+  float relaxationFactor = 0.95; // UNDER-relaxation for stability (was 1.1 over-relaxation)
+  bool prevNegative = false;
+  float tSignChange = -1.0; // t value where sign last changed (surface bracket)
+  float dSignChange = 0.0;  // SDF value at sign change
 
   for (int i = 0; i < 256; i++) {
     if (i >= maxSteps) break;
@@ -2859,79 +2869,137 @@ void main() {
     float d = res.x;
     min_trap = min(min_trap, res.y);
 
-    float hit_threshold = hitScale + 0.0002;
+    // HIT DETECTION: Check if we're at the surface
+    float hit_threshold = max(hitScale * 3.0, 0.002);
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
       break;
     }
 
-    // FIX: Use abs(d) for robust raymarching — handles negative SDF from inside fractals
-    // When ray enters fractal interior, raw distance goes negative
-    // abs() makes the raymarcher treat it as unsigned distance, escaping to surface
+    // STEP SIZE: Cap at 0.5 to prevent overshooting surfaces
+    // When SDF returns -2.0 (deep inside fractal), uncapped step would be
+    // abs(-2.0) * 0.95 = 1.9, jumping completely past the surface
     float absD = abs(d);
-    float step_factor;
-    if (absD > 2.0) {
-      step_factor = 0.98;
-    } else if (absD > 0.5) {
-      step_factor = 0.92;
-    } else if (absD > 0.05) {
-      step_factor = 0.82;
-    } else {
-      step_factor = 0.65;
-    }
-    
-    // Minimum step size scales with distance
-    float minStep = max(cam_dist * 0.00005, 0.0001);
-    // Apply over-relaxation: take slightly larger steps for faster convergence
-    float step_d = max(absD * step_factor * relaxationFactor, minStep);
+    float step_d = min(absD * relaxationFactor, 0.5);
+    // Minimum step: prevents infinite crawl when SDF is near zero
+    float minStep = max(cam_dist * 0.0001, 0.0005);
+    step_d = max(step_d, minStep);
     t += step_d;
-    
-    // OPTIMIZATION 6: Early Ray Termination
-    // FIX: More conservative thresholds to prevent premature termination
-    // Increased missCount threshold from 8 to 12, and distance threshold from 0.5 to 1.0
-    if (i > 0 && d > lastD * 1.5 && d > 1.0) {
+
+    // SIGN TRACKING: Record where SDF changes sign (surface crossing)
+    bool curNegative = d < 0.0;
+    if (i > 0 && curNegative != prevNegative) {
+      tSignChange = t - step_d; // t before this step (where sign changed)
+      dSignChange = d;
+    }
+    prevNegative = curNegative;
+
+    // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
+    // Don't count negative distances as "increasing" — they mean we're inside
+    if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount++;
-      if (missCount > 12) break; // Ray is clearly missing, stop (was 8)
+      if (missCount > 16) break;
+    } else if (d < 0.0) {
+      missCount = 0; // Inside fractal = definitely not missing
     } else {
-      missCount = 0;
+      missCount = max(0, missCount - 1); // Gradually reset
     }
     lastD = d;
-    
+
     if (t > max_dist) break;
   }
 
-  // Refinement pass: BINARY SEARCH for precise surface convergence
-  // Much better than linear backtracking - converges in log2(precision) steps
+  // PHASE 4.31: SIGN-AWARE BINARY SEARCH
+  // Uses tracked sign change to properly bracket the surface
   if (!hit && t < max_dist) {
-    float tLow = t - abs(lastD) * 2.0; // Lower bound
-    float tHigh = t;                    // Upper bound
-    float tBest = t;                    // Best guess so far
-    for (int j = 0; j < 16; j++) {
+    float tLow, tHigh;
+
+    if (tSignChange > 0.0) {
+      // We have a sign change — surface is bracketed between tSignChange and t
+      tLow = tSignChange;
+      tHigh = t;
+    } else {
+      // No sign change — try stepping back to find surface
+      tLow = max(t - 2.0, near_clip);
+      tHigh = t;
+    }
+
+    float tBest = tHigh;
+    float bestD = 1e10;
+
+    for (int j = 0; j < 20; j++) {
       float tMid = (tLow + tHigh) * 0.5;
-      vec3 p = ro + rd * tMid;
-      float d = sceneSDF(p).x;
-      if (abs(d) < hitScale * 0.3) {
+      vec3 pMid = ro + rd * tMid;
+      float dMid = sceneSDF(pMid).x;
+      float absDMid = abs(dMid);
+
+      // Track best (closest to surface) point
+      if (absDMid < bestD) {
+        bestD = absDMid;
+        tBest = tMid;
+      }
+
+      // Hit check
+      if (absDMid < hit_threshold) {
         hit = true;
         t = tMid;
         break;
       }
-      // Track best (closest to surface) point even if we don't converge
-      if (abs(d) < abs(sceneSDF(ro + rd * tBest).x)) {
-        tBest = tMid;
+
+      // Binary search: use SIGN to determine which half contains the surface
+      // If dMid has same sign as d at tHigh, surface is in [tLow, tMid]
+      // If dMid has opposite sign from d at tHigh, surface is in [tMid, tHigh]
+      float dHigh = sceneSDF(ro + rd * tHigh).x;
+      if (dMid * dHigh > 0.0) {
+        // Same sign — surface is in lower half
+        tHigh = tMid;
+      } else {
+        // Opposite sign — surface is in upper half
+        tLow = tMid;
       }
-      // Binary search: narrow the interval
-      if (d > 0.0) tHigh = tMid; else tLow = tMid;
     }
-    // If binary search didn't converge, use best guess to prevent black holes
-    if (!hit) {
+
+    if (!hit && bestD < 0.5) {
+      // Didn't converge but found a close point — use it
       t = tBest;
+      hit = true;
     }
   }
 
-  // Near-miss fallback: if we got very close to surface but didn't converge,
-  // still render as surface to prevent black holes
-  bool nearMiss = !hit && abs(lastD) < hitScale * 5.0 && t < max_dist;
+  // PHASE 4.31: FINE-GRAINED FALLBACK SEARCH
+  // If main loop + binary search both failed, do a fine-grained linear search
+  // This catches surfaces that were skipped due to step size
+  if (!hit && t < max_dist) {
+    float tStart = max(t - 3.0, near_clip);
+    float fineStep = 0.02; // Small steps to catch any surface
+    float bestFineD = 1e10;
+    float bestFineT = t;
+
+    for (int k = 0; k < 80; k++) {
+      float tFine = tStart + float(k) * fineStep;
+      if (tFine > t) break;
+      float dFine = sceneSDF(ro + rd * tFine).x;
+      float absDFine = abs(dFine);
+      if (absDFine < bestFineD) {
+        bestFineD = absDFine;
+        bestFineT = tFine;
+      }
+      if (absDFine < hit_threshold) {
+        hit = true;
+        t = tFine;
+        break;
+      }
+    }
+
+    if (!hit && bestFineD < 0.3) {
+      t = bestFineT;
+      hit = true;
+    }
+  }
+
+  // Near-miss fallback: if we got close to surface, still render it
+  bool nearMiss = !hit && abs(lastD) < 0.5 && t < max_dist;
 
   float bg_rad = length(uv);
   vec3 col = vec3(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u_time * 0.3));
