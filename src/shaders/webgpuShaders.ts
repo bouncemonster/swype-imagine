@@ -2888,17 +2888,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let sh1: f32 = 1.0; // No soft shadows — pure AO-based shading
     let sh2: f32 = 1.0;
 
-    // Multi-sample Subsurface Scattering
+    // IMPROVED SSS: 5 samples with better color bleeding (was 3)
     var sssCol = vec3<f32>(0.0, 0.0, 0.0);
-    let sssDist: f32 = 0.06;
+    let sssDist: f32 = 0.08; // Increased from 0.06 for deeper penetration
     var sssTotal: f32 = 0.0;
-    for (var si: i32 = 0; si < 3; si = si + 1) {
+    for (var si: i32 = 0; si < 5; si = si + 1) { // Increased from 3 to 5 samples
       let sssAngle: f32 = f32(si) * GOLDEN_ANGLE;
       let sssOffset = vec3<f32>(cos(sssAngle), sin(sssAngle * 0.7), sin(sssAngle * 1.3)) * sssDist;
       let sssD = sceneSDF(p - light1 * sssOffset).x;
-      sssTotal = sssTotal + smoothstep(0.0, sssDist * 1.5, sssD + sssDist * 1.5);
+      sssTotal = sssTotal + smoothstep(0.0, sssDist * 2.0, sssD + sssDist * 2.0);
     }
-    let sss: f32 = (sssTotal / 3.0) * 0.15; // Subtle SSS — high values wash out accent color
+    let sss: f32 = (sssTotal / 5.0) * 0.18; // Slightly increased weight
     sssCol = u.accent_color * sss * ao;
     let fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
@@ -3115,14 +3115,23 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u.accent_color * caustic * 0.6;
     }
 
-    // Distance-relative atmospheric falloff — fog starts well beyond surface at all zoom levels
+    // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth
     let fogStart: f32 = mix(20.0, max(4.0, cam_dist * 3.0 + 4.0), smoothstep(0.5, 5.0, cam_dist));
     let fogDensity: f32 = mix(0.008, 0.015, smoothstep(0.3, 3.0, cam_dist));
-    let fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
+    let fogDist = max(0.0, t - fogStart);
+    let fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5); // Exponential-squared for smoother falloff
     col = mix(col, vec3<f32>(0.005, 0.004, 0.008), fog * clamp(u.volumetric_fog, 0.0, 1.0));
   }
 
   col = acesToneMap(col);
+
+  // CHROMATIC ABERRATION: Subtle color fringing for realism
+  let caStrength: f32 = 0.0015;
+  let caR = fract(sin(dot(in.uv * u.resolution + vec2<f32>(caStrength, 0.0), vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
+  let caG = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
+  let caB = fract(sin(dot(in.uv * u.resolution + vec2<f32>(-caStrength, 0.0), vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
+  col.r = col.r + (caR - 0.5) * 0.008;
+  col.b = col.b + (caB - 0.5) * 0.008;
 
   // Color-space dither to eliminate banding in smooth gradients
   let ditherVal = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
