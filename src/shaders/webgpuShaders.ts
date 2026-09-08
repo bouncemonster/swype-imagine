@@ -2537,26 +2537,34 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   // Refinement pass: snap to surface more precisely if we got close but didn't converge
+  var lastD: f32 = 1e10;
   if (!hit && t < max_dist) {
-    for (var j: i32 = 0; j < 12; j = j + 1) {
+    for (var j: i32 = 0; j < 16; j = j + 1) {
       let p2 = ro + rd * t;
       let d2 = sceneSDF(p2).x;
+      lastD = d2;
       if (abs(d2) < hitScale * 0.5) {
         hit = true;
         break;
       }
-      t = t - d2 * 0.6;
+      t = t - d2 * 0.5;
       if (t < 0.0) { t = 0.001; break; }
     }
   }
+
+  // Near-miss fallback: if we got very close to surface but didn't converge,
+  // still render as surface to prevent black holes
+  let nearMiss = !hit && abs(lastD) < hitScale * 5.0 && t < max_dist;
 
   let bg_rad = length(uv);
   var col = vec3<f32>(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u.time * 0.3));
   col = col + u.accent_color * 0.015 * exp(-bg_rad * 2.0);
 
-  if (hit) {
+  if (hit || nearMiss) {
     let p = ro + rd * t;
-    let base_n = calcNormal(p, min(0.001 * max(t, 0.1) + 0.0003, 0.002));
+    // Scale-adaptive normal epsilon: larger at close range to avoid precision noise
+    let normalEps = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
+    let base_n = calcNormal(p, normalEps);
     let ao = calcAO(p, base_n, t);
     var n = base_n;
     if (dot(n, rd) > 0.0) {

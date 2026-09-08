@@ -2431,26 +2431,34 @@ void main() {
   }
 
   // Refinement pass: snap to surface more precisely if we got close but didn't converge
+  float lastD = 1e10; // Track last SDF value for near-miss fallback
   if (!hit && t < max_dist) {
-    for (int j = 0; j < 12; j++) {
+    for (int j = 0; j < 16; j++) {
       vec3 p = ro + rd * t;
       float d = sceneSDF(p).x;
+      lastD = d;
       if (abs(d) < hitScale * 0.5) {
         hit = true;
         break;
       }
-      t -= d * 0.6; // Back-track and approach more carefully
+      t -= d * 0.5; // Gentler back-tracking for stability
       if (t < 0.0) { t = 0.001; break; }
     }
   }
+
+  // Near-miss fallback: if we got very close to surface but didn't converge,
+  // still render as surface to prevent black holes
+  bool nearMiss = !hit && abs(lastD) < hitScale * 5.0 && t < max_dist;
 
   float bg_rad = length(uv);
   vec3 col = vec3(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u_time * 0.3));
   col += u_accent_color * 0.015 * exp(-bg_rad * 2.0);
 
-  if (hit) {
+  if (hit || nearMiss) {
     vec3 p = ro + rd * t;
-    vec3 base_n = calcNormal(p, min(0.001 * max(t, 0.1) + 0.0003, 0.002));
+    // Scale-adaptive normal epsilon: larger at close range to avoid precision noise
+    float normalEps = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
+    vec3 base_n = calcNormal(p, normalEps);
     float ao = calcAO(p, base_n, t);
     vec3 n = base_n;
     if (dot(n, rd) > 0.0) {

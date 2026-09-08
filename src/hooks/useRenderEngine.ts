@@ -141,7 +141,7 @@ export function useRenderEngine(
     }
   }, [forcedBackend]);
 
-  // Resize handler
+  // Resize handler — always syncs canvas buffer to container CSS size × DPR
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -152,12 +152,14 @@ export function useRenderEngine(
     const clientW = container.clientWidth || window.innerWidth || 800;
     const clientH = container.clientHeight || window.innerHeight || 600;
 
-    const width = Math.floor(clientW * dpr);
-    const height = Math.floor(clientH * dpr);
+    const width = Math.max(Math.floor(clientW * dpr), 320);
+    const height = Math.max(Math.floor(clientH * dpr), 240);
 
     if (canvas.width !== width || canvas.height !== height) {
-      canvas.width = Math.max(width, 320);
-      canvas.height = Math.max(height, 240);
+      const oldW = canvas.width, oldH = canvas.height;
+      canvas.width = width;
+      canvas.height = height;
+      console.info(`[Resize] Canvas buffer: ${oldW}x${oldH} → ${width}x${height} (container: ${clientW}x${clientH}, DPR: ${dpr.toFixed(2)})`);
     }
   }, [isEmbeddedBrowser, isMobileDevice]);
 
@@ -250,6 +252,18 @@ export function useRenderEngine(
       onEngineReady?.();
     });
 
+    // Delayed resize re-check: ensures canvas buffer matches container after layout settles
+    // This fixes horizontal split artifacts caused by initial size mismatch
+    const delayedResizeId = setTimeout(() => {
+      if (!isDestroyed) {
+        handleResize();
+        // Also force a second check after a frame to catch any late layout shifts
+        requestAnimationFrame(() => {
+          if (!isDestroyed) handleResize();
+        });
+      }
+    }, 100);
+
     const handleContextLost = (e: Event) => {
       e.preventDefault();
       contextLostRef.current = true;
@@ -275,6 +289,7 @@ export function useRenderEngine(
       isDestroyed = true;
       clearTimeout(setupTimeoutId);
       clearTimeout(forceHideTimeoutId);
+      clearTimeout(delayedResizeId);
       canvas.removeEventListener('webglcontextlost', handleContextLost);
       canvas.removeEventListener('webglcontextrestored', handleContextRestored);
       if (resizeObserver) resizeObserver.disconnect();
