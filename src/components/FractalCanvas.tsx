@@ -167,18 +167,23 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
 
     const currentZoom = paramsRef.current.zoom;
-    // Reduced sensitivity: 0.0025 instead of 0.0045 for slower rotation
+    // Further reduced sensitivity: 0.0015 instead of 0.0025 for much slower rotation
     // Also clamped to prevent excessive speed at any zoom level
-    const dynamicSensitivity = 0.0025 * Math.max(0.15, Math.min(0.8, currentZoom / 3.0));
+    const dynamicSensitivity = 0.0015 * Math.max(0.1, Math.min(0.6, currentZoom / 3.0));
 
     velocityRef.current = { x: dx / dt, y: dy / dt };
+
+    // Limit maximum rotation per frame to prevent jerky movement
+    const maxRotationPerFrame = 0.08; // radians (~4.5 degrees)
+    const clampedDx = Math.max(-maxRotationPerFrame / dynamicSensitivity, Math.min(maxRotationPerFrame / dynamicSensitivity, dx));
+    const clampedDy = Math.max(-maxRotationPerFrame / dynamicSensitivity, Math.min(maxRotationPerFrame / dynamicSensitivity, dy));
 
     onParamsChange(prev => ({
       ...prev,
       // Clamp rotX to prevent infinite spinning (-PI to PI)
-      rotX: ((prev.rotX + dx * dynamicSensitivity + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI,
+      rotX: ((prev.rotX + clampedDx * dynamicSensitivity + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI,
       // Clamp rotY to prevent flipping (-85° to 85°)
-      rotY: Math.max(-1.48, Math.min(1.48, prev.rotY + dy * dynamicSensitivity)),
+      rotY: Math.max(-1.48, Math.min(1.48, prev.rotY + clampedDy * dynamicSensitivity)),
     }));
 
     userPrefEngine.recordInteraction('rotate', Math.hypot(dx, dy) / dt);

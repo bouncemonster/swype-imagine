@@ -2794,10 +2794,30 @@ vec2 sceneSDF(vec3 p_world) {
 }
 
 vec3 calcNormal(vec3 p, float eps) {
-  vec3 e1 = vec3(eps, -eps, -eps);
-  vec3 e2 = vec3(-eps, -eps, eps);
-  vec3 e3 = vec3(-eps, eps, -eps);
-  vec3 e4 = vec3(eps, eps, eps);
+  // Tetrahedral normal estimation with adaptive epsilon
+  // Use smaller eps for more detail at close range
+  float adaptiveEps = eps * 0.5; // Reduce for sharper normals
+  
+  vec3 e1 = vec3(adaptiveEps, -adaptiveEps, -adaptiveEps);
+  vec3 e2 = vec3(-adaptiveEps, -adaptiveEps, adaptiveEps);
+  vec3 e3 = vec3(-adaptiveEps, adaptiveEps, -adaptiveEps);
+  vec3 e4 = vec3(adaptiveEps, adaptiveEps, adaptiveEps);
+
+  vec3 n = e1 * sceneSDF(p + e1).x +
+           e2 * sceneSDF(p + e2).x +
+           e3 * sceneSDF(p + e3).x +
+           e4 * sceneSDF(p + e4).x;
+  float len = length(n);
+  return len > 0.00001 ? n / len : vec3(0.0, 1.0, 0.0);
+}
+
+// Micro-detail normal perturbation for surface detail
+vec3 calcMicroNormal(vec3 p, float scale) {
+  float microEps = 0.0005 * scale;
+  vec3 e1 = vec3(microEps, -microEps, -microEps);
+  vec3 e2 = vec3(-microEps, -microEps, microEps);
+  vec3 e3 = vec3(-microEps, microEps, -microEps);
+  vec3 e4 = vec3(microEps, microEps, microEps);
 
   vec3 n = e1 * sceneSDF(p + e1).x +
            e2 * sceneSDF(p + e2).x +
