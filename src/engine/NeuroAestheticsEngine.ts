@@ -646,7 +646,10 @@ export class NeuroAestheticsEngine {
   private saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   // Track recently shown types to maximize variety (anti-repetition)
   private recentTypes: FractalType[] = [];
-  private readonly RECENT_WINDOW = 8; // Don't repeat any of the last 8 types
+  private readonly RECENT_WINDOW = 20; // Increased from 8 to 20 for more variety
+  // EXPLORATION MODE: Ensure all fractal types are shown
+  private explorationIndex = 0;
+  private readonly EXPLORATION_MODE = true; // Show all types sequentially first
 
   constructor() {
     this.taste = this.loadTasteProfile();
@@ -813,32 +816,38 @@ export class NeuroAestheticsEngine {
     this.currentGeneration++;
     this.taste.totalSpecimensExplored++;
 
-    // 1. Select Fractal Type with anti-repetition + Thompson sampling for variety
+    // 1. Select Fractal Type with EXPLORATION MODE
     let selectedType = forceType;
     if (!selectedType) {
       const types = ALL_FRACTAL_TYPES;
       
-      // Thompson sampling: sample from Beta distribution for exploration vs exploitation
-      // Types not recently shown get a bonus; high-affinity types get higher base weight
-      const weights = types.map(t => {
-        const baseAffinity = Math.max(0.2, this.taste.typeAffinities[t] || 1.0);
-        // Heavy penalty for recently shown types (anti-repetition)
-        const recentPenalty = this.recentTypes.includes(t) ? 0.05 : 1.0;
-        // Exploration bonus: types explored less get a small boost
-        const explorationBonus = this.currentGeneration < 20 ? 1.5 : 1.0; // More exploration early on
-        return baseAffinity * recentPenalty * explorationBonus;
-      });
-      
-      const totalWeight = weights.reduce((acc, w) => acc + w, 0);
-      let rand = Math.random() * totalWeight;
-      for (let i = 0; i < types.length; i++) {
-        if (rand <= weights[i]) {
-          selectedType = types[i];
-          break;
+      // EXPLORATION MODE: Show all types sequentially first
+      if (this.EXPLORATION_MODE && this.explorationIndex < types.length) {
+        selectedType = types[this.explorationIndex];
+        this.explorationIndex++;
+        console.info(`[NeuroAesthetics] Exploration mode: showing type ${this.explorationIndex}/${types.length}: ${selectedType}`);
+      } else {
+        // After exploration, use Thompson sampling with reduced penalty
+        const weights = types.map(t => {
+          const baseAffinity = Math.max(0.2, this.taste.typeAffinities[t] || 1.0);
+          // REDUCED penalty for recently shown types (was 0.05, now 0.3)
+          const recentPenalty = this.recentTypes.includes(t) ? 0.3 : 1.0;
+          // Exploration bonus: types explored less get a small boost
+          const explorationBonus = this.currentGeneration < 20 ? 1.5 : 1.0;
+          return baseAffinity * recentPenalty * explorationBonus;
+        });
+        
+        const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+        let rand = Math.random() * totalWeight;
+        for (let i = 0; i < types.length; i++) {
+          if (rand <= weights[i]) {
+            selectedType = types[i];
+            break;
+          }
+          rand -= weights[i];
         }
-        rand -= weights[i];
+        if (!selectedType) selectedType = types[Math.floor(Math.random() * types.length)];
       }
-      if (!selectedType) selectedType = types[Math.floor(Math.random() * types.length)];
       
       // Track this type as recently shown
       this.recentTypes.push(selectedType);

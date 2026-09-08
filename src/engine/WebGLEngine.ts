@@ -211,6 +211,21 @@ export class WebGLEngine extends FractalEngineBase {
       return;
     }
 
+    // LOG FRACTAL TYPE for debugging black screens
+    const indices = this.computeIndices(params);
+    userProblemLogger.log({
+      level: 'info',
+      category: 'render',
+      message: `Rendering fractal type: ${params.type} (idx: ${indices.fractalIdx})`,
+      details: { 
+        type: params.type,
+        fractalIdx: indices.fractalIdx,
+        hybridType: params.hybridType,
+        renderStyle: params.renderStyle,
+        zoom: params.zoom
+      }
+    });
+
     // Start performance measurement
     const { duration: setupTime } = measurePerformance(() => {
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -218,7 +233,7 @@ export class WebGLEngine extends FractalEngineBase {
       gl.bindVertexArray(this.vao);
 
       const palette = this.resolvePalette(params);
-      const indices = this.computeIndices(params);
+      // indices already computed above for logging, reuse it
 
       // Upload all uniforms via packed buffer
       const packed = new Float32Array(48);
