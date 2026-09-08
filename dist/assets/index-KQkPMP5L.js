@@ -7465,12 +7465,19 @@ void main() {
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth
-    // Based on physically-based volumetric fog models
     float fogStart = mix(20.0, max(4.0, cam_dist * 3.0 + 4.0), smoothstep(0.5, 5.0, cam_dist));
     float fogDensity = mix(0.008, 0.015, smoothstep(0.3, 3.0, cam_dist));
     float fogDist = max(0.0, t - fogStart);
-    float fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5); // Exponential-squared for smoother falloff
+    float fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5);
     col = mix(col, vec3(0.005, 0.004, 0.008), fog * clamp(u_volumetric_fog, 0.0, 1.0));
+
+    // ATMOSPHERIC SCATTERING: Rayleigh-like scattering for realistic sky color
+    // Sun direction based on time for dynamic atmosphere
+    vec3 sunDir = normalize(vec3(cos(u_time * 0.1), 0.5, sin(u_time * 0.1)));
+    float sunAmount = max(dot(rd, sunDir), 0.0);
+    vec3 rayleighScatter = vec3(0.3, 0.5, 0.8) * pow(sunAmount, 2.0);
+    float atmosphere = 1.0 - exp(-t * 0.008);
+    col = mix(col, col + rayleighScatter * 0.15, clamp(atmosphere, 0.0, 1.0));
   }
 
   col = acesToneMap(col);
