@@ -3122,26 +3122,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let base_n = calcNormal(p, normalEps);
     let ao = calcAO(p, base_n, t);
     
-    // CURVATURE-BASED NORMAL PERTURBATION: Add micro-detail without extra SDF calls
-    var curvDetail: f32 = 0.0;
-    {
-      // FIX: Use consistent epsilon with normal calculation (was max(t, 0.1), now max(t, 0.05))
-      let ce = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
-      let dn1 = calcNormal(p + vec3<f32>(ce, 0.0, 0.0), ce) - base_n;
-      let dn2 = calcNormal(p + vec3<f32>(0.0, ce, 0.0), ce) - base_n;
-      curvDetail = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
-    }
-    // Perturb normal based on curvature for micro-detail
-    let perturbStrength = 0.15 * clamp(curvDetail / 3.0, 0.0, 1.0);
-    let perturbed_n = normalize(base_n + vec3<f32>(
-      sin(p.x * 50.0 + p.y * 30.0) * perturbStrength,
-      sin(p.y * 50.0 + p.z * 30.0) * perturbStrength,
-      sin(p.z * 50.0 + p.x * 30.0) * perturbStrength
-    ));
+    // TRAP-BASED CURVATURE: Derive surface complexity from orbit trap data
+    // Replaces expensive 8-SDF-evaluation normal perturbation with trap-driven curvature
+    // min_trap (from raymarching) measures closest approach to fractal orbit points
+    // Low trap = complex filamentary region, High trap = smooth region
+    let curvDetail: f32 = min_trap * 12.0;
+    let curvNorm: f32 = clamp(curvDetail / 3.0, 0.0, 1.0);
     
-    // Smooth normal flip — prevents hard lighting boundary at silhouette edge
+    // Use base normal directly — no perturbation noise
     let ndotv = dot(base_n, rd);
-    var n = select(perturbed_n, -perturbed_n, ndotv > 0.0);
+    var n = select(base_n, -base_n, ndotv > 0.0);
 
     let light1 = normalize(vec3<f32>(cos(u.time * 0.3), 1.2, sin(u.time * 0.3)));
     let light2 = normalize(vec3<f32>(-sin(u.time * 0.25 * GOLDEN_RATIO), -0.6, cos(u.time * 0.25 * GOLDEN_RATIO)));
@@ -3175,9 +3165,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let spec1 = pow(max(dot(n, h1), 0.0), 64.0);
     let spec2 = pow(max(dot(n, normalize(light2 - rd)), 0.0), 48.0);
     
-    // Reuse curvature from normal perturbation (already computed above)
-    let curv = curvDetail;
-    let curvNorm = clamp(curv / 5.0, 0.0, 1.0);
+    // curvNorm already computed above from trap-based curvature
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     let effectiveTrap = max(min_trap, curvNorm * 0.15);
     // FIX: More responsive trap detail (was 1.0 / (1.0 + effectiveTrap * 2.0))
@@ -3194,73 +3182,76 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     texDetail = texDetail * 0.15 + 0.85;
 
-    // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
-    // FIX: Added high-frequency hash noise to break up uniform color zones on IFS fractals
-    // IFS fractals (Mandelbox, KIFS) have flat faces with uniform normals/positions
-    // This caused each face to get a single dominant color with sharp boundaries
+    // IMPROVED: Reduced hash noise for smoother colors, enhanced normal-based variation
     let seedAnim = u.palette_seed + u.palette_rotation * u.time * 2.5;
-    let trapSmooth = effectiveTrap / (1.0 + effectiveTrap); // Soft saturation, no jumps
+    let trapSmooth = effectiveTrap / (1.0 + effectiveTrap);
     
-    // High-frequency hash noise for color variation within each face
-    let hashNoise = fract(sin(dot(p * 17.3 + 127.1, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
-    let hashNoise2 = fract(sin(dot(p * 31.7 + 269.5, vec3<f32>(63.726, 10.873, 91.345))) * 23421.6312);
-    let hashNoise3 = fract(sin(dot(p * 47.1 + 419.2, vec3<f32>(23.456, 89.012, 34.567))) * 54321.9876);
-    
-    // CRITICAL FIX: Use normal-based coloring to break horizontal symmetry
+    // Normal-based coloring breaks horizontal symmetry without noise artifacts
     let normalPhase = dot(n, vec3<f32>(1.0, 0.0, 0.0)) * 0.5 + 0.5;
     let normalPhase2 = dot(n, vec3<f32>(0.0, 1.0, 0.0)) * 0.5 + 0.5;
     let normalPhase3 = dot(n, vec3<f32>(0.0, 0.0, 1.0)) * 0.5 + 0.5;
     
-    // Phase with normal-based dominance to break horizontal splits
+    // Reduced hash noise — was 0.4+0.25+0.15=0.8 (grainy), now 0.15+0.1+0.05=0.3 (smooth)
+    let hashNoise = fract(sin(dot(p * 17.3 + 127.1, vec3<f32>(12.9898, 78.233, 45.164))) * 43758.5453);
+    let hashNoise2 = fract(sin(dot(p * 31.7 + 269.5, vec3<f32>(63.726, 10.873, 91.345))) * 23421.6312);
+    let hashNoise3 = fract(sin(dot(p * 47.1 + 419.2, vec3<f32>(23.456, 89.012, 34.567))) * 54321.9876);
+    
+    // IMPROVED phase: normal-dominant, less noisy, depth-aware
     let phase = fract(
-      normalPhase * 0.5 +            // Normal X (NEW - breaks symmetry)
-      normalPhase2 * 0.3 +           // Normal Y (NEW)
-      normalPhase3 * 0.2 +           // Normal Z (NEW)
-      hashNoise * 0.4 +              // Primary noise
-      hashNoise2 * 0.25 +            // Secondary noise
-      hashNoise3 * 0.15 +            // Tertiary noise
-      trapSmooth * 0.2 +             // Orbit trap (further reduced)
-      curvNorm * 0.3 +               // Curvature (further reduced)
-      p.y * 0.05 + p.x * 0.03 + p.z * 0.02 +  // Position (minimal)
-      length(p - ro) * 0.02 +        // Distance (minimal)
-      u.time * 0.04 + seedAnim * 0.01 + 0.37  // Animation + constant offset
+      normalPhase * 0.45 +
+      normalPhase2 * 0.30 +
+      normalPhase3 * 0.15 +
+      hashNoise * 0.15 +
+      hashNoise2 * 0.10 +
+      hashNoise3 * 0.05 +
+      trapSmooth * 0.25 +
+      curvNorm * 0.20 +
+      p.y * 0.04 + p.x * 0.02 + p.z * 0.02 +
+      length(p - ro) * 0.015 +
+      u.time * 0.03 + seedAnim * 0.01 + 0.37
     );
     let w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     let w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     let w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
+    // IMPROVED material: richer color mixing with depth-based accent
     var mat_col = u.primary_color * w_primary + u.secondary_color * w_secondary;
-    mat_col = mix(mat_col, u.accent_color, w_accent * 0.30);
-    mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.18);
-    // Orbit trap direct coloring with saturation-safe effectiveTrap
-    // FIX: More visible orbit trap coloring (was 0.30 / (1.0 + effectiveTrap * 2.5))
-    let trapWeight = clamp(0.45 / (1.0 + effectiveTrap * 1.2), 0.0, 0.55);
+    mat_col = mix(mat_col, u.accent_color, w_accent * 0.35);
+    let depthFade = clamp(t / 30.0, 0.0, 1.0);
+    mat_col = mix(mat_col, u.accent_color * 0.7, depthFade * 0.15);
+    mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.20);
+    let trapWeight = clamp(0.50 / (1.0 + effectiveTrap * 1.0), 0.0, 0.60);
     mat_col = mix(mat_col, u.accent_color * (0.5 + trapDetail * 0.5), trapWeight);
-
-    // Apply procedural fractal texture detail
     mat_col = mat_col * texDetail;
 
-    // Environment ambient: sample SDF along normal for color-bleeding approximation
+    // IMPROVED PBR Lighting: Environment reflections + better balance
     let envOcc = sceneSDF(p + n * 0.15).x;
     let envFactor = clamp(envOcc * 6.0, 0.0, 1.0);
-    let ambientCol = mix(u.secondary_color * 0.25, u.primary_color * 0.15, envFactor);
+    let ambientCol = mix(u.secondary_color * 0.30, u.primary_color * 0.18, envFactor);
     let ambient = ambientCol * ao;
-    // Secondary bounce light: light bouncing off nearby surfaces into crevices
+    
+    // IMPROVED: Environment reflection
+    let reflectDir = reflect(rd, n);
+    let envReflDist = sceneSDF(p + reflectDir * 0.3).x;
+    let envRefl = clamp(1.0 - envReflDist * 4.0, 0.0, 1.0);
+    var reflCol = mix(u.secondary_color, u.accent_color, envRefl) * envRefl * 0.25;
+    reflCol = reflCol * (0.3 + 0.7 * fresnel);
+    
     let bounceDir = normalize(-light1 + n * 0.5);
     let bounce = max(dot(n, bounceDir), 0.0) * 0.12;
     let bounceOcc = clamp(sceneSDF(p - light1 * 0.08).x * 12.0, 0.0, 1.0);
     let bounceCol = u.secondary_color * bounce * bounceOcc * ao;
 
     let diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    // FIX: Brighter, sharper specular with both lights (was only spec1)
-    let specular = vec3<f32>(1.0, 0.97, 0.92) * (spec1 * 1.2 + spec2 * 0.6) * ao;
-    // FIX: Stronger rim lighting for better edge definition (was 0.45)
-    let rim = u.accent_color * fresnel * 0.7 * (0.3 + 0.7 * ao);
+    // IMPROVED specular: material-tinted for colored highlights
+    let specColor = mix(vec3<f32>(1.0, 0.97, 0.92), mat_col, 0.15);
+    let specular = specColor * (spec1 * 1.3 + spec2 * 0.7) * ao;
+    // IMPROVED rim: stronger at grazing angles
+    let rim = u.accent_color * fresnel * 0.8 * (0.3 + 0.7 * ao);
 
-    // Full lighting: ambient + diffuse + bounce + specular + rim + SSS
-    // FIX: Better balanced lighting with more contrast (was 0.4 + 0.6 * ao)
-    col = ambient * 0.5 + diffuse * 1.4 + bounceCol * 1.8 + specular * 1.3 + rim * 1.5 + sssCol * 1.8;
-    col = col * (0.3 + 0.7 * ao); // Stronger AO contrast for more depth
+    // IMPROVED full lighting: ambient + refl + diffuse + bounce + specular + rim + SSS
+    col = ambient * 0.5 + reflCol + diffuse * 1.4 + bounceCol * 1.8 + specular * 1.3 + rim * 1.5 + sssCol * 1.8;
+    col = col * (0.3 + 0.7 * ao);
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u.headlamp_power > 0.01) {
@@ -3349,23 +3340,29 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       holoCol = holoCol + u.primary_color * trapDetail * 0.3;
       col = mix(col * 0.08, holoCol, 0.93);
     } else if (u.render_style > 3.5 && u.render_style < 4.5) {
-      // 4. Радужная интерференция: Curvature-varying film thickness
+      // 4. Радужная интерференция: IMPROVED thin-film interference
       let nv = max(dot(n, -rd), 0.0);
       let filmThickness = 0.5 + curvNorm * 0.8 + trapDetail * 0.3;
+      // IMPROVED: 5 interference orders for richer rainbow (was 3)
       let order1 = nv * 3.0 * filmThickness + min_trap * 0.5;
       let order2 = nv * 5.0 * filmThickness + min_trap * 0.3 + u.time * 0.08;
       let order3 = nv * 7.0 * filmThickness + min_trap * 0.2;
-      let iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
-      let iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
+      let order4 = nv * 9.0 * filmThickness + min_trap * 0.15 - u.time * 0.05;
+      let order5 = nv * 11.0 * filmThickness + min_trap * 0.1;
+      let iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33 + order4 * 0.1));
+      let iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33 + order5 * 0.08));
       let iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
       var iridCol = vec3<f32>(iridR, iridG, iridB);
+      // IMPROVED specular: removed dead sh1 variable
       let hIrid = normalize(light1 - rd);
       let specAngle = max(dot(n, hIrid), 0.0);
-      let specIrid = vec3<f32>(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
-      iridCol = iridCol * (0.7 + trapDetail * 0.3);
+      let specIrid = vec3<f32>(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * 2.5;
+      // Add subtle diffuse lighting
+      let iridDiff = max(dot(n, light1), 0.0) * 0.3;
+      iridCol = iridCol * (0.6 + trapDetail * 0.3 + iridDiff);
       col = iridCol * (0.45 + 0.55 * ao) + specIrid;
     } else if (u.render_style > 4.5 && u.render_style < 5.5) {
-      // 5. Квантовое поле: Trap-based probability + curvature energy density
+      // 5. Квантовое поле: IMPROVED with PBR integration
       let wave1 = sin(length(p) * 12.0 - u.time * 3.5);
       let wave2 = cos(dot(p, normalize(vec3<f32>(1.618, 1.0, 0.618))) * 7.0 + u.time * 2.2);
       let wave3 = sin(dot(p, normalize(vec3<f32>(-0.618, 1.618, 1.0))) * 9.0 - u.time * 1.8);
@@ -3375,25 +3372,37 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       let plasmaCold = u.secondary_color * (0.25 + probability * 0.5);
       let plasmaHot = u.accent_color * (0.6 + energy * 1.8);
       var qCol = mix(plasmaCold, plasmaHot, energy);
+      // IMPROVED: Add PBR diffuse lighting
+      let plasmaDiff = max(dot(n, light1), 0.0) * 0.4 + max(dot(n, light2), 0.0) * 0.15;
+      qCol = qCol * (0.7 + plasmaDiff * 0.3);
+      // IMPROVED: Add specular highlights
+      let hPlasma = normalize(light1 - rd);
+      let plasmaSpec = pow(max(dot(n, hPlasma), 0.0), 32.0);
+      qCol = qCol + vec3<f32>(0.8, 0.9, 1.0) * plasmaSpec * 0.5;
       qCol = qCol + u.accent_color * pow(fresnel, 2.0) * 1.2;
       qCol = qCol + u.primary_color * curvNorm * 0.35;
       qCol = qCol * (0.6 + trapDetail * 0.4);
       col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
     } else if (u.render_style > 5.5) {
-      // 6. Кристалл: Curvature facets + trap inclusions + Beer-Lambert
-      let beerDist = min(max(t - 0.5, 0.0), 20.0); // Clamp to prevent black-out at extreme depths
-      let beer = exp(-beerDist * vec3<f32>(0.08, 0.25, 0.9));
+      // 6. Кристалл: IMPROVED with internal reflections + better Beer-Lambert
+      let beerDist = min(max(t - 0.5, 0.0), 20.0);
+      // IMPROVED: Asymmetric absorption
+      let beer = exp(-beerDist * vec3<f32>(0.06, 0.18, 0.7));
       let caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
       let caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       let caustic = caustic1 + caustic2;
       let facetStrength = 0.3 + curvNorm * 0.7;
       let refractCol = mix(u.primary_color, u.accent_color, fresnel * facetStrength);
       var gemCol = refractCol * beer;
-      let gemSpec = vec3<f32>(1.0, 0.96, 0.82) * spec1 * 2.0;
+      // IMPROVED: Internal reflection
+      let internalReflDir = reflect(rd, n);
+      let internalRefl = clamp(1.0 - sceneSDF(p + internalReflDir * 0.15).x * 6.0, 0.0, 1.0);
+      gemCol = gemCol + u.accent_color * internalRefl * beer * 0.2;
+      let gemSpec = vec3<f32>(1.0, 0.96, 0.82) * spec1 * 2.2;
       let dispersion = fresnel * (0.1 + curvNorm * 0.15);
       gemCol.r = gemCol.r * (1.0 + dispersion);
       gemCol.b = gemCol.b * (1.0 - dispersion * 0.5);
-      gemCol = gemCol + u.secondary_color * trapDetail * 0.2 * beer;
+      gemCol = gemCol + u.secondary_color * trapDetail * 0.25 * beer;
       gemCol = gemCol * facetStrength;
       col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u.accent_color * caustic * 0.6;
     }
@@ -3407,8 +3416,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   col = acesToneMap(col);
-  
-    // MINIMUM BRIGHTNESS FLOOR: Prevent completely black pixels
+
+  // BLOOM SIMULATION: Brightness-based glow for light sources and specular highlights
+  let brightness = dot(col, vec3<f32>(0.299, 0.587, 0.114));
+  let bloomThreshold: f32 = 0.6;
+  let bloomStrength = max(brightness - bloomThreshold, 0.0) * 0.35;
+  let bloomCol = col * bloomStrength + u.accent_color * bloomStrength * 0.15;
+  col = col + bloomCol;
+
+  // MINIMUM BRIGHTNESS FLOOR: Prevent completely black pixels
     col = max(col, vec3<f32>(0.004, 0.003, 0.005));
 
   // CHROMATIC ABERRATION: Subtle color fringing for realism
