@@ -2383,7 +2383,12 @@ fn calcAO(p: vec3<f32>, n: vec3<f32>) -> f32 {
     occ = occ + (h - d) * sca;
     sca = sca * 0.74;
   }
-  return clamp(1.0 - 2.8 * occ, 0.08, 1.0);
+  // IQ multi-distance AO: captures both fine and large-scale occlusion
+  let ao1 = clamp(1.0 - 4.0 * max(0.005 - sceneSDF(p + n * 0.005).x, 0.0), 0.0, 1.0);
+  let ao2 = clamp(1.0 - 2.5 * max(0.03  - sceneSDF(p + n * 0.03).x,  0.0), 0.0, 1.0);
+  let ao3 = clamp(1.0 - 1.5 * max(0.12  - sceneSDF(p + n * 0.12).x,  0.0), 0.0, 1.0);
+  let multiAO = ao1 * 0.25 + ao2 * 0.40 + ao3 * 0.35;
+  return clamp(multiAO * (1.0 - 1.5 * occ), 0.06, 1.0);
 }
 
 fn acesToneMap(x: vec3<f32>) -> vec3<f32> {
@@ -2551,14 +2556,27 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var mat_col = u.primary_color * w_primary + u.secondary_color * w_secondary;
     mat_col = mix(mat_col, u.accent_color, w_accent * 0.12); // Subtle accent — high values wash out to white
     mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.08); // Low-edge accent tint
+    // Orbit trap direct coloring: fine fractal structure modulates material (Syntopia/IQ technique)
+    let trapWeight = clamp(0.25 / (1.0 + min_trap * 3.0), 0.0, 0.35);
+    mat_col = mix(mat_col, u.accent_color * (0.6 + trapDetail * 0.4), trapWeight);
 
-    let ambient = u.primary_color * 0.12 * ao;
+    // Environment ambient: sample SDF along normal for color-bleeding approximation
+    let envOcc = sceneSDF(p + n * 0.15).x;
+    let envFactor = clamp(envOcc * 6.0, 0.0, 1.0);
+    let ambientCol = mix(u.secondary_color * 0.25, u.primary_color * 0.15, envFactor);
+    let ambient = ambientCol * ao;
+    // Secondary bounce light: light bouncing off nearby surfaces into crevices
+    let bounceDir = normalize(-light1 + n * 0.5);
+    let bounce = max(dot(n, bounceDir), 0.0) * 0.12;
+    let bounceOcc = clamp(sceneSDF(p - light1 * 0.08).x * 12.0, 0.0, 1.0);
+    let bounceCol = u.secondary_color * bounce * bounceOcc * ao;
+
     let diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
     let specular = mat_col * spec1 * 0.35 * ao; // Tinted by material color — never white
     let rim = u.accent_color * fresnel * 0.18 * (0.3 + 0.7 * ao); // Subtle rim — high values create white edges
 
-    // Clean surface lighting: no headlamp, minimal SSS
-    col = ambient + diffuse + specular + rim + sssCol;
+    // Full lighting: ambient + diffuse + bounce + specular + rim + SSS
+    col = ambient + diffuse + bounceCol + specular + rim + sssCol;
     col = col * (0.22 + 0.78 * ao); // Stronger AO contrast for depth
 
     // If slice plane is active, highlight the glowing cut rim

@@ -586,8 +586,8 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     // Exponential proportional zoom prevents linear overshoot at close range
     const zoomFactor = Math.exp(Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY) * 0.0018, 0.28));
     
-    // Register neuro-interaction zoom engagement
-    onInteraction?.(Math.abs(e.deltaY) * 0.02, 0);
+    // Register neuro-interaction zoom engagement (use ref to avoid stale closure)
+    onInteractionRef.current?.(Math.abs(e.deltaY) * 0.02, 0);
 
     onParamsChange(prev => ({
       ...prev,
@@ -608,7 +608,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       if (touchDistanceRef.current !== null && touchDistanceRef.current > 5) {
         const ratio = touchDistanceRef.current / Math.max(dist, 1);
         const touchFactor = Math.pow(ratio, 0.95);
-        onInteraction?.(Math.abs(touchDistanceRef.current - dist) * 0.04, 0);
+        onInteractionRef.current?.(Math.abs(touchDistanceRef.current - dist) * 0.04, 0);
 
         onParamsChange(prev => ({
           ...prev,
