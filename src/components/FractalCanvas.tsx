@@ -248,6 +248,8 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     setup().catch((err) => {
       console.error('[FractalCanvas] Engine setup crashed:', err);
       setIsCompiling(false);
+      // CRITICAL: Always dismiss loader even on crash — otherwise stuck for 15s
+      onEngineReady?.();
     });
 
     // Handle GPU context loss and restore gracefully

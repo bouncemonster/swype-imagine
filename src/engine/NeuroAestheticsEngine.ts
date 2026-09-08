@@ -924,6 +924,19 @@ export class NeuroAestheticsEngine {
       this.taste.preferredGlow = this.taste.preferredGlow * 0.99 + specimen.glowIntensity * 0.01;
       this.taste.preferredIterations = Math.round(this.taste.preferredIterations * 0.99 + specimen.iterations * 0.01);
 
+      // Learn preferred hue from specimen palette primary color (RGB → hue)
+      const [pr, pg, pb] = specimen.palette.primary;
+      const pMax = Math.max(pr, pg, pb), pMin = Math.min(pr, pg, pb);
+      const pDelta = pMax - pMin;
+      if (pDelta > 0.05) {
+        let specimenHue = 0;
+        if (pMax === pr) specimenHue = 60 * (((pg - pb) / pDelta) % 6);
+        else if (pMax === pg) specimenHue = 60 * (((pb - pr) / pDelta) + 2);
+        else specimenHue = 60 * (((pr - pg) / pDelta) + 4);
+        if (specimenHue < 0) specimenHue += 360;
+        this.taste.preferredHue = (this.taste.preferredHue * 0.97 + specimenHue * 0.03) % 360;
+      }
+
       if (specimen.affinityScore > this.taste.highestResonanceScore) {
         this.taste.highestResonanceScore = specimen.affinityScore;
       }

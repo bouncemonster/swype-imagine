@@ -2282,9 +2282,20 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
 
   // 4. Tertiary Layer Evaluation (Only evaluated in direct proximity to surface)
   if (u.tertiary_blend > 0.03 && current_d < 0.1) {
-    let resC = evalSingleFractal(ftypeC, p_eval, t, phi, 4);
-    let blendC = clamp(u.tertiary_blend, 0.0, 0.35);
-    current_d = opSmoothUnion(current_d, resC.x, k * blendC * 0.5);
+    let resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(iters / 2, 6, 16));
+    let blendC = clamp(u.tertiary_blend, 0.05, 0.35);
+    // Apply user-selected composite operator for consistent tertiary blending
+    if (compOp == 2) {
+      let h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
+      current_d = mix(resC.x, current_d, h) + k * h * (1.0 - h);
+    } else if (compOp == 3) {
+      let h = clamp(0.5 - 0.5 * (resC.x + current_d) / k, 0.0, 1.0);
+      current_d = mix(current_d, -resC.x, h) + k * h * (1.0 - h);
+    } else if (compOp == 0) {
+      current_d = mix(current_d, resC.x, blendC * 0.5);
+    } else {
+      current_d = opSmoothUnion(current_d, resC.x, k * blendC * 1.5);
+    }
     current_trap = min(current_trap, resC.y);
   }
 
@@ -2482,9 +2493,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       break;
     }
 
-    // Adaptive step sizing: conservative to prevent tunneling through thin structures
-    let step_factor = select(0.65, 0.85, abs(d) > 0.2);
-    let step_d = max(abs(d) * step_factor, 0.0005);
+    // Balanced step sizing: allows reaching surfaces within 112-step budget
+    let step_factor = select(0.78, 0.92, abs(d) > 0.2);
+    let step_d = max(abs(d) * step_factor, 0.001);
     t = t + step_d;
     if (t > max_dist) {
       break;
@@ -2570,40 +2581,51 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     // ===================================================================
     // Rendering Modalities: 7 Math-Driven Visualization Techniques
-    // Each reveals different mathematical properties of the fractal
-    // ZERO extra SDF calls — uses only already-computed data
+    // Curvature-enhanced: uses normal variation for rich surface detail
     // ===================================================================
-    
+
+    // Surface curvature from normal variation (2 extra SDF calls)
+    let ce: f32 = min(0.001 * t + 0.0005, 0.003);
+    let dn1 = calcNormal(p + vec3<f32>(ce, 0.0, 0.0), ce) - n;
+    let dn2 = calcNormal(p + vec3<f32>(0.0, ce, 0.0), ce) - n;
+    let curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
+    let curvNorm = clamp(curv / 5.0, 0.0, 1.0);
+    let trapDetail = clamp(1.0 / (1.0 + min_trap * 2.0), 0.0, 1.0);
+
     if (u.render_style > 0.5 && u.render_style < 1.5) {
-      // 1. X-Ray Томография: Density gradient + surface curvature + interior glow
-      let dens = f32(steps) / 90.0;
-      let surfaceEdge = pow(1.0 - ao, 2.0);
-      let xrayCore = u.accent_color * (0.3 + dens * 1.2);
-      let xrayShell = u.secondary_color * (0.2 + surfaceEdge * 0.8);
-      var xrayCol = mix(xrayCore, xrayShell, 0.4 + 0.6 * ao);
-      xrayCol = xrayCol + vec3<f32>(0.05, 0.12, 0.2) * surfaceEdge * 1.5;
-      xrayCol = xrayCol + u.primary_color * surfaceEdge * 0.6;
-      col = mix(col * 0.2, xrayCol * 1.4, 0.7 + 0.3 * ao);
+      // 1. X-Ray Томография: Curvature bone density + orbit trap vasculature
+      let dens = clamp(f32(steps) / 65.0, 0.0, 1.0);
+      let boneDensity = mix(0.2, 1.0, curvNorm * 0.6 + ao * 0.4);
+      let xrayCore = u.accent_color * boneDensity * (0.4 + trapDetail * 0.8);
+      let xrayVessel = u.primary_color * trapDetail * (0.3 + dens * 0.7);
+      let edgeGlow = pow(1.0 - ao, 2.5) * (0.5 + curvNorm * 0.5);
+      let xrayShell = u.secondary_color * edgeGlow;
+      var xrayCol = mix(xrayVessel, xrayCore, boneDensity) + xrayShell * 0.6;
+      xrayCol = xrayCol + u.accent_color * curvNorm * 0.4;
+      col = mix(col * 0.15, xrayCol * 1.5, 0.75 + 0.25 * ao);
     } else if (u.render_style > 1.5 && u.render_style < 2.5) {
-      // 2. Топография: Normal-based elevation contours + slope shading
+      // 2. Топография: Curvature-enhanced ridges + multi-scale contours
       let elevation = dot(n, vec3<f32>(0.0, 1.0, 0.0)) * 0.5 + 0.5;
-      let contourRaw = abs(fract(elevation * 12.0) - 0.5) * 2.0;
-      let contour = smoothstep(0.0, 0.08, contourRaw);
-      let topoLow = u.secondary_color * 0.4;
-      let topoHigh = u.primary_color * (0.6 + elevation * 0.8);
-      let topoRidge = u.accent_color * (0.8 + elevation * 1.2);
+      let contour1 = abs(fract(elevation * 14.0) - 0.5) * 2.0;
+      let contour2 = abs(fract(elevation * 5.0 + curvNorm * 0.4) - 0.5) * 2.0;
+      let contourRaw = min(contour1, contour2);
+      let contour = smoothstep(0.0, 0.06, contourRaw);
+      let ridgeLine = smoothstep(0.35, 0.65, curvNorm);
+      let topoLow = u.secondary_color * (0.3 + trapDetail * 0.2);
+      let topoHigh = u.primary_color * (0.5 + elevation * 0.9);
+      let topoRidge = u.accent_color * (0.7 + curvNorm * 1.3);
       var topoCol = mix(topoLow, topoHigh, elevation);
-      topoCol = mix(topoCol, topoRidge, elevation * 0.7);
-      topoCol = mix(topoCol, topoCol * 1.8, (1.0 - contour) * 0.5);
+      topoCol = mix(topoCol, topoRidge, ridgeLine * 0.6 + elevation * 0.3);
+      topoCol = mix(topoCol, topoCol * 2.0, (1.0 - contour) * 0.45);
       let slope = 1.0 - abs(dot(n, vec3<f32>(0.0, 1.0, 0.0)));
-      topoCol = topoCol * (0.5 + 0.5 * slope);
-      col = topoCol * (0.5 + 0.5 * ao);
+      topoCol = topoCol * (0.4 + 0.6 * slope);
+      col = topoCol * (0.4 + 0.6 * ao);
     } else if (u.render_style > 2.5 && u.render_style < 3.5) {
-      // 3. Голографическая проекция: Chromatic aberration + scan lines + shimmer
+      // 3. Голографическая проекция: Curvature wireframe + data glitch + scan lines
       let depthNorm = clamp(t / 20.0, 0.0, 1.0);
-      let rOff = sin(depthNorm * 20.0 + u.time * 3.0) * 0.02;
-      let gOff = sin(depthNorm * 20.0 + u.time * 3.0 + 2.094) * 0.02;
-      let bOff = sin(depthNorm * 20.0 + u.time * 3.0 + 4.189) * 0.02;
+      let rOff = sin(depthNorm * 20.0 + u.time * 3.0) * 0.025;
+      let gOff = sin(depthNorm * 20.0 + u.time * 3.0 + 2.094) * 0.025;
+      let bOff = sin(depthNorm * 20.0 + u.time * 3.0 + 4.189) * 0.025;
       let holoBase = vec3<f32>(
         u.primary_color.r * (1.0 + rOff),
         u.primary_color.g * (1.0 + gOff),
@@ -2611,51 +2633,63 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       );
       let holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
       let scanFreq = 180.0 + depthNorm * 120.0;
-      let scanline = 0.85 + 0.15 * sin(in.uv.y * scanFreq + u.time * 8.0);
-      let shimmer = 0.9 + 0.1 * sin(u.time * 5.0 + length(p) * 10.0);
-      var holoCol = holoBase * (0.4 + holoFres * 1.2) * scanline * shimmer;
-      holoCol = holoCol + u.accent_color * pow(1.0 - ao, 2.0) * 2.0;
-      holoCol = holoCol + vec3<f32>(0.1, 0.3, 0.5) * holoFres * 1.5;
-      col = mix(col * 0.1, holoCol, 0.92);
+      let scanline = 0.82 + 0.18 * sin(in.uv.y * scanFreq + u.time * 8.0);
+      let wireframe = smoothstep(0.3, 0.7, curvNorm);
+      let glitch = step(0.96, fract(sin(dot(p, vec3<f32>(12.9898, 78.233, 45.164)) + u.time * 2.0) * 43758.5));
+      let shimmer = 0.88 + 0.12 * sin(u.time * 5.0 + length(p) * 10.0);
+      var holoCol = holoBase * (0.35 + holoFres * 1.4 + wireframe * 0.5) * scanline * shimmer;
+      holoCol = holoCol + u.accent_color * wireframe * 1.2;
+      holoCol = holoCol + vec3<f32>(0.15, 0.4, 0.7) * holoFres * 1.5;
+      holoCol = holoCol + u.accent_color * glitch * 3.0;
+      holoCol = holoCol + u.primary_color * trapDetail * 0.3;
+      col = mix(col * 0.08, holoCol, 0.93);
     } else if (u.render_style > 3.5 && u.render_style < 4.5) {
-      // 4. Радужная интерференция: Multi-order thin-film interference
+      // 4. Радужная интерференция: Curvature-varying film thickness
       let nv = max(dot(n, -rd), 0.0);
-      let order1 = nv * 3.0 + min_trap * 0.5;
-      let order2 = nv * 5.0 + min_trap * 0.3 + u.time * 0.08;
-      let order3 = nv * 7.0 + min_trap * 0.2;
+      let filmThickness = 0.5 + curvNorm * 0.8 + trapDetail * 0.3;
+      let order1 = nv * 3.0 * filmThickness + min_trap * 0.5;
+      let order2 = nv * 5.0 * filmThickness + min_trap * 0.3 + u.time * 0.08;
+      let order3 = nv * 7.0 * filmThickness + min_trap * 0.2;
       let iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
       let iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
       let iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
-      let iridCol = vec3<f32>(iridR, iridG, iridB);
+      var iridCol = vec3<f32>(iridR, iridG, iridB);
       let hIrid = normalize(light1 - rd);
       let specAngle = max(dot(n, hIrid), 0.0);
       let specIrid = vec3<f32>(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
-      col = iridCol * (0.5 + 0.5 * ao) + specIrid;
+      iridCol = iridCol * (0.7 + trapDetail * 0.3);
+      col = iridCol * (0.45 + 0.55 * ao) + specIrid;
     } else if (u.render_style > 4.5 && u.render_style < 5.5) {
-      // 5. Квантовое поле: 3 standing waves on golden vectors + interference
+      // 5. Квантовое поле: Trap-based probability + curvature energy density
       let wave1 = sin(length(p) * 12.0 - u.time * 3.5);
       let wave2 = cos(dot(p, normalize(vec3<f32>(1.618, 1.0, 0.618))) * 7.0 + u.time * 2.2);
       let wave3 = sin(dot(p, normalize(vec3<f32>(-0.618, 1.618, 1.0))) * 9.0 - u.time * 1.8);
       let interference = (wave1 + wave2 + wave3) / 3.0;
-      let energy = pow(abs(interference), 0.7);
-      let plasmaCold = u.secondary_color * (0.3 + energy * 0.5);
-      let plasmaHot = u.accent_color * (0.8 + energy * 1.5);
+      let probability = trapDetail * 0.6 + (0.5 + 0.5 * interference) * 0.4;
+      let energy = pow(abs(interference), 0.7) * (0.5 + curvNorm * 0.5);
+      let plasmaCold = u.secondary_color * (0.25 + probability * 0.5);
+      let plasmaHot = u.accent_color * (0.6 + energy * 1.8);
       var qCol = mix(plasmaCold, plasmaHot, energy);
       qCol = qCol + u.accent_color * pow(fresnel, 2.0) * 1.2;
-      col = qCol * (0.4 + 0.6 * ao) + sssCol * 1.2;
+      qCol = qCol + u.primary_color * curvNorm * 0.35;
+      qCol = qCol * (0.6 + trapDetail * 0.4);
+      col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
     } else if (u.render_style > 5.5) {
-      // 6. Кристалл: Beer-Lambert + dual caustic + spectral dispersion
+      // 6. Кристалл: Curvature facets + trap inclusions + Beer-Lambert
       let beer = exp(-max(t - 0.5, 0.0) * vec3<f32>(0.08, 0.25, 0.9));
       let caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
       let caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       let caustic = caustic1 + caustic2;
-      let refractCol = mix(u.primary_color, u.accent_color, fresnel * 0.7);
+      let facetStrength = 0.3 + curvNorm * 0.7;
+      let refractCol = mix(u.primary_color, u.accent_color, fresnel * facetStrength);
       var gemCol = refractCol * beer;
       let gemSpec = vec3<f32>(1.0, 0.96, 0.82) * spec1 * 2.0;
-      let dispersion = fresnel * 0.15;
+      let dispersion = fresnel * (0.1 + curvNorm * 0.15);
       gemCol.r = gemCol.r * (1.0 + dispersion);
       gemCol.b = gemCol.b * (1.0 - dispersion * 0.5);
-      col = gemCol * (0.7 + 0.3 * ao) + gemSpec + u.accent_color * caustic * 0.6;
+      gemCol = gemCol + u.secondary_color * trapDetail * 0.2 * beer;
+      gemCol = gemCol * facetStrength;
+      col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u.accent_color * caustic * 0.6;
     }
 
     // Distance-relative atmospheric falloff

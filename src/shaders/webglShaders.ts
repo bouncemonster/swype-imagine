@@ -2219,9 +2219,20 @@ vec2 sceneSDF(vec3 p_world) {
 
   // 4. Tertiary Layer Evaluation (Only evaluated in direct proximity to surface)
   if (u_tertiary_blend > 0.03 && current_d < 0.1) {
-    vec2 resC = evalSingleFractal(ftypeC, p_eval, t, phi, 4);
-    float blendC = clamp(u_tertiary_blend, 0.0, 0.35);
-    current_d = opSmoothUnion(current_d, resC.x, k * blendC * 0.5);
+    vec2 resC = evalSingleFractal(ftypeC, p_eval, t, phi, clamp(iters / 2, 6, 16));
+    float blendC = clamp(u_tertiary_blend, 0.05, 0.35);
+    // Apply user-selected composite operator for consistent tertiary blending
+    if (compOp == 2) {
+      float h = clamp(0.5 - 0.5 * (resC.x - current_d) / k, 0.0, 1.0);
+      current_d = mix(resC.x, current_d, h) + k * h * (1.0 - h);
+    } else if (compOp == 3) {
+      float h = clamp(0.5 - 0.5 * (resC.x + current_d) / k, 0.0, 1.0);
+      current_d = mix(current_d, -resC.x, h) + k * h * (1.0 - h);
+    } else if (compOp == 0) {
+      current_d = mix(current_d, resC.x, blendC * 0.5);
+    } else {
+      current_d = opSmoothUnion(current_d, resC.x, k * blendC * 1.5);
+    }
     current_trap = min(current_trap, resC.y);
   }
 
@@ -2415,9 +2426,9 @@ void main() {
       break;
     }
 
-    // Adaptive step sizing: conservative to prevent tunneling through thin structures
-    float step_factor = (abs(d) > 0.2) ? 0.85 : 0.65;
-    float step_d = max(abs(d) * step_factor, 0.0005);
+    // Balanced step sizing: allows reaching surfaces within 112-step budget
+    float step_factor = (abs(d) > 0.2) ? 0.92 : 0.78;
+    float step_d = max(abs(d) * step_factor, 0.001);
     t += step_d;
     if (t > max_dist) break;
   }
@@ -2496,59 +2507,74 @@ void main() {
 
     // ===================================================================
     // Rendering Modalities: 7 Math-Driven Visualization Techniques
-    // Each reveals different mathematical properties of the fractal
-    // ZERO extra SDF calls — uses only already-computed data
+    // Curvature-enhanced: uses normal variation for rich surface detail
     // ===================================================================
-    
+
+    // Surface curvature from normal variation (2 extra SDF calls)
+    float curv = 0.0;
+    {
+      float ce = min(0.001 * t + 0.0005, 0.003);
+      vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - n;
+      vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - n;
+      curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
+    }
+    float curvNorm = clamp(curv / 5.0, 0.0, 1.0);
+    float trapDetail = clamp(1.0 / (1.0 + min_trap * 2.0), 0.0, 1.0);
+
     if (u_render_style > 0.5 && u_render_style < 1.5) {
-      // 1. X-Ray Томография: Density gradient + surface curvature + interior glow
-      // Reveals internal structure through raymarch step density
-      float dens = float(steps) / 90.0;
-      float surfaceEdge = pow(1.0 - ao, 2.0); // Curvature proxy from AO
-      vec3 xrayCore = u_accent_color * (0.3 + dens * 1.2);
-      vec3 xrayShell = u_secondary_color * (0.2 + surfaceEdge * 0.8);
-      vec3 xrayCol = mix(xrayCore, xrayShell, 0.4 + 0.6 * ao);
-      xrayCol += vec3(0.05, 0.12, 0.2) * surfaceEdge * 1.5; // Interior glow
-      xrayCol += u_primary_color * surfaceEdge * 0.6; // Edge enhancement
-      col = mix(col * 0.2, xrayCol * 1.4, 0.7 + 0.3 * ao);
+      // 1. X-Ray Томография: Curvature bone density + orbit trap vasculature
+      float dens = clamp(float(steps) / 65.0, 0.0, 1.0);
+      float boneDensity = mix(0.2, 1.0, curvNorm * 0.6 + ao * 0.4);
+      vec3 xrayCore = u_accent_color * boneDensity * (0.4 + trapDetail * 0.8);
+      vec3 xrayVessel = u_primary_color * trapDetail * (0.3 + dens * 0.7);
+      float edgeGlow = pow(1.0 - ao, 2.5) * (0.5 + curvNorm * 0.5);
+      vec3 xrayShell = u_secondary_color * edgeGlow;
+      vec3 xrayCol = mix(xrayVessel, xrayCore, boneDensity) + xrayShell * 0.6;
+      xrayCol += u_accent_color * curvNorm * 0.4; // Curvature highlights
+      col = mix(col * 0.15, xrayCol * 1.5, 0.75 + 0.25 * ao);
     } else if (u_render_style > 1.5 && u_render_style < 2.5) {
-      // 2. Топография: Normal-based elevation contours + slope shading
-      // Reveals surface structure through topographic contour bands
+      // 2. Топография: Curvature-enhanced ridges + multi-scale contours
       float elevation = dot(n, vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
-      float contour = abs(fract(elevation * 12.0) - 0.5) * 2.0;
-      contour = smoothstep(0.0, 0.08, contour);
-      vec3 topoLow = u_secondary_color * 0.4;
-      vec3 topoHigh = u_primary_color * (0.6 + elevation * 0.8);
-      vec3 topoRidge = u_accent_color * (0.8 + elevation * 1.2);
+      float contour1 = abs(fract(elevation * 14.0) - 0.5) * 2.0;
+      float contour2 = abs(fract(elevation * 5.0 + curvNorm * 0.4) - 0.5) * 2.0;
+      float contour = min(contour1, contour2);
+      contour = smoothstep(0.0, 0.06, contour);
+      float ridgeLine = smoothstep(0.35, 0.65, curvNorm); // Curvature ridges
+      vec3 topoLow = u_secondary_color * (0.3 + trapDetail * 0.2);
+      vec3 topoHigh = u_primary_color * (0.5 + elevation * 0.9);
+      vec3 topoRidge = u_accent_color * (0.7 + curvNorm * 1.3);
       vec3 topoCol = mix(topoLow, topoHigh, elevation);
-      topoCol = mix(topoCol, topoRidge, elevation * 0.7);
-      topoCol = mix(topoCol, topoCol * 1.8, (1.0 - contour) * 0.5);
+      topoCol = mix(topoCol, topoRidge, ridgeLine * 0.6 + elevation * 0.3);
+      topoCol = mix(topoCol, topoCol * 2.0, (1.0 - contour) * 0.45);
       float slope = 1.0 - abs(dot(n, vec3(0.0, 1.0, 0.0)));
-      topoCol *= (0.5 + 0.5 * slope);
-      col = topoCol * (0.5 + 0.5 * ao);
+      topoCol *= (0.4 + 0.6 * slope);
+      col = topoCol * (0.4 + 0.6 * ao);
     } else if (u_render_style > 2.5 && u_render_style < 3.5) {
-      // 3. Голографическая проекция: Chromatic aberration + scan lines + shimmer
-      // Simulates volumetric holographic display
+      // 3. Голографическая проекция: Curvature wireframe + data glitch + scan lines
       float depthNorm = clamp(t / 20.0, 0.0, 1.0);
-      float rOff = sin(depthNorm * 20.0 + u_time * 3.0) * 0.02;
-      float gOff = sin(depthNorm * 20.0 + u_time * 3.0 + 2.094) * 0.02;
-      float bOff = sin(depthNorm * 20.0 + u_time * 3.0 + 4.189) * 0.02;
+      float rOff = sin(depthNorm * 20.0 + u_time * 3.0) * 0.025;
+      float gOff = sin(depthNorm * 20.0 + u_time * 3.0 + 2.094) * 0.025;
+      float bOff = sin(depthNorm * 20.0 + u_time * 3.0 + 4.189) * 0.025;
       vec3 holoBase = u_primary_color * vec3(1.0 + rOff, 1.0 + gOff, 1.0 + bOff);
       float holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
       float scanFreq = 180.0 + depthNorm * 120.0;
-      float scanline = 0.85 + 0.15 * sin(v_uv.y * scanFreq + u_time * 8.0);
-      float shimmer = 0.9 + 0.1 * sin(u_time * 5.0 + length(p) * 10.0);
-      vec3 holoCol = holoBase * (0.4 + holoFres * 1.2) * scanline * shimmer;
-      holoCol += u_accent_color * pow(1.0 - ao, 2.0) * 2.0; // Edge wireframe
-      holoCol += vec3(0.1, 0.3, 0.5) * holoFres * 1.5;
-      col = mix(col * 0.1, holoCol, 0.92);
+      float scanline = 0.82 + 0.18 * sin(v_uv.y * scanFreq + u_time * 8.0);
+      float wireframe = smoothstep(0.3, 0.7, curvNorm); // Curvature wireframe
+      float glitch = step(0.96, fract(sin(dot(p, vec3(12.9898, 78.233, 45.164)) + u_time * 2.0) * 43758.5));
+      float shimmer = 0.88 + 0.12 * sin(u_time * 5.0 + length(p) * 10.0);
+      vec3 holoCol = holoBase * (0.35 + holoFres * 1.4 + wireframe * 0.5) * scanline * shimmer;
+      holoCol += u_accent_color * wireframe * 1.2; // Curvature edge glow
+      holoCol += vec3(0.15, 0.4, 0.7) * holoFres * 1.5;
+      holoCol += u_accent_color * glitch * 3.0; // Data glitch bursts
+      holoCol += u_primary_color * trapDetail * 0.3; // Internal structure
+      col = mix(col * 0.08, holoCol, 0.93);
     } else if (u_render_style > 3.5 && u_render_style < 4.5) {
-      // 4. Радужная интерференция: Multi-order thin-film interference
-      // Angle-dependent spectral color shifting like butterfly wings
+      // 4. Радужная интерференция: Curvature-varying film thickness
       float nv = max(dot(n, -rd), 0.0);
-      float order1 = nv * 3.0 + min_trap * 0.5;
-      float order2 = nv * 5.0 + min_trap * 0.3 + u_time * 0.08;
-      float order3 = nv * 7.0 + min_trap * 0.2;
+      float filmThickness = 0.5 + curvNorm * 0.8 + trapDetail * 0.3; // Curvature modulates film
+      float order1 = nv * 3.0 * filmThickness + min_trap * 0.5;
+      float order2 = nv * 5.0 * filmThickness + min_trap * 0.3 + u_time * 0.08;
+      float order3 = nv * 7.0 * filmThickness + min_trap * 0.2;
       float iridR = 0.5 + 0.5 * cos(6.28318 * (0.0 + order1 * 0.33));
       float iridG = 0.5 + 0.5 * cos(6.28318 * (0.33 + order2 * 0.33));
       float iridB = 0.5 + 0.5 * cos(6.28318 * (0.67 + order3 * 0.33));
@@ -2556,34 +2582,39 @@ void main() {
       vec3 hIrid = normalize(light1 - rd);
       float specAngle = max(dot(n, hIrid), 0.0);
       vec3 specIrid = vec3(pow(specAngle, 24.0), pow(specAngle, 32.0), pow(specAngle, 48.0)) * sh1 * 2.0;
-      col = iridCol * (0.5 + 0.5 * ao) + specIrid;
+      iridCol *= (0.7 + trapDetail * 0.3); // Trap detail modulates saturation
+      col = iridCol * (0.45 + 0.55 * ao) + specIrid;
     } else if (u_render_style > 4.5 && u_render_style < 5.5) {
-      // 5. Квантовое поле: 3 standing waves on golden vectors + interference
-      // Visualizes quantum energy density through wave superposition
+      // 5. Квантовое поле: Trap-based probability + curvature energy density
       float wave1 = sin(length(p) * 12.0 - u_time * 3.5);
       float wave2 = cos(dot(p, normalize(vec3(1.618, 1.0, 0.618))) * 7.0 + u_time * 2.2);
       float wave3 = sin(dot(p, normalize(vec3(-0.618, 1.618, 1.0))) * 9.0 - u_time * 1.8);
       float interference = (wave1 + wave2 + wave3) / 3.0;
-      float energy = pow(abs(interference), 0.7);
-      vec3 plasmaCold = u_secondary_color * (0.3 + energy * 0.5);
-      vec3 plasmaHot = u_accent_color * (0.8 + energy * 1.5);
+      float probability = trapDetail * 0.6 + (0.5 + 0.5 * interference) * 0.4; // Trap as probability density
+      float energy = pow(abs(interference), 0.7) * (0.5 + curvNorm * 0.5);
+      vec3 plasmaCold = u_secondary_color * (0.25 + probability * 0.5);
+      vec3 plasmaHot = u_accent_color * (0.6 + energy * 1.8);
       vec3 qCol = mix(plasmaCold, plasmaHot, energy);
       qCol += u_accent_color * pow(fresnel, 2.0) * 1.2;
-      col = qCol * (0.4 + 0.6 * ao) + sssCol * 1.2;
+      qCol += u_primary_color * curvNorm * 0.35; // Curvature energy filaments
+      qCol *= (0.6 + trapDetail * 0.4); // Internal structure visibility
+      col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
     } else if (u_render_style > 5.5) {
-      // 6. Кристалл: Beer-Lambert + dual caustic + spectral dispersion
-      // Physical refraction with wavelength-dependent absorption
+      // 6. Кристалл: Curvature facets + trap inclusions + Beer-Lambert
       vec3 beer = exp(-max(t - 0.5, 0.0) * vec3(0.08, 0.25, 0.9));
       float caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
       float caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       float caustic = caustic1 + caustic2;
-      vec3 refractCol = mix(u_primary_color, u_accent_color, fresnel * 0.7);
+      float facetStrength = 0.3 + curvNorm * 0.7; // Curvature defines facets
+      vec3 refractCol = mix(u_primary_color, u_accent_color, fresnel * facetStrength);
       vec3 gemCol = refractCol * beer;
       vec3 gemSpec = vec3(1.0, 0.96, 0.82) * spec1 * 2.0;
-      float dispersion = fresnel * 0.15;
+      float dispersion = fresnel * (0.1 + curvNorm * 0.15); // Curvature-dependent dispersion
       gemCol.r *= (1.0 + dispersion);
       gemCol.b *= (1.0 - dispersion * 0.5);
-      col = gemCol * (0.7 + 0.3 * ao) + gemSpec + u_accent_color * caustic * 0.6;
+      gemCol += u_secondary_color * trapDetail * 0.2 * beer; // Internal trap inclusions
+      gemCol *= facetStrength; // Facet darkening on flat areas
+      col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u_accent_color * caustic * 0.6;
     }
 
     // Distance-relative atmospheric falloff
