@@ -886,16 +886,16 @@ fn mapLorenzAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       let dy = q.x * (rho - q.z) - q.y;
       let dz = q.x * q.y - beta * q.z;
       q = q + vec3<f32>(dx, dy, dz) * 0.008;
-      let scaled = q * 0.08;
+      let scaled = q * 0.25;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
             maxDensity = max(maxDensity, exp(-dist * 4.0));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -1015,10 +1015,10 @@ fn mapCliffordAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.3);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.3);
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -1110,10 +1110,10 @@ fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
             maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
@@ -1137,10 +1137,10 @@ fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
             maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
@@ -1158,16 +1158,16 @@ fn mapThomasAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
       let dy = sin(v.z) - b * v.y;
       let dz = sin(v.x) - b * v.z;
       v = v + vec3<f32>(dx, dy, dz) * 0.1;
-      let scaled = v * 0.45;
+      let scaled = v * 0.8;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
             maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 44. Halvorsen 3-Fold Chaotic Attractor (orbit-traced, a=1.89)
@@ -1185,16 +1185,16 @@ fn mapHalvorsenAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<
       let dy = -a * v.y - 4.0 * v.z - 4.0 * v.x - v.z * v.z;
       let dz = -a * v.z - 4.0 * v.x - 4.0 * v.y - v.x * v.x;
       v = v + vec3<f32>(dx, dy, dz) * 0.04;
-      let scaled = v * 0.25;
+      let scaled = v * 0.7;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
             maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 45. Julia Set 3D (c = -0.7 + 0.27i)
@@ -1389,16 +1389,16 @@ fn mapBarnsleyFern3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
       else if (choice < 0.86) { q = vec3<f32>(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.3 * q.z); }
       else if (choice < 0.93) { q = vec3<f32>(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.3 * q.z); }
       else { q = vec3<f32>(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.3 * q.z); }
-      let scaled = q * 0.15;
+      let scaled = q * 0.4;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 54. Klein Quartic Surface (genus-3)
@@ -1601,16 +1601,16 @@ fn mapChuaCircuit(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       let dy = v.x - v.y + v.z;
       let dz2 = -beta * v.y;
       v = v + vec3<f32>(dx, dy, dz2) * 0.008;
-      let scaled = v * 0.1;
+      let scaled = v * 0.5;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 64. Standard Map (Chirikov-Taylor, orbit-traced)
@@ -1634,10 +1634,10 @@ fn mapStandardMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 65. Ikeda Map (orbit-traced)
@@ -1664,10 +1664,10 @@ fn mapIkedaMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.2);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.2);
 }
 
 // 66. Koch Snowflake 3D (recursive triangular IFS)
@@ -1816,16 +1816,16 @@ fn mapFitzHugh(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       let dw = (v.x - a + b_param * v.y) / tau;
       let dz2 = sin(v.z * 2.0 + t * 0.1) * 0.15;
       v = v + vec3<f32>(dv, dw, dz2) * 0.08;
-      let scaled = v * 0.45;
+      let scaled = v * 0.8;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
@@ -1843,16 +1843,16 @@ fn mapRosslerAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
       let dy = v.x + a * v.y;
       let dz2 = b + v.z * (v.x - c);
       v = v + vec3<f32>(dx, dy, dz2) * 0.015;
-      let scaled = v * 0.15;
+      let scaled = v * 0.4;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 74. Duffing Attractor (orbit-traced)
@@ -1871,16 +1871,16 @@ fn mapDuffingAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
       let dy = -delta * v.y - alpha * v.x - beta_p * v.x * v.x * v.x + gamma * cos(v.z);
       let dz2 = omega;
       v = v + vec3<f32>(dx, dy, dz2) * 0.015;
-      let scaled = v * 0.3;
+      let scaled = v * 0.8;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
@@ -1904,10 +1904,10 @@ fn mapLogisticBifurcation(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.10 + maxDensity * 0.06;
+  let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 76. Fractal Spire (Exponential spiral tower)
@@ -1958,10 +1958,10 @@ fn mapDeJongAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
     }
   }
     // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let tubeR: f32 = 0.02 + maxDensity * 0.01;
   let dd = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 78. Pickover Attractor
@@ -1987,10 +1987,10 @@ fn mapPickoverAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
     }
   }
     // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let tubeR: f32 = 0.02 + maxDensity * 0.01;
   let dd = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 79. Vicsek Fractal (3D cross IFS, dim ~1.465)
@@ -2109,10 +2109,10 @@ fn mapBedheadAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
     }
   }
     // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let tubeR: f32 = 0.02 + maxDensity * 0.01;
   let dd = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic)
@@ -2136,10 +2136,10 @@ fn mapFourSpotAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
     }
   }
     // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let tubeR: f32 = 0.02 + maxDensity * 0.01;
   let dd = minDist - tubeR;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 85. Svensson Attractor
@@ -2166,10 +2166,10 @@ fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
     }
   }
     // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  let tubeR: f32 = 0.10 + maxDensity * 0.06;
+  let tubeR: f32 = 0.02 + maxDensity * 0.01;
   let dd = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2<f32>(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 86: Kaleidoscopic IFS
@@ -4267,7 +4267,7 @@ vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
       float dy = q.x * (rho - q.z) - q.y;
       float dz = q.x * q.y - beta * q.z;
       q += vec3(dx, dy, dz) * 0.008;
-      vec3 scaled = q * 0.08;
+      vec3 scaled = q * 0.25;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 4.0));
@@ -4275,10 +4275,10 @@ vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   // PHASE 4.32 FIX: Proper SDF using minimum distance to orbit points
   // Density-based approach created smooth blobs — replaced with tube SDF
-  float tubeR = 0.10 + maxDensity * 0.06; // Tube radius modulated by orbit density
+  float tubeR = 0.02 + maxDensity * 0.01; // Tube radius modulated by orbit density
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -4398,10 +4398,10 @@ vec2 mapCliffordAttractor(vec3 p, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p) - 2.5;
-  return vec2(max(d, bound) * 0.5, max(maxDensity * 0.3, 0.001));
+  return vec2(max(d, bound * 0.6), max(maxDensity * 0.3, 0.001));
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -4492,10 +4492,10 @@ vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
@@ -4519,10 +4519,10 @@ vec2 mapAizawaAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
@@ -4539,17 +4539,17 @@ vec2 mapThomasAttractor(vec3 p_in, float t, float phi, int iters) {
       float dy = sin(v.z) - b * v.y;
       float dz = sin(v.x) - b * v.z;
       v += vec3(dx, dy, dz) * 0.1;
-      vec3 scaled = v * 0.45;
+      vec3 scaled = v * 0.8;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 44. Halvorsen 3-Fold Chaotic Attractor (orbit-traced, a=1.89)
@@ -4566,17 +4566,17 @@ vec2 mapHalvorsenAttractor(vec3 p_in, float t, float phi, int iters) {
       float dy = -a * v.y - 4.0 * v.z - 4.0 * v.x - v.z * v.z;
       float dz = -a * v.z - 4.0 * v.x - 4.0 * v.y - v.x * v.x;
       v += vec3(dx, dy, dz) * 0.04;
-      vec3 scaled = v * 0.25;
+      vec3 scaled = v * 0.7;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 45. Julia Set 3D (c = -0.7 + 0.27i, thick 3D extrusion with orbit trap)
@@ -4769,17 +4769,17 @@ vec2 mapBarnsleyFern3D(vec3 p_in, float t, float phi, int iters) {
       } else {
         q = vec3(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.3 * q.z);
       }
-      vec3 scaled = q * 0.15;
+      vec3 scaled = q * 0.4;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.2;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 54. Klein Quartic Surface (genus-3 Hurwitz surface)
@@ -4976,17 +4976,17 @@ vec2 mapChuaCircuit(vec3 p_in, float t, float phi, int iters) {
       float dy = v.x - v.y + v.z;
       float dz2 = -beta * v.y;
       v += vec3(dx, dy, dz2) * 0.008;
-      vec3 scaled = v * 0.1;
+      vec3 scaled = v * 0.5;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 64. Standard Map (Chirikov-Taylor, orbit-traced)
@@ -5011,10 +5011,10 @@ vec2 mapStandardMap(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 65. Ikeda Map (orbit-traced, b=0.9, u=0.4+0.05*sin(t))
@@ -5041,10 +5041,10 @@ vec2 mapIkedaMap(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 66. Koch Snowflake 3D (recursive triangular SDF)
@@ -5191,17 +5191,17 @@ vec2 mapFitzHugh(vec3 p_in, float t, float phi, int iters) {
       float dw = (v.x - a + b_param * v.y) / tau;
       float dz2 = sin(v.z * 2.0 + t * 0.1) * 0.15;
       v += vec3(dv, dw, dz2) * 0.08;
-      vec3 scaled = v * 0.45;
+      vec3 scaled = v * 0.8;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
@@ -5218,17 +5218,17 @@ vec2 mapRosslerAttractor(vec3 p_in, float t, float phi, int iters) {
       float dy = v.x + a * v.y;
       float dz2 = b + v.z * (v.x - c);
       v += vec3(dx, dy, dz2) * 0.015;
-      vec3 scaled = v * 0.15;
+      vec3 scaled = v * 0.4;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 74. Duffing Attractor (orbit-traced, alpha=1, beta=5, delta=0.02, gamma=8)
@@ -5246,17 +5246,17 @@ vec2 mapDuffingAttractor(vec3 p_in, float t, float phi, int iters) {
       float dy = -delta * v.y - alpha * v.x - beta_p * v.x * v.x * v.x + gamma * cos(v.z);
       float dz2 = omega;
       v += vec3(dx, dy, dz2) * 0.015;
-      vec3 scaled = v * 0.3;
+      vec3 scaled = v * 0.8;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
@@ -5280,10 +5280,10 @@ vec2 mapLogisticBifurcation(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(d, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 76. Fractal Spire (Exponential spiral tower z -> e^z + c)
@@ -5334,10 +5334,10 @@ vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float dd = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 78. Pickover Attractor (x'=sin(a*y)+c*cos(a*x), y'=sin(b*x)+d*cos(b*y))
@@ -5364,10 +5364,10 @@ vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float dd = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 79. Vicsek Fractal (3D cross-shaped IFS, dim ~ 1.465)
@@ -5493,10 +5493,10 @@ vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float dd = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic attractor)
@@ -5527,10 +5527,10 @@ vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float dd = minDist - tubeR;
   float bound = length(p_in) - 2.5;
-  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 85. Svensson Attractor (x'=d*sin(a*y)-c, y'=b-x)
@@ -5558,10 +5558,10 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  float tubeR = 0.10 + maxDensity * 0.06;
+  float tubeR = 0.02 + maxDensity * 0.01;
   float dd = minDist - tubeR;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, maxDensity * 0.25);
+  return vec2(max(dd, bound * 0.6), maxDensity * 0.25);
 }
 
 // 86: Kaleidoscopic IFS
