@@ -2874,9 +2874,26 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let normalEps = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
     let base_n = calcNormal(p, normalEps);
     let ao = calcAO(p, base_n, t);
+    
+    // CURVATURE-BASED NORMAL PERTURBATION: Add micro-detail without extra SDF calls
+    var curvDetail: f32 = 0.0;
+    {
+      let ce = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
+      let dn1 = calcNormal(p + vec3<f32>(ce, 0.0, 0.0), ce) - base_n;
+      let dn2 = calcNormal(p + vec3<f32>(0.0, ce, 0.0), ce) - base_n;
+      curvDetail = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
+    }
+    // Perturb normal based on curvature for micro-detail
+    let perturbStrength = 0.15 * clamp(curvDetail / 3.0, 0.0, 1.0);
+    let perturbed_n = normalize(base_n + vec3<f32>(
+      sin(p.x * 50.0 + p.y * 30.0) * perturbStrength,
+      sin(p.y * 50.0 + p.z * 30.0) * perturbStrength,
+      sin(p.z * 50.0 + p.x * 30.0) * perturbStrength
+    ));
+    
     // Smooth normal flip — prevents hard lighting boundary at silhouette edge
     let ndotv = dot(base_n, rd);
-    var n = select(base_n, -base_n, ndotv > 0.0);
+    var n = select(perturbed_n, -perturbed_n, ndotv > 0.0);
 
     let light1 = normalize(vec3<f32>(cos(u.time * 0.3), 1.2, sin(u.time * 0.3)));
     let light2 = normalize(vec3<f32>(-sin(u.time * 0.25 * GOLDEN_RATIO), -0.6, cos(u.time * 0.25 * GOLDEN_RATIO)));
@@ -2909,12 +2926,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let h1 = normalize(light1 - rd);
     let spec1 = pow(max(dot(n, h1), 0.0), 32.0);
     
-    // Surface curvature from normal variation (2 extra SDF calls)
-    // Distance-adaptive epsilon + curvature floor prevents close-up saturation
-    let ce: f32 = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
-    let dn1 = calcNormal(p + vec3<f32>(ce, 0.0, 0.0), ce) - n;
-    let dn2 = calcNormal(p + vec3<f32>(0.0, ce, 0.0), ce) - n;
-    let curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
+    // Reuse curvature from normal perturbation (already computed above)
+    let curv = curvDetail;
     let curvNorm = clamp(curv / 5.0, 0.0, 1.0);
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     let effectiveTrap = max(min_trap, curvNorm * 0.15);

@@ -2791,9 +2791,27 @@ void main() {
     float normalEps = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
     vec3 base_n = calcNormal(p, normalEps);
     float ao = calcAO(p, base_n, t);
+    
+    // CURVATURE-BASED NORMAL PERTURBATION: Add micro-detail without extra SDF calls
+    // Uses the already-computed curvature to perturb normals for enhanced surface detail
+    float curvDetail = 0.0;
+    {
+      float ce = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
+      vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - base_n;
+      vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - base_n;
+      curvDetail = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
+    }
+    // Perturb normal based on curvature for micro-detail
+    float perturbStrength = 0.15 * clamp(curvDetail / 3.0, 0.0, 1.0);
+    vec3 perturbed_n = normalize(base_n + vec3(
+      sin(p.x * 50.0 + p.y * 30.0) * perturbStrength,
+      sin(p.y * 50.0 + p.z * 30.0) * perturbStrength,
+      sin(p.z * 50.0 + p.x * 30.0) * perturbStrength
+    ));
+    
     // Smooth normal flip — prevents hard lighting boundary at silhouette edge
     float ndotv = dot(base_n, rd);
-    vec3 n = ndotv > 0.0 ? -base_n : base_n;
+    vec3 n = ndotv > 0.0 ? -perturbed_n : perturbed_n;
 
     vec3 light1 = normalize(vec3(cos(u_time * 0.3), 1.2, sin(u_time * 0.3)));
     vec3 light2 = normalize(vec3(-sin(u_time * 0.25 * GOLDEN_RATIO), -0.6, cos(u_time * 0.25 * GOLDEN_RATIO)));
@@ -2826,15 +2844,8 @@ void main() {
     vec3 h1 = normalize(light1 - rd);
     float spec1 = pow(max(dot(n, h1), 0.0), 32.0);
     
-    // Surface curvature from normal variation (2 extra SDF calls)
-    // Distance-adaptive epsilon + curvature floor prevents close-up saturation
-    float curv = 0.0;
-    {
-      float ce = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
-      vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - n;
-      vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - n;
-      curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
-    }
+    // Reuse curvature from normal perturbation (already computed above)
+    float curv = curvDetail;
     float curvNorm = clamp(curv / 5.0, 0.0, 1.0);
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     float effectiveTrap = max(min_trap, curvNorm * 0.15);
