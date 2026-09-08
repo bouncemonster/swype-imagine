@@ -76,6 +76,16 @@ export function getFractalIndex(type?: string): number {
     case 'rosslerAttractor': return 73;
     case 'duffingAttractor': return 74;
     case 'logisticBifurcation': return 75;
+    case 'fractalSpire': return 76;
+    case 'deJongAttractor': return 77;
+    case 'pickoverAttractor': return 78;
+    case 'vicsekFractal': return 79;
+    case 'mandelbar': return 80;
+    case 'weierstrass3D': return 81;
+    case 'popcornFunction': return 82;
+    case 'bedheadAttractor': return 83;
+    case 'fourSpotAttractor': return 84;
+    case 'svenssonAttractor': return 85;
     default: return 0;
   }
 }

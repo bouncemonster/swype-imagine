@@ -1750,6 +1750,240 @@ vec2 mapLogisticBifurcation(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(d, bound) * 0.5, density * 0.2);
 }
 
+// 76. Fractal Spire (Exponential spiral tower z → e^z + c)
+vec2 mapFractalSpire(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.2;
+  float rot_a = t * 0.08;
+  p = vec3(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  vec2 z = p.xy;
+  float trap = 1e10;
+  float dr = 1.0;
+  int count = clamp(iters, 4, 16);
+  for (int i = 0; i < 16; i++) {
+    if (i >= count) break;
+    float ex = exp(z.x);
+    vec2 ez = vec2(ex * cos(z.y), ex * sin(z.y));
+    dr = length(ez) * dr + 1.0;
+    z = ez + p.xy * 0.3;
+    trap = min(trap, length(z));
+    if (dot(z, z) > 256.0) break;
+  }
+  float d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dr, 0.001);
+  float bound = length(p_in) - 2.8;
+  return vec2(max(d * 0.6, bound), trap);
+}
+
+// 77. DeJong Attractor (x'=sin(a*y)-z*cos(b*x))
+vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 0.8;
+  float a = 2.24 + sin(t * 0.05) * 0.5;
+  float b = -0.43 + cos(t * 0.07) * 0.3;
+  float c_ = -0.65 + sin(t * 0.03) * 0.4;
+  float d_ = 2.43 + cos(t * 0.04) * 0.3;
+  float density = 0.0;
+  vec2 seeds[3];
+  seeds[0] = vec2(0.1, 0.1); seeds[1] = vec2(-0.3, 0.5); seeds[2] = vec2(0.4, -0.2);
+  int count = clamp(iters, 6, 20);
+  for (int s = 0; s < 3; s++) {
+    vec2 z = seeds[s];
+    for (int i = 0; i < 20; i++) {
+      if (i >= count) break;
+      vec2 nz = vec2(sin(a * z.y) - cos(b * z.x), sin(c_ * z.x) - cos(d_ * z.y));
+      z = nz;
+      vec3 pt = vec3(z * 0.7, p.z * 0.5 + float(s) * 0.15);
+      float dist = length(p - pt);
+      density += exp(-dist * 5.0);
+    }
+  }
+  float dd = 0.3 - density * 0.04;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(dd, bound) * 0.5, density * 0.15);
+}
+
+// 78. Pickover Attractor (x'=sin(a*y)+c*cos(a*x), y'=sin(b*x)+d*cos(b*y))
+vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 0.7;
+  float a = -1.64 + sin(t * 0.04) * 0.4;
+  float b = 1.9 + cos(t * 0.06) * 0.3;
+  float c_ = -0.31 + sin(t * 0.05) * 0.3;
+  float d_ = 0.72 + cos(t * 0.03) * 0.2;
+  float density = 0.0;
+  vec2 z = vec2(0.1, 0.1);
+  int count = clamp(iters, 8, 24);
+  for (int i = 0; i < 24; i++) {
+    if (i >= count) break;
+    vec2 nz = vec2(sin(a * z.y) + c_ * cos(a * z.x), sin(b * z.x) + d_ * cos(b * z.y));
+    z = nz;
+    vec3 pt = vec3(z * 0.6, p.z * 0.4);
+    float dist = length(p - pt);
+    density += exp(-dist * 4.5);
+  }
+  float dd = 0.28 - density * 0.035;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(dd, bound) * 0.5, density * 0.12);
+}
+
+// 79. Vicsek Fractal (3D cross-shaped IFS, dim ≈ 1.465)
+vec2 mapVicsekFractal(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.8;
+  float rot_a = t * 0.04;
+  p = vec3(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  float scale = 3.0;
+  float d = 1e10;
+  int count = clamp(iters, 4, 12);
+  for (int i = 0; i < 12; i++) {
+    if (i >= count) break;
+    p = abs(p);
+    if (p.x < p.y) p.xy = p.yx;
+    if (p.x < p.z) p.xz = p.zx;
+    if (p.y < p.z) p.yz = p.zy;
+    p = p * scale - vec3(scale - 1.0);
+    d = min(d, length(p) * pow(scale, -float(i + 1)));
+  }
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound), length(p_in) * 0.3);
+}
+
+// 80. Mandelbar (Conjugate Mandelbrot: z → conj(z)^2 + c)
+vec2 mapMandelbar(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.4;
+  float rot_a = t * 0.06;
+  p = vec3(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  vec2 z = p.xy;
+  vec2 c = p.xy;
+  float trap = 1e10;
+  float dr = 1.0;
+  int count = clamp(iters, 4, 20);
+  for (int i = 0; i < 20; i++) {
+    if (i >= count) break;
+    trap = min(trap, length(z));
+    vec2 zconj = vec2(z.x, -z.y);
+    vec2 z2 = vec2(zconj.x * zconj.x - zconj.y * zconj.y, 2.0 * zconj.x * zconj.y);
+    dr = 2.0 * length(z) * dr + 1.0;
+    z = z2 + c;
+    if (dot(z, z) > 256.0) break;
+  }
+  float d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dr, 0.001);
+  float bound = length(p_in) - 2.6;
+  return vec2(max(d * 0.6, bound), trap);
+}
+
+// 81. Weierstrass 3D (Nowhere-differentiable: sum a^n cos(b^n pi x))
+vec2 mapWeierstrass3D(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.5;
+  float rot_a = t * 0.05;
+  p = vec3(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  float a_w = 0.5;
+  float b_w = 7.0;
+  float surf = 0.0;
+  int count = clamp(iters, 4, 10);
+  for (int n = 0; n < 10; n++) {
+    if (n >= count) break;
+    float an = pow(a_w, float(n));
+    float bn = pow(b_w, float(n));
+    surf += an * cos(bn * 3.14159 * p.x) * cos(bn * 3.14159 * p.z);
+  }
+  float d = abs(p.y - surf * 0.3) - 0.15;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(d, bound) * 0.7, abs(surf) * 0.2);
+}
+
+// 82. Popcorn Function (Celldoor: x'=x-c*sin(y+tan(y)), y'=y-c*sin(x+tan(x)))
+vec2 mapPopcornFunction(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 1.3;
+  float rot_a = t * 0.05;
+  p = vec3(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  float c_pop = 0.4 + sin(t * 0.08) * 0.15;
+  vec2 z = p.xy;
+  float trap = 1e10;
+  int count = clamp(iters, 4, 12);
+  for (int i = 0; i < 12; i++) {
+    if (i >= count) break;
+    trap = min(trap, length(z));
+    vec2 nz = vec2(
+      z.x - c_pop * sin(z.y + tan(z.y)),
+      z.y - c_pop * sin(z.x + tan(z.x))
+    );
+    z = nz;
+  }
+  float d = length(z - p.xy) - 0.2;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(abs(d) - 0.05, bound) * 0.6, trap);
+}
+
+// 83. Bedhead Attractor (3D: x'=sin(y*z)-z*cos(x*y))
+vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 0.7;
+  float a = 0.95 + sin(t * 0.04) * 0.2;
+  float b = 0.7 + cos(t * 0.06) * 0.15;
+  float c_ = 0.6 + sin(t * 0.05) * 0.2;
+  float density = 0.0;
+  vec3 z = vec3(0.1, 0.1, 0.1);
+  int count = clamp(iters, 6, 18);
+  for (int i = 0; i < 18; i++) {
+    if (i >= count) break;
+    vec3 nz = vec3(
+      sin(a * z.y * z.z) - z.z * cos(b * z.x * z.y),
+      z.z * sin(a * z.x) - cos(b * z.y * z.z),
+      c_ * sin(z.x * z.z)
+    );
+    z = nz;
+    float dist = length(p - z * 0.5);
+    density += exp(-dist * 4.0);
+  }
+  float dd = 0.3 - density * 0.04;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(dd, bound) * 0.5, density * 0.15);
+}
+
+// 84. FourSpot Attractor (4-wing chaotic attractor)
+vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 0.8;
+  float a = 2.0 + sin(t * 0.05) * 0.5;
+  float density = 0.0;
+  vec3 z = vec3(0.5, 0.5, 0.5);
+  int count = clamp(iters, 6, 20);
+  for (int i = 0; i < 20; i++) {
+    if (i >= count) break;
+    vec3 nz = vec3(
+      z.y * z.z - a * z.x,
+      z.x * z.z - z.y,
+      -z.x * z.y + z.z
+    );
+    z = nz * 0.3;
+    float dist = length(p - z);
+    density += exp(-dist * 5.0);
+  }
+  float dd = 0.25 - density * 0.04;
+  float bound = length(p_in) - 2.5;
+  return vec2(max(dd, bound) * 0.5, density * 0.12);
+}
+
+// 85. Svensson Attractor (x'=d*sin(a*y)-z, y'=b*cos(c*x))
+vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
+  vec3 p = p_in * 0.7;
+  float a = 2.0 + sin(t * 0.04) * 0.3;
+  float b = 0.2 + cos(t * 0.06) * 0.1;
+  float c_ = 1.57 + sin(t * 0.05) * 0.2;
+  float d_ = 0.4 + cos(t * 0.03) * 0.15;
+  float density = 0.0;
+  vec2 z = vec2(0.1, 0.1);
+  int count = clamp(iters, 8, 22);
+  for (int i = 0; i < 22; i++) {
+    if (i >= count) break;
+    vec2 nz = vec2(d_ * sin(a * z.y) - z.x, b * cos(c_ * z.x));
+    // Wait, correct Svensson: x'=d*sin(a*y)-z, y'=b-z*cos(c*x)
+    nz = vec2(d_ * sin(a * z.y) - z.x * 0.1, b - z.x * cos(c_ * z.x));
+    z = nz;
+    vec3 pt = vec3(z * 0.8, p.z * 0.4);
+    float dist = length(p - pt);
+    density += exp(-dist * 4.5);
+  }
+  float dd = 0.28 - density * 0.035;
+  float bound = length(p_in) - 2.3;
+  return vec2(max(dd, bound) * 0.5, density * 0.12);
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -1826,7 +2060,17 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 72) return mapFitzHugh(p, t, phi, iters);
   if (ftype == 73) return mapRosslerAttractor(p, t, phi, iters);
   if (ftype == 74) return mapDuffingAttractor(p, t, phi, iters);
-  return mapLogisticBifurcation(p, t, phi, iters);
+  if (ftype == 75) return mapLogisticBifurcation(p, t, phi, iters);
+  if (ftype == 76) return mapFractalSpire(p, t, phi, iters);
+  if (ftype == 77) return mapDeJongAttractor(p, t, phi, iters);
+  if (ftype == 78) return mapPickoverAttractor(p, t, phi, iters);
+  if (ftype == 79) return mapVicsekFractal(p, t, phi, iters);
+  if (ftype == 80) return mapMandelbar(p, t, phi, iters);
+  if (ftype == 81) return mapWeierstrass3D(p, t, phi, iters);
+  if (ftype == 82) return mapPopcornFunction(p, t, phi, iters);
+  if (ftype == 83) return mapBedheadAttractor(p, t, phi, iters);
+  if (ftype == 84) return mapFourSpotAttractor(p, t, phi, iters);
+  return mapSvenssonAttractor(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
@@ -2152,7 +2396,6 @@ void main() {
   // Fixed large max_dist — decoupled from cam_dist to prevent far-side slicing
   // When camera is close, rays travel nearly parallel to surface and need full range
   float max_dist = 128.0;
-  float glow = 0.0;
   bool hit = false;
   float min_trap = 1e10;
   int steps = 0;
@@ -2164,12 +2407,6 @@ void main() {
     min_trap = min(min_trap, res.y);
 
     // No near-plane escape — let rays march from the start to prevent slicing artifacts
-    
-    // Controlled aura & interior volumetric fog (reduced to prevent milky silhouette)
-    float fogDensity = max(0.0, u_volumetric_fog);
-    if (d > 0.006) {
-      glow += (0.0004 * (1.0 + fogDensity * 0.5)) / (0.08 + d * d * 18.0);
-    }
 
     float hit_threshold = 0.00075 * t + 0.00025;
     if (abs(d) < hit_threshold) {
@@ -2184,8 +2421,6 @@ void main() {
     t += step_d;
     if (t > max_dist) break;
   }
-
-  glow = min(glow, 0.08); // Tight cap to prevent milky silhouette glow
 
   float bg_rad = length(uv);
   vec3 col = vec3(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u_time * 0.3));
@@ -2356,17 +2591,6 @@ void main() {
     float fogDensity = cam_dist < 1.0 ? 0.012 : 0.02;
     float fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
     col = mix(col, vec3(0.005, 0.004, 0.008), fog * clamp(u_volumetric_fog, 0.0, 1.0));
-  } else {
-    // Glow in empty void silhouette
-    if (u_render_style > 0.5 && u_render_style < 1.5) {
-      col += u_accent_color * glow * 1.2 + vec3(0.01, 0.02, 0.04);
-    } else if (u_render_style > 2.5 && u_render_style < 3.5) {
-      col += u_accent_color * glow * 1.8 + u_secondary_color * (glow * 0.6);
-    } else if (u_render_style > 4.5 && u_render_style < 5.5) {
-      col += mix(u_primary_color, u_accent_color, 0.5 + 0.5 * sin(u_time * 3.0)) * glow * 1.5;
-    } else {
-      col += u_accent_color * glow * (u_glow_intensity * 0.35);
-    }
   }
 
   col = acesToneMap(col);

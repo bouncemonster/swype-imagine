@@ -74,7 +74,17 @@ export type FractalType =
   | 'fitzHugh'            // 72: FitzHugh-Nagumo Neural Dynamics
   | 'rosslerAttractor'    // 73: Rössler Attractor (a=0.2, b=0.2, c=5.7)
   | 'duffingAttractor'    // 74: Duffing Attractor (nonlinear oscillator)
-  | 'logisticBifurcation'; // 75: Logistic Map Bifurcation (Feigenbaum cascade)
+  | 'logisticBifurcation'  // 75: Logistic Map Bifurcation (Feigenbaum cascade)
+  | 'fractalSpire'         // 76: Fractal Spire (exponential spiral tower e^z+c)
+  | 'deJongAttractor'      // 77: DeJong Strange Attractor
+  | 'pickoverAttractor'    // 78: Pickover Strange Attractor
+  | 'vicsekFractal'        // 79: Vicsek Fractal (3D cross IFS, dim ~1.465)
+  | 'mandelbar'            // 80: Mandelbar (Conjugate Mandelbrot)
+  | 'weierstrass3D'        // 81: Weierstrass 3D (nowhere-differentiable surface)
+  | 'popcornFunction'      // 82: Popcorn Function (Celldoor)
+  | 'bedheadAttractor'     // 83: Bedhead 3D Chaotic Attractor
+  | 'fourSpotAttractor'    // 84: FourSpot 4-Wing Chaotic Attractor
+  | 'svenssonAttractor';   // 85: Svensson Strange Attractor
 
 export type RenderStyle = 
   | 'solid'       // 0: PBR Solid with AO, Soft Shadows & Subsurface Scattering (SSS)

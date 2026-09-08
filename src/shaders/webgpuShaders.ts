@@ -1817,7 +1817,230 @@ fn mapLogisticBifurcation(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2
   return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
 }
 
-// Master Single Primitive Dispatcher (76 Architectures)
+// 76. Fractal Spire (Exponential spiral tower)
+fn mapFractalSpire(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.2;
+  let rot_a = t * 0.08;
+  p = vec3<f32>(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  var z = p.xy;
+  var trap: f32 = 1e10;
+  var dr: f32 = 1.0;
+  let count = clamp(iters, 4, 16);
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= count) { break; }
+    let ex = exp(z.x);
+    let ez = vec2<f32>(ex * cos(z.y), ex * sin(z.y));
+    dr = length(ez) * dr + 1.0;
+    z = ez + p.xy * 0.3;
+    trap = min(trap, length(z));
+    if (dot(z, z) > 256.0) { break; }
+  }
+  let d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dr, 0.001);
+  let bound = length(p_in) - 2.8;
+  return vec2<f32>(max(d * 0.6, bound), trap);
+}
+
+// 77. DeJong Attractor
+fn mapDeJongAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let p = p_in * 0.8;
+  let a = 2.24 + sin(t * 0.05) * 0.5;
+  let b = -0.43 + cos(t * 0.07) * 0.3;
+  let c_ = -0.65 + sin(t * 0.03) * 0.4;
+  let d_ = 2.43 + cos(t * 0.04) * 0.3;
+  var density: f32 = 0.0;
+  let count = clamp(iters, 6, 20);
+  for (var s: i32 = 0; s < 3; s = s + 1) {
+    var z = vec2<f32>(0.1 - f32(s) * 0.2, 0.1 + f32(s) * 0.15);
+    for (var i: i32 = 0; i < 20; i = i + 1) {
+      if (i >= count) { break; }
+      let nz = vec2<f32>(sin(a * z.y) - cos(b * z.x), sin(c_ * z.x) - cos(d_ * z.y));
+      z = nz;
+      let pt = vec3<f32>(z * 0.7, p.z * 0.5 + f32(s) * 0.15);
+      let dist = length(p - pt);
+      density = density + exp(-dist * 5.0);
+    }
+  }
+  let dd = 0.3 - density * 0.04;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(dd, bound) * 0.5, density * 0.15);
+}
+
+// 78. Pickover Attractor
+fn mapPickoverAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let p = p_in * 0.7;
+  let a = -1.64 + sin(t * 0.04) * 0.4;
+  let b = 1.9 + cos(t * 0.06) * 0.3;
+  let c_ = -0.31 + sin(t * 0.05) * 0.3;
+  let d_ = 0.72 + cos(t * 0.03) * 0.2;
+  var density: f32 = 0.0;
+  var z = vec2<f32>(0.1, 0.1);
+  let count = clamp(iters, 8, 24);
+  for (var i: i32 = 0; i < 24; i = i + 1) {
+    if (i >= count) { break; }
+    let nz = vec2<f32>(sin(a * z.y) + c_ * cos(a * z.x), sin(b * z.x) + d_ * cos(b * z.y));
+    z = nz;
+    let pt = vec3<f32>(z * 0.6, p.z * 0.4);
+    let dist = length(p - pt);
+    density = density + exp(-dist * 4.5);
+  }
+  let dd = 0.28 - density * 0.035;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(dd, bound) * 0.5, density * 0.12);
+}
+
+// 79. Vicsek Fractal (3D cross IFS, dim ~1.465)
+fn mapVicsekFractal(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.8;
+  let rot_a = t * 0.04;
+  p = vec3<f32>(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  let scale: f32 = 3.0;
+  var d: f32 = 1e10;
+  let count = clamp(iters, 4, 12);
+  for (var i: i32 = 0; i < 12; i = i + 1) {
+    if (i >= count) { break; }
+    p = abs(p);
+    if (p.x < p.y) { p.xy = p.yx; }
+    if (p.x < p.z) { p.xz = p.zx; }
+    if (p.y < p.z) { p.yz = p.zy; }
+    p = p * scale - vec3<f32>(scale - 1.0);
+    d = min(d, length(p) * pow(scale, -f32(i + 1)));
+  }
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound), length(p_in) * 0.3);
+}
+
+// 80. Mandelbar (Conjugate Mandelbrot)
+fn mapMandelbar(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.4;
+  let rot_a = t * 0.06;
+  p = vec3<f32>(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  var z = p.xy;
+  let c = p.xy;
+  var trap: f32 = 1e10;
+  var dr: f32 = 1.0;
+  let count = clamp(iters, 4, 20);
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= count) { break; }
+    trap = min(trap, length(z));
+    let zc = vec2<f32>(z.x, -z.y);
+    let z2 = vec2<f32>(zc.x * zc.x - zc.y * zc.y, 2.0 * zc.x * zc.y);
+    dr = 2.0 * length(z) * dr + 1.0;
+    z = z2 + c;
+    if (dot(z, z) > 256.0) { break; }
+  }
+  let d = 0.5 * log(max(dot(z, z), 1.0001)) * length(z) / max(dr, 0.001);
+  let bound = length(p_in) - 2.6;
+  return vec2<f32>(max(d * 0.6, bound), trap);
+}
+
+// 81. Weierstrass 3D (Nowhere-differentiable surface)
+fn mapWeierstrass3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.5;
+  let rot_a = t * 0.05;
+  p = vec3<f32>(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  let a_w: f32 = 0.5;
+  let b_w: f32 = 7.0;
+  var surf: f32 = 0.0;
+  let count = clamp(iters, 4, 10);
+  for (var n: i32 = 0; n < 10; n = n + 1) {
+    if (n >= count) { break; }
+    let an = pow(a_w, f32(n));
+    let bn = pow(b_w, f32(n));
+    surf = surf + an * cos(bn * 3.14159 * p.x) * cos(bn * 3.14159 * p.z);
+  }
+  let d = abs(p.y - surf * 0.3) - 0.15;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(d, bound) * 0.7, abs(surf) * 0.2);
+}
+
+// 82. Popcorn Function (Celldoor)
+fn mapPopcornFunction(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var p = p_in * 1.3;
+  let rot_a = t * 0.05;
+  p = vec3<f32>(p.x * cos(rot_a) - p.z * sin(rot_a), p.y, p.x * sin(rot_a) + p.z * cos(rot_a));
+  let c_pop = 0.4 + sin(t * 0.08) * 0.15;
+  var z = p.xy;
+  var trap: f32 = 1e10;
+  let count = clamp(iters, 4, 12);
+  for (var i: i32 = 0; i < 12; i = i + 1) {
+    if (i >= count) { break; }
+    trap = min(trap, length(z));
+    let nz = vec2<f32>(z.x - c_pop * sin(z.y + tan(z.y)), z.y - c_pop * sin(z.x + tan(z.x)));
+    z = nz;
+  }
+  let d = length(z - p.xy) - 0.2;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(abs(d) - 0.05, bound) * 0.6, trap);
+}
+
+// 83. Bedhead Attractor (3D chaotic)
+fn mapBedheadAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let p = p_in * 0.7;
+  let a = 0.95 + sin(t * 0.04) * 0.2;
+  let b = 0.7 + cos(t * 0.06) * 0.15;
+  let c_ = 0.6 + sin(t * 0.05) * 0.2;
+  var density: f32 = 0.0;
+  var z = vec3<f32>(0.1, 0.1, 0.1);
+  let count = clamp(iters, 6, 18);
+  for (var i: i32 = 0; i < 18; i = i + 1) {
+    if (i >= count) { break; }
+    let nz = vec3<f32>(
+      sin(a * z.y * z.z) - z.z * cos(b * z.x * z.y),
+      z.z * sin(a * z.x) - cos(b * z.y * z.z),
+      c_ * sin(z.x * z.z)
+    );
+    z = nz * 0.3;
+    let dist = length(p - z);
+    density = density + exp(-dist * 4.0);
+  }
+  let dd = 0.3 - density * 0.04;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(dd, bound) * 0.5, density * 0.15);
+}
+
+// 84. FourSpot Attractor (4-wing chaotic)
+fn mapFourSpotAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let p = p_in * 0.8;
+  let a = 2.0 + sin(t * 0.05) * 0.5;
+  var density: f32 = 0.0;
+  var z = vec3<f32>(0.5, 0.5, 0.5);
+  let count = clamp(iters, 6, 20);
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= count) { break; }
+    let nz = vec3<f32>(z.y * z.z - a * z.x, z.x * z.z - z.y, -z.x * z.y + z.z);
+    z = nz * 0.3;
+    let dist = length(p - z);
+    density = density + exp(-dist * 5.0);
+  }
+  let dd = 0.25 - density * 0.04;
+  let bound = length(p_in) - 2.5;
+  return vec2<f32>(max(dd, bound) * 0.5, density * 0.12);
+}
+
+// 85. Svensson Attractor
+fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let p = p_in * 0.7;
+  let a = 2.0 + sin(t * 0.04) * 0.3;
+  let b = 0.2 + cos(t * 0.06) * 0.1;
+  let c_ = 1.57 + sin(t * 0.05) * 0.2;
+  let d_ = 0.4 + cos(t * 0.03) * 0.15;
+  var density: f32 = 0.0;
+  var z = vec2<f32>(0.1, 0.1);
+  let count = clamp(iters, 8, 22);
+  for (var i: i32 = 0; i < 22; i = i + 1) {
+    if (i >= count) { break; }
+    let nz = vec2<f32>(d_ * sin(a * z.y) - z.x * 0.1, b - z.x * cos(c_ * z.x));
+    z = nz;
+    let pt = vec3<f32>(z * 0.8, p.z * 0.4);
+    let dist = length(p - pt);
+    density = density + exp(-dist * 4.5);
+  }
+  let dd = 0.28 - density * 0.035;
+  let bound = length(p_in) - 2.3;
+  return vec2<f32>(max(dd, bound) * 0.5, density * 0.12);
+}
+
+// Master Single Primitive Dispatcher (86 Architectures)
 fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (ftype == 0) { return mapPhyllotaxis(p, t, phi, iters); }
   if (ftype == 1) { return mapMandelbulb(p, t, phi, iters); }
@@ -1894,7 +2117,17 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 72) { return mapFitzHugh(p, t, phi, iters); }
   if (ftype == 73) { return mapRosslerAttractor(p, t, phi, iters); }
   if (ftype == 74) { return mapDuffingAttractor(p, t, phi, iters); }
-  return mapLogisticBifurcation(p, t, phi, iters);
+  if (ftype == 75) { return mapLogisticBifurcation(p, t, phi, iters); }
+  if (ftype == 76) { return mapFractalSpire(p, t, phi, iters); }
+  if (ftype == 77) { return mapDeJongAttractor(p, t, phi, iters); }
+  if (ftype == 78) { return mapPickoverAttractor(p, t, phi, iters); }
+  if (ftype == 79) { return mapVicsekFractal(p, t, phi, iters); }
+  if (ftype == 80) { return mapMandelbar(p, t, phi, iters); }
+  if (ftype == 81) { return mapWeierstrass3D(p, t, phi, iters); }
+  if (ftype == 82) { return mapPopcornFunction(p, t, phi, iters); }
+  if (ftype == 83) { return mapBedheadAttractor(p, t, phi, iters); }
+  if (ftype == 84) { return mapFourSpotAttractor(p, t, phi, iters); }
+  return mapSvenssonAttractor(p, t, phi, iters);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
@@ -2230,7 +2463,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   // Fixed large max_dist — decoupled from cam_dist to prevent far-side slicing
   // When camera is close, rays travel nearly parallel to surface and need full range
   let max_dist: f32 = 128.0;
-  var glow: f32 = 0.0;
   var hit: bool = false;
   var min_trap: f32 = 1e10;
   var steps: i32 = 0;
@@ -2242,12 +2474,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     min_trap = min(min_trap, res.y);
 
     // No near-plane escape — let rays march from the start to prevent slicing artifacts
-    
-    // Controlled aura & interior volumetric fog (reduced to prevent milky silhouette)
-    let fogDensity = max(0.0, u.volumetric_fog);
-    if (d > 0.006) {
-      glow = glow + (0.0004 * (1.0 + fogDensity * 0.5)) / (0.08 + d * d * 18.0);
-    }
 
     let hit_threshold = 0.00075 * t + 0.00025;
     if (abs(d) < hit_threshold) {
@@ -2264,8 +2490,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       break;
     }
   }
-
-  glow = min(glow, 0.08); // Tight cap to prevent milky silhouette glow
 
   let bg_rad = length(uv);
   var col = vec3<f32>(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u.time * 0.3));
@@ -2439,17 +2663,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let fogDensity: f32 = select(0.02, 0.012, cam_dist < 1.0);
     let fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
     col = mix(col, vec3<f32>(0.005, 0.004, 0.008), fog * clamp(u.volumetric_fog, 0.0, 1.0));
-  } else {
-    // Glow in empty void silhouette
-    if (u.render_style > 0.5 && u.render_style < 1.5) {
-      col = col + u.accent_color * glow * 1.2 + vec3<f32>(0.01, 0.02, 0.04);
-    } else if (u.render_style > 2.5 && u.render_style < 3.5) {
-      col = col + u.accent_color * glow * 1.8 + u.secondary_color * (glow * 0.6);
-    } else if (u.render_style > 4.5 && u.render_style < 5.5) {
-      col = col + mix(u.primary_color, u.accent_color, 0.5 + 0.5 * sin(u.time * 3.0)) * glow * 1.5;
-    } else {
-      col = col + u.accent_color * glow * (u.glow_intensity * 0.35);
-    }
   }
 
   col = acesToneMap(col);

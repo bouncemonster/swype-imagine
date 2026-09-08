@@ -235,6 +235,16 @@ export const COMPATIBLE_HYBRIDS: Record<FractalType, { partners: FractalType[]; 
   rosslerAttractor: { partners: ['lorenzAttractor', 'chuaCircuit', 'rosslerHyperchaos'], ops: ['smoothUnion', 'domainWarp'] },
   duffingAttractor: { partners: ['lorenzAttractor', 'chuaCircuit', 'rosslerAttractor'], ops: ['smoothUnion', 'domainWarp'] },
   logisticBifurcation: { partners: ['henonAttractor', 'mandelbulb', 'hofstadterButterfly'], ops: ['smoothUnion', 'domainWarp'] },
+  fractalSpire: { partners: ['mandelbulb', 'spiralTunnel', 'quaternionJulia'], ops: ['smoothUnion', 'domainWarp', 'goldenSpiralFold'] },
+  deJongAttractor: { partners: ['pickoverAttractor', 'svenssonAttractor', 'cliffordAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
+  pickoverAttractor: { partners: ['deJongAttractor', 'bedheadAttractor', 'fourSpotAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
+  vicsekFractal: { partners: ['sierpinskiCarpet', 'cantorDust', 'menger'], ops: ['smoothUnion', 'smoothCarve', 'fractalLattice'] },
+  mandelbar: { partners: ['mandelbulb', 'tricorn', 'burningShip3D'], ops: ['smoothUnion', 'smoothMorph', 'domainWarp'] },
+  weierstrass3D: { partners: ['gyroid', 'neoviusMinimal', 'schwarzP'], ops: ['smoothMorph', 'smoothUnion', 'fractalLattice'] },
+  popcornFunction: { partners: ['hopfFibration', 'cliffordTorus4D', 'spiralTunnel'], ops: ['domainWarp', 'smoothMorph'] },
+  bedheadAttractor: { partners: ['lorenzAttractor', 'rosslerAttractor', 'fourSpotAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
+  fourSpotAttractor: { partners: ['bedheadAttractor', 'halvorsenAttractor', 'thomasAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
+  svenssonAttractor: { partners: ['deJongAttractor', 'pickoverAttractor', 'cliffordAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
 };
 
 const GOLDEN_RATIO = 1.61803398875;
@@ -354,6 +364,16 @@ export const ALL_FRACTAL_TYPES: FractalType[] = [
   'rosslerAttractor',
   'duffingAttractor',
   'logisticBifurcation',
+  'fractalSpire',
+  'deJongAttractor',
+  'pickoverAttractor',
+  'vicsekFractal',
+  'mandelbar',
+  'weierstrass3D',
+  'popcornFunction',
+  'bedheadAttractor',
+  'fourSpotAttractor',
+  'svenssonAttractor',
 ];
 
 export const FRACTAL_NAMES: Record<FractalType, string> = {
@@ -433,6 +453,16 @@ export const FRACTAL_NAMES: Record<FractalType, string> = {
   rosslerAttractor: 'Аттрактор Рёсслера',
   duffingAttractor: 'Аттрактор Даффинга',
   logisticBifurcation: 'Бифуркация логистического отображения (Фейгенбаум)',
+  fractalSpire: 'Фрактальный шпиль (экспоненциальная спиральная башня)',
+  deJongAttractor: 'Странный аттрактор де Йонга',
+  pickoverAttractor: 'Странный аттрактор Пиковера',
+  vicsekFractal: 'Фрактал Вицека (3D крест IFS)',
+  mandelbar: 'Мандельбар (сопряжённое множество Мандельброта)',
+  weierstrass3D: 'Функция Вейерштрасса 3D (нигде не дифференцируема)',
+  popcornFunction: 'Функция попкорна (Celldoor)',
+  bedheadAttractor: '3D хаотический аттрактор Bedhead',
+  fourSpotAttractor: '4-крылый хаотический аттрактор FourSpot',
+  svenssonAttractor: 'Странный аттрактор Свенссона',
 };
 
 export const DEFAULT_ZOOMS: Record<FractalType, number> = {
@@ -512,6 +542,16 @@ export const DEFAULT_ZOOMS: Record<FractalType, number> = {
   rosslerAttractor: 2.5,
   duffingAttractor: 2.3,
   logisticBifurcation: 2.3,
+  fractalSpire: 1.8,
+  deJongAttractor: 2.5,
+  pickoverAttractor: 2.5,
+  vicsekFractal: 1.6,
+  mandelbar: 1.8,
+  weierstrass3D: 1.5,
+  popcornFunction: 2.0,
+  bedheadAttractor: 2.5,
+  fourSpotAttractor: 2.5,
+  svenssonAttractor: 2.5,
 };
 
 export interface TasteProfile {
@@ -549,6 +589,7 @@ export function getFractalArchetype(type: FractalType): AestheticArchetype {
     case 'dragonCurveIFS':
     case 'spinFoamNetwork':
     case 'beltramiPseudosphere':
+    case 'vicsekFractal':
       return 'geometry';
 
     case 'mandelbulb':
@@ -559,6 +600,9 @@ export function getFractalArchetype(type: FractalType): AestheticArchetype {
     case 'newtonBasins':
     case 'menger':
     case 'jerusalemCube':
+    case 'fractalSpire':
+    case 'mandelbar':
+    case 'popcornFunction':
       return 'complex';
 
     case 'gyroid':
@@ -568,6 +612,7 @@ export function getFractalArchetype(type: FractalType): AestheticArchetype {
     case 'cliffordTorus4D':
     case 'antoineNecklace':
     case 'abrikosovLattice':
+    case 'weierstrass3D':
       return 'minimal';
 
     case 'primeSpiral':
@@ -755,7 +800,7 @@ export class NeuroAestheticsEngine {
     let hybridType = selectedType;
     let tertiaryType = selectedType;
     let hybridBlend = 0.0;
-    let tertiaryBlend = 0.0; // Keep tertiary 0.0 by default to guarantee high FPS & clean geometry
+    let tertiaryBlend = 0.0;
     let compositeOp: CompositeOp = 'smoothUnion';
     let octaveLayers = 1;
     let smoothK = 0.32;
@@ -782,6 +827,21 @@ export class NeuroAestheticsEngine {
       const name1 = FRACTAL_NAMES[selectedType].split(' ')[0];
       const name2 = FRACTAL_NAMES[hybridType].split(' ')[0];
       specimenName = `${name1} ${sym} ${name2} • φ-${this.currentGeneration}`;
+
+      // Tertiary layer: 35% chance to add a 3rd fractal for richer topology (only 4 shader iterations)
+      if (Math.random() < 0.35) {
+        const compatC = COMPATIBLE_HYBRIDS[hybridType] || {
+          partners: ALL_FRACTAL_TYPES.filter(t => t !== selectedType && t !== hybridType),
+          ops: ['smoothUnion']
+        };
+        const tertiaryCandidates = compatC.partners.filter(t => t !== selectedType && t !== hybridType);
+        if (tertiaryCandidates.length > 0) {
+          tertiaryType = tertiaryCandidates[Math.floor(Math.random() * tertiaryCandidates.length)];
+          tertiaryBlend = parseFloat((0.08 + Math.random() * 0.18).toFixed(3));
+          const name3 = FRACTAL_NAMES[tertiaryType].split(' ')[0];
+          specimenName = `${name1} ${sym} ${name2} ⊕ ${name3} • φ-${this.currentGeneration}`;
+        }
+      }
     }
 
     // Continuous genetic morphological parameters (keep interior solid by default)
