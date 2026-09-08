@@ -156,7 +156,7 @@ export class WebGLEngine {
       'u_box_fold', 'u_sphere_fold', 'u_interior_cut',
       'u_primary_color', 'u_secondary_color', 'u_accent_color',
       'u_cam_mode', 'u_cam_pos', 'u_slice_plane', 'u_slice_axis', 'u_render_style',
-      'u_headlamp_power', 'u_volumetric_fog'
+      'u_headlamp_power', 'u_volumetric_fog', 'u_palette_seed'
     ];
 
     uniformNames.forEach(name => {
@@ -254,6 +254,7 @@ export class WebGLEngine {
     if (this.uniformLocs['u_render_style']) gl.uniform1f(this.uniformLocs['u_render_style'], getRenderStyleIndex(params.renderStyle));
     if (this.uniformLocs['u_headlamp_power']) gl.uniform1f(this.uniformLocs['u_headlamp_power'], params.headlampPower ?? 0.3);
     if (this.uniformLocs['u_volumetric_fog']) gl.uniform1f(this.uniformLocs['u_volumetric_fog'], params.volumetricFog ?? 0.15);
+    if (this.uniformLocs['u_palette_seed']) gl.uniform1f(this.uniformLocs['u_palette_seed'], params.paletteSeed ?? 0.0);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

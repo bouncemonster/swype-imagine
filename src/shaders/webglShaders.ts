@@ -51,6 +51,7 @@ uniform float u_slice_axis;
 uniform float u_render_style;
 uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
+uniform float u_palette_seed;
 
 const float PI = 3.141592653589793;
 const float TWO_PI = 6.283185307179586;
@@ -2306,19 +2307,20 @@ float calcSoftShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
   return clamp(res, 0.0, 1.0);
 }
 
-float calcAO(vec3 p, vec3 n) {
+float calcAO(vec3 p, vec3 n, float t) {
+  float aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive: scale down at close range
   float occ = 0.0;
   float sca = 1.0;
   for (int i = 0; i < 5; i++) {
-    float h = 0.012 + 0.09 * float(i * i) / 16.0;
+    float h = (0.012 + 0.09 * float(i * i) / 16.0) * aoScale;
     float d = sceneSDF(p + h * n).x;
     occ += (h - d) * sca;
     sca *= 0.74;
   }
-  // IQ multi-distance AO: captures both fine and large-scale occlusion
-  float ao1 = clamp(1.0 - 4.0 * max(0.005 - sceneSDF(p + n * 0.005).x, 0.0), 0.0, 1.0);
-  float ao2 = clamp(1.0 - 2.5 * max(0.03  - sceneSDF(p + n * 0.03).x,  0.0), 0.0, 1.0);
-  float ao3 = clamp(1.0 - 1.5 * max(0.12  - sceneSDF(p + n * 0.12).x,  0.0), 0.0, 1.0);
+  // IQ multi-distance AO: distance-scaled for consistent behavior at all ranges
+  float ao1 = clamp(1.0 - 4.0 * max(0.005 * aoScale - sceneSDF(p + n * 0.005 * aoScale).x, 0.0), 0.0, 1.0);
+  float ao2 = clamp(1.0 - 2.5 * max(0.03  * aoScale - sceneSDF(p + n * 0.03  * aoScale).x, 0.0), 0.0, 1.0);
+  float ao3 = clamp(1.0 - 1.5 * max(0.12  * aoScale - sceneSDF(p + n * 0.12  * aoScale).x, 0.0), 0.0, 1.0);
   float multiAO = ao1 * 0.25 + ao2 * 0.40 + ao3 * 0.35;
   return clamp(multiAO * (1.0 - 0.8 * occ), 0.15, 1.0);
 }
@@ -2441,8 +2443,8 @@ void main() {
 
   if (hit) {
     vec3 p = ro + rd * t;
-    vec3 base_n = calcNormal(p, min(0.0008 * t + 0.00025, 0.002));
-    float ao = calcAO(p, base_n);
+    vec3 base_n = calcNormal(p, min(0.001 * max(t, 0.1) + 0.0003, 0.002));
+    float ao = calcAO(p, base_n, t);
     vec3 n = base_n;
     if (dot(n, rd) > 0.0) {
       n = -n;
@@ -2475,29 +2477,31 @@ void main() {
     float spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
     
     // Surface curvature from normal variation (2 extra SDF calls)
-    // Moved before palette engine — trapDetail needed for orbit trap coloring
+    // Distance-adaptive epsilon + curvature floor prevents close-up saturation
     float curv = 0.0;
     {
-      float ce = min(0.001 * t + 0.0005, 0.003);
+      float ce = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
       vec3 dn1 = calcNormal(p + vec3(ce, 0.0, 0.0), ce) - n;
       vec3 dn2 = calcNormal(p + vec3(0.0, ce, 0.0), ce) - n;
       curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
     }
     float curvNorm = clamp(curv / 5.0, 0.0, 1.0);
-    float trapDetail = clamp(1.0 / (1.0 + min_trap * 2.0), 0.0, 1.0);
+    // Curvature floor prevents trapDetail/trapWeight saturation at close range
+    float effectiveTrap = max(min_trap, curvNorm * 0.15);
+    float trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
 
-    // Harmonic Cosine Palette Engine with Golden Ratio phase distribution
-    // Strong spatial modulation for rich color variation across the surface
-    float phase = fract(min_trap * 1.8 + length(p) * 0.55 + dot(p, n) * 0.3 + u_time * 0.03);
+    // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
+    // curvNorm provides surface variation; length(p-ro) is ray distance (always meaningful)
+    float phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u_time * 0.04 + u_palette_seed * 0.01);
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
     vec3 mat_col = u_primary_color * w_primary + u_secondary_color * w_secondary;
-    mat_col = mix(mat_col, u_accent_color, w_accent * 0.30); // Stronger accent mixing
-    mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.18); // Edge accent boost
-    // Orbit trap direct coloring: fine fractal structure modulates material (Syntopia/IQ technique)
-    float trapWeight = clamp(0.30 / (1.0 + min_trap * 2.5), 0.0, 0.40);
+    mat_col = mix(mat_col, u_accent_color, w_accent * 0.30);
+    mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.18);
+    // Orbit trap direct coloring with saturation-safe effectiveTrap
+    float trapWeight = clamp(0.30 / (1.0 + effectiveTrap * 2.5), 0.0, 0.40);
     mat_col = mix(mat_col, u_accent_color * (0.5 + trapDetail * 0.5), trapWeight);
 
     // Environment ambient: sample SDF along normal for color-bleeding approximation

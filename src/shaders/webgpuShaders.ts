@@ -41,7 +41,7 @@ struct Uniforms {
   render_style: f32,
 
   ambient_color: vec3<f32>,
-  pad3: f32,
+  palette_seed: f32,
 
   pad4: vec4<f32>,
 };
@@ -2374,19 +2374,20 @@ fn calcSoftShadow(ro: vec3<f32>, rd: vec3<f32>, mint: f32, maxt: f32, k: f32) ->
   return clamp(res, 0.0, 1.0);
 }
 
-fn calcAO(p: vec3<f32>, n: vec3<f32>) -> f32 {
+fn calcAO(p: vec3<f32>, n: vec3<f32>, t: f32) -> f32 {
+  let aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive: scale down at close range
   var occ: f32 = 0.0;
   var sca: f32 = 1.0;
   for (var i: i32 = 0; i < 5; i = i + 1) {
-    let h = 0.012 + 0.09 * f32(i * i) / 16.0;
+    let h = (0.012 + 0.09 * f32(i * i) / 16.0) * aoScale;
     let d = sceneSDF(p + h * n).x;
     occ = occ + (h - d) * sca;
     sca = sca * 0.74;
   }
-  // IQ multi-distance AO: captures both fine and large-scale occlusion
-  let ao1 = clamp(1.0 - 4.0 * max(0.005 - sceneSDF(p + n * 0.005).x, 0.0), 0.0, 1.0);
-  let ao2 = clamp(1.0 - 2.5 * max(0.03  - sceneSDF(p + n * 0.03).x,  0.0), 0.0, 1.0);
-  let ao3 = clamp(1.0 - 1.5 * max(0.12  - sceneSDF(p + n * 0.12).x,  0.0), 0.0, 1.0);
+  // IQ multi-distance AO: distance-scaled for consistent behavior at all ranges
+  let ao1 = clamp(1.0 - 4.0 * max(0.005 * aoScale - sceneSDF(p + n * 0.005 * aoScale).x, 0.0), 0.0, 1.0);
+  let ao2 = clamp(1.0 - 2.5 * max(0.03  * aoScale - sceneSDF(p + n * 0.03  * aoScale).x, 0.0), 0.0, 1.0);
+  let ao3 = clamp(1.0 - 1.5 * max(0.12  * aoScale - sceneSDF(p + n * 0.12  * aoScale).x, 0.0), 0.0, 1.0);
   let multiAO = ao1 * 0.25 + ao2 * 0.40 + ao3 * 0.35;
   return clamp(multiAO * (1.0 - 0.8 * occ), 0.15, 1.0);
 }
@@ -2513,8 +2514,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
   if (hit) {
     let p = ro + rd * t;
-    let base_n = calcNormal(p, min(0.0008 * t + 0.00025, 0.002));
-    let ao = calcAO(p, base_n);
+    let base_n = calcNormal(p, min(0.001 * max(t, 0.1) + 0.0003, 0.002));
+    let ao = calcAO(p, base_n, t);
     var n = base_n;
     if (dot(n, rd) > 0.0) {
       n = -n;
@@ -2548,26 +2549,28 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
     
     // Surface curvature from normal variation (2 extra SDF calls)
-    // Moved before palette engine — trapDetail needed for orbit trap coloring
-    let ce: f32 = min(0.001 * t + 0.0005, 0.003);
+    // Distance-adaptive epsilon + curvature floor prevents close-up saturation
+    let ce: f32 = min(0.0015 * max(t, 0.1) + 0.0004, 0.003);
     let dn1 = calcNormal(p + vec3<f32>(ce, 0.0, 0.0), ce) - n;
     let dn2 = calcNormal(p + vec3<f32>(0.0, ce, 0.0), ce) - n;
     let curv = clamp((length(dn1) + length(dn2)) / (2.0 * ce), 0.0, 8.0);
     let curvNorm = clamp(curv / 5.0, 0.0, 1.0);
-    let trapDetail = clamp(1.0 / (1.0 + min_trap * 2.0), 0.0, 1.0);
+    // Curvature floor prevents trapDetail/trapWeight saturation at close range
+    let effectiveTrap = max(min_trap, curvNorm * 0.15);
+    let trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
 
-    // Harmonic Cosine Palette Engine with Golden Ratio phase distribution
-    // Strong spatial modulation for rich color variation across the surface
-    let phase = fract(min_trap * 1.8 + length(p) * 0.55 + dot(p, n) * 0.3 + u.time * 0.03);
+    // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
+    // curvNorm provides surface variation; length(p-ro) is ray distance (always meaningful)
+    let phase = fract(effectiveTrap * 2.0 + curvNorm * 1.5 + length(p - ro) * 0.3 + u.time * 0.04 + u.palette_seed * 0.01);
     let w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     let w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));
     let w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
     var mat_col = u.primary_color * w_primary + u.secondary_color * w_secondary;
-    mat_col = mix(mat_col, u.accent_color, w_accent * 0.30); // Stronger accent mixing
-    mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.18); // Edge accent boost
-    // Orbit trap direct coloring: fine fractal structure modulates material (Syntopia/IQ technique)
-    let trapWeight = clamp(0.30 / (1.0 + min_trap * 2.5), 0.0, 0.40);
+    mat_col = mix(mat_col, u.accent_color, w_accent * 0.30);
+    mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.18);
+    // Orbit trap direct coloring with saturation-safe effectiveTrap
+    let trapWeight = clamp(0.30 / (1.0 + effectiveTrap * 2.5), 0.0, 0.40);
     mat_col = mix(mat_col, u.accent_color * (0.5 + trapDetail * 0.5), trapWeight);
 
     // Environment ambient: sample SDF along normal for color-bleeding approximation

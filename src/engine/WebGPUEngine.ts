@@ -241,7 +241,7 @@ export class WebGPUEngine {
     u[40] = palette.ambient ? palette.ambient[0] : 0.02;
     u[41] = palette.ambient ? palette.ambient[1] : 0.02;
     u[42] = palette.ambient ? palette.ambient[2] : 0.02;
-    u[43] = 0.0;
+    u[43] = params.paletteSeed ?? 0.0;
 
     u[44] = 0.0;
     u[45] = 0.0;

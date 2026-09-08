@@ -167,6 +167,7 @@ export interface FractalParams {
   probeActive: boolean;        // Interactive 3D spatial probe & dimension inspector
   drsEnabled: boolean;         // Dynamic resolution scaling to guarantee 60-250 FPS
   paletteRotation: boolean;    // Dynamic smooth palette cycle
+  paletteSeed?: number;        // 0-100 per-fractal color signature offset
 }
 
 export interface TelemetryData {
