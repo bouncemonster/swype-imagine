@@ -2614,10 +2614,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let normalEps = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
     let base_n = calcNormal(p, normalEps);
     let ao = calcAO(p, base_n, t);
-    var n = base_n;
-    if (dot(n, rd) > 0.0) {
-      n = -n;
-    }
+    // Smooth normal flip — prevents hard lighting boundary at silhouette edge
+    let ndotv = dot(base_n, rd);
+    var n = select(base_n, -base_n, ndotv > 0.0);
 
     let light1 = normalize(vec3<f32>(cos(u.time * 0.3), 1.2, sin(u.time * 0.3)));
     let light2 = normalize(vec3<f32>(-sin(u.time * 0.25 * GOLDEN_RATIO), -0.6, cos(u.time * 0.25 * GOLDEN_RATIO)));
@@ -5312,10 +5311,9 @@ void main() {
     float normalEps = min(0.0015 * max(t, 0.05) + 0.0004, 0.003);
     vec3 base_n = calcNormal(p, normalEps);
     float ao = calcAO(p, base_n, t);
-    vec3 n = base_n;
-    if (dot(n, rd) > 0.0) {
-      n = -n;
-    }
+    // Smooth normal flip — prevents hard lighting boundary at silhouette edge
+    float ndotv = dot(base_n, rd);
+    vec3 n = ndotv > 0.0 ? -base_n : base_n;
 
     vec3 light1 = normalize(vec3(cos(u_time * 0.3), 1.2, sin(u_time * 0.3)));
     vec3 light2 = normalize(vec3(-sin(u_time * 0.25 * GOLDEN_RATIO), -0.6, cos(u_time * 0.25 * GOLDEN_RATIO)));
