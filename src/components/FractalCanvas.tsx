@@ -167,22 +167,42 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
 
     const currentZoom = paramsRef.current.zoom;
-    // Further reduced sensitivity: 0.0015 instead of 0.0025 for much slower rotation
-    // Also clamped to prevent excessive speed at any zoom level
     const dynamicSensitivity = 0.0015 * Math.max(0.1, Math.min(0.6, currentZoom / 3.0));
+
+    // Check if moving opposite to current velocity (braking)
+    const currentVelX = velocityRef.current.x;
+    const currentVelY = velocityRef.current.y;
+    const moveDirX = dx / dt;
+    const moveDirY = dy / dt;
+    
+    // If moving opposite to current rotation direction, apply braking
+    const isOppositeX = (currentVelX > 0.001 && moveDirX < -0.001) || (currentVelX < -0.001 && moveDirX > 0.001);
+    const isOppositeY = (currentVelY > 0.001 && moveDirY < -0.001) || (currentVelY < -0.001 && moveDirY > 0.001);
+    
+    // If opposite movement detected, reduce velocity (braking effect)
+    const brakingFactor = 0.3;
+    if (isOppositeX) {
+      velocityRef.current.x *= brakingFactor;
+    }
+    if (isOppositeY) {
+      velocityRef.current.y *= brakingFactor;
+    }
+    
+    // If velocity is very low after braking, stop completely
+    if (Math.abs(velocityRef.current.x) < 0.001 && Math.abs(velocityRef.current.y) < 0.001) {
+      velocityRef.current = { x: 0, y: 0 };
+    }
 
     velocityRef.current = { x: dx / dt, y: dy / dt };
 
-    // Limit maximum rotation per frame to prevent jerky movement
-    const maxRotationPerFrame = 0.08; // radians (~4.5 degrees)
+    // Limit maximum rotation per frame
+    const maxRotationPerFrame = 0.08;
     const clampedDx = Math.max(-maxRotationPerFrame / dynamicSensitivity, Math.min(maxRotationPerFrame / dynamicSensitivity, dx));
     const clampedDy = Math.max(-maxRotationPerFrame / dynamicSensitivity, Math.min(maxRotationPerFrame / dynamicSensitivity, dy));
 
     onParamsChange(prev => ({
       ...prev,
-      // Clamp rotX to prevent infinite spinning (-PI to PI)
       rotX: ((prev.rotX + clampedDx * dynamicSensitivity + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI,
-      // Clamp rotY to prevent flipping (-85° to 85°)
       rotY: Math.max(-1.48, Math.min(1.48, prev.rotY + clampedDy * dynamicSensitivity)),
     }));
 
