@@ -3214,24 +3214,25 @@ vec3 calcMicroNormal(vec3 p, float scale) {
 // Kept for reference but commented out to save shader compilation time
 
 float calcAO(vec3 p, vec3 n, float t) {
-  float aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive: scale down at close range
+  float aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive
   float occ = 0.0;
   float sca = 1.0;
-  for (int i = 0; i < 5; i++) {
-    float h = (0.012 + 0.09 * float(i * i) / 16.0) * aoScale;
+  // HIGH-QUALITY AO: 7 samples (was 5) for smoother occlusion
+  for (int i = 0; i < 7; i++) {
+    float h = (0.01 + 0.11 * float(i * i) / 36.0) * aoScale;
     float d = sceneSDF(p + h * n).x;
     occ += (h - d) * sca;
-    sca *= 0.74;
+    sca *= 0.72; // Slightly faster decay for sharper details
   }
-  // Clamp occ to prevent negative values or overflow
-  occ = clamp(occ, 0.0, 2.0);
+  occ = clamp(occ, 0.0, 2.5);
   
-  // IQ multi-distance AO: distance-scaled for consistent behavior at all ranges
-  float ao1 = clamp(1.0 - 4.0 * max(0.005 * aoScale - sceneSDF(p + n * 0.005 * aoScale).x, 0.0), 0.0, 1.0);
-  float ao2 = clamp(1.0 - 2.5 * max(0.03  * aoScale - sceneSDF(p + n * 0.03  * aoScale).x, 0.0), 0.0, 1.0);
-  float ao3 = clamp(1.0 - 1.5 * max(0.12  * aoScale - sceneSDF(p + n * 0.12  * aoScale).x, 0.0), 0.0, 1.0);
-  float multiAO = ao1 * 0.25 + ao2 * 0.40 + ao3 * 0.35;
-  return clamp(multiAO * (1.0 - 0.8 * occ), 0.15, 1.0);
+  // IQ multi-distance AO: 4 distances (was 3) for better detail
+  float ao1 = clamp(1.0 - 5.0 * max(0.003 * aoScale - sceneSDF(p + n * 0.003 * aoScale).x, 0.0), 0.0, 1.0);
+  float ao2 = clamp(1.0 - 3.0 * max(0.02  * aoScale - sceneSDF(p + n * 0.02  * aoScale).x, 0.0), 0.0, 1.0);
+  float ao3 = clamp(1.0 - 2.0 * max(0.08  * aoScale - sceneSDF(p + n * 0.08  * aoScale).x, 0.0), 0.0, 1.0);
+  float ao4 = clamp(1.0 - 1.2 * max(0.18  * aoScale - sceneSDF(p + n * 0.18  * aoScale).x, 0.0), 0.0, 1.0);
+  float multiAO = ao1 * 0.20 + ao2 * 0.35 + ao3 * 0.30 + ao4 * 0.15;
+  return clamp(multiAO * (1.0 - 0.85 * occ), 0.12, 1.0);
 }
 
 vec3 acesToneMap(vec3 x) {
