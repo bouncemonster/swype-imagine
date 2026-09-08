@@ -68,7 +68,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     onScreenshotCaptured,
   });
 
-  const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling } = engine;
+  const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling, stopRotation, toggleInertia, inertiaEnabledRef } = engine;
 
   // Native wheel/touch listeners with passive:false + capture:true
   // capture:true ensures our listeners fire BEFORE React's document-level passive listeners

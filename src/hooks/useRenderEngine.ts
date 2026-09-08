@@ -35,6 +35,9 @@ export interface UseRenderEngineResult {
   lastMousePosRef: RefObject<{ x: number; y: number }>;
   lastInteractionReportTimeRef: RefObject<number>;
   lastMoveTimeRef: RefObject<number>;
+  inertiaEnabledRef: RefObject<boolean>;
+  stopRotation: () => void;
+  toggleInertia: () => void;
   params: FractalParams | null;
 }
 
@@ -117,6 +120,7 @@ export function useRenderEngine(
   const lastInteractionReportTimeRef = useRef<number>(0);
   const inertiaDecay = 0.92;
   const inertiaThreshold = 0.0001;
+  const inertiaEnabledRef = useRef(true); // Allow toggling inertia on/off
 
   // Keep screenshot ref in sync
   useEffect(() => {
@@ -393,7 +397,7 @@ export function useRenderEngine(
 
         // Inertia
         let inertiaRotX = 0, inertiaRotY = 0;
-        if (!isDraggingRef.current && (Math.abs(velocityRef.current.x) > inertiaThreshold || Math.abs(velocityRef.current.y) > inertiaThreshold)) {
+        if (inertiaEnabledRef.current && !isDraggingRef.current && (Math.abs(velocityRef.current.x) > inertiaThreshold || Math.abs(velocityRef.current.y) > inertiaThreshold)) {
           const currentZoom = currentParams.zoom;
           const dynamicSensitivity = 0.0045 * Math.max(0.12, Math.min(1.0, currentZoom / 2.8));
           const dt = deltaMs;
@@ -510,6 +514,25 @@ export function useRenderEngine(
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
           e.preventDefault();
           onPrevSpecimenRef.current?.();
+        } else if (e.key === 's' || e.key === 'S' || e.key === 'ы' || e.key === 'Ы') {
+          // Stop rotation (S or Russian Ы)
+          e.preventDefault();
+          velocityRef.current = { x: 0, y: 0 };
+          if (paramsRef.current) {
+            paramsRef.current = {
+              ...paramsRef.current,
+              autoRotate: false,
+            };
+          }
+          console.info('[Controls] Rotation stopped (S key)');
+        } else if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') {
+          // Toggle inertia (I or Russian Ш)
+          e.preventDefault();
+          inertiaEnabledRef.current = !inertiaEnabledRef.current;
+          if (!inertiaEnabledRef.current) {
+            velocityRef.current = { x: 0, y: 0 };
+          }
+          console.info(`[Controls] Inertia ${inertiaEnabledRef.current ? 'enabled' : 'disabled'} (I key)`);
         }
       }
     };
@@ -524,6 +547,26 @@ export function useRenderEngine(
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
+  }, []);
+
+  // Stop rotation function - immediately stops all rotation and inertia
+  const stopRotation = useCallback(() => {
+    velocityRef.current = { x: 0, y: 0 };
+    if (paramsRef.current) {
+      paramsRef.current = {
+        ...paramsRef.current,
+        autoRotate: false,
+      };
+    }
+  }, []);
+
+  // Toggle inertia on/off
+  const toggleInertia = useCallback(() => {
+    inertiaEnabledRef.current = !inertiaEnabledRef.current;
+    if (!inertiaEnabledRef.current) {
+      // If disabling inertia, stop all rotation immediately
+      velocityRef.current = { x: 0, y: 0 };
+    }
   }, []);
 
   return {
@@ -544,6 +587,9 @@ export function useRenderEngine(
     lastMousePosRef,
     lastInteractionReportTimeRef,
     lastMoveTimeRef,
+    inertiaEnabledRef,
+    stopRotation,
+    toggleInertia,
     params: paramsRef.current,
   };
 }
