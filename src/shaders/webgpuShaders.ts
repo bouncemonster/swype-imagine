@@ -2243,48 +2243,37 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     // No near-plane escape — let rays march from the start to prevent slicing artifacts
     
-    // Controlled aura & interior volumetric fog
+    // Controlled aura & interior volumetric fog (reduced to prevent milky silhouette)
     let fogDensity = max(0.0, u.volumetric_fog);
     if (d > 0.006) {
-      glow = glow + (0.0012 * (1.0 + fogDensity * 1.5)) / (0.08 + d * d * 18.0);
+      glow = glow + (0.0004 * (1.0 + fogDensity * 0.5)) / (0.08 + d * d * 18.0);
     }
 
     let hit_threshold = 0.00075 * t + 0.00025;
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
-      // 3-step bisection refinement for exact zero isosurface contact
-      var t_a: f32 = max(0.001, t - 0.02);
-      var t_b: f32 = t;
-      for (var s: i32 = 0; s < 3; s = s + 1) {
-        let t_m = 0.5 * (t_a + t_b);
-        let dm = sceneSDF(ro + rd * t_m).x;
-        if (abs(dm) < 0.0001) { t = t_m; break; }
-        if (dm < 0.0) { t_b = t_m; }
-        else { t_a = t_m; }
-        t = t_m;
-      }
       break;
     }
 
-    // Adaptive step sizing: fast across open space, precise at isosurface
-    let step_factor = select(0.80, 0.94, abs(d) > 0.2);
-    let step_d = max(abs(d) * step_factor, 0.0008);
+    // Adaptive step sizing: conservative to prevent tunneling through thin structures
+    let step_factor = select(0.65, 0.85, abs(d) > 0.2);
+    let step_d = max(abs(d) * step_factor, 0.0005);
     t = t + step_d;
     if (t > max_dist) {
       break;
     }
   }
 
-  glow = min(glow, 0.45);
+  glow = min(glow, 0.08); // Tight cap to prevent milky silhouette glow
 
   let bg_rad = length(uv);
   var col = vec3<f32>(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u.time * 0.3));
-  col = col + u.accent_color * 0.04 * exp(-bg_rad * 1.5);
+  col = col + u.accent_color * 0.015 * exp(-bg_rad * 2.0);
 
   if (hit) {
     let p = ro + rd * t;
-    let base_n = calcNormal(p, 0.0008 * t + 0.00025);
+    let base_n = calcNormal(p, min(0.0008 * t + 0.00025, 0.002));
     let ao = calcAO(p, base_n);
     var n = base_n;
     if (dot(n, rd) > 0.0) {
@@ -2308,7 +2297,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       let sssD = sceneSDF(p - light1 * sssOffset).x;
       sssTotal = sssTotal + smoothstep(0.0, sssDist * 1.5, sssD + sssDist * 1.5);
     }
-    let sss: f32 = (sssTotal / 3.0) * 0.55;
+    let sss: f32 = (sssTotal / 3.0) * 0.15; // Subtle SSS — high values wash out accent color
     sssCol = u.accent_color * sss * ao;
     let fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
@@ -2318,13 +2307,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let h1 = normalize(light1 - rd);
     let spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
 
-    // Dynamic Camera Headlamp: subtle fill light from camera direction
+    // Dynamic Camera Headlamp: very subtle tinted fill from camera direction
     let headDir = -rd;
     let headDiff = max(dot(n, headDir), 0.0);
-    let headSpec = pow(headDiff, 32.0);
     let headAtten = 1.0 / (1.0 + t * 0.8 + t * t * 0.2);
-    let headPower = max(0.0, u.headlamp_power) * 0.3; // Reduced to 30% to prevent harsh camera shadow
-    let headLight = (vec3<f32>(1.0, 0.97, 0.90) * headDiff * 0.4 + vec3<f32>(1.0, 1.0, 0.95) * headSpec * 0.3) * headAtten * ao * headPower;
+    let headPower = max(0.0, u.headlamp_power) * 0.04; // Minimal — primary cause of whitish washout
+    let headLight = u.primary_color * headDiff * headAtten * ao * headPower;
 
     // Harmonic Cosine Palette Engine with Golden Ratio Phase distribution
     let phase = fract(min_trap * 0.85 + length(p) * 0.18 + u.time * 0.02);
@@ -2333,17 +2321,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
     var mat_col = u.primary_color * w_primary + u.secondary_color * w_secondary;
-    mat_col = mix(mat_col, u.accent_color, w_accent * 0.45);
-    mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.35);
+    mat_col = mix(mat_col, u.accent_color, w_accent * 0.12); // Subtle accent — high values wash out to white
+    mat_col = mix(mat_col, u.accent_color, pow(1.0 - ao, 2.0) * 0.08); // Low-edge accent tint
 
-    let ambient = u.primary_color * 0.16 * ao;
+    let ambient = u.primary_color * 0.12 * ao;
     let diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    let specular = vec3<f32>(1.0, 0.96, 0.82) * spec1 * 1.35 * ao;
-    let rim = u.accent_color * fresnel * 0.65 * (0.3 + 0.7 * ao);
+    let specular = mat_col * spec1 * 0.35 * ao; // Tinted by material color — never white
+    let rim = u.accent_color * fresnel * 0.18 * (0.3 + 0.7 * ao); // Subtle rim — high values create white edges
 
-    // Direct crisp surface lighting with interior headlight and SSS
-    col = ambient + diffuse + specular + rim + headLight + sssCol;
-    col = col * (0.28 + 0.72 * ao);
+    // Clean surface lighting: no headlamp, minimal SSS
+    col = ambient + diffuse + specular + rim + sssCol;
+    col = col * (0.22 + 0.78 * ao); // Stronger AO contrast for depth
 
     // If slice plane is active, highlight the glowing cut rim
     if (u.slice_plane > 0.01) {
@@ -2473,9 +2461,19 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
   col = acesToneMap(col);
 
+  // Color-space dither to eliminate banding in smooth gradients
+  let ditherVal = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
+  col = col + (ditherVal - 0.5) * (1.0 / 128.0);
+
   let vigStrength = smoothstep(0.12, 1.0, cam_dist);
   let vignette = 1.0 - smoothstep(0.9, 1.8, bg_rad) * vigStrength * 0.5;
   col = col * vignette;
+
+  // Subpixel edge sharpening via screen-space derivatives
+  let edgeDetect = length(vec2<f32>(dpdx(col.r), dpdy(col.r))) +
+                   length(vec2<f32>(dpdx(col.g), dpdy(col.g))) +
+                   length(vec2<f32>(dpdx(col.b), dpdy(col.b)));
+  col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
 
   return vec4<f32>(col, 1.0);
 }

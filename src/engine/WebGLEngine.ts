@@ -247,8 +247,8 @@ export class WebGLEngine {
     if (this.uniformLocs['u_slice_plane']) gl.uniform1f(this.uniformLocs['u_slice_plane'], params.slicePlane ?? 0.0);
     if (this.uniformLocs['u_slice_axis']) gl.uniform1f(this.uniformLocs['u_slice_axis'], getSliceAxisIndex(params.sliceAxis));
     if (this.uniformLocs['u_render_style']) gl.uniform1f(this.uniformLocs['u_render_style'], getRenderStyleIndex(params.renderStyle));
-    if (this.uniformLocs['u_headlamp_power']) gl.uniform1f(this.uniformLocs['u_headlamp_power'], params.headlampPower ?? 1.0);
-    if (this.uniformLocs['u_volumetric_fog']) gl.uniform1f(this.uniformLocs['u_volumetric_fog'], params.volumetricFog ?? 0.4);
+    if (this.uniformLocs['u_headlamp_power']) gl.uniform1f(this.uniformLocs['u_headlamp_power'], params.headlampPower ?? 0.3);
+    if (this.uniformLocs['u_volumetric_fog']) gl.uniform1f(this.uniformLocs['u_volumetric_fog'], params.volumetricFog ?? 0.15);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

@@ -2063,7 +2063,7 @@ float calcAO(vec3 p, vec3 n) {
     sca *= 0.74;
   }
   // Improved AO: smoother falloff, less harsh darkening in crevices
-  return clamp(1.0 - 2.2 * occ, 0.15, 1.0);
+  return clamp(1.0 - 2.8 * occ, 0.08, 1.0);
 }
 
 vec3 acesToneMap(vec3 x) {
@@ -2165,46 +2165,35 @@ void main() {
 
     // No near-plane escape — let rays march from the start to prevent slicing artifacts
     
-    // Controlled aura & interior volumetric fog
+    // Controlled aura & interior volumetric fog (reduced to prevent milky silhouette)
     float fogDensity = max(0.0, u_volumetric_fog);
     if (d > 0.006) {
-      glow += (0.0012 * (1.0 + fogDensity * 1.5)) / (0.08 + d * d * 18.0);
+      glow += (0.0004 * (1.0 + fogDensity * 0.5)) / (0.08 + d * d * 18.0);
     }
 
     float hit_threshold = 0.00075 * t + 0.00025;
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
-      // 3-step bisection refinement for exact zero isosurface contact
-      float t_a = max(0.001, t - 0.02);
-      float t_b = t;
-      for (int s = 0; s < 3; s++) {
-        float t_m = 0.5 * (t_a + t_b);
-        float dm = sceneSDF(ro + rd * t_m).x;
-        if (abs(dm) < 0.0001) { t = t_m; break; }
-        if (dm < 0.0) t_b = t_m;
-        else t_a = t_m;
-        t = t_m;
-      }
       break;
     }
 
-    // Adaptive step sizing: fast across open space, precise at isosurface
-    float step_factor = (abs(d) > 0.2) ? 0.94 : 0.80;
-    float step_d = max(abs(d) * step_factor, 0.0008);
+    // Adaptive step sizing: conservative to prevent tunneling through thin structures
+    float step_factor = (abs(d) > 0.2) ? 0.85 : 0.65;
+    float step_d = max(abs(d) * step_factor, 0.0005);
     t += step_d;
     if (t > max_dist) break;
   }
 
-  glow = min(glow, 0.45);
+  glow = min(glow, 0.08); // Tight cap to prevent milky silhouette glow
 
   float bg_rad = length(uv);
   vec3 col = vec3(0.005, 0.004, 0.008) * (1.0 + 0.3 * sin(uv.y * 3.0 + u_time * 0.3));
-  col += u_accent_color * 0.04 * exp(-bg_rad * 1.5);
+  col += u_accent_color * 0.015 * exp(-bg_rad * 2.0);
 
   if (hit) {
     vec3 p = ro + rd * t;
-    vec3 base_n = calcNormal(p, 0.0008 * t + 0.00025);
+    vec3 base_n = calcNormal(p, min(0.0008 * t + 0.00025, 0.002));
     float ao = calcAO(p, base_n);
     vec3 n = base_n;
     if (dot(n, rd) > 0.0) {
@@ -2227,7 +2216,7 @@ void main() {
       float sssD = sceneSDF(p - light1 * sssOffset).x;
       sssTotal += smoothstep(0.0, sssDist * 1.5, sssD + sssDist * 1.5);
     }
-    float sss = (sssTotal / 3.0) * 0.55;
+    float sss = (sssTotal / 3.0) * 0.15; // Subtle SSS — high values wash out accent color
     vec3 sssCol = u_accent_color * sss * ao;
     float fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
@@ -2237,13 +2226,12 @@ void main() {
     vec3 h1 = normalize(light1 - rd);
     float spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
 
-    // Dynamic Camera Headlamp: subtle fill light from camera direction
+    // Dynamic Camera Headlamp: very subtle tinted fill from camera direction
     vec3 headDir = -rd;
     float headDiff = max(dot(n, headDir), 0.0);
-    float headSpec = pow(headDiff, 32.0);
     float headAtten = 1.0 / (1.0 + t * 0.8 + t * t * 0.2);
-    float headPower = max(0.0, u_headlamp_power) * 0.3; // Reduced to 30% to prevent harsh camera shadow
-    vec3 headLight = (vec3(1.0, 0.97, 0.90) * headDiff * 0.4 + vec3(1.0, 1.0, 0.95) * headSpec * 0.3) * headAtten * ao * headPower;
+    float headPower = max(0.0, u_headlamp_power) * 0.04; // Minimal — primary cause of whitish washout
+    vec3 headLight = u_primary_color * headDiff * headAtten * ao * headPower;
 
     // Harmonic Cosine Palette Engine with Golden Ratio Phase distribution
     float phase = fract(min_trap * 0.85 + length(p) * 0.18 + u_time * 0.02);
@@ -2252,17 +2240,17 @@ void main() {
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
     vec3 mat_col = u_primary_color * w_primary + u_secondary_color * w_secondary;
-    mat_col = mix(mat_col, u_accent_color, w_accent * 0.45);
-    mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.35);
+    mat_col = mix(mat_col, u_accent_color, w_accent * 0.12); // Subtle accent — high values wash out to white
+    mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.08); // Low-edge accent tint
 
-    vec3 ambient = u_primary_color * 0.16 * ao;
+    vec3 ambient = u_primary_color * 0.12 * ao;
     vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    vec3 specular = vec3(1.0, 0.96, 0.82) * spec1 * 1.35 * ao;
-    vec3 rim = u_accent_color * fresnel * 0.65 * (0.3 + 0.7 * ao);
+    vec3 specular = mat_col * spec1 * 0.35 * ao; // Tinted by material color — never white
+    vec3 rim = u_accent_color * fresnel * 0.18 * (0.3 + 0.7 * ao); // Subtle rim — high values create white edges
 
-    // Direct crisp surface lighting with interior headlight and SSS
-    col = ambient + diffuse + specular + rim + headLight + sssCol;
-    col *= (0.28 + 0.72 * ao);
+    // Clean surface lighting: no headlamp, minimal SSS
+    col = ambient + diffuse + specular + rim + sssCol;
+    col *= (0.22 + 0.78 * ao); // Stronger AO contrast for depth
 
     // If slice plane is active, highlight the glowing cut rim
     if (u_slice_plane > 0.01) {
@@ -2390,14 +2378,17 @@ void main() {
 
   col = acesToneMap(col);
 
+  // Color-space dither to eliminate banding in smooth gradients
+  float ditherVal = fract(sin(dot(v_uv * u_resolution, vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
+  col = col + (ditherVal - 0.5) * (1.0 / 128.0);
+
   float vigStrength = smoothstep(0.12, 1.0, cam_dist);
   float vignette = 1.0 - smoothstep(0.9, 1.8, bg_rad) * vigStrength * 0.5;
   col *= vignette;
 
-  // Subpixel anti-aliasing boost — sharpen edges via unsharp mask approximation
-  // Uses the dither pattern already present to break up banding
+  // Subpixel anti-aliasing boost — sharpen edges via fwidth unsharp mask
   float edgeDetect = length(fwidth(col)) * 0.5;
-  col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.15);
+  col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
 
   fragColor = vec4(col, 1.0);
 }

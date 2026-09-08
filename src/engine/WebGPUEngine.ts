@@ -232,8 +232,8 @@ export class WebGPUEngine {
     u[35] = params.slicePlane ?? 0.0;
 
     // Immersion technologies: Headlamp power, volumetric fog, tomography axis & render modality
-    u[36] = params.headlampPower ?? 1.0;
-    u[37] = params.volumetricFog ?? 0.4;
+    u[36] = params.headlampPower ?? 0.3;
+    u[37] = params.volumetricFog ?? 0.15;
     u[38] = getSliceAxisIndex(params.sliceAxis);
     u[39] = getRenderStyleIndex(params.renderStyle);
 
