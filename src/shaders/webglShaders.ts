@@ -2949,7 +2949,9 @@ void main() {
     float diff2 = max(dot(n, light2), 0.0);
 
     vec3 h1 = normalize(light1 - rd);
-    float spec1 = pow(max(dot(n, h1), 0.0), 32.0);
+    // FIX: Higher specular power for sharper, more defined highlights (was 32.0)
+    float spec1 = pow(max(dot(n, h1), 0.0), 64.0);
+    float spec2 = pow(max(dot(n, normalize(light2 - rd)), 0.0), 48.0);
     
     // Reuse curvature from normal perturbation (already computed above)
     float curv = curvDetail;
@@ -2968,7 +2970,8 @@ void main() {
     texDetail = texDetail * 0.15 + 0.85; // Scale to [0.85, 1.15] range for subtle variation
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     float effectiveTrap = max(min_trap, curvNorm * 0.15);
-    float trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 2.0), 0.0, 1.0);
+    // FIX: More responsive trap detail (was 1.0 / (1.0 + effectiveTrap * 2.0))
+    float trapDetail = clamp(1.0 / (1.0 + effectiveTrap * 0.8), 0.0, 1.0);
 
     // Harmonic Cosine Palette Engine — scale-independent phase for all zoom levels
     // FIX: Added high-frequency hash noise to break up uniform color zones on IFS fractals
@@ -3020,7 +3023,8 @@ void main() {
     mat_col = mix(mat_col, u_accent_color, w_accent * 0.30);
     mat_col = mix(mat_col, u_accent_color, pow(1.0 - ao, 2.0) * 0.18);
     // Orbit trap direct coloring with saturation-safe effectiveTrap
-    float trapWeight = clamp(0.30 / (1.0 + effectiveTrap * 2.5), 0.0, 0.40);
+    // FIX: More visible orbit trap coloring (was 0.30 / (1.0 + effectiveTrap * 2.5))
+    float trapWeight = clamp(0.45 / (1.0 + effectiveTrap * 1.2), 0.0, 0.55);
     mat_col = mix(mat_col, u_accent_color * (0.5 + trapDetail * 0.5), trapWeight);
     
     // Apply procedural fractal texture detail
@@ -3038,12 +3042,15 @@ void main() {
     vec3 bounceCol = u_secondary_color * bounce * bounceOcc * ao;
 
     vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    vec3 specular = vec3(1.0, 0.97, 0.92) * spec1 * 0.85 * ao; // Brighter specular for visible highlights
-    vec3 rim = u_accent_color * fresnel * 0.45 * (0.3 + 0.7 * ao); // Stronger rim for edge definition
+    // FIX: Brighter, sharper specular with both lights (was only spec1)
+    vec3 specular = vec3(1.0, 0.97, 0.92) * (spec1 * 1.2 + spec2 * 0.6) * ao;
+    // FIX: Stronger rim lighting for better edge definition (was 0.45)
+    vec3 rim = u_accent_color * fresnel * 0.7 * (0.3 + 0.7 * ao);
 
     // Full lighting: ambient + diffuse + bounce + specular + rim + SSS
-    col = ambient * 0.6 + diffuse * 1.2 + bounceCol * 1.5 + specular + rim * 1.3 + sssCol * 1.5;
-    col *= (0.4 + 0.6 * ao); // Balanced AO — preserves brightness while adding depth
+    // FIX: Better balanced lighting with more contrast (was 0.4 + 0.6 * ao)
+    col = ambient * 0.5 + diffuse * 1.4 + bounceCol * 1.8 + specular * 1.3 + rim * 1.5 + sssCol * 1.8;
+    col *= (0.3 + 0.7 * ao); // Stronger AO contrast for more depth
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u_headlamp_power > 0.01) {
