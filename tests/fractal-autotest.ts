@@ -11,6 +11,8 @@ import { getFractalIndex, getCompositeOpIndex, getCameraModeIndex, getSliceAxisI
 import { COLOR_PALETTES } from '../src/palettes';
 import { getFractalHarmonicFamily } from '../src/audio/goldenAudio';
 import { FractalType, RenderStyle, CompositeOp, CameraMode } from '../src/types/fractal';
+import { FRAGMENT_SHADER_SOURCE } from '../src/shaders/webglShaders';
+import { WGSL_SHADER } from '../src/shaders/webgpuShaders';
 
 // ============================================
 // Test Infrastructure
@@ -242,6 +244,61 @@ console.log(`    Rendering: renderStyle, cameraMode, camX/Y/Z`);
 console.log(`    Atmosphere: headlamp, fog, slicePlane, sliceAxis`);
 console.log(`    Audio: audio, audioVol, audioTuning`);
 console.log(`    Performance: drs`);
+
+// ============================================
+// 10. SHADER SOURCE VALIDATION — Critical features present in code
+// ============================================
+section('10. Shader Source Validation');
+
+// GLSL checks
+const glsl = FRAGMENT_SHADER_SOURCE;
+assert(glsl.includes('u_headlamp_power'), 'GLSL: headlamp uniform declared');
+assert(glsl.includes('u_palette_rotation'), 'GLSL: palette_rotation uniform declared');
+assert(glsl.includes('lampNdotL'), 'GLSL: headlamp NdotL calculation present');
+assert(glsl.includes('seedAnim'), 'GLSL: palette rotation animation present');
+assert(glsl.includes('beerDist'), 'GLSL: Beer-Lambert distance clamp present');
+assert(glsl.includes('min(max(t - 0.5, 0.0), 20.0)'), 'GLSL: gemstone clamped to 20.0');
+assert(glsl.includes('u_render_style > 0.5'), 'GLSL: render style 1 (xray) branch');
+assert(glsl.includes('u_render_style > 1.5'), 'GLSL: render style 2 (topo) branch');
+assert(glsl.includes('u_render_style > 2.5'), 'GLSL: render style 3 (hologram) branch');
+assert(glsl.includes('u_render_style > 3.5'), 'GLSL: render style 4 (iridescent) branch');
+assert(glsl.includes('u_render_style > 4.5'), 'GLSL: render style 5 (quantum) branch');
+assert(glsl.includes('u_render_style > 5.5'), 'GLSL: render style 6 (gemstone) branch');
+
+// WGSL checks
+const wgsl = WGSL_SHADER;
+assert(wgsl.includes('headlamp_power'), 'WGSL: headlamp field in uniform struct');
+assert(wgsl.includes('palette_rotation'), 'WGSL: palette_rotation field in uniform struct');
+assert(wgsl.includes('lampNdotL'), 'WGSL: headlamp NdotL calculation present');
+assert(wgsl.includes('seedAnim'), 'WGSL: palette rotation animation present');
+assert(wgsl.includes('beerDist'), 'WGSL: Beer-Lambert distance clamp present');
+assert(wgsl.includes('min(max(t - 0.5, 0.0), 20.0)'), 'WGSL: gemstone clamped to 20.0');
+assert(wgsl.includes('render_style > 0.5'), 'WGSL: render style 1 (xray) branch');
+assert(wgsl.includes('render_style > 5.5'), 'WGSL: render style 6 (gemstone) branch');
+
+// Verify all 7 render styles implemented in both shaders
+const glslStyleCount = (glsl.match(/u_render_style >/g) || []).length;
+const wgslStyleCount = (wgsl.match(/render_style >/g) || []).length;
+assert(glslStyleCount >= 6, `GLSL: at least 6 render style branches (got ${glslStyleCount})`);
+assert(wgslStyleCount >= 6, `WGSL: at least 6 render style branches (got ${wgslStyleCount})`);
+
+// Verify critical math functions present
+assert(glsl.includes('calcNormal'), 'GLSL: normal calculation');
+assert(glsl.includes('calcSoftShadow'), 'GLSL: soft shadows');
+assert(glsl.includes('calcAO'), 'GLSL: ambient occlusion');
+assert(glsl.includes('acesToneMap'), 'GLSL: ACES tone mapping');
+assert(glsl.includes('sceneSDF'), 'GLSL: scene SDF evaluation');
+assert(glsl.includes('evalSingleFractal'), 'GLSL: fractal dispatch');
+assert(wgsl.includes('calcNormal'), 'WGSL: normal calculation');
+assert(wgsl.includes('calcSoftShadow'), 'WGSL: soft shadows');
+assert(wgsl.includes('calcAO'), 'WGSL: ambient occlusion');
+assert(wgsl.includes('acesToneMap'), 'WGSL: ACES tone mapping');
+assert(wgsl.includes('sceneSDF'), 'WGSL: scene SDF evaluation');
+assert(wgsl.includes('evalSingleFractal'), 'WGSL: fractal dispatch');
+
+console.log(`  ✓ GLSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
+console.log(`  ✓ WGSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
+console.log(`  ✓ Both: normals, soft shadows, AO, ACES tonemap, SDF dispatch`);
 
 // ============================================
 // RESULTS
