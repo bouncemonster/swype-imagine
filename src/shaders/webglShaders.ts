@@ -2934,9 +2934,9 @@ void main() {
   // Adaptive near-plane: scales with camera distance to prevent slicing
   float near_clip = max(0.0001, cam_dist * 0.0005);
   float t = near_clip + 0.001 * dither;
-  // FIX: Dynamic max_dist based on camera distance to prevent clipping
-  // When camera is close, rays travel nearly parallel to surface and need more range
-  float max_dist = (cam_dist < 1.0) ? 256.0 : (cam_dist < 3.0) ? 192.0 : 128.0;
+  // MASSIVE INCREASE: Dynamic max_dist for huge rendering distances
+  // Close range: 2048.0, Medium: 1536.0, Far: 1024.0 (was 256/192/128)
+  float max_dist = (cam_dist < 1.0) ? 2048.0 : (cam_dist < 3.0) ? 1536.0 : 1024.0;
   bool hit = false;
   float min_trap = 1e10;
   int steps = 0;
@@ -2957,8 +2957,9 @@ void main() {
   float lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
   int iterReduction = int(lodFactor * 8.0); // Reduce up to 8 iterations at far distance
 
-  // Adaptive step budget: complex fractals at close zoom need many more steps
-  int maxSteps = (cam_dist < 1.0) ? 256 : (cam_dist < 3.0) ? 200 : 160;
+  // MASSIVE INCREASE: Adaptive step budget for extreme detail
+  // Close range: 512 steps, Medium: 384 steps, Far: 256 steps (was 256/200/160)
+  int maxSteps = (cam_dist < 1.0) ? 512 : (cam_dist < 3.0) ? 384 : 256;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
 
@@ -3002,8 +3003,9 @@ void main() {
     // abs(-2.0) * 0.95 = 1.9, jumping completely past the surface
     float absD = abs(d);
     float step_d = min(absD * relaxationFactor, 0.5);
-    // Minimum step: prevents infinite crawl when SDF is near zero
-    float minStep = max(cam_dist * 0.0001, 0.0005);
+    // IMPROVED: Smaller minimum step for extreme interior detail
+    // Was: max(cam_dist * 0.0001, 0.0005), now: max(cam_dist * 0.00005, 0.0001)
+    float minStep = max(cam_dist * 0.00005, 0.0001);
     step_d = max(step_d, minStep);
     t += step_d;
 
