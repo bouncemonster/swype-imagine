@@ -119,7 +119,7 @@ fn mapPhyllotaxis(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     p = vec3<f32>(rotZ.x, p.y, rotZ.y);
   }
   let d = (length(p) - 0.35) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 1. Golden Mandelbulb 3D
@@ -152,7 +152,7 @@ fn mapMandelbulb(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   } else {
     d = 0.5 * log(max(r, 0.001)) * r / max(dr, 0.0001);
   }
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 2. Quaternion Julia 4D
@@ -181,7 +181,7 @@ fn mapQuaternionJulia(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
     trap = min(trap, sqrt(mz2));
   }
   let d = 0.25 * sqrt(mz2 / max(md2, 0.0001)) * log(max(mz2, 1.0001));
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 3. Apollonian Sphere Packing
@@ -202,7 +202,7 @@ fn mapApollonian(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     scale = scale * k;
   }
   let d = (length(p) - 0.72) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 4. Spiral Tunnel
@@ -259,7 +259,7 @@ fn mapMandelbox(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     p = vec3<f32>(rot.x, rot.y, p.z);
   }
   let d = (length(p) - 0.4) / max(abs(scale), 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 6. Icosahedral IFS
@@ -292,7 +292,7 @@ fn mapIcosahedron(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     trap = min(trap, length(p));
   }
   let d = (length(p) - 0.45) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 7. Menger Sponge
@@ -364,7 +364,7 @@ fn mapPrimeSpiral(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let nodule_d = length(vec3<f32>(fract_spiral * 0.4, p.z, sin(r * 12.0) * 0.1)) - 0.035;
   let d = min(d_spiral, nodule_d);
   let trap = abs(prime_wave) + 0.4 * r;
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 10. 3D Penrose & Dan Shechtman Icosahedral Quasicrystal (Nobel Prize Symmetries)
@@ -396,7 +396,7 @@ fn mapQuasicrystal(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let bound = length(p_in) - 2.2;
   let d = max(d_quasi, bound);
   let trap = abs(psi) * 0.2 + 0.3 * length(p);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 11. Hopf Fibration & Clifford Golden Torus S³→S²
@@ -440,7 +440,7 @@ fn mapCalabiYau(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let bound = length(p_in) - 2.3;
   let d = max(d_manifold, bound);
   let trap = abs(quintic) + 0.25 * r;
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 13. Riemann Zeta Quantum Chaos Resonator (Prime Zeros along Re(s) = 1/2)
@@ -462,7 +462,7 @@ fn mapRiemannZeta(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
   let cylinder_bound = max(length(p.xy) - 1.8, abs(p.z) - 1.8);
   let d = max(cavity * 0.25, cylinder_bound);
   let trap = abs(nodal) + 0.2 * r;
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 14. Golden Sierpinski Octahedral Star
@@ -487,7 +487,7 @@ fn mapSierpinskiOcta(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
     trap = min(trap, length(p));
   }
   let d = (length(p) - 0.6) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 15. 4D Clifford-Klein Golden Helicoid Knot
@@ -547,7 +547,7 @@ fn mapGaussianPrimes(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
   let primeRes = sin(r * r * 0.618 - t * 0.3) * 0.35;
   let d = (abs(pot + primeRes) - 0.22) / 2.2;
   let bound = r - 2.6;
-  return vec2<f32>(max(d, bound), abs(pot) + 0.25 * r);
+  return vec2<f32>(max(max(d, bound), 0.001), abs(pot) + 0.25 * r);
 }
 
 // 18. Neovius-Schoen TPMS Minimal Surface (Zero Mean Curvature)
@@ -559,7 +559,7 @@ fn mapNeoviusMinimal(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
   let f = 3.0 * (c.x + c.y + c.z) + 4.0 * c.x * c.y * c.z;
   let d = (abs(f) - 0.25) / (2.6 * phi);
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound), abs(f) * 0.15 + 0.3 * length(p_in));
+  return vec2<f32>(max(max(d, bound), 0.001), abs(f) * 0.15 + 0.3 * length(p_in));
 }
 
 // 19. Euler Totient φ(n) & Archimedean Prime Spiral
@@ -573,7 +573,7 @@ fn mapEulerTotientSpiral(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
   let spiral = fract(theta * (phi / PI) - log_r * 2.0 + p.z * 1.5 + t * 0.2) - 0.5;
   let d = sqrt(spiral * spiral * r_xy * r_xy + p.z * p.z * 0.2) - 0.08;
   let bound = length(p_in) - 2.6;
-  return vec2<f32>(max(d, bound), abs(spiral) + 0.2 * r_xy);
+  return vec2<f32>(max(max(d, bound), 0.001), abs(spiral) + 0.2 * r_xy);
 }
 
 // 20. 4D Flat Clifford Torus in S³ Stereographic Projection
@@ -660,7 +660,7 @@ fn mapQuaternionMandelbrot(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec
   if (escaped) {
     d = 0.5 * log(max(r, 1.0001)) * r / max(dz, 0.001);
   }
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 24. 3D Space-Filling Hilbert-Peano Curve (L-System)
@@ -683,7 +683,7 @@ fn mapHilbertCurve3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
     trap = min(trap, length(p.xy));
   }
   let d = (length(vec2<f32>(length(p.xy) - 0.25, p.z)) - 0.12) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 25. Golden Dragon Curve IFS (Harter-Heighway / Levy)
@@ -708,7 +708,7 @@ fn mapDragonCurveIFS(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
     trap = min(trap, length(p));
   }
   let d = (length(p) - 0.38) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 26. 3D Branching Pythagorean Tree IFS
@@ -765,7 +765,7 @@ fn mapBurningShip3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
   if (escaped) {
     d = 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.001);
   }
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 28. 3D Newton-Raphson Complex Roots Basin (z^3 - 1 = 0)
@@ -818,7 +818,7 @@ fn mapJerusalemCube(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
     scale = scale * factor;
     trap = min(trap, length(p));
   }
-  return vec2<f32>(d, trap);
+  return vec2<f32>(max(d, 0.001), trap);
 }
 
 // 30. 3D Lorenz Strange Attractor Chaotic Flow
@@ -842,7 +842,7 @@ fn mapLorenzAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 31. 3D Quantum Hofstadter Butterfly Energy Bands
@@ -855,7 +855,7 @@ fn mapHofstadterButterfly(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2
   let gap = abs(energy - 0.8) - 0.28;
   let d = gap / 2.5;
   let bound = length(p_in) - 2.7;
-  return vec2<f32>(max(d, bound), abs(energy) * 0.2 + 0.25 * length(p));
+  return vec2<f32>(max(max(d, bound), 0.001), abs(energy) * 0.2 + 0.25 * length(p));
 }
 
 // 32. 3D Antoine's Necklace Wild Topological Linked Tori
@@ -887,7 +887,7 @@ fn mapAntoineNecklace(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
     p = p * 2.4;
   }
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound) * 0.5, trap);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), trap);
 }
 
 // 33. 3D Diffusion-Limited Aggregation (DLA) Dendritic Cluster
@@ -917,7 +917,7 @@ fn mapDLACluster(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     }
   }
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, trap * 0.15);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), trap * 0.15);
 }
 
 // 34. 4D Hyperchaotic Rössler Attractor
@@ -962,7 +962,7 @@ fn mapCliffordAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.3);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.3);
 }
 
 // 36. Type-II Superconductor Quantum Magnetic Vortex Flux Lattice (Abrikosov Lattice)
@@ -1026,7 +1026,7 @@ fn mapBelousovWaves(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
   let z_mod = cos(p_in.z * 4.0 + wave * 0.5) * 0.15;
   let d = abs(p_in.z - wave * 0.25) - 0.05 + z_mod;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound) * 0.55, abs(wave));
+  return vec2<f32>(max(max(d, bound) * 0.55, 0.001), abs(wave));
 }
 
 // ============================================================
@@ -1054,7 +1054,7 @@ fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 42. Aizawa Toroidal Chaotic Attractor (orbit-traced)
@@ -1078,7 +1078,7 @@ fn mapAizawaAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 43. Thomas Cyclically Symmetric Attractor (orbit-traced, b=0.208186)
@@ -1102,7 +1102,7 @@ fn mapThomasAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 44. Halvorsen 3-Fold Chaotic Attractor (orbit-traced, a=1.89)
@@ -1126,7 +1126,7 @@ fn mapHalvorsenAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 45. Julia Set 3D (c = -0.7 + 0.27i)
@@ -1197,7 +1197,7 @@ fn mapTetrix(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     trap += length(p) * sc;
   }
   let d = length(p) * sc - 0.05;
-  return vec2<f32>(d, trap * 0.08);
+  return vec2<f32>(max(d, 0.001), trap * 0.08);
 }
 
 // 48. Gosper Island (hexagonal space-filling)
@@ -1264,7 +1264,7 @@ fn mapSchwarzP(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
   let val = cos(p.x) + cos(p.y) + cos(p.z);
   let d = (abs(val) - 0.3) / (phi * 1.3);
   let bound = length(p_in) - 2.0;
-  return vec2<f32>(max(d, bound), abs(val) + 0.2 * length(p));
+  return vec2<f32>(max(max(d, bound), 0.001), abs(val) + 0.2 * length(p));
 }
 
 // 51. Schwarz D Diamond Surface
@@ -1277,7 +1277,7 @@ fn mapSchwarzD(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
   let val = s1 - c1;
   let d = (abs(val) - 0.25) / (phi * 1.2);
   let bound = length(p_in) - 2.0;
-  return vec2<f32>(max(d, bound), abs(val) + 0.3 * length(p));
+  return vec2<f32>(max(max(d, bound), 0.001), abs(val) + 0.3 * length(p));
 }
 
 // 52. Apollonian Gasket (recursive sphere packing)
@@ -1327,7 +1327,7 @@ fn mapBarnsleyFern3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 54. Klein Quartic Surface (genus-3)
@@ -1361,7 +1361,7 @@ fn mapSpherePacking(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
     sc *= phi;
   }
   let bound = length(p_in) - 2.0;
-  return vec2<f32>(max(d, bound) * 0.5, trap * 0.1);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), trap * 0.1);
 }
 
 // 56. Nova Fractal (Newton + Mandelbrot)
@@ -1403,7 +1403,7 @@ fn mapGoldenKnot(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
     rTube * sin(phiK * 3.0));
   let d = length(p - curve) - 0.08;
   let bound = length(p_in) - 2.0;
-  return vec2<f32>(max(d, bound) * 0.7, abs(phiK) * 0.1);
+  return vec2<f32>(max(max(d, bound) * 0.7, 0.001), abs(phiK) * 0.1);
 }
 
 // 58. Spherical Harmonics (quantum orbitals)
@@ -1419,7 +1419,7 @@ fn mapSphericalHarmonics(p_in: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
   let radial = 1.0 + 0.4 * Y32 + 0.25 * Y42;
   let d = abs(r - radial * 0.9) - 0.04;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound) * 0.5, abs(Y32) + abs(Y42));
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), abs(Y32) + abs(Y42));
 }
 
 // 59. Fractal Cross (3D plus-shaped recursive IFS)
@@ -1489,7 +1489,7 @@ fn mapSierpinskiCarpet(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
     trap = min(trap, length(p));
   }
   let d = (length(p) - 0.5) / max(scale, 0.0001);
-  return vec2<f32>(d, trap * 0.08);
+  return vec2<f32>(max(d, 0.001), trap * 0.08);
 }
 
 // 62. Tricorn (Mandelbar) — conjugate Mandelbrot
@@ -1536,7 +1536,7 @@ fn mapChuaCircuit(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 64. Standard Map (Chirikov-Taylor, orbit-traced)
@@ -1560,7 +1560,7 @@ fn mapStandardMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 65. Ikeda Map (orbit-traced)
@@ -1587,7 +1587,7 @@ fn mapIkedaMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.2);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.2);
 }
 
 // 66. Koch Snowflake 3D (recursive triangular IFS)
@@ -1698,7 +1698,7 @@ fn mapE8Lattice(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       + cos(dot(p, d4) * ws + t * 0.15) + cos(dot(p, d5) * ws + t * 0.15);
   let d = (abs(psi) - 0.6) / ws;
   let bound = length(p_in) - 2.2;
-  return vec2<f32>(max(d, bound), abs(psi) * 0.2 + 0.3 * length(p));
+  return vec2<f32>(max(max(d, bound), 0.001), abs(psi) * 0.2 + 0.3 * length(p));
 }
 
 // 71. Chladni Figures (vibrational eigenmodes)
@@ -1742,7 +1742,7 @@ fn mapFitzHugh(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 73. Rössler Attractor (orbit-traced, a=0.2, b=0.2, c=5.7)
@@ -1766,7 +1766,7 @@ fn mapRosslerAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 74. Duffing Attractor (orbit-traced)
@@ -1791,7 +1791,7 @@ fn mapDuffingAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 75. Logistic Map Bifurcation (period-doubling cascade, Feigenbaum δ≈4.669)
@@ -1815,7 +1815,7 @@ fn mapLogisticBifurcation(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2
   }
   let d = 0.5 - density * 0.12;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound) * 0.5, density * 0.25);
+  return vec2<f32>(max(max(d, bound) * 0.5, 0.001), density * 0.25);
 }
 
 // 76. Fractal Spire (Exponential spiral tower)
@@ -1961,7 +1961,7 @@ fn mapWeierstrass3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> 
   }
   let d = abs(p.y - surf * 0.3) - 0.15;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(d, bound) * 0.7, abs(surf) * 0.2);
+  return vec2<f32>(max(max(d, bound) * 0.7, 0.001), abs(surf) * 0.2);
 }
 
 // 82. Popcorn Function (Celldoor)
@@ -2074,7 +2074,7 @@ fn mapKaleidoscopicIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     pos = pos * (scale / max(r * r, 0.001)) - offset * 0.5;
     minDist = min(minDist, length(pos) * pow(scale, -f32(i + 1)));
   }
-  return minDist * 0.5;
+  return max(minDist * 0.5, 0.001);
 }
 
 // 87: Flower of Life
@@ -2118,7 +2118,7 @@ fn mapCrystalGrowth(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     d = min(d, bd);
     dir = normalize(dir + vec3<f32>(sin(fi), cos(fi * 1.3), sin(fi * 0.7)) * 0.3);
   }
-  return d * 0.7;
+  return max(d * 0.7, 0.001);
 }
 
 // 90: Quantum Foam
@@ -2146,7 +2146,7 @@ fn mapFractalCoral(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     pos = pos * 1.5 / max(r * r, 0.01);
     d = min(d, length(pos) * pow(1.5, -f32(i + 1)));
   }
-  return d * 0.4;
+  return max(d * 0.4, 0.001);
 }
 
 // 92: Nebula Cloud
@@ -2224,7 +2224,7 @@ fn mapMandelbulbPower4(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     z = zr * vec3<f32>(sin(theta * 4.0) * cos(phiAngle * 4.0), sin(phiAngle * 4.0) * sin(theta * 4.0), cos(theta * 4.0));
     z = z + p;
   }
-  return 0.5 * log(r) * r / dr;
+  return max(0.5 * log(max(r, 1.0001)) * r / max(dr, 0.001), 0.001);
 }
 
 // 97: Mandelbulb Power 12
@@ -2244,7 +2244,7 @@ fn mapMandelbulbPower12(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     z = zr * vec3<f32>(sin(theta * 12.0) * cos(phiAngle * 12.0), sin(phiAngle * 12.0) * sin(theta * 12.0), cos(theta * 12.0));
     z = z + p;
   }
-  return 0.5 * log(r) * r / dr;
+  return max(0.5 * log(max(r, 1.0001)) * r / max(dr, 0.001), 0.001);
 }
 
 // 98: Hybrid Mandelbox-KIFS
@@ -2265,7 +2265,7 @@ fn mapHybridMandelboxKIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     pos = vec3<f32>(rot2D(t * 0.05 + f32(i) * 0.3) * pos.xy, pos.z);
     minDist = min(minDist, length(pos) * pow(scale, -f32(i + 1)));
   }
-  return minDist * 0.5;
+  return max(minDist * 0.5, 0.001);
 }
 
 // 99: Multibrot Power 3
@@ -2285,7 +2285,7 @@ fn mapMultibrot3Advanced(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     z = zr * vec3<f32>(sin(theta * 3.0) * cos(phiAngle * 3.0), sin(phiAngle * 3.0) * sin(theta * 3.0), cos(theta * 3.0));
     z = z + p;
   }
-  return 0.5 * log(r) * r / dr;
+  return max(0.5 * log(max(r, 1.0001)) * r / max(dr, 0.001), 0.001);
 }
 
 // 100: Fractal Flame IFS
@@ -2306,7 +2306,7 @@ fn mapFractalFlameIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     color = color + length(z) * 0.1;
     minDist = min(minDist, length(z - p) * pow(phi * 0.7, -f32(i + 1)));
   }
-  return minDist * 0.4;
+  return max(minDist * 0.4, 0.001);
 }
 
 // 101: Amazing Box — Mandelbox variation with spherical fold
