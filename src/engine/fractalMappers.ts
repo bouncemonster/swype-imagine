@@ -86,6 +86,26 @@ export function getFractalIndex(type?: string): number {
     case 'bedheadAttractor': return 83;
     case 'fourSpotAttractor': return 84;
     case 'svenssonAttractor': return 85;
+    // ADDITIONAL TYPES from categories (were missing, causing black screens)
+    case 'burningShip': return 27; // Map to burningShip3D
+    case 'chenAttractor': return 73; // Map to rosslerAttractor (similar)
+    case 'dadrasAttractor': return 73; // Map to rosslerAttractor (similar)
+    case 'dlAggregate': return 33; // Map to dlaCluster
+    case 'fibonacciSphere': return 22; // Map to fibonacciSnowflake
+    case 'goldenSpiral': return 22; // Map to fibonacciSnowflake
+    case 'ifsFractal': return 25; // Map to dragonCurveIFS
+    case 'mandala': return 0; // Map to phyllotaxis (closest)
+    case 'newtonFractal': return 28; // Map to newtonBasins
+    case 'penroseTiling': return 10; // Map to quasicrystal
+    case 'percolationCluster': return 33; // Map to dlaCluster
+    case 'perlinNoise': return 58; // Map to sphericalHarmonics
+    case 'platonicSolids': return 6; // Map to icosahedron
+    case 'randomTerrain': return 58; // Map to sphericalHarmonics
+    case 'schwarzSurface': return 50; // Map to schwarzP
+    case 'sierpinskiTriangle': return 14; // Map to sierpinskiOcta
+    case 'sprottAttractor': return 77; // Map to deJongAttractor (similar)
+    case 'torusKnot': return 57; // Map to goldenKnot
+    case 'worleyNoise': return 60; // Map to reactionDiffusion
     default: return 0;
   }
 }
