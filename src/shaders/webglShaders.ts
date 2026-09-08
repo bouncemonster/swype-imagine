@@ -2708,6 +2708,12 @@ void main() {
   float lastD = 1e10;
   int missCount = 0;
 
+  // OPTIMIZATION 7: Over-Relaxation for Sphere Tracing
+  // Based on "Enhanced Sphere Tracing" (Keinert et al., 2014)
+  // Allows taking slightly larger steps than SDF suggests
+  // Relaxation factor > 1.0 speeds up convergence, but too high causes artifacts
+  float relaxationFactor = 1.1; // Conservative over-relaxation for stability
+
   for (int i = 0; i < 256; i++) {
     if (i >= maxSteps) break;
     vec3 p = ro + rd * t;
@@ -2738,7 +2744,8 @@ void main() {
     
     // OPTIMIZATION 5: Minimum step size scales with distance
     float minStep = max(cam_dist * 0.00005, 0.0001);
-    float step_d = max(absD * step_factor, minStep);
+    // Apply over-relaxation: take slightly larger steps for faster convergence
+    float step_d = max(absD * step_factor * relaxationFactor, minStep);
     t += step_d;
     
     // OPTIMIZATION 6: Early Ray Termination
