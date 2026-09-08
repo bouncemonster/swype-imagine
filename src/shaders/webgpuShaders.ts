@@ -2139,7 +2139,7 @@ fn calcAO(p: vec3<f32>, n: vec3<f32>) -> f32 {
     occ = occ + (h - d) * sca;
     sca = sca * 0.74;
   }
-  return clamp(1.0 - 2.2 * occ, 0.15, 1.0);
+  return clamp(1.0 - 2.8 * occ, 0.08, 1.0);
 }
 
 fn acesToneMap(x: vec3<f32>) -> vec3<f32> {
@@ -2306,15 +2306,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let h1 = normalize(light1 - rd);
     let spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
-
-    // Dynamic Camera Headlamp: very subtle tinted fill from camera direction
-    let headDir = -rd;
-    let headDiff = max(dot(n, headDir), 0.0);
-    let headAtten = 1.0 / (1.0 + t * 0.8 + t * t * 0.2);
-    let headPower = max(0.0, u.headlamp_power) * 0.04; // Minimal — primary cause of whitish washout
-    let headLight = u.primary_color * headDiff * headAtten * ao * headPower;
-
-    // Harmonic Cosine Palette Engine with Golden Ratio Phase distribution
+    
+    // Harmonic Cosine Palette Engine with Golden Ratio phase distribution
     let phase = fract(min_trap * 0.85 + length(p) * 0.18 + u.time * 0.02);
     let w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     let w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));

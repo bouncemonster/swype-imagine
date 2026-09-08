@@ -2225,15 +2225,8 @@ void main() {
 
     vec3 h1 = normalize(light1 - rd);
     float spec1 = pow(max(dot(n, h1), 0.0), 32.0) * sh1;
-
-    // Dynamic Camera Headlamp: very subtle tinted fill from camera direction
-    vec3 headDir = -rd;
-    float headDiff = max(dot(n, headDir), 0.0);
-    float headAtten = 1.0 / (1.0 + t * 0.8 + t * t * 0.2);
-    float headPower = max(0.0, u_headlamp_power) * 0.04; // Minimal — primary cause of whitish washout
-    vec3 headLight = u_primary_color * headDiff * headAtten * ao * headPower;
-
-    // Harmonic Cosine Palette Engine with Golden Ratio Phase distribution
+    
+    // Harmonic Cosine Palette Engine with Golden Ratio phase distribution
     float phase = fract(min_trap * 0.85 + length(p) * 0.18 + u_time * 0.02);
     float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
     float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0 / GOLDEN_RATIO));

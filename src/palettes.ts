@@ -54,7 +54,7 @@ export const COLOR_PALETTES: ColorPalette[] = [
     name: 'Cybernetic Sakura & Lotus',
     primary: [0.98, 0.32, 0.68],     // Neon pink/magenta
     secondary: [0.45, 0.18, 0.78],    // Electric violet
-    accent: [0.95, 0.95, 1.0],       // Crystalline white-silver
+    accent: [0.85, 0.35, 0.75],       // Neon sakura bloom (was white-silver, caused washout)
     ambient: [0.05, 0.02, 0.05],
   },
   {
@@ -78,7 +78,7 @@ export const COLOR_PALETTES: ColorPalette[] = [
     name: 'Hyperborean Crystal Ice',
     primary: [0.55, 0.82, 0.98],     // Arctic glacial cyan
     secondary: [0.18, 0.35, 0.72],    // Deep sapphire ice
-    accent: [0.92, 0.98, 1.0],       // Diamond glare specular
+    accent: [0.55, 0.82, 0.95],      // Aurora borealis shimmer (was diamond glare, caused washout)
     ambient: [0.02, 0.04, 0.07],
   },
   {
@@ -110,7 +110,7 @@ export const COLOR_PALETTES: ColorPalette[] = [
     name: 'Cinematic Silver & Charcoal',
     primary: [0.82, 0.84, 0.86],     // Liquid silver mirror
     secondary: [0.28, 0.30, 0.33],    // Dense graphite
-    accent: [1.0, 1.0, 1.0],         // Pure blinding photon
+    accent: [0.95, 0.95, 0.98],      // Bright silver photon (was pure white, caused washout)
     ambient: [0.03, 0.03, 0.03],
   },
   {
@@ -182,7 +182,7 @@ export const COLOR_PALETTES: ColorPalette[] = [
     name: 'Arctic Winter & Polar Ice',
     primary: [0.88, 0.92, 0.98],     // Fresh snowfall white
     secondary: [0.42, 0.58, 0.78],    // Glacial ice blue
-    accent: [1.0, 0.98, 0.92],       // Diamond dust sparkle
+    accent: [0.72, 0.85, 0.95],      // Frost crystal blue (was diamond dust, caused washout)
     ambient: [0.04, 0.05, 0.07],
   },
   {
