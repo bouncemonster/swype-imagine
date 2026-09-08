@@ -49,7 +49,7 @@ const INITIAL_PARAMS: FractalParams = {
   rotX: 0.4,
   rotY: 0.25,
   autoRotate: true,
-  autoRotateSpeed: 0.3,
+  autoRotateSpeed: 0.12,
   targetFps: 60, // Safe default — prevents GPU overheating and browser crashes
   enableAudio: false,
   audioVolume: 0.65,

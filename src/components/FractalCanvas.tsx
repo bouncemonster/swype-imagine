@@ -394,8 +394,8 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         }
 
         // Calculate auto rotation smoothly without React re-renders!
-        const autoRotX = currentParams.autoRotate ? (simTime * currentParams.autoRotateSpeed * 0.35) : 0;
-        const autoRotY = currentParams.autoRotate ? (Math.sin(simTime * 0.18) * 0.12) : 0;
+        const autoRotX = currentParams.autoRotate ? (simTime * currentParams.autoRotateSpeed * 0.12) : 0;
+        const autoRotY = currentParams.autoRotate ? (Math.sin(simTime * 0.18) * 0.06) : 0;
 
         // Apply inertia — momentum-based rotation decay when not dragging
         let inertiaRotX = 0;
@@ -600,6 +600,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
 
   // Pinch Zoom for Touch with proportional scaling
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent browser scroll/zoom gestures on mobile
     if (e.touches.length === 2) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -619,7 +620,8 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
     touchDistanceRef.current = null;
   };
 
@@ -663,12 +665,13 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         key={activeEngineType}
         ref={canvasRef}
         id="fractal-canvas"
-        className="w-full h-full block"
+        className="w-full h-full block touch-none"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onWheel={handleWheel}
+        onTouchStart={(e) => e.preventDefault()}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       />

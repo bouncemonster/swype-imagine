@@ -1862,7 +1862,7 @@ fn mapDeJongAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   }
   let dd = 0.3 - density * 0.04;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.15);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
 // 78. Pickover Attractor
@@ -1885,7 +1885,7 @@ fn mapPickoverAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   }
   let dd = 0.28 - density * 0.035;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.12);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
 }
 
 // 79. Vicsek Fractal (3D cross IFS, dim ~1.465)
@@ -1970,7 +1970,7 @@ fn mapPopcornFunction(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   }
   let d = length(z - p.xy) - 0.2;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(abs(d) - 0.05, bound) * 0.6, trap);
+  return vec2<f32>(max(max(abs(d), 0.001), bound) * 0.6, trap);
 }
 
 // 83. Bedhead Attractor (3D chaotic)
@@ -1995,7 +1995,7 @@ fn mapBedheadAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   }
   let dd = 0.3 - density * 0.04;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.15);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic)
@@ -2014,7 +2014,7 @@ fn mapFourSpotAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   }
   let dd = 0.25 - density * 0.04;
   let bound = length(p_in) - 2.5;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.12);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
 }
 
 // 85. Svensson Attractor
@@ -2037,7 +2037,7 @@ fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   }
   let dd = 0.28 - density * 0.035;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(dd, bound) * 0.5, density * 0.12);
+  return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
 }
 
 // Master Single Primitive Dispatcher (86 Architectures)
@@ -2711,8 +2711,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
 
     // Distance-relative atmospheric falloff
-    let fogStart: f32 = select(select(max(2.0, cam_dist + 2.5), 8.0, cam_dist < 2.0), 16.0, cam_dist < 1.0);
-    let fogDensity: f32 = select(0.02, 0.012, cam_dist < 1.0);
+    // Smooth fog interpolation — no discontinuous jumps with zoom
+    let fogStart: f32 = mix(16.0, max(2.0, cam_dist + 2.5), smoothstep(0.5, 3.0, cam_dist));
+    let fogDensity: f32 = mix(0.012, 0.02, smoothstep(0.3, 1.5, cam_dist));
     let fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
     col = mix(col, vec3<f32>(0.005, 0.004, 0.008), fog * clamp(u.volumetric_fog, 0.0, 1.0));
   }

@@ -14,6 +14,7 @@ export class WebGLEngine {
   private gl: WebGL2RenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private vao: WebGLVertexArrayObject | null = null;
+  private vbo: WebGLBuffer | null = null;
   private uniformLocs: Record<string, WebGLUniformLocation | null> = {};
   public rendererInfo: string = 'WebGL2 Shader Pipeline';
 
@@ -118,6 +119,10 @@ export class WebGLEngine {
     gl.attachShader(program, fs);
     gl.linkProgram(program);
 
+    // Delete shaders after linking — they're no longer needed
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.error('WebGL Program Link Error:', gl.getProgramInfoLog(program));
       return false;
@@ -134,8 +139,8 @@ export class WebGLEngine {
     this.vao = gl.createVertexArray();
     gl.bindVertexArray(this.vao);
 
-    const vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    this.vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
     const posLoc = gl.getAttribLocation(program, 'a_position');
@@ -259,6 +264,10 @@ export class WebGLEngine {
       if (this.vao) {
         this.gl.deleteVertexArray(this.vao);
         this.vao = null;
+      }
+      if (this.vbo) {
+        this.gl.deleteBuffer(this.vbo);
+        this.vbo = null;
       }
       if (this.program) {
         this.gl.deleteProgram(this.program);

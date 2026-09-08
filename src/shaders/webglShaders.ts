@@ -1797,7 +1797,7 @@ vec2 mapDeJongAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   float dd = 0.3 - density * 0.04;
   float bound = length(p_in) - 2.5;
-  return vec2(max(dd, bound) * 0.5, density * 0.15);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
 // 78. Pickover Attractor (x'=sin(a*y)+c*cos(a*x), y'=sin(b*x)+d*cos(b*y))
@@ -1820,7 +1820,7 @@ vec2 mapPickoverAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   float dd = 0.28 - density * 0.035;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, density * 0.12);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
 }
 
 // 79. Vicsek Fractal (3D cross-shaped IFS, dim ≈ 1.465)
@@ -1908,7 +1908,7 @@ vec2 mapPopcornFunction(vec3 p_in, float t, float phi, int iters) {
   }
   float d = length(z - p.xy) - 0.2;
   float bound = length(p_in) - 2.5;
-  return vec2(max(abs(d) - 0.05, bound) * 0.6, trap);
+  return vec2(max(max(abs(d), 0.001), bound) * 0.6, trap);
 }
 
 // 83. Bedhead Attractor (3D: x'=sin(y*z)-z*cos(x*y))
@@ -1933,7 +1933,7 @@ vec2 mapBedheadAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   float dd = 0.3 - density * 0.04;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, density * 0.15);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.15);
 }
 
 // 84. FourSpot Attractor (4-wing chaotic attractor)
@@ -1956,7 +1956,7 @@ vec2 mapFourSpotAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   float dd = 0.25 - density * 0.04;
   float bound = length(p_in) - 2.5;
-  return vec2(max(dd, bound) * 0.5, density * 0.12);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
 }
 
 // 85. Svensson Attractor (x'=d*sin(a*y)-z, y'=b*cos(c*x))
@@ -1971,9 +1971,7 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
   int count = clamp(iters, 8, 22);
   for (int i = 0; i < 22; i++) {
     if (i >= count) break;
-    vec2 nz = vec2(d_ * sin(a * z.y) - z.x, b * cos(c_ * z.x));
-    // Wait, correct Svensson: x'=d*sin(a*y)-z, y'=b-z*cos(c*x)
-    nz = vec2(d_ * sin(a * z.y) - z.x * 0.1, b - z.x * cos(c_ * z.x));
+    vec2 nz = vec2(d_ * sin(a * z.y) - z.x * 0.1, b - z.x * cos(c_ * z.x));
     z = nz;
     vec3 pt = vec3(z * 0.8, p.z * 0.4);
     float dist = length(p - pt);
@@ -1981,7 +1979,7 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   float dd = 0.28 - density * 0.035;
   float bound = length(p_in) - 2.3;
-  return vec2(max(dd, bound) * 0.5, density * 0.12);
+  return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.12);
 }
 
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
@@ -2635,8 +2633,9 @@ void main() {
     }
 
     // Distance-relative atmospheric falloff
-    float fogStart = cam_dist < 1.0 ? 16.0 : (cam_dist < 2.0 ? 8.0 : max(2.0, cam_dist + 2.5));
-    float fogDensity = cam_dist < 1.0 ? 0.012 : 0.02;
+    // Smooth fog interpolation — no discontinuous jumps with zoom
+    float fogStart = mix(16.0, max(2.0, cam_dist + 2.5), smoothstep(0.5, 3.0, cam_dist));
+    float fogDensity = mix(0.012, 0.02, smoothstep(0.3, 1.5, cam_dist));
     float fog = 1.0 - exp(-max(0.0, t - fogStart) * fogDensity);
     col = mix(col, vec3(0.005, 0.004, 0.008), fog * clamp(u_volumetric_fog, 0.0, 1.0));
   }
