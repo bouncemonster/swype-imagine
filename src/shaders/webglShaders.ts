@@ -2512,6 +2512,16 @@ void main() {
     col = ambient + diffuse + bounceCol + specular + rim + sssCol;
     col *= (0.35 + 0.65 * ao); // Balanced AO — preserves brightness while adding depth
 
+    // Headlamp: camera-attached flashlight for illuminating dark interior halls
+    if (u_headlamp_power > 0.01) {
+      vec3 lampDir = normalize(ro - p);
+      float lampNdotL = max(dot(n, lampDir), 0.0);
+      float lampFalloff = 1.0 / (1.0 + t * t * 0.15);
+      float lampSpot = pow(max(dot(-rd, lampDir), 0.0), 4.0); // Focused beam along view ray
+      vec3 lampCol = (u_primary_color * 0.6 + u_accent_color * 0.4) * lampNdotL * lampFalloff * lampSpot;
+      col += lampCol * u_headlamp_power * 2.0;
+    }
+
     // If slice plane is active, highlight the glowing cut rim
     if (u_slice_plane > 0.01) {
       float sliceOffset = (0.5 - u_slice_plane) * 3.5;
@@ -2613,7 +2623,8 @@ void main() {
       col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
     } else if (u_render_style > 5.5) {
       // 6. Кристалл: Curvature facets + trap inclusions + Beer-Lambert
-      vec3 beer = exp(-max(t - 0.5, 0.0) * vec3(0.08, 0.25, 0.9));
+      float beerDist = min(max(t - 0.5, 0.0), 20.0); // Clamp to prevent black-out at extreme depths
+      vec3 beer = exp(-beerDist * vec3(0.08, 0.25, 0.9));
       float caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
       float caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       float caustic = caustic1 + caustic2;

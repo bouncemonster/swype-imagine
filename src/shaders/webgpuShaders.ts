@@ -2616,6 +2616,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     col = ambient + diffuse + bounceCol + specular + rim + sssCol;
     col = col * (0.35 + 0.65 * ao); // Balanced AO — preserves brightness while adding depth
 
+    // Headlamp: camera-attached flashlight for illuminating dark interior halls
+    if (u.headlamp_power > 0.01) {
+      let lampDir = normalize(ro - p);
+      let lampNdotL = max(dot(n, lampDir), 0.0);
+      let lampFalloff = 1.0 / (1.0 + t * t * 0.15);
+      let lampSpot = pow(max(dot(-rd, lampDir), 0.0), 4.0);
+      let lampCol = (u.primary_color * 0.6 + u.accent_color * 0.4) * lampNdotL * lampFalloff * lampSpot;
+      col = col + lampCol * u.headlamp_power * 2.0;
+    }
+
     // If slice plane is active, highlight the glowing cut rim
     if (u.slice_plane > 0.01) {
       let sliceOffset = (0.5 - u.slice_plane) * 3.5;
@@ -2725,7 +2735,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
     } else if (u.render_style > 5.5) {
       // 6. Кристалл: Curvature facets + trap inclusions + Beer-Lambert
-      let beer = exp(-max(t - 0.5, 0.0) * vec3<f32>(0.08, 0.25, 0.9));
+      let beerDist = min(max(t - 0.5, 0.0), 20.0); // Clamp to prevent black-out at extreme depths
+      let beer = exp(-beerDist * vec3<f32>(0.08, 0.25, 0.9));
       let caustic1 = pow(max(dot(-rd, light1), 0.0), 4.0) * 1.4;
       let caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       let caustic = caustic1 + caustic2;
