@@ -10,7 +10,7 @@ import { ProjectManifestModal } from './components/ProjectManifestModal';
 import { FractalAtlasModal } from './components/FractalAtlasModal';
 import { FractalProbeHUD } from './components/FractalProbeHUD';
 import { FractalScrollFeed } from './components/FractalScrollFeed';
-import { FractalParams, TelemetryData, FractalSpecimen, FractalType } from './types/fractal';
+import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle, CompositeOp, CameraMode } from './types/fractal';
 import { NeuroAestheticsEngine } from './engine/NeuroAestheticsEngine';
 import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
@@ -81,6 +81,77 @@ export default function App() {
   const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [likedSpecimens, setLikedSpecimens] = useState<FractalSpecimen[]>([]);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [autoExplore, setAutoExplore] = useState(true);
+
+  // AUTO-EXPLORE: Golden ratio based cycling through ALL fractal types
+  // Prevents getting stuck on the same models — explores the full fractal space
+  const ALL_FRACTAL_TYPES: FractalType[] = [
+    'phyllotaxis', 'mandelbulb', 'quaternionJulia', 'apollonian', 'spiralTunnel',
+    'mandelbox', 'icosahedral', 'menger', 'gyroid', 'primeSpiral',
+    'quasicrystal', 'hopfFibration', 'calabiYau', 'riemannZeta', 'sierpinskiOcta',
+    'cliffordKlein', 'poincareSphere', 'gaussianPrimes', 'neoviusMinimal', 'eulerTotientSpiral',
+    'cliffordTorus4D', 'kleinianLimit', 'fibonacciSnowflake', 'quaternionMandelbrot', 'hilbertCurve3D',
+    'dragonCurveIFS', 'pythagorasTree3D', 'burningShip3D', 'newtonBasins', 'jerusalemCube',
+    'lorenzAttractor', 'hofstadterButterfly', 'antoineNecklace', 'dlaCluster', 'rosslerHyperchaos',
+    'cliffordAttractor', 'abrikosovLattice', 'beltramiPseudosphere', 'spinFoamNetwork', 'ramanujanTau',
+    'belousovWaves', 'henonAttractor', 'aizawaAttractor', 'thomasAttractor', 'halvorsenAttractor',
+    'juliaSet3D', 'multibrot3', 'tetrix', 'gosperCurve', 'lSystemPlant',
+    'schwarzP', 'schwarzD', 'apollonianGasket', 'barnsleyFern3D', 'kleinQuartic',
+    'spherePacking', 'novaFractal', 'goldenKnot', 'sphericalHarmonics', 'fractalCross',
+    'reactionDiffusion', 'sierpinskiCarpet', 'tricorn', 'chuaCircuit', 'standardMap',
+    'ikedaMap', 'kochSnowflake3D', 'cantorDust', 'phoenixFractal', 'fatouSet',
+    'e8Lattice', 'chladniFigures', 'fitzHugh', 'rosslerAttractor', 'duffingAttractor',
+    'logisticBifurcation', 'fractalSpire', 'deJongAttractor', 'pickoverAttractor', 'vicsekFractal',
+    'mandelbar', 'weierstrass3D', 'popcornFunction', 'bedheadAttractor', 'fourSpotAttractor',
+    'svenssonAttractor',
+  ];
+  const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
+  const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
+  const CAMERA_MODES: CameraMode[] = ['orbit', 'flyThrough', 'goldenSpiral', 'kelvinInvert'];
+  const exploreIndexRef = useRef(0);
+  const PHI_INV = 0.61803398875; // Golden ratio inverse for maximum spread
+
+  useEffect(() => {
+    if (!autoExplore) return;
+    const interval = setInterval(() => {
+      // Golden ratio step through fractal types — ensures maximum coverage
+      exploreIndexRef.current = (exploreIndexRef.current + Math.round(PHI_INV * ALL_FRACTAL_TYPES.length)) % ALL_FRACTAL_TYPES.length;
+      const idx = exploreIndexRef.current;
+      const newType = ALL_FRACTAL_TYPES[idx];
+      // Use golden ratio offsets for hybrid/tertiary to ensure they differ from primary
+      const hybridIdx = (idx + Math.round(PHI_INV * 37)) % ALL_FRACTAL_TYPES.length;
+      const tertiaryIdx = (idx + Math.round(PHI_INV * 73)) % ALL_FRACTAL_TYPES.length;
+      const newHybrid = ALL_FRACTAL_TYPES[hybridIdx];
+      const newTertiary = ALL_FRACTAL_TYPES[tertiaryIdx];
+      // Cycle composite ops and render styles with different golden ratio phases
+      const opIdx = Math.floor(idx * PHI_INV) % COMPOSITE_OPS.length;
+      const styleIdx = Math.floor(idx * PHI_INV * 1.3) % RENDER_STYLES.length;
+      const camIdx = Math.floor(idx * PHI_INV * 0.7) % CAMERA_MODES.length;
+      // Vary zoom for visual diversity (close, medium, far)
+      const zoomOptions = [1.8, 2.5, 3.5, 5.0, 7.0];
+      const zoomIdx = Math.floor(idx * PHI_INV * 1.7) % zoomOptions.length;
+      // Vary iterations for complexity diversity
+      const iterOptions = [12, 18, 24, 30, 36];
+      const iterIdx = Math.floor(idx * PHI_INV * 2.1) % iterOptions.length;
+
+      setParams(prev => ({
+        ...prev,
+        type: newType,
+        hybridType: newHybrid,
+        tertiaryType: newTertiary,
+        compositeOp: COMPOSITE_OPS[opIdx],
+        renderStyle: RENDER_STYLES[styleIdx],
+        cameraMode: CAMERA_MODES[camIdx],
+        hybridBlend: 0.2 + (idx % 5) * 0.12,
+        tertiaryBlend: 0.1 + (idx % 4) * 0.08,
+        zoom: zoomOptions[zoomIdx],
+        iterations: iterOptions[iterIdx],
+        paletteRotation: true,
+        autoRotate: true,
+      }));
+    }, 18000); // Change every 18 seconds
+    return () => clearInterval(interval);
+  }, [autoExplore]);
 
   const handleLoaderFinished = useCallback(() => {
     // Keep clean entrance directly into the 3D scroll feed without annoying popups
@@ -101,6 +172,7 @@ export default function App() {
 
   // Apply a specimen's genome to rendering parameters
   const applySpecimen = useCallback((specimen: FractalSpecimen) => {
+    setAutoExplore(false); // User interaction disables auto-explore
     setCurrentSpecimen(specimen);
     setResonanceScore(specimen.affinityScore);
 
