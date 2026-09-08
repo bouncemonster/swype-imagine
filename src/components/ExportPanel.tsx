@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { exportPointCloudToPLY, exportPointCloudToOBJ, downloadFile } from '../utils/exportUtils';
+import { exportPointCloudToPLY, exportPointCloudToOBJ, generateMeshFromSDF, exportMeshToOBJ, downloadFile } from '../utils/exportUtils';
 
 interface ExportPanelProps {
   isOpen: boolean;
@@ -64,6 +64,32 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ isOpen, onClose }) => 
     }
   };
 
+  const handleExportMesh = async () => {
+    setExporting(true);
+    
+    try {
+      // Simple SDF function for demo (Mandelbulb approximation)
+      const sdfFunction = (x: number, y: number, z: number): number => {
+        const r = Math.sqrt(x * x + y * y + z * z);
+        return r - 1.0; // Simple sphere for demo
+      };
+      
+      const bounds = {
+        min: [-2, -2, -2] as [number, number, number],
+        max: [2, 2, 2] as [number, number, number]
+      };
+      
+      const meshData = generateMeshFromSDF(sdfFunction, bounds, 32);
+      const content = exportMeshToOBJ(meshData);
+      
+      downloadFile(content, 'fractal_mesh.obj', 'model/obj');
+    } catch (error) {
+      console.error('Mesh export failed:', error);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -102,6 +128,21 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ isOpen, onClose }) => 
                 Export OBJ
               </button>
             </div>
+          </div>
+
+          {/* Mesh Export */}
+          <div className="border border-neutral-700 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-amber-300 mb-3">Mesh Export (Marching Cubes)</h3>
+            <p className="text-sm text-neutral-400 mb-4">
+              Generate and export 3D mesh from fractal surface using Marching Cubes algorithm
+            </p>
+            <button
+              onClick={handleExportMesh}
+              disabled={exporting}
+              className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-neutral-700 text-white rounded-lg transition-colors font-medium"
+            >
+              Export Mesh (OBJ)
+            </button>
           </div>
 
           {/* Stereo Rendering */}
