@@ -1,17 +1,9 @@
 /// <reference types="@webgpu/types" />
 import { FractalParams } from '../types/fractal';
 import { WGSL_SHADER } from '../shaders/webgpuShaders';
-import { COLOR_PALETTES } from '../palettes';
-import {
-  getFractalIndex,
-  getCompositeOpIndex,
-  getCameraModeIndex,
-  getSliceAxisIndex,
-  getRenderStyleIndex,
-} from './fractalMappers';
+import { FractalEngineBase } from './FractalEngineBase';
 
-export class WebGPUEngine {
-  private canvas: HTMLCanvasElement;
+export class WebGPUEngine extends FractalEngineBase {
   private adapter: GPUAdapter | null = null;
   private device: GPUDevice | null = null;
   private context: GPUCanvasContext | null = null;
@@ -23,7 +15,8 @@ export class WebGPUEngine {
   public adapterInfo: string = 'Unknown GPU';
 
   constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+    super(canvas);
+    this.rendererInfo = 'WebGPU Engine';
   }
 
   public static isSupported(): boolean {
@@ -172,81 +165,10 @@ export class WebGPUEngine {
     const height = this.canvas.height;
     if (width === 0 || height === 0) return;
 
-    // Palette lookup (supports procedural neuro-aesthetic palettes)
-    const palette = (params as any).customPalette || COLOR_PALETTES.find(p => p.id === params.paletteId) || COLOR_PALETTES[0];
-
-    const fractalIdx = getFractalIndex(params.type);
-    const hybridIdx = getFractalIndex(params.hybridType || params.type);
-    const tertiaryIdx = getFractalIndex(params.tertiaryType || 'riemannZeta');
-
-    // Pack uniform float32 array (48 floats = 192 bytes)
-    const u = this.uniformValues;
-    u[0] = width;
-    u[1] = height;
-    u[2] = timeSec;
-    u[3] = params.phiMultiplier;
-
-    u[4] = params.rotX;
-    u[5] = params.rotY;
-    u[6] = params.zoom;
-    u[7] = fractalIdx;
-
-    u[8] = params.iterations;
-    u[9] = params.glowIntensity;
-    u[10] = params.morphSpeed;
-    u[11] = hybridIdx;
-
-    u[12] = params.hybridBlend ?? 0.0;
-    u[13] = params.boxFold ?? 1.2;
-    u[14] = params.sphereFold ?? 0.65;
-    u[15] = params.interiorCut ?? 0.35;
-
-    // Primary RGB + tertiary fractal index (fits natural 4-byte padding of vec3)
-    u[16] = palette.primary[0];
-    u[17] = palette.primary[1];
-    u[18] = palette.primary[2];
-    u[19] = tertiaryIdx;
-
-    // Secondary RGB + tertiary blend
-    u[20] = palette.secondary[0];
-    u[21] = palette.secondary[1];
-    u[22] = palette.secondary[2];
-    u[23] = params.tertiaryBlend ?? 0.0;
-
-    // Accent RGB + composite operator index
-    u[24] = palette.accent[0];
-    u[25] = palette.accent[1];
-    u[26] = palette.accent[2];
-    u[27] = getCompositeOpIndex(params.compositeOp);
-
-    // Multi-operator distance field algebra & Fibonacci octave hierarchy & camera mode
-    u[28] = params.smoothK ?? 0.35;
-    u[29] = params.warpStrength ?? 0.3;
-    u[30] = params.octaveLayers ?? 2;
-    u[31] = getCameraModeIndex(params.cameraMode);
-
-    // Inside-out free flight position & anatomical slicing
-    u[32] = params.camPosX ?? 0.0;
-    u[33] = params.camPosY ?? 0.0;
-    u[34] = params.camPosZ ?? 0.0;
-    u[35] = params.slicePlane ?? 0.0;
-
-    // Immersion technologies: Headlamp power, volumetric fog, tomography axis & render modality
-    u[36] = params.headlampPower ?? 0.3;
-    u[37] = params.volumetricFog ?? 0.15;
-    u[38] = getSliceAxisIndex(params.sliceAxis);
-    u[39] = getRenderStyleIndex(params.renderStyle);
-
-    // Ambient color & padding
-    u[40] = palette.ambient ? palette.ambient[0] : 0.02;
-    u[41] = palette.ambient ? palette.ambient[1] : 0.02;
-    u[42] = palette.ambient ? palette.ambient[2] : 0.02;
-    u[43] = params.paletteSeed ?? 0.0;
-
-    u[44] = 0.0;
-    u[45] = 0.0;
-    u[46] = 0.0;
-    u[47] = 0.0;
+    // Pack uniforms using shared base method
+    const palette = this.resolvePalette(params);
+    const indices = this.computeIndices(params);
+    this.packUniforms(this.uniformValues, timeSec, params, palette, indices);
 
     // Write to GPU uniform buffer
     this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);

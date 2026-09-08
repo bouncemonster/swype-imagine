@@ -1,25 +1,17 @@
 import { FractalParams } from '../types/fractal';
 import { GLSL_VERTEX_SHADER, GLSL_FRAGMENT_SHADER } from '../shaders/webglShaders';
-import { COLOR_PALETTES } from '../palettes';
-import {
-  getFractalIndex,
-  getCompositeOpIndex,
-  getCameraModeIndex,
-  getSliceAxisIndex,
-  getRenderStyleIndex,
-} from './fractalMappers';
+import { FractalEngineBase } from './FractalEngineBase';
 
-export class WebGLEngine {
-  private canvas: HTMLCanvasElement;
+export class WebGLEngine extends FractalEngineBase {
   private gl: WebGL2RenderingContext | null = null;
   private program: WebGLProgram | null = null;
   private vao: WebGLVertexArrayObject | null = null;
   private vbo: WebGLBuffer | null = null;
   private uniformLocs: Record<string, WebGLUniformLocation | null> = {};
-  public rendererInfo: string = 'WebGL2 Shader Pipeline';
 
   constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+    super(canvas);
+    this.rendererInfo = 'WebGL2 Shader Pipeline';
   }
 
   public init(): boolean {
@@ -212,49 +204,58 @@ export class WebGLEngine {
     gl.useProgram(this.program);
     gl.bindVertexArray(this.vao);
 
-    const palette = (params as any).customPalette || COLOR_PALETTES.find(p => p.id === params.paletteId) || COLOR_PALETTES[0];
+    const palette = this.resolvePalette(params);
+    const indices = this.computeIndices(params);
 
-    const fractalIdx = getFractalIndex(params.type);
-    const hybridIdx = getFractalIndex(params.hybridType || params.type);
-    const tertiaryIdx = getFractalIndex(params.tertiaryType || 'riemannZeta');
+    // Upload all uniforms via packed buffer
+    const packed = new Float32Array(48);
+    this.packUniforms(packed, timeSec, params, palette, indices);
 
-    if (this.uniformLocs['u_resolution']) gl.uniform2f(this.uniformLocs['u_resolution'], this.canvas.width, this.canvas.height);
-    if (this.uniformLocs['u_time']) gl.uniform1f(this.uniformLocs['u_time'], timeSec);
-    if (this.uniformLocs['u_phi_val']) gl.uniform1f(this.uniformLocs['u_phi_val'], params.phiMultiplier);
+    const set = (name: string, val: number) => {
+      const loc = this.uniformLocs[name];
+      if (loc) gl.uniform1f(loc, val);
+    };
+    const set2 = (name: string, x: number, y: number) => {
+      const loc = this.uniformLocs[name];
+      if (loc) gl.uniform2f(loc, x, y);
+    };
+    const set3 = (name: string, x: number, y: number, z: number) => {
+      const loc = this.uniformLocs[name];
+      if (loc) gl.uniform3f(loc, x, y, z);
+    };
 
-    if (this.uniformLocs['u_cam_rot']) gl.uniform2f(this.uniformLocs['u_cam_rot'], params.rotX, params.rotY);
-    if (this.uniformLocs['u_zoom']) gl.uniform1f(this.uniformLocs['u_zoom'], params.zoom);
-    if (this.uniformLocs['u_fractal_type']) gl.uniform1f(this.uniformLocs['u_fractal_type'], fractalIdx);
-    if (this.uniformLocs['u_hybrid_type']) gl.uniform1f(this.uniformLocs['u_hybrid_type'], hybridIdx);
-    if (this.uniformLocs['u_tertiary_type']) gl.uniform1f(this.uniformLocs['u_tertiary_type'], tertiaryIdx);
-
-    if (this.uniformLocs['u_iterations']) gl.uniform1f(this.uniformLocs['u_iterations'], params.iterations);
-    if (this.uniformLocs['u_glow_intensity']) gl.uniform1f(this.uniformLocs['u_glow_intensity'], params.glowIntensity);
-    if (this.uniformLocs['u_morph_speed']) gl.uniform1f(this.uniformLocs['u_morph_speed'], params.morphSpeed);
-    if (this.uniformLocs['u_hybrid_blend']) gl.uniform1f(this.uniformLocs['u_hybrid_blend'], params.hybridBlend ?? 0.0);
-    if (this.uniformLocs['u_tertiary_blend']) gl.uniform1f(this.uniformLocs['u_tertiary_blend'], params.tertiaryBlend ?? 0.0);
-
-    if (this.uniformLocs['u_compose_op']) gl.uniform1f(this.uniformLocs['u_compose_op'], getCompositeOpIndex(params.compositeOp));
-    if (this.uniformLocs['u_smooth_k']) gl.uniform1f(this.uniformLocs['u_smooth_k'], params.smoothK ?? 0.35);
-    if (this.uniformLocs['u_warp_strength']) gl.uniform1f(this.uniformLocs['u_warp_strength'], params.warpStrength ?? 0.3);
-    if (this.uniformLocs['u_octave_layers']) gl.uniform1f(this.uniformLocs['u_octave_layers'], params.octaveLayers ?? 2);
-
-    if (this.uniformLocs['u_box_fold']) gl.uniform1f(this.uniformLocs['u_box_fold'], params.boxFold ?? 1.2);
-    if (this.uniformLocs['u_sphere_fold']) gl.uniform1f(this.uniformLocs['u_sphere_fold'], params.sphereFold ?? 0.65);
-    if (this.uniformLocs['u_interior_cut']) gl.uniform1f(this.uniformLocs['u_interior_cut'], params.interiorCut ?? 0.35);
-
-    if (this.uniformLocs['u_primary_color']) gl.uniform3f(this.uniformLocs['u_primary_color'], palette.primary[0], palette.primary[1], palette.primary[2]);
-    if (this.uniformLocs['u_secondary_color']) gl.uniform3f(this.uniformLocs['u_secondary_color'], palette.secondary[0], palette.secondary[1], palette.secondary[2]);
-    if (this.uniformLocs['u_accent_color']) gl.uniform3f(this.uniformLocs['u_accent_color'], palette.accent[0], palette.accent[1], palette.accent[2]);
-
-    if (this.uniformLocs['u_cam_mode']) gl.uniform1f(this.uniformLocs['u_cam_mode'], getCameraModeIndex(params.cameraMode));
-    if (this.uniformLocs['u_cam_pos']) gl.uniform3f(this.uniformLocs['u_cam_pos'], params.camPosX ?? 0.0, params.camPosY ?? 0.0, params.camPosZ ?? 0.0);
-    if (this.uniformLocs['u_slice_plane']) gl.uniform1f(this.uniformLocs['u_slice_plane'], params.slicePlane ?? 0.0);
-    if (this.uniformLocs['u_slice_axis']) gl.uniform1f(this.uniformLocs['u_slice_axis'], getSliceAxisIndex(params.sliceAxis));
-    if (this.uniformLocs['u_render_style']) gl.uniform1f(this.uniformLocs['u_render_style'], getRenderStyleIndex(params.renderStyle));
-    if (this.uniformLocs['u_headlamp_power']) gl.uniform1f(this.uniformLocs['u_headlamp_power'], params.headlampPower ?? 0.3);
-    if (this.uniformLocs['u_volumetric_fog']) gl.uniform1f(this.uniformLocs['u_volumetric_fog'], params.volumetricFog ?? 0.15);
-    if (this.uniformLocs['u_palette_seed']) gl.uniform1f(this.uniformLocs['u_palette_seed'], params.paletteSeed ?? 0.0);
+    set2('u_resolution', packed[0], packed[1]);
+    set('u_time', packed[2]);
+    set('u_phi_val', packed[3]);
+    set2('u_cam_rot', packed[4], packed[5]);
+    set('u_zoom', packed[6]);
+    set('u_fractal_type', packed[7]);
+    set('u_iterations', packed[8]);
+    set('u_glow_intensity', packed[9]);
+    set('u_morph_speed', packed[10]);
+    set('u_hybrid_type', packed[11]);
+    set('u_hybrid_blend', packed[12]);
+    set('u_box_fold', packed[13]);
+    set('u_sphere_fold', packed[14]);
+    set('u_interior_cut', packed[15]);
+    set3('u_primary_color', packed[16], packed[17], packed[18]);
+    set('u_tertiary_type', packed[19]);
+    set3('u_secondary_color', packed[20], packed[21], packed[22]);
+    set('u_tertiary_blend', packed[23]);
+    set3('u_accent_color', packed[24], packed[25], packed[26]);
+    set('u_compose_op', packed[27]);
+    set('u_smooth_k', packed[28]);
+    set('u_warp_strength', packed[29]);
+    set('u_octave_layers', packed[30]);
+    set('u_cam_mode', packed[31]);
+    set3('u_cam_pos', packed[32], packed[33], packed[34]);
+    set('u_slice_plane', packed[35]);
+    set('u_headlamp_power', packed[36]);
+    set('u_volumetric_fog', packed[37]);
+    set('u_slice_axis', packed[38]);
+    set('u_render_style', packed[39]);
+    // Ambient color not a separate GLSL uniform — palette colors used directly in shader
+    set('u_palette_seed', packed[43]);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
