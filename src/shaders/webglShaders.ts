@@ -2768,21 +2768,22 @@ void main() {
   // Adaptive near-plane: scales with camera distance to prevent slicing
   float near_clip = max(0.0001, cam_dist * 0.0005);
   float t = near_clip + 0.001 * dither;
-  // Fixed large max_dist — decoupled from cam_dist to prevent far-side slicing
-  // When camera is close, rays travel nearly parallel to surface and need full range
-  float max_dist = 128.0;
+  // FIX: Dynamic max_dist based on camera distance to prevent clipping
+  // When camera is close, rays travel nearly parallel to surface and need more range
+  float max_dist = (cam_dist < 1.0) ? 256.0 : (cam_dist < 3.0) ? 192.0 : 128.0;
   bool hit = false;
   float min_trap = 1e10;
   int steps = 0;
 
   // OPTIMIZATION 1: Space Leaping — skip empty space with bounding sphere
-  // Check if ray starts outside a large bounding sphere around the fractal
-  float boundingRadius = 4.0; // Fractal is contained within radius 4
+  // FIX: Bounding radius must match sceneSDF boundary (5.0) to prevent clipping
+  float boundingRadius = 6.0; // Increased from 4.0 to match sceneSDF r_bound > 5.0
   float rayOriginDist = length(ro);
   if (rayOriginDist > boundingRadius) {
     // Ray starts outside bounding sphere, skip to intersection
+    // FIX: Use more conservative start (0.95 instead of 0.9) to prevent missing surface
     float tmin = rayOriginDist - boundingRadius;
-    if (tmin > t) t = tmin * 0.9; // Start 10% before sphere intersection
+    if (tmin > t) t = tmin * 0.95; // Start 5% before sphere intersection (was 10%)
   }
 
   // OPTIMIZATION 2: LOD System — reduce iterations based on distance
@@ -2840,11 +2841,11 @@ void main() {
     t += step_d;
     
     // OPTIMIZATION 6: Early Ray Termination
-    // If we're moving away from surface for many steps, terminate early
-    // FIX: Skip check on first iteration (lastD is uninitialized)
-    if (i > 0 && d > lastD * 1.5 && d > 0.5) {
+    // FIX: More conservative thresholds to prevent premature termination
+    // Increased missCount threshold from 8 to 12, and distance threshold from 0.5 to 1.0
+    if (i > 0 && d > lastD * 1.5 && d > 1.0) {
       missCount++;
-      if (missCount > 8) break; // Ray is clearly missing, stop
+      if (missCount > 12) break; // Ray is clearly missing, stop (was 8)
     } else {
       missCount = 0;
     }
