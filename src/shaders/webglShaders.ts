@@ -1968,6 +1968,151 @@ vec2 mapSvenssonAttractor(vec3 p_in, float t, float phi, int iters) {
   return vec2(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
+// 86: Kaleidoscopic IFS
+float mapKaleidoscopicIFS(vec3 p, float t, float phi, int iters) {
+  float scale = phi;
+  float minDist = 1e10;
+  vec3 offset = vec3(1.0) * 0.8;
+  for (int i = 0; i < 12; i++) {
+    p = abs(p) - offset;
+    p.xy = rot2D(t * 0.1 + float(i) * 0.5) * p.xy;
+    p.yz = rot2D(t * 0.08 + float(i) * 0.3) * p.yz;
+    float r = length(p);
+    p = p * (scale / max(r * r, 0.001)) - offset * 0.5;
+    minDist = min(minDist, length(p) * pow(scale, -float(i + 1)));
+  }
+  return minDist * 0.5;
+}
+
+// 87: Flower of Life
+float mapFlowerOfLife(vec3 p, float t, float phi) {
+  float r = length(p.xy);
+  float theta = atan(p.y, p.x);
+  float petals = 0.0;
+  for (int i = 0; i < 6; i++) {
+    float angle = float(i) * 1.0472 + t * 0.1;
+    vec2 center = vec2(cos(angle), sin(angle)) * 0.5;
+    float d = length(p.xy - center) - 0.5;
+    petals += exp(-abs(d) * 8.0);
+  }
+  float flower = r - 0.5 - petals * 0.1;
+  float z = sin(theta * 6.0 + t) * 0.1;
+  return max(flower, abs(p.z - z) - 0.05) * 0.8;
+}
+
+// 88: Cosmic Spiral
+float mapCosmicSpiral(vec3 p, float t, float phi) {
+  float r = length(p.xy);
+  float theta = atan(p.y, p.x);
+  float spiral1 = theta - log(max(r, 0.01)) * 3.0 - t * 0.5;
+  float spiral2 = theta - log(max(r, 0.01)) * 3.0 - t * 0.5 + 3.14159;
+  float arm1 = sin(spiral1 * 2.0) * 0.5 + 0.5;
+  float arm2 = sin(spiral2 * 2.0) * 0.5 + 0.5;
+  float arms = max(arm1, arm2) * exp(-r * 0.5);
+  float disk = abs(p.z) - 0.1 - arms * 0.2;
+  return max(disk, r - 2.0) * 0.6;
+}
+
+// 89: Crystal Growth
+float mapCrystalGrowth(vec3 p, float t, float phi, int iters) {
+  float d = length(p) - 1.0;
+  vec3 dir = normalize(p);
+  for (int i = 0; i < 8; i++) {
+    float fi = float(i);
+    vec3 branch = dir * (1.0 + fi * 0.3);
+    branch.xy = rot2D(fi * 1.2 + t * 0.1) * branch.xy;
+    float bd = length(p - branch) - 0.3 / (1.0 + fi * 0.2);
+    d = min(d, bd);
+    dir = normalize(dir + vec3(sin(fi), cos(fi * 1.3), sin(fi * 0.7)) * 0.3);
+  }
+  return d * 0.7;
+}
+
+// 90: Quantum Foam
+float mapQuantumFoam(vec3 p, float t, float phi) {
+  float bubbles = 0.0;
+  for (int i = 0; i < 12; i++) {
+    float fi = float(i);
+    vec3 center = vec3(sin(fi * 1.3 + t * 0.2), cos(fi * 1.7 + t * 0.15), sin(fi * 2.1 + t * 0.1)) * 1.2;
+    float r = 0.3 + sin(fi + t) * 0.1;
+    float d = length(p - center) - r;
+    bubbles = max(bubbles, -d);
+  }
+  return -bubbles * 0.8;
+}
+
+// 91: Fractal Coral
+float mapFractalCoral(vec3 p, float t, float phi, int iters) {
+  float d = length(p) - 1.5;
+  vec3 offset = vec3(0.0, 1.0, 0.0);
+  for (int i = 0; i < 10; i++) {
+    p = abs(p) - offset;
+    p.xy = rot2D(0.8 + t * 0.05) * p.xy;
+    float r = length(p);
+    p = p * 1.5 / max(r * r, 0.01);
+    d = min(d, length(p) * pow(1.5, -float(i + 1)));
+  }
+  return d * 0.4;
+}
+
+// 92: Nebula Cloud
+float mapNebulaCloud(vec3 p, float t, float phi, int iters) {
+  float density = 0.0;
+  vec3 q = p;
+  for (int i = 0; i < 8; i++) {
+    q = abs(q) - vec3(0.5, 0.3, 0.4);
+    q.xy = rot2D(t * 0.1 + float(i)) * q.xy;
+    q.yz = rot2D(t * 0.08) * q.yz;
+    density += exp(-length(q) * 2.0);
+  }
+  float d = 0.5 - density * 0.15;
+  float bound = length(p) - 2.0;
+  return max(d * 0.6, bound) * 0.7;
+}
+
+// 93: Hyperbolic Tiling
+float mapHyperbolicTiling(vec3 p, float t, float phi) {
+  float r = length(p.xy);
+  float theta = atan(p.y, p.x);
+  float tile = sin(theta * 8.0 + t * 0.2) * sin(r * 10.0 - t * 0.3);
+  float pattern = abs(tile) - 0.3;
+  float disk = r - 1.0;
+  return max(pattern * 0.3, disk) * 0.8;
+}
+
+// 94: Organic Cell
+float mapOrganicCell(vec3 p, float t, float phi) {
+  float r = length(p);
+  float theta = atan(p.y, p.x);
+  float phiAngle = acos(p.z / max(r, 0.01));
+  float membrane = abs(r - 1.0 - sin(theta * 5.0 + t) * 0.1 - sin(phiAngle * 4.0) * 0.1);
+  float nucleus = length(p - vec3(0.0, 0.0, 0.2)) - 0.3;
+  float organelles = 0.0;
+  for (int i = 0; i < 5; i++) {
+    float fi = float(i);
+    vec3 pos = vec3(sin(fi * 1.5), cos(fi * 1.3), sin(fi * 1.7)) * 0.5;
+    organelles = max(organelles, -(length(p - pos) - 0.15));
+  }
+  return min(membrane, max(-nucleus, -organelles)) * 0.7;
+}
+
+// 95: Golden Helix
+float mapGoldenHelix(vec3 p, float t, float phi) {
+  float helix1 = 0.0;
+  float helix2 = 0.0;
+  for (int i = 0; i < 20; i++) {
+    float fi = float(i) * 0.3;
+    float angle1 = fi * 2.4 + t * 0.5;
+    float angle2 = angle1 + 3.14159;
+    vec3 pos1 = vec3(cos(angle1), sin(angle1), fi - 3.0) * 0.5;
+    vec3 pos2 = vec3(cos(angle2), sin(angle2), fi - 3.0) * 0.5;
+    helix1 = max(helix1, -(length(p - pos1) - 0.15));
+    helix2 = max(helix2, -(length(p - pos2) - 0.15));
+  }
+  float bridge = abs(p.z) - 3.0;
+  return min(min(helix1, helix2), bridge) * 0.8;
+}
+
 vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 0) return mapPhyllotaxis(p, t, phi, iters);
   if (ftype == 1) return mapMandelbulb(p, t, phi, iters);
@@ -2054,7 +2199,18 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 82) return mapPopcornFunction(p, t, phi, iters);
   if (ftype == 83) return mapBedheadAttractor(p, t, phi, iters);
   if (ftype == 84) return mapFourSpotAttractor(p, t, phi, iters);
-  return mapSvenssonAttractor(p, t, phi, iters);
+  if (ftype == 85) return mapSvenssonAttractor(p, t, phi, iters);
+  // NEW BEAUTIFUL FRACTALS
+  if (ftype == 86) return mapKaleidoscopicIFS(p, t, phi, iters);
+  if (ftype == 87) return mapFlowerOfLife(p, t, phi);
+  if (ftype == 88) return mapCosmicSpiral(p, t, phi);
+  if (ftype == 89) return mapCrystalGrowth(p, t, phi, iters);
+  if (ftype == 90) return mapQuantumFoam(p, t, phi);
+  if (ftype == 91) return mapFractalCoral(p, t, phi, iters);
+  if (ftype == 92) return mapNebulaCloud(p, t, phi, iters);
+  if (ftype == 93) return mapHyperbolicTiling(p, t, phi);
+  if (ftype == 94) return mapOrganicCell(p, t, phi);
+  return mapGoldenHelix(p, t, phi);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
@@ -2532,12 +2688,12 @@ void main() {
     vec3 bounceCol = u_secondary_color * bounce * bounceOcc * ao;
 
     vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    vec3 specular = vec3(1.0, 0.97, 0.92) * spec1 * 0.55 * ao; // Near-white specular for visible highlights
-    vec3 rim = u_accent_color * fresnel * 0.28 * (0.3 + 0.7 * ao); // Stronger rim for edge definition
+    vec3 specular = vec3(1.0, 0.97, 0.92) * spec1 * 0.85 * ao; // Brighter specular for visible highlights
+    vec3 rim = u_accent_color * fresnel * 0.45 * (0.3 + 0.7 * ao); // Stronger rim for edge definition
 
     // Full lighting: ambient + diffuse + bounce + specular + rim + SSS
-    col = ambient + diffuse + bounceCol + specular + rim + sssCol;
-    col *= (0.35 + 0.65 * ao); // Balanced AO — preserves brightness while adding depth
+    col = ambient * 0.6 + diffuse * 1.2 + bounceCol * 1.5 + specular + rim * 1.3 + sssCol * 1.5;
+    col *= (0.4 + 0.6 * ao); // Balanced AO — preserves brightness while adding depth
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u_headlamp_power > 0.01) {

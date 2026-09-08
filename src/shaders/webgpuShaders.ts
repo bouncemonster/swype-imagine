@@ -2060,6 +2060,153 @@ fn mapSvenssonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
   return vec2<f32>(max(max(dd, 0.001), bound) * 0.5, density * 0.25);
 }
 
+// 86: Kaleidoscopic IFS
+fn mapKaleidoscopicIFS(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var pos = p;
+  let scale = phi;
+  var minDist = 1e10;
+  let offset = vec3<f32>(1.0) * 0.8;
+  for (var i = 0; i < 12; i++) {
+    pos = abs(pos) - offset;
+    pos = vec3<f32>(rot2D(t * 0.1 + f32(i) * 0.5) * pos.xy, pos.z);
+    pos = vec3<f32>(pos.x, rot2D(t * 0.08 + f32(i) * 0.3) * pos.yz);
+    let r = length(pos);
+    pos = pos * (scale / max(r * r, 0.001)) - offset * 0.5;
+    minDist = min(minDist, length(pos) * pow(scale, -f32(i + 1)));
+  }
+  return minDist * 0.5;
+}
+
+// 87: Flower of Life
+fn mapFlowerOfLife(p: vec3<f32>, t: f32, phi: f32) -> f32 {
+  let r = length(p.xy);
+  let theta = atan2(p.y, p.x);
+  var petals = 0.0;
+  for (var i = 0; i < 6; i++) {
+    let angle = f32(i) * 1.0472 + t * 0.1;
+    let center = vec2<f32>(cos(angle), sin(angle)) * 0.5;
+    let d = length(p.xy - center) - 0.5;
+    petals = petals + exp(-abs(d) * 8.0);
+  }
+  let flower = r - 0.5 - petals * 0.1;
+  let z = sin(theta * 6.0 + t) * 0.1;
+  return max(flower, abs(p.z - z) - 0.05) * 0.8;
+}
+
+// 88: Cosmic Spiral
+fn mapCosmicSpiral(p: vec3<f32>, t: f32, phi: f32) -> f32 {
+  let r = length(p.xy);
+  let theta = atan2(p.y, p.x);
+  let spiral1 = theta - log(max(r, 0.01)) * 3.0 - t * 0.5;
+  let spiral2 = theta - log(max(r, 0.01)) * 3.0 - t * 0.5 + 3.14159;
+  let arm1 = sin(spiral1 * 2.0) * 0.5 + 0.5;
+  let arm2 = sin(spiral2 * 2.0) * 0.5 + 0.5;
+  let arms = max(arm1, arm2) * exp(-r * 0.5);
+  let disk = abs(p.z) - 0.1 - arms * 0.2;
+  return max(disk, r - 2.0) * 0.6;
+}
+
+// 89: Crystal Growth
+fn mapCrystalGrowth(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var d = length(p) - 1.0;
+  var dir = normalize(p);
+  for (var i = 0; i < 8; i++) {
+    let fi = f32(i);
+    var branch = dir * (1.0 + fi * 0.3);
+    branch = vec3<f32>(rot2D(fi * 1.2 + t * 0.1) * branch.xy, branch.z);
+    let bd = length(p - branch) - 0.3 / (1.0 + fi * 0.2);
+    d = min(d, bd);
+    dir = normalize(dir + vec3<f32>(sin(fi), cos(fi * 1.3), sin(fi * 0.7)) * 0.3);
+  }
+  return d * 0.7;
+}
+
+// 90: Quantum Foam
+fn mapQuantumFoam(p: vec3<f32>, t: f32, phi: f32) -> f32 {
+  var bubbles = 0.0;
+  for (var i = 0; i < 12; i++) {
+    let fi = f32(i);
+    let center = vec3<f32>(sin(fi * 1.3 + t * 0.2), cos(fi * 1.7 + t * 0.15), sin(fi * 2.1 + t * 0.1)) * 1.2;
+    let r = 0.3 + sin(fi + t) * 0.1;
+    let d = length(p - center) - r;
+    bubbles = max(bubbles, -d);
+  }
+  return -bubbles * 0.8;
+}
+
+// 91: Fractal Coral
+fn mapFractalCoral(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var pos = p;
+  var d = length(p) - 1.5;
+  let offset = vec3<f32>(0.0, 1.0, 0.0);
+  for (var i = 0; i < 10; i++) {
+    pos = abs(pos) - offset;
+    pos = vec3<f32>(rot2D(0.8 + t * 0.05) * pos.xy, pos.z);
+    let r = length(pos);
+    pos = pos * 1.5 / max(r * r, 0.01);
+    d = min(d, length(pos) * pow(1.5, -f32(i + 1)));
+  }
+  return d * 0.4;
+}
+
+// 92: Nebula Cloud
+fn mapNebulaCloud(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
+  var density = 0.0;
+  var q = p;
+  for (var i = 0; i < 8; i++) {
+    q = abs(q) - vec3<f32>(0.5, 0.3, 0.4);
+    q = vec3<f32>(rot2D(t * 0.1 + f32(i)) * q.xy, q.z);
+    q = vec3<f32>(q.x, rot2D(t * 0.08) * q.yz);
+    density = density + exp(-length(q) * 2.0);
+  }
+  let d = 0.5 - density * 0.15;
+  let bound = length(p) - 2.0;
+  return max(d * 0.6, bound) * 0.7;
+}
+
+// 93: Hyperbolic Tiling
+fn mapHyperbolicTiling(p: vec3<f32>, t: f32, phi: f32) -> f32 {
+  let r = length(p.xy);
+  let theta = atan2(p.y, p.x);
+  let tile = sin(theta * 8.0 + t * 0.2) * sin(r * 10.0 - t * 0.3);
+  let pattern = abs(tile) - 0.3;
+  let disk = r - 1.0;
+  return max(pattern * 0.3, disk) * 0.8;
+}
+
+// 94: Organic Cell
+fn mapOrganicCell(p: vec3<f32>, t: f32, phi: f32) -> f32 {
+  let r = length(p);
+  let theta = atan2(p.y, p.x);
+  let phiAngle = acos(p.z / max(r, 0.01));
+  let membrane = abs(r - 1.0 - sin(theta * 5.0 + t) * 0.1 - sin(phiAngle * 4.0) * 0.1);
+  let nucleus = length(p - vec3<f32>(0.0, 0.0, 0.2)) - 0.3;
+  var organelles = 0.0;
+  for (var i = 0; i < 5; i++) {
+    let fi = f32(i);
+    let pos = vec3<f32>(sin(fi * 1.5), cos(fi * 1.3), sin(fi * 1.7)) * 0.5;
+    organelles = max(organelles, -(length(p - pos) - 0.15));
+  }
+  return min(membrane, max(-nucleus, -organelles)) * 0.7;
+}
+
+// 95: Golden Helix
+fn mapGoldenHelix(p: vec3<f32>, t: f32, phi: f32) -> f32 {
+  var helix1 = 0.0;
+  var helix2 = 0.0;
+  for (var i = 0; i < 20; i++) {
+    let fi = f32(i) * 0.3;
+    let angle1 = fi * 2.4 + t * 0.5;
+    let angle2 = angle1 + 3.14159;
+    let pos1 = vec3<f32>(cos(angle1), sin(angle1), fi - 3.0) * 0.5;
+    let pos2 = vec3<f32>(cos(angle2), sin(angle2), fi - 3.0) * 0.5;
+    helix1 = max(helix1, -(length(p - pos1) - 0.15));
+    helix2 = max(helix2, -(length(p - pos2) - 0.15));
+  }
+  let bridge = abs(p.z) - 3.0;
+  return min(min(helix1, helix2), bridge) * 0.8;
+}
+
 // Master Single Primitive Dispatcher (86 Architectures)
 fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (ftype == 0) { return mapPhyllotaxis(p, t, phi, iters); }
@@ -2147,7 +2294,18 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 82) { return mapPopcornFunction(p, t, phi, iters); }
   if (ftype == 83) { return mapBedheadAttractor(p, t, phi, iters); }
   if (ftype == 84) { return mapFourSpotAttractor(p, t, phi, iters); }
-  return mapSvenssonAttractor(p, t, phi, iters);
+  if (ftype == 85) { return mapSvenssonAttractor(p, t, phi, iters); }
+  // NEW BEAUTIFUL FRACTALS
+  if (ftype == 86) { return mapKaleidoscopicIFS(p, t, phi, iters); }
+  if (ftype == 87) { return mapFlowerOfLife(p, t, phi); }
+  if (ftype == 88) { return mapCosmicSpiral(p, t, phi); }
+  if (ftype == 89) { return mapCrystalGrowth(p, t, phi, iters); }
+  if (ftype == 90) { return mapQuantumFoam(p, t, phi); }
+  if (ftype == 91) { return mapFractalCoral(p, t, phi, iters); }
+  if (ftype == 92) { return mapNebulaCloud(p, t, phi, iters); }
+  if (ftype == 93) { return mapHyperbolicTiling(p, t, phi); }
+  if (ftype == 94) { return mapOrganicCell(p, t, phi); }
+  return mapGoldenHelix(p, t, phi);
 }
 
 // Multi-Operator Distance Field Algebra & Space Folding
@@ -2636,12 +2794,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let bounceCol = u.secondary_color * bounce * bounceOcc * ao;
 
     let diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    let specular = vec3<f32>(1.0, 0.97, 0.92) * spec1 * 0.55 * ao; // Near-white specular for visible highlights
-    let rim = u.accent_color * fresnel * 0.28 * (0.3 + 0.7 * ao); // Stronger rim for edge definition
+    let specular = vec3<f32>(1.0, 0.97, 0.92) * spec1 * 0.85 * ao; // Brighter specular for visible highlights
+    let rim = u.accent_color * fresnel * 0.45 * (0.3 + 0.7 * ao); // Stronger rim for edge definition
 
     // Full lighting: ambient + diffuse + bounce + specular + rim + SSS
-    col = ambient + diffuse + bounceCol + specular + rim + sssCol;
-    col = col * (0.35 + 0.65 * ao); // Balanced AO — preserves brightness while adding depth
+    col = ambient * 0.6 + diffuse * 1.2 + bounceCol * 1.5 + specular + rim * 1.3 + sssCol * 1.5;
+    col = col * (0.4 + 0.6 * ao); // Balanced AO — preserves brightness while adding depth
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u.headlamp_power > 0.01) {
