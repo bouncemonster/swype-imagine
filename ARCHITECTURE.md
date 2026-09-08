@@ -22,8 +22,11 @@ src/
 ├── main.tsx                      # Entry point (React 19 createRoot)
 ├── index.css                     # Tailwind v4 global styles
 │
+├── hooks/
+│   └── useRenderEngine.ts        # Render engine lifecycle hook (523 lines)
+│
 ├── components/
-│   ├── FractalCanvas.tsx         # GPU canvas + render loop + pointer interaction (680 lines)
+│   ├── FractalCanvas.tsx         # GPU canvas + pointer interaction (191 lines, uses useRenderEngine)
 │   ├── ControlsPanel.tsx         # Parameter UI panel with all controls (1060 lines)
 │   ├── TelemetryHUD.tsx          # FPS/draw-call overlay
 │   ├── FractalScrollFeed.tsx     # Horizontal fractal specimen browser
@@ -66,6 +69,8 @@ App.tsx ─── params: FractalParams ───► FractalCanvas.tsx
     │  ◄── telemetry: TelemetryData ────────┤
     │                                        │
     │                             ┌──────────┴──────────┐
+    │                             │                     │
+    │                      useRenderEngine hook
     │                             │                     │
     │                      WebGPUEngine          WebGLEngine
     │                             │                     │
@@ -202,16 +207,20 @@ Embedded browser detection:
 ## Render Loop
 
 ```
-FractalCanvas requestAnimationFrame loop:
-  1. Read paramsRef.current
-  2. Compute delta time
-  3. Apply inertia decay to rotation velocity
-  4. Call activeEngine.render(time, params)
-  5. Read telemetry (FPS, frame time, GPU info)
-  6. Report telemetry via onTelemetryUpdateRef
-  7. Handle screenshot capture if requested
-  8. Throttle to 1 FPS when no engine ready (prevents CPU spin)
-  9. Pause when document.hidden (visibility change handler)
+useRenderEngine hook (called by FractalCanvas):
+  1. Init engine (WebGPU → fallback WebGL2, embedded browser safety)
+  2. requestAnimationFrame loop:
+     a. Read paramsRef.current
+     b. Compute delta time, apply FPS throttle
+     c. Apply fly-through keyboard movement + inertia decay
+     d. Call activeEngine.render(time, effectiveParams)
+     e. Compute telemetry (FPS, 1% low, frame time)
+     f. Report telemetry via onTelemetryUpdateRef
+     g. Handle screenshot capture if requested
+  3. ResizeObserver + DPR capping (1.5 mobile/embedded, 2.0 desktop)
+  4. Visibility change handler (pause when tab hidden)
+  5. Context-lost/restored handlers (WebGL2 recovery)
+  6. Keyboard navigation (next/prev specimen, fly-through WASD)
 ```
 
 ---
@@ -275,8 +284,9 @@ App.tsx
   └── audio/goldenAudio.ts
 
 FractalCanvas.tsx
-  ├── engine/WebGPUEngine.ts → engine/FractalEngineBase.ts → shaders/webgpuShaders.ts
-  ├── engine/WebGLEngine.ts  → engine/FractalEngineBase.ts → shaders/webglShaders.ts
+  ├── hooks/useRenderEngine.ts (engine lifecycle, render loop, resize, telemetry)
+  │   ├── engine/WebGPUEngine.ts → engine/FractalEngineBase.ts → shaders/webgpuShaders.ts
+  │   └── engine/WebGLEngine.ts  → engine/FractalEngineBase.ts → shaders/webglShaders.ts
   ├── engine/UserPreferenceEngine.ts
   └── types/fractal.ts
 
