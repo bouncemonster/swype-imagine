@@ -10,6 +10,7 @@ import { ProjectManifestModal } from './components/ProjectManifestModal';
 import { FractalAtlasModal } from './components/FractalAtlasModal';
 import { FractalProbeHUD } from './components/FractalProbeHUD';
 import { FractalScrollFeed } from './components/FractalScrollFeed';
+import { DebugOverlay } from './components/DebugOverlay';
 import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle, CompositeOp, CameraMode } from './types/fractal';
 import { NeuroAestheticsEngine } from './engine/NeuroAestheticsEngine';
 import { goldenAudio } from './audio/goldenAudio';
@@ -82,6 +83,19 @@ export default function App() {
   const [likedSpecimens, setLikedSpecimens] = useState<FractalSpecimen[]>([]);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [autoExplore, setAutoExplore] = useState(true);
+  const [showDebugOverlay, setShowDebugOverlay] = useState(false);
+
+  // Debug overlay toggle with F3 key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F3') {
+        e.preventDefault();
+        setShowDebugOverlay(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // AUTO-EXPLORE: Golden ratio based cycling through ALL fractal types
   // Prevents getting stuck on the same models — explores the full fractal space
@@ -612,6 +626,9 @@ export default function App() {
         isReady={isEngineReady}
         onFinished={handleLoaderFinished}
       />
+
+      {/* Debug Overlay - Toggle with F3 */}
+      {showDebugOverlay && <DebugOverlay />}
     </main>
   );
 }

@@ -1,6 +1,8 @@
 import { FractalParams } from '../types/fractal';
 import { GLSL_VERTEX_SHADER, GLSL_FRAGMENT_SHADER } from '../shaders/webglShaders';
 import { FractalEngineBase } from './FractalEngineBase';
+import { renderDiagnostics } from './RenderDiagnostics';
+import { validateMatrix, validateScalar, measurePerformance } from './MathValidation';
 
 export class WebGLEngine extends FractalEngineBase {
   private gl: WebGL2RenderingContext | null = null;
@@ -15,7 +17,9 @@ export class WebGLEngine extends FractalEngineBase {
   }
 
   public init(): boolean {
+    const initStart = performance.now();
     console.group('[WebGL2] === INITIALIZATION START ===');
+    renderDiagnostics.log('info', 'gpu', 'WebGL2 initialization started');
     console.info('[WebGL2] Canvas element:', this.canvas);
     console.info('[WebGL2] Canvas size (CSS):', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
     console.info('[WebGL2] Canvas size (buffer):', this.canvas.width, 'x', this.canvas.height);
@@ -155,6 +159,11 @@ export class WebGLEngine extends FractalEngineBase {
       this.uniformLocs[name] = gl.getUniformLocation(program, name);
     });
 
+    const initTime = performance.now() - initStart;
+    renderDiagnostics.log('info', 'gpu', 'WebGL2 initialization completed', { initTime });
+    renderDiagnostics.trackGPUContext(false, initTime);
+    console.info('[WebGL2] Initialization time:', initTime.toFixed(2), 'ms');
+    console.groupEnd();
     return true;
   }
 
@@ -186,65 +195,80 @@ export class WebGLEngine extends FractalEngineBase {
     const gl = this.gl;
     if (!gl || !this.program || !this.vao) return;
 
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-    gl.useProgram(this.program);
-    gl.bindVertexArray(this.vao);
+    // Start performance measurement
+    const { duration: setupTime } = measurePerformance(() => {
+      gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+      gl.useProgram(this.program);
+      gl.bindVertexArray(this.vao);
 
-    const palette = this.resolvePalette(params);
-    const indices = this.computeIndices(params);
+      const palette = this.resolvePalette(params);
+      const indices = this.computeIndices(params);
 
-    // Upload all uniforms via packed buffer
-    const packed = new Float32Array(48);
-    this.packUniforms(packed, timeSec, params, palette, indices);
+      // Upload all uniforms via packed buffer
+      const packed = new Float32Array(48);
+      this.packUniforms(packed, timeSec, params, palette, indices);
 
-    const set = (name: string, val: number) => {
-      const loc = this.uniformLocs[name];
-      if (loc) gl.uniform1f(loc, val);
-    };
-    const set2 = (name: string, x: number, y: number) => {
-      const loc = this.uniformLocs[name];
-      if (loc) gl.uniform2f(loc, x, y);
-    };
-    const set3 = (name: string, x: number, y: number, z: number) => {
-      const loc = this.uniformLocs[name];
-      if (loc) gl.uniform3f(loc, x, y, z);
-    };
+      // Validate uniform values
+      if (!validateScalar(packed[2], 'u_time', undefined, [0, 1000])) {
+        renderDiagnostics.log('error', 'render', 'Invalid time value', { time: packed[2] });
+      }
+      if (!validateScalar(packed[6], 'u_zoom', undefined, [0.01, 100])) {
+        renderDiagnostics.log('warn', 'render', 'Zoom out of range', { zoom: packed[6] });
+      }
 
-    set2('u_resolution', packed[0], packed[1]);
-    set('u_time', packed[2]);
-    set('u_phi_val', packed[3]);
-    set2('u_cam_rot', packed[4], packed[5]);
-    set('u_zoom', packed[6]);
-    set('u_fractal_type', packed[7]);
-    set('u_iterations', packed[8]);
-    set('u_glow_intensity', packed[9]);
-    set('u_morph_speed', packed[10]);
-    set('u_hybrid_type', packed[11]);
-    set('u_hybrid_blend', packed[12]);
-    set('u_box_fold', packed[13]);
-    set('u_sphere_fold', packed[14]);
-    set('u_interior_cut', packed[15]);
-    set3('u_primary_color', packed[16], packed[17], packed[18]);
-    set('u_tertiary_type', packed[19]);
-    set3('u_secondary_color', packed[20], packed[21], packed[22]);
-    set('u_tertiary_blend', packed[23]);
-    set3('u_accent_color', packed[24], packed[25], packed[26]);
-    set('u_compose_op', packed[27]);
-    set('u_smooth_k', packed[28]);
-    set('u_warp_strength', packed[29]);
-    set('u_octave_layers', packed[30]);
-    set('u_cam_mode', packed[31]);
-    set3('u_cam_pos', packed[32], packed[33], packed[34]);
-    set('u_slice_plane', packed[35]);
-    set('u_headlamp_power', packed[36]);
-    set('u_volumetric_fog', packed[37]);
-    set('u_slice_axis', packed[38]);
-    set('u_render_style', packed[39]);
-    // Ambient color not a separate GLSL uniform — palette colors used directly in shader
-    set('u_palette_seed', packed[43]);
-    set('u_palette_rotation', packed[44]);
+      const set = (name: string, val: number) => {
+        const loc = this.uniformLocs[name];
+        if (loc) gl.uniform1f(loc, val);
+      };
+      const set2 = (name: string, x: number, y: number) => {
+        const loc = this.uniformLocs[name];
+        if (loc) gl.uniform2f(loc, x, y);
+      };
+      const set3 = (name: string, x: number, y: number, z: number) => {
+        const loc = this.uniformLocs[name];
+        if (loc) gl.uniform3f(loc, x, y, z);
+      };
 
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+      set2('u_resolution', packed[0], packed[1]);
+      set('u_time', packed[2]);
+      set('u_phi_val', packed[3]);
+      set2('u_cam_rot', packed[4], packed[5]);
+      set('u_zoom', packed[6]);
+      set('u_fractal_type', packed[7]);
+      set('u_iterations', packed[8]);
+      set('u_glow_intensity', packed[9]);
+      set('u_morph_speed', packed[10]);
+      set('u_hybrid_type', packed[11]);
+      set('u_hybrid_blend', packed[12]);
+      set('u_box_fold', packed[13]);
+      set('u_sphere_fold', packed[14]);
+      set('u_interior_cut', packed[15]);
+      set3('u_primary_color', packed[16], packed[17], packed[18]);
+      set('u_tertiary_type', packed[19]);
+      set3('u_secondary_color', packed[20], packed[21], packed[22]);
+      set('u_tertiary_blend', packed[23]);
+      set3('u_accent_color', packed[24], packed[25], packed[26]);
+      set('u_compose_op', packed[27]);
+      set('u_smooth_k', packed[28]);
+      set('u_warp_strength', packed[29]);
+      set('u_octave_layers', packed[30]);
+      set('u_cam_mode', packed[31]);
+      set3('u_cam_pos', packed[32], packed[33], packed[34]);
+      set('u_slice_plane', packed[35]);
+      set('u_headlamp_power', packed[36]);
+      set('u_volumetric_fog', packed[37]);
+      set('u_slice_axis', packed[38]);
+      set('u_render_style', packed[39]);
+      // Ambient color not a separate GLSL uniform — palette colors used directly in shader
+      set('u_palette_seed', packed[43]);
+      set('u_palette_rotation', packed[44]);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }, 'WebGL render setup');
+
+    // Update diagnostics
+    renderDiagnostics.updateFrameStats(128, 0.001, 20.0); // Approximate values
+    renderDiagnostics.trackGPUContext(false, setupTime);
   }
 
   public destroy() {

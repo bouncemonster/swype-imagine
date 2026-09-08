@@ -2,6 +2,8 @@
 import { FractalParams } from '../types/fractal';
 import { WGSL_SHADER } from '../shaders/webgpuShaders';
 import { FractalEngineBase } from './FractalEngineBase';
+import { renderDiagnostics } from './RenderDiagnostics';
+import { validateScalar, measurePerformance } from './MathValidation';
 
 export class WebGPUEngine extends FractalEngineBase {
   private adapter: GPUAdapter | null = null;
@@ -165,41 +167,57 @@ export class WebGPUEngine extends FractalEngineBase {
     const height = this.canvas.height;
     if (width === 0 || height === 0) return;
 
-    // Pack uniforms using shared base method
-    const palette = this.resolvePalette(params);
-    const indices = this.computeIndices(params);
-    this.packUniforms(this.uniformValues, timeSec, params, palette, indices);
+    // Measure render performance
+    const { duration: renderTime } = measurePerformance(() => {
+      // Pack uniforms using shared base method
+      const palette = this.resolvePalette(params);
+      const indices = this.computeIndices(params);
+      this.packUniforms(this.uniformValues, timeSec, params, palette, indices);
 
-    // Write to GPU uniform buffer
-    this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
+      // Validate uniform values
+      if (!validateScalar(this.uniformValues[2], 'u_time', undefined, [0, 1000])) {
+        renderDiagnostics.log('error', 'render', 'Invalid time value', { time: this.uniformValues[2] });
+      }
+      if (!validateScalar(this.uniformValues[6], 'u_zoom', undefined, [0.01, 100])) {
+        renderDiagnostics.log('warn', 'render', 'Zoom out of range', { zoom: this.uniformValues[6] });
+      }
 
-    // Command encoder — wrapped in try/catch to survive surface/device transient errors
-    try {
-      const commandEncoder = this.device.createCommandEncoder();
-      const textureView = this.context.getCurrentTexture().createView();
+      // Write to GPU uniform buffer
+      this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
 
-      const renderPass = commandEncoder.beginRenderPass({
-        colorAttachments: [
-          {
-            view: textureView,
-            clearValue: { r: 0.01, g: 0.01, b: 0.02, a: 1.0 },
-            loadOp: 'clear',
-            storeOp: 'store',
-          },
-        ],
-      });
+      // Command encoder — wrapped in try/catch to survive surface/device transient errors
+      try {
+        const commandEncoder = this.device.createCommandEncoder();
+        const textureView = this.context.getCurrentTexture().createView();
 
-      renderPass.setPipeline(this.pipeline);
-      renderPass.setBindGroup(0, this.bindGroup);
-      renderPass.draw(3, 1, 0, 0);
-      renderPass.end();
+        const renderPass = commandEncoder.beginRenderPass({
+          colorAttachments: [
+            {
+              view: textureView,
+              clearValue: { r: 0.01, g: 0.01, b: 0.02, a: 1.0 },
+              loadOp: 'clear',
+              storeOp: 'store',
+            },
+          ],
+        });
 
-      this.device.queue.submit([commandEncoder.finish()]);
-    } catch (e) {
-      // Surface texture acquisition failed (device lost, context reconfigured, etc.)
-      // Silently skip this frame — the device.lost handler will set isDestroyed
-      console.debug('WebGPU render frame skipped:', (e as Error).message);
-    }
+        renderPass.setPipeline(this.pipeline);
+        renderPass.setBindGroup(0, this.bindGroup);
+        renderPass.draw(3, 1, 0, 0);
+        renderPass.end();
+
+        this.device.queue.submit([commandEncoder.finish()]);
+      } catch (e) {
+        // Surface texture acquisition failed (device lost, context reconfigured, etc.)
+        // Silently skip this frame — the device.lost handler will set isDestroyed
+        renderDiagnostics.log('warn', 'render', 'WebGPU render frame skipped', { error: (e as Error).message });
+        console.debug('WebGPU render frame skipped:', (e as Error).message);
+      }
+    }, 'WebGPU render');
+
+    // Update diagnostics
+    renderDiagnostics.updateFrameStats(128, 0.001, 20.0); // Approximate values
+    renderDiagnostics.trackGPUContext(false, renderTime);
   }
 
   public destroy() {
