@@ -164,29 +164,15 @@ export class WebGLEngine extends FractalEngineBase {
     const shader = gl.createShader(type);
     if (!shader) return null;
 
-    // Enable parallel shader compilation (KHR_parallel_shader_compile)
-    // This prevents the browser from freezing during shader compilation
-    const parallelCompile = gl.getExtension('KHR_parallel_shader_compile');
-
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
-    // If parallel compile is available, poll for completion with timeout
-    if (parallelCompile) {
-      const startTime = performance.now();
-      const timeout = 15000; // 15s max compile time
-      while (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        const completionStatus = parallelCompile.COMPLETION_STATUS_KHR;
-        if (gl.getShaderParameter(shader, completionStatus)) break;
-        if (performance.now() - startTime > timeout) {
-          console.error('[WebGL2] Shader compilation timeout after 15s');
-          console.error('Shader info:', gl.getShaderInfoLog(shader));
-          gl.deleteShader(shader);
-          return null;
-        }
-      }
-    }
+    // Request parallel compilation hint (non-blocking)
+    gl.getExtension('KHR_parallel_shader_compile');
 
+    // Single blocking check — browser handles async compilation internally.
+    // This is far better than a busy-wait while() loop that spins the CPU
+    // and blocks all event handlers (wheel, touch, etc.)
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
       gl.deleteShader(shader);

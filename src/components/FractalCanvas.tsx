@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { FractalParams, TelemetryData } from '../types/fractal';
 import { userPrefEngine } from '../engine/UserPreferenceEngine';
 import { useRenderEngine } from '../hooks/useRenderEngine';
@@ -69,6 +69,59 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
 
   const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling } = engine;
 
+  // Native wheel/touch listeners with passive:false — fixes Chrome "Unable to preventDefault"
+  // React synthetic events are registered as passive, so preventDefault() fails silently
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const wheelHandler = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomFactor = Math.exp(Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY) * 0.0018, 0.28));
+      onInteraction?.(Math.abs(e.deltaY) * 0.02, 0);
+      onParamsChange(prev => ({
+        ...prev,
+        zoom: Math.max(0.02, Math.min(64.0, prev.zoom * zoomFactor)),
+      }));
+      userPrefEngine.recordInteraction('zoom', Math.log(zoomFactor) * 10);
+    };
+    canvas.addEventListener('wheel', wheelHandler, { passive: false });
+
+    const touchStartHandler = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const t1 = e.touches[0], t2 = e.touches[1];
+        touchDistanceRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      }
+    };
+    canvas.addEventListener('touchstart', touchStartHandler, { passive: false });
+
+    const touchMoveHandler = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const t1 = e.touches[0], t2 = e.touches[1];
+        const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        if (touchDistanceRef.current !== null && touchDistanceRef.current > 5) {
+          const ratio = touchDistanceRef.current / Math.max(dist, 1);
+          const touchFactor = Math.pow(ratio, 0.95);
+          onInteraction?.(Math.abs(touchDistanceRef.current - dist) * 0.04, 0);
+          onParamsChange(prev => ({
+            ...prev,
+            zoom: Math.max(0.02, Math.min(64.0, prev.zoom * touchFactor)),
+          }));
+        }
+        touchDistanceRef.current = dist;
+      }
+    };
+    canvas.addEventListener('touchmove', touchMoveHandler, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('wheel', wheelHandler);
+      canvas.removeEventListener('touchstart', touchStartHandler);
+      canvas.removeEventListener('touchmove', touchMoveHandler);
+    };
+  }, [canvasRef, onParamsChange, onInteraction]);
+
   // Pointer Handlers for 3D Orbit with Inertia
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     isDraggingRef.current = true;
@@ -113,41 +166,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     } catch {}
   };
 
-  // Wheel Zoom
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const zoomFactor = Math.exp(Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY) * 0.0018, 0.28));
-    onInteraction?.(Math.abs(e.deltaY) * 0.02, 0);
-    onParamsChange(prev => ({
-      ...prev,
-      zoom: Math.max(0.02, Math.min(64.0, prev.zoom * zoomFactor)),
-    }));
-    userPrefEngine.recordInteraction('zoom', Math.log(zoomFactor) * 10);
-  };
-
-  // Pinch Zoom for Touch
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (e.touches.length === 2) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
-
-      if (touchDistanceRef.current !== null && touchDistanceRef.current > 5) {
-        const ratio = touchDistanceRef.current / Math.max(dist, 1);
-        const touchFactor = Math.pow(ratio, 0.95);
-        onInteraction?.(Math.abs(touchDistanceRef.current - dist) * 0.04, 0);
-        onParamsChange(prev => ({
-          ...prev,
-          zoom: Math.max(0.02, Math.min(64.0, prev.zoom * touchFactor)),
-        }));
-      }
-      touchDistanceRef.current = dist;
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
+  const handleTouchEnd = () => {
     touchDistanceRef.current = null;
   };
 
@@ -180,9 +199,6 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        onWheel={handleWheel}
-        onTouchStart={(e) => e.preventDefault()}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       />
     </div>

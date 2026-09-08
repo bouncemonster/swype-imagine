@@ -180,9 +180,9 @@ export function useRenderEngine(
 
     const setupTimeoutId = setTimeout(() => {
       if (!engineReadyRef.current && !isDestroyed) {
-        console.error('[useRenderEngine] Engine setup timed out after 8s — GPU unavailable');
+        console.error('[useRenderEngine] Engine setup timed out after 20s — GPU unavailable');
       }
-    }, 8000);
+    }, 20000);
 
     async function setup() {
       if (!canvas) return;
