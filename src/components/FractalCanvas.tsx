@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useEffect } from 'react';
 import { FractalParams, TelemetryData } from '../types/fractal';
 import { userPrefEngine } from '../engine/UserPreferenceEngine';
 import { useRenderEngine } from '../hooks/useRenderEngine';
+import { userProblemLogger } from '../engine/UserProblemLogger';
 
 interface FractalCanvasProps {
   params: FractalParams;
@@ -74,7 +75,25 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   // This is the only reliable way to preventDefault() wheel/touch in React 19
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      userProblemLogger.log({
+        level: 'error',
+        category: 'render',
+        message: 'FractalCanvas: canvas ref is null on mount'
+      });
+      return;
+    }
+
+    userProblemLogger.log({
+      level: 'info',
+      category: 'render',
+      message: 'FractalCanvas: mounted',
+      details: {
+        width: canvas.width,
+        height: canvas.height,
+        activeEngineType
+      }
+    });
 
     const wheelHandler = (e: WheelEvent) => {
       e.preventDefault();

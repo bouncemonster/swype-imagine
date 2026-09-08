@@ -184,7 +184,14 @@ export class WebGLEngine extends FractalEngineBase {
     // This is far better than a busy-wait while() loop that spins the CPU
     // and blocks all event handlers (wheel, touch, etc.)
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+      const errorLog = gl.getShaderInfoLog(shader);
+      console.error('Shader compilation error:', errorLog);
+      userProblemLogger.log({
+        level: 'error',
+        category: 'render',
+        message: `Shader compilation failed: ${type === gl.VERTEX_SHADER ? 'vertex' : 'fragment'}`,
+        details: { error: errorLog?.substring(0, 500) }
+      });
       gl.deleteShader(shader);
       return null;
     }
