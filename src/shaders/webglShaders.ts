@@ -2500,6 +2500,20 @@ vec2 sceneSDF(vec3 p_world) {
   int ftypeB = int(u_hybrid_type + 0.5);
   int ftypeC = int(u_tertiary_type + 0.5);
   int iters = int(clamp(u_iterations, 6.0, 48.0));
+  
+  // FRACTAL-SPECIFIC ADAPTIVE ITERATIONS
+  // Different fractals have different complexity and need different iteration counts
+  // This optimizes quality/performance ratio for each fractal type
+  if (ftypeA == 1 || ftypeA == 23) { // Mandelbulb, Quaternion Mandelbrot
+    iters = int(clamp(float(iters) * 1.2, 6.0, 48.0)); // Need more iterations
+  } else if (ftypeA == 5 || ftypeA == 101) { // Mandelbox, Amazing Box
+    iters = int(clamp(float(iters) * 1.1, 6.0, 48.0)); // Slightly more
+  } else if (ftypeA == 7 || ftypeA == 103) { // Menger, Menger-Mandelbox
+    iters = int(clamp(float(iters) * 0.9, 6.0, 48.0)); // Can use fewer
+  } else if (ftypeA >= 86 && ftypeA <= 95) { // Beautiful fractals
+    iters = int(clamp(float(iters) * 1.15, 6.0, 48.0)); // More for detail
+  }
+  
   float t = u_time * u_morph_speed;
   float phi = u_phi_val;
   int compOp = int(u_compose_op + 0.5);
@@ -2845,19 +2859,22 @@ void main() {
     if (t > max_dist) break;
   }
 
-  // Refinement pass: snap to surface more precisely if we got close but didn't converge
-  // lastD already tracked from main loop
+  // Refinement pass: BINARY SEARCH for precise surface convergence
+  // Much better than linear backtracking - converges in log2(precision) steps
   if (!hit && t < max_dist) {
+    float tLow = t - abs(lastD) * 2.0; // Lower bound
+    float tHigh = t;                    // Upper bound
     for (int j = 0; j < 16; j++) {
-      vec3 p = ro + rd * t;
+      float tMid = (tLow + tHigh) * 0.5;
+      vec3 p = ro + rd * tMid;
       float d = sceneSDF(p).x;
-      lastD = d;
-      if (abs(d) < hitScale * 0.5) {
+      if (abs(d) < hitScale * 0.3) {
         hit = true;
+        t = tMid;
         break;
       }
-      t -= d * 0.5; // Gentler back-tracking for stability
-      if (t < 0.0) { t = 0.001; break; }
+      // Binary search: narrow the interval
+      if (d > 0.0) tHigh = tMid; else tLow = tMid;
     }
   }
 

@@ -2581,7 +2581,19 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   let ftypeA = i32(u.fractal_type + 0.5);
   let ftypeB = i32(u.hybrid_type + 0.5);
   let ftypeC = i32(u.tertiary_type + 0.5);
-  let iters = i32(clamp(u.iterations, 6.0, 48.0));
+  var iters = i32(clamp(u.iterations, 6.0, 48.0));
+  
+  // FRACTAL-SPECIFIC ADAPTIVE ITERATIONS
+  if (ftypeA == 1 || ftypeA == 23) { // Mandelbulb, Quaternion Mandelbrot
+    iters = i32(clamp(f32(iters) * 1.2, 6.0, 48.0));
+  } else if (ftypeA == 5 || ftypeA == 101) { // Mandelbox, Amazing Box
+    iters = i32(clamp(f32(iters) * 1.1, 6.0, 48.0));
+  } else if (ftypeA == 7 || ftypeA == 103) { // Menger, Menger-Mandelbox
+    iters = i32(clamp(f32(iters) * 0.9, 6.0, 48.0));
+  } else if (ftypeA >= 86 && ftypeA <= 95) { // Beautiful fractals
+    iters = i32(clamp(f32(iters) * 1.15, 6.0, 48.0));
+  }
+  
   let t = u.time * u.morph_speed;
   let phi = u.phi_val;
   let compOp = i32(u.compose_op + 0.5);
@@ -2927,19 +2939,21 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
   }
 
-  // Refinement pass: snap to surface more precisely if we got close but didn't converge
-  // lastD already tracked from main loop
+  // Refinement pass: BINARY SEARCH for precise surface convergence
+  // Much better than linear backtracking - converges in log2(precision) steps
   if (!hit && t < max_dist) {
+    var tLow: f32 = t - abs(lastD) * 2.0;
+    var tHigh: f32 = t;
     for (var j: i32 = 0; j < 16; j = j + 1) {
-      let p2 = ro + rd * t;
+      let tMid = (tLow + tHigh) * 0.5;
+      let p2 = ro + rd * tMid;
       let d2 = sceneSDF(p2).x;
-      lastD = d2;
-      if (abs(d2) < hitScale * 0.5) {
+      if (abs(d2) < hitScale * 0.3) {
         hit = true;
+        t = tMid;
         break;
       }
-      t = t - d2 * 0.5;
-      if (t < 0.0) { t = 0.001; break; }
+      if (d2 > 0.0) { tHigh = tMid; } else { tLow = tMid; }
     }
   }
 
