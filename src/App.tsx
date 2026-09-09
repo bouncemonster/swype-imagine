@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FractalCanvas } from './components/FractalCanvas';
 import { TelemetryHUD } from './components/TelemetryHUD';
 import { ControlsPanel } from './components/ControlsPanel';
-import { NeuroFeedHUD } from './components/NeuroFeedHUD';
+import { FractalInfoHUD } from './components/FractalInfoHUD';
 import { ExplanationModal } from './components/ExplanationModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { CosmicLoader } from './components/CosmicLoader';
@@ -524,8 +524,8 @@ export default function App() {
         onToggleOpen={() => setIsFeedOpen(prev => !prev)}
       />
 
-      {/* Clean, Minimalist Neuro-Aesthetic Feed HUD */}
-      <NeuroFeedHUD
+      {/* Clean, Minimalist Fractal Info HUD */}
+      <FractalInfoHUD
         specimen={currentSpecimen}
         resonanceScore={resonanceScore}
         isInteracting={interactionType !== 'idle'}

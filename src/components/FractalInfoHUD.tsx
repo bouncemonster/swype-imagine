@@ -6,7 +6,7 @@ import {
   Share2, Check
 } from 'lucide-react';
 
-interface NeuroFeedHUDProps {
+interface FractalInfoHUDProps {
   specimen: FractalSpecimen | null;
   resonanceScore: number;
   isInteracting: boolean;
@@ -36,7 +36,7 @@ const FRIENDLY_COMPOSITE_NAMES: Record<string, string> = {
   goldenSpiralFold: 'Золотая спираль',
 };
 
-export const NeuroFeedHUD: React.FC<NeuroFeedHUDProps> = ({
+export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
   specimen,
   resonanceScore,
   isInteracting,
