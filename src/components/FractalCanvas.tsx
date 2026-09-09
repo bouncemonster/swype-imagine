@@ -223,6 +223,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       ref={containerRef}
       id="fractal-canvas-container"
       className="absolute inset-0 w-full h-full overflow-hidden bg-black select-none touch-none cursor-grab active:cursor-grabbing"
+      style={{ touchAction: 'none', overscrollBehavior: 'none' }}
     >
       {/* Visual indicator when GPU pipeline is compiling shaders */}
       {isCompiling && (
@@ -243,6 +244,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         ref={canvasRef}
         id="fractal-canvas"
         className="w-full h-full block touch-none"
+        style={{ touchAction: 'none' }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
