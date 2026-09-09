@@ -2495,6 +2495,280 @@ float map600Cell(vec3 p, float t, float phi, int iters) {
   return length(projected) * pow(scale, -7.0);
 }
 
+// ============= MANDELBROT VARIATIONS (1-10) =============
+
+float mapMandelbrotVariant1(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.0 + sin(t * 0.1) * 0.5;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant2(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.0 + cos(t * 0.15) * 0.4;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p * (1.0 + sin(t * 0.08) * 0.1);
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant3(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 3.0 + sin(t * 0.12) * 0.6;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant4(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.5 + cos(t * 0.18) * 0.5;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p * phi;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant5(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.0 + sin(t * 0.2) * 0.7;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p;
+    z *= 1.0 + sin(t * 0.1) * 0.05;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant6(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.2 + cos(t * 0.14) * 0.45;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p * (1.0 + cos(t * 0.12) * 0.08);
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant7(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.8 + sin(t * 0.16) * 0.55;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant8(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.0 + cos(t * 0.22) * 0.65;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p * phi * 0.5;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant9(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.4 + sin(t * 0.19) * 0.5;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p;
+    z *= 1.0 + cos(t * 0.15) * 0.06;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+float mapMandelbrotVariant10(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float power = 2.6 + cos(t * 0.17) * 0.58;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    float zr = pow(r, power);
+    theta *= power;
+    phiAngle *= power;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p * (1.0 + sin(t * 0.13) * 0.09);
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
 float map24Cell(vec3 p, float t, float phi, int iters) {
   float angle = t * 0.3;
   float c = cos(angle), s = sin(angle);
@@ -2922,6 +3196,19 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 128) return vec2(mapIFS3DSierpinski(p, t, phi, iters), 0.0);
   if (ftype == 129) return vec2(mapIFS3DCantor(p, t, phi, iters), 0.0);
   if (ftype == 130) return vec2(mapIFS3DKoch(p, t, phi, iters), 0.0);
+  
+  // MANDELBROT VARIATIONS (131-140)
+  if (ftype == 131) return vec2(mapMandelbrotVariant1(p, t, phi, iters), 0.0);
+  if (ftype == 132) return vec2(mapMandelbrotVariant2(p, t, phi, iters), 0.0);
+  if (ftype == 133) return vec2(mapMandelbrotVariant3(p, t, phi, iters), 0.0);
+  if (ftype == 134) return vec2(mapMandelbrotVariant4(p, t, phi, iters), 0.0);
+  if (ftype == 135) return vec2(mapMandelbrotVariant5(p, t, phi, iters), 0.0);
+  if (ftype == 136) return vec2(mapMandelbrotVariant6(p, t, phi, iters), 0.0);
+  if (ftype == 137) return vec2(mapMandelbrotVariant7(p, t, phi, iters), 0.0);
+  if (ftype == 138) return vec2(mapMandelbrotVariant8(p, t, phi, iters), 0.0);
+  if (ftype == 139) return vec2(mapMandelbrotVariant9(p, t, phi, iters), 0.0);
+  if (ftype == 140) return vec2(mapMandelbrotVariant10(p, t, phi, iters), 0.0);
+  
   return mapPhyllotaxis(p, t, phi, iters); // Default fallback
 }
 

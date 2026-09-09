@@ -137,6 +137,19 @@ export function getFractalIndex(type?: string): number {
     case 'ifs3DSierpinski': return 128;
     case 'ifs3DCantor': return 129;
     case 'ifs3DKoch': return 130;
+    
+    // MANDELBROT VARIATIONS (131-140)
+    case 'mandelbrotVariant1': return 131;
+    case 'mandelbrotVariant2': return 132;
+    case 'mandelbrotVariant3': return 133;
+    case 'mandelbrotVariant4': return 134;
+    case 'mandelbrotVariant5': return 135;
+    case 'mandelbrotVariant6': return 136;
+    case 'mandelbrotVariant7': return 137;
+    case 'mandelbrotVariant8': return 138;
+    case 'mandelbrotVariant9': return 139;
+    case 'mandelbrotVariant10': return 140;
+    
     default: return 0;
   }
 }
