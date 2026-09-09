@@ -2649,17 +2649,17 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   let ftypeA = i32(u.fractal_type + 0.5);
   let ftypeB = i32(u.hybrid_type + 0.5);
   let ftypeC = i32(u.tertiary_type + 0.5);
-  var iters = i32(clamp(u.iterations, 6.0, 48.0));
+  var iters = i32(clamp(u.iterations, 6.0, 64.0));
   
   // FRACTAL-SPECIFIC ADAPTIVE ITERATIONS
   if (ftypeA == 1 || ftypeA == 23) { // Mandelbulb, Quaternion Mandelbrot
-    iters = i32(clamp(f32(iters) * 1.2, 6.0, 48.0));
+    iters = i32(clamp(f32(iters) * 1.2, 6.0, 64.0));
   } else if (ftypeA == 5 || ftypeA == 101) { // Mandelbox, Amazing Box
-    iters = i32(clamp(f32(iters) * 1.1, 6.0, 48.0));
+    iters = i32(clamp(f32(iters) * 1.1, 6.0, 64.0));
   } else if (ftypeA == 7 || ftypeA == 103) { // Menger, Menger-Mandelbox
-    iters = i32(clamp(f32(iters) * 0.9, 6.0, 48.0));
+    iters = i32(clamp(f32(iters) * 0.9, 6.0, 64.0));
   } else if (ftypeA >= 86 && ftypeA <= 95) { // Beautiful fractals
-    iters = i32(clamp(f32(iters) * 1.15, 6.0, 48.0));
+    iters = i32(clamp(f32(iters) * 1.15, 6.0, 64.0));
   }
   
   let t = u.time * u.morph_speed;
@@ -2970,8 +2970,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   let iterReduction = i32(lodFactor * 8.0);
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
-  // Close range: 512 steps, Medium: 384 steps, Far: 256 steps (was 256/200/160)
-  let maxSteps: i32 = select(select(select(256, 384, cam_dist < 3.0), 512, cam_dist < 1.0), 512, false);
+  // Close range: 640 steps, Medium: 480 steps, Far: 320 steps (was 512/384/256)
+  let maxSteps: i32 = select(select(select(320, 480, cam_dist < 3.0), 640, cam_dist < 1.0), 640, false);
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   let hitScale = max(cam_dist * 0.0003, 0.0001);
 

@@ -102,7 +102,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       onInteraction?.(Math.abs(e.deltaY) * 0.015, 0);
       onParamsChange(prev => ({
         ...prev,
-        zoom: Math.max(0.05, Math.min(32.0, prev.zoom * zoomFactor)),
+        zoom: Math.max(0.01, Math.min(100.0, prev.zoom * zoomFactor)),
       }));
       userPrefEngine.recordInteraction('zoom', Math.log(zoomFactor) * 10);
     };
@@ -128,7 +128,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
           onInteraction?.(Math.abs(touchDistanceRef.current - dist) * 0.04, 0);
           onParamsChange(prev => ({
             ...prev,
-            zoom: Math.max(0.02, Math.min(64.0, prev.zoom * touchFactor)),
+            zoom: Math.max(0.01, Math.min(100.0, prev.zoom * touchFactor)),
           }));
         }
         touchDistanceRef.current = dist;
@@ -170,15 +170,26 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     const currentZoom = paramsRef.current.zoom;
     const dynamicSensitivity = 0.002 * Math.max(0.2, Math.min(0.8, currentZoom / 2.5));
 
-    // Update velocity directly from mouse movement
-    velocityRef.current = { x: dx / dt, y: dy / dt };
+    // BRAKING LOGIC: If moving opposite to current velocity, apply braking
+    const prevVelX = velocityRef.current.x;
+    const prevVelY = velocityRef.current.y;
+    const newVelX = dx / dt;
+    const newVelY = dy / dt;
     
-    // Check if moving opposite to current velocity (braking)
-    const currentVelX = velocityRef.current.x;
-    const currentVelY = velocityRef.current.y;
+    // Check if direction changed (opposite movement)
+    const directionChangedX = (prevVelX > 0.001 && newVelX < -0.001) || (prevVelX < -0.001 && newVelX > 0.001);
+    const directionChangedY = (prevVelY > 0.001 && newVelY < -0.001) || (prevVelY < -0.001 && newVelY > 0.001);
+    
+    // If direction changed, stop rotation immediately
+    if (directionChangedX || directionChangedY) {
+      velocityRef.current = { x: 0, y: 0 };
+    } else {
+      // Otherwise, update velocity normally
+      velocityRef.current = { x: newVelX, y: newVelY };
+    }
     
     // If velocity is very low, stop completely
-    if (Math.abs(currentVelX) < 0.0005 && Math.abs(currentVelY) < 0.0005) {
+    if (Math.abs(velocityRef.current.x) < 0.0005 && Math.abs(velocityRef.current.y) < 0.0005) {
       velocityRef.current = { x: 0, y: 0 };
     }
 

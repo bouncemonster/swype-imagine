@@ -3609,19 +3609,19 @@ vec2 sceneSDF(vec3 p_world) {
   int ftypeA = int(u_fractal_type + 0.5);
   int ftypeB = int(u_hybrid_type + 0.5);
   int ftypeC = int(u_tertiary_type + 0.5);
-  int iters = int(clamp(u_iterations, 6.0, 48.0));
+  int iters = int(clamp(u_iterations, 6.0, 64.0));
   
   // FRACTAL-SPECIFIC ADAPTIVE ITERATIONS
   // Different fractals have different complexity and need different iteration counts
   // This optimizes quality/performance ratio for each fractal type
   if (ftypeA == 1 || ftypeA == 23) { // Mandelbulb, Quaternion Mandelbrot
-    iters = int(clamp(float(iters) * 1.2, 6.0, 48.0)); // Need more iterations
+    iters = int(clamp(float(iters) * 1.2, 6.0, 64.0)); // Need more iterations
   } else if (ftypeA == 5 || ftypeA == 101) { // Mandelbox, Amazing Box
-    iters = int(clamp(float(iters) * 1.1, 6.0, 48.0)); // Slightly more
+    iters = int(clamp(float(iters) * 1.1, 6.0, 64.0)); // Slightly more
   } else if (ftypeA == 7 || ftypeA == 103) { // Menger, Menger-Mandelbox
-    iters = int(clamp(float(iters) * 0.9, 6.0, 48.0)); // Can use fewer
+    iters = int(clamp(float(iters) * 0.9, 6.0, 64.0)); // Can use fewer
   } else if (ftypeA >= 86 && ftypeA <= 95) { // Beautiful fractals
-    iters = int(clamp(float(iters) * 1.15, 6.0, 48.0)); // More for detail
+    iters = int(clamp(float(iters) * 1.15, 6.0, 64.0)); // More for detail
   }
   
   float t = u_time * u_morph_speed;
@@ -3981,8 +3981,8 @@ void main() {
   int iterReduction = int(lodFactor * 8.0); // Reduce up to 8 iterations at far distance
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
-  // Close range: 512 steps, Medium: 384 steps, Far: 256 steps (was 256/200/160)
-  int maxSteps = (cam_dist < 1.0) ? 512 : (cam_dist < 3.0) ? 384 : 256;
+  // Close range: 640 steps, Medium: 480 steps, Far: 320 steps (was 512/384/256)
+  int maxSteps = (cam_dist < 1.0) ? 640 : (cam_dist < 3.0) ? 480 : 320;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
 
