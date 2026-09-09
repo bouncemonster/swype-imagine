@@ -533,6 +533,44 @@ export function useRenderEngine(
             velocityRef.current = { x: 0, y: 0 };
           }
           console.info(`[Controls] Inertia ${inertiaEnabledRef.current ? 'enabled' : 'disabled'} (I key)`);
+        } else if (e.key >= '1' && e.key <= '7') {
+          // Quick render mode switch (1-7)
+          e.preventDefault();
+          const renderStyle = parseFloat(e.key);
+          if (paramsRef.current) {
+            paramsRef.current = {
+              ...paramsRef.current,
+              renderStyle: renderStyle,
+            };
+          }
+          console.info(`[Controls] Render mode: ${renderStyle} (${e.key} key)`);
+        } else if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
+          // Toggle fly-through camera (F or Russian А)
+          e.preventDefault();
+          if (paramsRef.current) {
+            const newMode = paramsRef.current.cameraMode === 'flyThrough' ? 'orbit' : 'flyThrough';
+            paramsRef.current = {
+              ...paramsRef.current,
+              cameraMode: newMode,
+            };
+            console.info(`[Controls] Camera mode: ${newMode} (F key)`);
+          }
+        } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
+          // Reset camera position (R or Russian К)
+          e.preventDefault();
+          velocityRef.current = { x: 0, y: 0 };
+          if (paramsRef.current) {
+            paramsRef.current = {
+              ...paramsRef.current,
+              rotX: 0,
+              rotY: 0,
+              zoom: 2.5,
+              camPosX: 0,
+              camPosY: 0,
+              camPosZ: 0,
+            };
+          }
+          console.info('[Controls] Camera reset (R key)');
         }
       }
     };
