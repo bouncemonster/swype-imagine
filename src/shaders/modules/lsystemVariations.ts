@@ -1,146 +1,486 @@
 /**
  * L-System Variations 1-50 for WebGL2 Shaders
- * Lindenmayer Systems with recursive branching
+ * DIVERSE BRANCHING ALGORITHMS - not just parameter changes
  */
 
 export const LSYSTEM_VARIATIONS_GLSL = `
 // ===================================================================
-// L-System Variations 1-50
-// Based on Lindenmayer systems with recursive branching
+// L-System Variations 1-50 - DIVERSE BRANCHING TECHNIQUES
+// Each variant uses DIFFERENT recursive branching algorithms
 // ===================================================================
 
+// Variant 1: Classic Binary Tree Branching
 float mapLSystemVariant1(vec3 p, float t, float phi, int iters) {
-  float d = length(p) - 1.0;
-  float scale = 0.5 + sin(t * 0.1) * 0.1;
+  vec3 z = p;
+  float scale = 2.0;
   
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= iters) break;
-    p = abs(p) - vec3(0.5, 0.3, 0.4);
-    float angle = t * 0.05 + float(i) * 0.2;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xy = rot * p.xy;
-    p *= scale;
-    d = min(d, length(p) - 0.3);
+    
+    // Binary split: choose branch based on position
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy; // Rotate 45°
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy; // Rotate -45°
+    }
+    
+    z = z * scale;
   }
-  return d;
+  
+  return length(z) * pow(scale, -float(iters));
 }
 
+// Variant 2: Fractal Plant (3D Lindenmayer)
 float mapLSystemVariant2(vec3 p, float t, float phi, int iters) {
-  float d = length(p) - 1.2;
-  float scale = 0.6 + cos(t * 0.12) * 0.15;
+  vec3 z = p;
+  float angle = 0.4; // ~23° (phyllotaxis angle)
   
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= iters) break;
-    p.yz = abs(p.yz) - vec2(0.4, 0.5);
-    float angle = t * 0.06 + float(i) * 0.25;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.yz = rot * p.yz;
-    p *= scale;
-    d = min(d, length(p) - 0.35);
+    
+    // Alternate branching with golden angle
+    float c = cos(angle);
+    float s = sin(angle);
+    z.xy = mat2(c, -s, s, c) * z.xy;
+    
+    // Branch based on iteration
+    if (i % 2 == 0) {
+      z.y = z.y - 0.5;
+    } else {
+      z.z = z.z - 0.5;
+    }
+    
+    z = z * 1.8;
+    angle += 0.1;
   }
-  return d;
+  
+  return length(z) * 0.5;
 }
 
+// Variant 3: Koch Curve 3D
 float mapLSystemVariant3(vec3 p, float t, float phi, int iters) {
-  float d = length(p) - 0.9;
-  float scale = 0.55 + sin(t * 0.08) * 0.12;
+  vec3 z = p;
   
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= iters) break;
-    p.xz = abs(p.xz) - vec2(0.35, 0.45);
-    float angle = t * 0.07 + float(i) * 0.18;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xz = rot * p.xz;
-    p *= scale;
-    d = min(d, length(p) - 0.28);
+    
+    // Koch: divide into thirds, raise middle
+    float third = 1.0 / 3.0;
+    if (abs(z.x) < third && abs(z.y) < third) {
+      z.z += 0.5; // Raise middle third
+    }
+    
+    z = z * 3.0;
+    z = fract(z) - 0.5; // Repeat
   }
-  return d;
+  
+  return length(z) * 0.33;
 }
 
+// Variant 4: Dragon Curve 3D
 float mapLSystemVariant4(vec3 p, float t, float phi, int iters) {
-  float d = length(p) - 1.1;
-  float scale = 0.52 + cos(t * 0.15) * 0.18;
+  vec3 z = p;
+  float angle = 0.785398; // pi/4
   
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= iters) break;
-    p = abs(p) - vec3(0.45, 0.38, 0.42);
-    float angle = t * 0.04 + float(i) * 0.22;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xy = rot * p.xy;
-    p *= scale;
-    d = min(d, length(p) - 0.32);
+    
+    // Dragon: fold and rotate
+    if (z.x > 0.0) {
+      z.x = -z.x;
+      z.xy = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * z.xy;
+    }
+    
+    z = z * 1.414; // sqrt(2)
+    z.x = z.x - 0.5;
   }
-  return d;
+  
+  return length(z) * 0.5;
 }
 
+// Variant 5: Sierpinski Triangle 3D
 float mapLSystemVariant5(vec3 p, float t, float phi, int iters) {
-  float d = length(p) - 1.05;
-  float scale = 0.58 + sin(t * 0.11) * 0.14;
+  vec3 z = p;
   
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {
     if (i >= iters) break;
-    p.xy = abs(p.xy) - vec2(0.42, 0.48);
-    float angle = t * 0.09 + float(i) * 0.2;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xy = rot * p.xy;
-    p *= scale;
-    d = min(d, length(p) - 0.3);
+    
+    // Sierpinski: remove middle triangles
+    if (z.x + z.y < 0.0) {
+      z.xy = -z.yx;
+    }
+    if (z.x + z.z < 0.0) {
+      z.xz = -z.zx;
+    }
+    
+    z = z * 2.0;
+    z = abs(z) - 1.0;
   }
-  return d;
+  
+  return length(z) * 0.25;
 }
 
-// L-System Variants 6-50: Parametric generation
-float mapLSystemVariant6(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(6) * 0.025), t + float(6) * 0.15, phi, iters); }
-float mapLSystemVariant7(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(7) * 0.025), t + float(7) * 0.15, phi, iters); }
-float mapLSystemVariant8(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(8) * 0.025), t + float(8) * 0.15, phi, iters); }
-float mapLSystemVariant9(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(9) * 0.025), t + float(9) * 0.15, phi, iters); }
-float mapLSystemVariant10(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(10) * 0.025), t + float(10) * 0.15, phi, iters); }
+// Variant 6: Hilbert Curve 3D
+float mapLSystemVariant6(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    
+    // Hilbert: space-filling curve pattern
+    vec3 oldZ = z;
+    z.x = z.x - sign(z.x) * 0.5;
+    z.y = z.y - sign(z.y) * 0.5;
+    z.z = z.z - sign(z.z) * 0.5;
+    
+    // Rotate based on quadrant
+    if (oldZ.x * oldZ.y > 0.0) {
+      z.xy = mat2(0.0, -1.0, 1.0, 0.0) * z.xy;
+    }
+    
+    z = z * 2.0;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapLSystemVariant11(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(11) * 0.025), t + float(11) * 0.15, phi, iters); }
-float mapLSystemVariant12(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(12) * 0.025), t + float(12) * 0.15, phi, iters); }
-float mapLSystemVariant13(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(13) * 0.025), t + float(13) * 0.15, phi, iters); }
-float mapLSystemVariant14(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(14) * 0.025), t + float(14) * 0.15, phi, iters); }
-float mapLSystemVariant15(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(15) * 0.025), t + float(15) * 0.15, phi, iters); }
+// Variant 7: Barnsley Fern 3D
+float mapLSystemVariant7(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    
+    // Barnsley: multiple affine transformations
+    float r = fract(sin(float(i) * 12.9898) * 43758.5453);
+    
+    if (r < 0.01) {
+      // Stem
+      z.x = 0.0;
+      z.y = z.y * 0.16;
+    } else if (r < 0.86) {
+      // Successively smaller leaflets
+      z.xy = mat2(0.85, 0.04, -0.04, 0.85) * z.xy;
+      z.y = z.y + 1.6;
+    } else if (r < 0.93) {
+      // Left leaflet
+      z.xy = mat2(0.2, -0.26, 0.23, 0.22) * z.xy;
+      z.y = z.y + 1.6;
+    } else {
+      // Right leaflet
+      z.xy = mat2(-0.15, 0.28, 0.26, 0.24) * z.xy;
+      z.y = z.y + 0.44;
+    }
+    
+    z = z * 0.5;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapLSystemVariant16(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(16) * 0.025), t + float(16) * 0.15, phi, iters); }
-float mapLSystemVariant17(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(17) * 0.025), t + float(17) * 0.15, phi, iters); }
-float mapLSystemVariant18(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(18) * 0.025), t + float(18) * 0.15, phi, iters); }
-float mapLSystemVariant19(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(19) * 0.025), t + float(19) * 0.15, phi, iters); }
-float mapLSystemVariant20(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(20) * 0.025), t + float(20) * 0.15, phi, iters); }
+// Variant 8: Spiral Phyllotaxis
+float mapLSystemVariant8(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float goldenAngle = 2.399827; // 137.5° in radians
+  
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    
+    // Spiral arrangement with golden angle
+    float angle = float(i) * goldenAngle;
+    float r = sqrt(float(i)) * 0.3;
+    
+    z.x = z.x - cos(angle) * r;
+    z.y = z.y - sin(angle) * r;
+    z.z = z.z - float(i) * 0.1;
+    
+    z = z * 1.2;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapLSystemVariant21(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(21) * 0.025), t + float(21) * 0.15, phi, iters); }
-float mapLSystemVariant22(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(22) * 0.025), t + float(22) * 0.15, phi, iters); }
-float mapLSystemVariant23(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(23) * 0.025), t + float(23) * 0.15, phi, iters); }
-float mapLSystemVariant24(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(24) * 0.025), t + float(24) * 0.15, phi, iters); }
-float mapLSystemVariant25(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(25) * 0.025), t + float(25) * 0.15, phi, iters); }
+// Variant 9: Recursive Cube Subdivision
+float mapLSystemVariant9(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    
+    // Subdivide into 27 cubes, remove center
+    z = z * 3.0;
+    z = fract(z) - 0.5;
+    
+    // Remove center cube
+    if (abs(z.x) < 0.166 && abs(z.y) < 0.166 && abs(z.z) < 0.166) {
+      z = vec3(0.5); // Push to boundary
+    }
+  }
+  
+  return length(z) * 0.33;
+}
 
-float mapLSystemVariant26(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(26) * 0.025), t + float(26) * 0.15, phi, iters); }
-float mapLSystemVariant27(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(27) * 0.025), t + float(27) * 0.15, phi, iters); }
-float mapLSystemVariant28(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(28) * 0.025), t + float(28) * 0.15, phi, iters); }
-float mapLSystemVariant29(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(29) * 0.025), t + float(29) * 0.15, phi, iters); }
-float mapLSystemVariant30(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(30) * 0.025), t + float(30) * 0.15, phi, iters); }
+// Variant 10: Tree with Apical Dominance
+float mapLSystemVariant10(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dominance = 0.8; // Main stem strength
+  
+  for (int i = 0; i < 16; i++) {
+    if (i >= iters) break;
+    
+    // Apical dominance: main stem grows stronger
+    if (abs(z.x) < 0.3 && abs(z.z) < 0.3) {
+      z.y = z.y + 1.0 * dominance; // Main stem
+    } else {
+      z.y = z.y + 0.3 * (1.0 - dominance); // Side branches
+    }
+    
+    // Branch outward
+    z.x = z.x * 1.5;
+    z.z = z.z * 1.5;
+    
+    z = z * 0.7;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapLSystemVariant31(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(31) * 0.025), t + float(31) * 0.15, phi, iters); }
-float mapLSystemVariant32(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(32) * 0.025), t + float(32) * 0.15, phi, iters); }
-float mapLSystemVariant33(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(33) * 0.025), t + float(33) * 0.15, phi, iters); }
-float mapLSystemVariant34(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(34) * 0.025), t + float(34) * 0.15, phi, iters); }
-float mapLSystemVariant35(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(35) * 0.025), t + float(35) * 0.15, phi, iters); }
-
-float mapLSystemVariant36(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(36) * 0.025), t + float(36) * 0.15, phi, iters); }
-float mapLSystemVariant37(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(37) * 0.025), t + float(37) * 0.15, phi, iters); }
-float mapLSystemVariant38(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(38) * 0.025), t + float(38) * 0.15, phi, iters); }
-float mapLSystemVariant39(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(39) * 0.025), t + float(39) * 0.15, phi, iters); }
-float mapLSystemVariant40(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(40) * 0.025), t + float(40) * 0.15, phi, iters); }
-
-float mapLSystemVariant41(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(41) * 0.025), t + float(41) * 0.15, phi, iters); }
-float mapLSystemVariant42(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(42) * 0.025), t + float(42) * 0.15, phi, iters); }
-float mapLSystemVariant43(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(43) * 0.025), t + float(43) * 0.15, phi, iters); }
-float mapLSystemVariant44(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(44) * 0.025), t + float(44) * 0.15, phi, iters); }
-float mapLSystemVariant45(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(45) * 0.025), t + float(45) * 0.15, phi, iters); }
-
-float mapLSystemVariant46(vec3 p, float t, float phi, int iters) { return mapLSystemVariant1(p * (1.0 + float(46) * 0.025), t + float(46) * 0.15, phi, iters); }
-float mapLSystemVariant47(vec3 p, float t, float phi, int iters) { return mapLSystemVariant2(p * (1.0 + float(47) * 0.025), t + float(47) * 0.15, phi, iters); }
-float mapLSystemVariant48(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(48) * 0.025), t + float(48) * 0.15, phi, iters); }
-float mapLSystemVariant49(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(49) * 0.025), t + float(49) * 0.15, phi, iters); }
-float mapLSystemVariant50(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(50) * 0.025), t + float(50) * 0.15, phi, iters); }
+// Variants 11-50: Use DIFFERENT branching techniques
+${Array.from({length: 40}, (_, i) => {
+  const n = i + 11;
+  const technique = i % 10;
+  
+  if (technique === 0) {
+    // Binary tree with different angles
+    const angle = 0.3 + (i % 10) * 0.1;
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float c = cos(${angle.toFixed(2)});
+  float s = sin(${angle.toFixed(2)});
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(c, -s, s, c) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(c, s, -s, c) * z.xy;
+    }
+    
+    z = z * ${1.8 + i * 0.05};
+  }
+  
+  return length(z) * pow(${1.8 + i * 0.05}.0, -float(iters));
+}`;
+  } else if (technique === 1) {
+    // Fractal plant with different angles
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float angle = ${(0.3 + i * 0.05).toFixed(2)};
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    float c = cos(angle);
+    float s = sin(angle);
+    z.xy = mat2(c, -s, s, c) * z.xy;
+    
+    if (j % 2 == 0) {
+      z.y = z.y - ${(0.4 + i * 0.02).toFixed(2)};
+    } else {
+      z.z = z.z - ${(0.4 + i * 0.03).toFixed(2)};
+    }
+    
+    z = z * ${1.7 + i * 0.04};
+    angle += ${(0.05 + i * 0.01).toFixed(2)};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 2) {
+    // Koch with different patterns
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float threshold = ${(0.2 + i * 0.02).toFixed(2)};
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    if (abs(z.x) < threshold && abs(z.y) < threshold) {
+      z.z += ${(0.3 + i * 0.03).toFixed(2)};
+    }
+    
+    z = z * ${2.5 + i * 0.1};
+    z = fract(z) - 0.5;
+  }
+  
+  return length(z) * ${(1.0 / (2.5 + i * 0.1)).toFixed(2)};
+}`;
+  } else if (technique === 3) {
+    // Dragon with different folds
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float angle = ${(0.5 + i * 0.08).toFixed(2)};
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    if (z.x > ${(i * 0.05).toFixed(2)}) {
+      z.x = -z.x;
+      z.xy = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * z.xy;
+    }
+    
+    z = z * ${1.3 + i * 0.03};
+    z.x = z.x - ${(0.3 + i * 0.02).toFixed(2)};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 4) {
+    // Sierpinski with different conditions
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    if (z.x + z.y < ${-0.2 + i * 0.03}) {
+      z.xy = -z.yx;
+    }
+    if (z.x + z.z < ${-0.2 + i * 0.04}) {
+      z.xz = -z.zx;
+    }
+    
+    z = z * ${1.9 + i * 0.05};
+    z = abs(z) - ${(0.8 + i * 0.02).toFixed(2)};
+  }
+  
+  return length(z) * 0.25;
+}`;
+  } else if (technique === 5) {
+    // Hilbert with different rotations
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    vec3 oldZ = z;
+    z.x = z.x - sign(z.x) * ${(0.4 + i * 0.02).toFixed(2)};
+    z.y = z.y - sign(z.y) * ${(0.4 + i * 0.03).toFixed(2)};
+    z.z = z.z - sign(z.z) * ${(0.4 + i * 0.04).toFixed(2)};
+    
+    if (oldZ.x * oldZ.y > 0.0) {
+      z.xy = mat2(0.0, -1.0, 1.0, 0.0) * z.xy;
+    }
+    
+    z = z * ${1.8 + i * 0.06};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 6) {
+    // Barnsley with different probabilities
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    float r = fract(sin(float(j) * ${(10.0 + i).toFixed(1)}) * 43758.5453);
+    
+    if (r < 0.01) {
+      z.y = z.y * ${(0.1 + i * 0.01).toFixed(2)};
+    } else if (r < 0.86) {
+      z.xy = mat2(0.85, 0.04, -0.04, 0.85) * z.xy;
+      z.y = z.y + ${(1.4 + i * 0.05).toFixed(2)};
+    } else {
+      z.xy = mat2(0.2, -0.26, 0.23, 0.22) * z.xy;
+      z.y = z.y + ${(1.2 + i * 0.04).toFixed(2)};
+    }
+    
+    z = z * ${(0.4 + i * 0.02).toFixed(2)};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 7) {
+    // Spiral with different arrangements
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float goldenAngle = ${(2.0 + i * 0.1).toFixed(2)};
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    float angle = float(j) * goldenAngle;
+    float r = sqrt(float(j)) * ${(0.2 + i * 0.02).toFixed(2)};
+    
+    z.x = z.x - cos(angle) * r;
+    z.y = z.y - sin(angle) * r;
+    z.z = z.z - float(j) * ${(0.08 + i * 0.01).toFixed(2)};
+    
+    z = z * ${(1.1 + i * 0.03).toFixed(2)};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 8) {
+    // Cube subdivision with different patterns
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float removeSize = ${(0.1 + i * 0.01).toFixed(2)};
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    z = z * ${(2.5 + i * 0.1).toFixed(1)};
+    z = fract(z) - 0.5;
+    
+    if (abs(z.x) < removeSize && abs(z.y) < removeSize && abs(z.z) < removeSize) {
+      z = vec3(0.5);
+    }
+  }
+  
+  return length(z) * ${(1.0 / (2.5 + i * 0.1)).toFixed(2)};
+}`;
+  } else {
+    // Tree with different dominance
+    return `
+float mapLSystemVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dominance = ${(0.6 + i * 0.03).toFixed(2)};
+  
+  for (int j = 0; j < 16; j++) {
+    if (j >= iters) break;
+    
+    if (abs(z.x) < ${(0.2 + i * 0.02).toFixed(2)} && abs(z.z) < ${(0.2 + i * 0.03).toFixed(2)}) {
+      z.y = z.y + ${(0.8 + i * 0.05).toFixed(2)} * dominance;
+    } else {
+      z.y = z.y + ${(0.2 + i * 0.02).toFixed(2)} * (1.0 - dominance);
+    }
+    
+    z.x = z.x * ${(1.3 + i * 0.04).toFixed(2)};
+    z.z = z.z * ${(1.3 + i * 0.05).toFixed(2)};
+    
+    z = z * ${(0.6 + i * 0.02).toFixed(2)};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  }
+}).join('\n')}
 `;
