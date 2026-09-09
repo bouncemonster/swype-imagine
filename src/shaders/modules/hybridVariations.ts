@@ -1,5 +1,13 @@
-// Hybrid Variations 1-90 for webglShaders.ts
-// Hybrid fractals combining Mandelbrot, Julia, IFS, and Flames
+/**
+ * Hybrid Variations 1-90 for WebGL2 Shaders
+ * Hybrid fractals combining Mandelbrot, Julia, IFS, and Flames
+ */
+
+export const HYBRID_VARIATIONS_GLSL = `
+// ===================================================================
+// Hybrid Variations 1-90
+// Combining Mandelbrot, Julia, IFS, and Flames
+// ===================================================================
 
 float mapHybridVariant1(vec3 p, float t, float phi, int iters) {
   // Mandelbrot-Julia hybrid
@@ -218,3 +226,4 @@ float mapHybridVariant87(vec3 p, float t, float phi, int iters) { return mapHybr
 float mapHybridVariant88(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(88) * 0.015), t + float(88) * 0.1, phi, iters); }
 float mapHybridVariant89(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(89) * 0.015), t + float(89) * 0.1, phi, iters); }
 float mapHybridVariant90(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(90) * 0.015), t + float(90) * 0.1, phi, iters); }
+`;

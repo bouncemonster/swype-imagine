@@ -1,5 +1,13 @@
-// L-System Variations 1-50 for webglShaders.ts
-// Lindenmayer Systems with recursive branching
+/**
+ * L-System Variations 1-50 for WebGL2 Shaders
+ * Lindenmayer Systems with recursive branching
+ */
+
+export const LSYSTEM_VARIATIONS_GLSL = `
+// ===================================================================
+// L-System Variations 1-50
+// Based on Lindenmayer systems with recursive branching
+// ===================================================================
 
 float mapLSystemVariant1(vec3 p, float t, float phi, int iters) {
   float d = length(p) - 1.0;
@@ -135,3 +143,4 @@ float mapLSystemVariant47(vec3 p, float t, float phi, int iters) { return mapLSy
 float mapLSystemVariant48(vec3 p, float t, float phi, int iters) { return mapLSystemVariant3(p * (1.0 + float(48) * 0.025), t + float(48) * 0.15, phi, iters); }
 float mapLSystemVariant49(vec3 p, float t, float phi, int iters) { return mapLSystemVariant4(p * (1.0 + float(49) * 0.025), t + float(49) * 0.15, phi, iters); }
 float mapLSystemVariant50(vec3 p, float t, float phi, int iters) { return mapLSystemVariant5(p * (1.0 + float(50) * 0.025), t + float(50) * 0.15, phi, iters); }
+`;

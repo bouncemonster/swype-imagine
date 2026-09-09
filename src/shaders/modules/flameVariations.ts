@@ -1,5 +1,13 @@
-// Fractal Flames Variations 1-50 for webglShaders.ts
-// Apophysis-style fractal flames with variations
+/**
+ * Fractal Flames Variations 1-50 for WebGL2 Shaders
+ * Apophysis-style fractal flames with variations
+ */
+
+export const FLAME_VARIATIONS_GLSL = `
+// ===================================================================
+// Flame Variations 1-50
+// Based on Apophysis-style fractal flames
+// ===================================================================
 
 float mapFlameVariant1(vec3 p, float t, float phi, int iters) {
   float d = 1e10;
@@ -148,3 +156,4 @@ float mapFlameVariant47(vec3 p, float t, float phi, int iters) { return mapFlame
 float mapFlameVariant48(vec3 p, float t, float phi, int iters) { return mapFlameVariant3(p * (1.0 + float(48) * 0.02), t + float(48) * 0.13, phi, iters); }
 float mapFlameVariant49(vec3 p, float t, float phi, int iters) { return mapFlameVariant4(p * (1.0 + float(49) * 0.02), t + float(49) * 0.13, phi, iters); }
 float mapFlameVariant50(vec3 p, float t, float phi, int iters) { return mapFlameVariant5(p * (1.0 + float(50) * 0.02), t + float(50) * 0.13, phi, iters); }
+`;

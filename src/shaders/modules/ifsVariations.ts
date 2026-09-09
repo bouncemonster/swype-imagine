@@ -1,5 +1,13 @@
-// IFS Variations 1-50 for webglShaders.ts
-// Iterated Function Systems with folding, rotation, and scaling
+/**
+ * IFS Variations 1-50 for WebGL2 Shaders
+ * Iterated Function Systems with folding, rotation, and scaling
+ */
+
+export const IFS_VARIATIONS_GLSL = `
+// ===================================================================
+// IFS Variations 1-50
+// Based on iterated function systems with folding and rotation
+// ===================================================================
 
 float mapIFSVariant1(vec3 p, float t, float phi, int iters) {
   float scale = 2.0 + sin(t * 0.1) * 0.2;
@@ -139,3 +147,4 @@ float mapIFSVariant47(vec3 p, float t, float phi, int iters) { return mapIFSVari
 float mapIFSVariant48(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(48) * 0.03), t + float(48) * 0.12, phi, iters); }
 float mapIFSVariant49(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(49) * 0.03), t + float(49) * 0.12, phi, iters); }
 float mapIFSVariant50(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(50) * 0.03), t + float(50) * 0.12, phi, iters); }
+`;
