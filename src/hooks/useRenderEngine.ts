@@ -118,8 +118,8 @@ export function useRenderEngine(
   const velocityRef = useRef({ x: 0, y: 0 });
   const lastMoveTimeRef = useRef(0);
   const lastInteractionReportTimeRef = useRef<number>(0);
-  const inertiaDecay = 0.92;
-  const inertiaThreshold = 0.0001;
+  const inertiaDecay = 0.94; // Smoother decay (was 0.92)
+  const inertiaThreshold = 0.00008; // Lower threshold for longer glide
   const inertiaEnabledRef = useRef(true); // Allow toggling inertia on/off
 
   // Keep screenshot ref in sync
@@ -395,14 +395,14 @@ export function useRenderEngine(
         const autoRotX = currentParams.autoRotate ? (simTime * currentParams.autoRotateSpeed * 0.12) : 0;
         const autoRotY = currentParams.autoRotate ? (Math.sin(simTime * 0.18) * 0.06) : 0;
 
-        // Inertia
+        // Inertia - smoother with better momentum
         let inertiaRotX = 0, inertiaRotY = 0;
         if (inertiaEnabledRef.current && !isDraggingRef.current && (Math.abs(velocityRef.current.x) > inertiaThreshold || Math.abs(velocityRef.current.y) > inertiaThreshold)) {
           const currentZoom = currentParams.zoom;
-          const dynamicSensitivity = 0.0045 * Math.max(0.12, Math.min(1.0, currentZoom / 2.8));
+          const dynamicSensitivity = 0.005 * Math.max(0.1, Math.min(1.2, currentZoom / 2.5));
           const dt = deltaMs;
-          inertiaRotX = velocityRef.current.x * dt * dynamicSensitivity * 0.5;
-          inertiaRotY = velocityRef.current.y * dt * dynamicSensitivity * 0.5;
+          inertiaRotX = velocityRef.current.x * dt * dynamicSensitivity * 0.6;
+          inertiaRotY = velocityRef.current.y * dt * dynamicSensitivity * 0.6;
           velocityRef.current.x *= inertiaDecay;
           velocityRef.current.y *= inertiaDecay;
           if (Math.abs(velocityRef.current.x) < inertiaThreshold) velocityRef.current.x = 0;

@@ -168,7 +168,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
 
     const currentZoom = paramsRef.current.zoom;
-    const dynamicSensitivity = 0.002 * Math.max(0.2, Math.min(0.8, currentZoom / 2.5));
+    const dynamicSensitivity = 0.0025 * Math.max(0.15, Math.min(0.9, currentZoom / 2.0));
 
     // BRAKING LOGIC: If moving opposite to current velocity, apply braking
     const prevVelX = velocityRef.current.x;
@@ -194,7 +194,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
 
     // Apply rotation with improved sensitivity
-    const rotationSpeed = 0.003;
+    const rotationSpeed = 0.0035; // Slightly faster (was 0.003)
     const rotDeltaX = dx * rotationSpeed;
     const rotDeltaY = dy * rotationSpeed;
 
