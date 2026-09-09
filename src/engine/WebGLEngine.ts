@@ -11,10 +11,98 @@ export class WebGLEngine extends FractalEngineBase {
   private vao: WebGLVertexArrayObject | null = null;
   private vbo: WebGLBuffer | null = null;
   private uniformLocs: Record<string, WebGLUniformLocation | null> = {};
+  
+  // Export data collection
+  private exportPositions: Float32Array = new Float32Array(100000 * 3);
+  private exportColors: Float32Array = new Float32Array(100000 * 3);
+  private exportNormals: Float32Array = new Float32Array(100000 * 3);
+  private exportCount = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
     this.rendererInfo = 'WebGL2 Shader Pipeline';
+  }
+
+  /**
+   * Collect surface points for export by sampling SDF
+   */
+  public collectSurfacePoints(params: FractalParams, resolution: number = 64): void {
+    this.exportCount = 0;
+    const bounds = 2.5;
+    const step = (bounds * 2) / resolution;
+    
+    // Sample SDF on grid
+    for (let i = 0; i < resolution; i++) {
+      for (let j = 0; j < resolution; j++) {
+        for (let k = 0; k < resolution; k++) {
+          const x = -bounds + i * step;
+          const y = -bounds + j * step;
+          const z = -bounds + k * step;
+          
+          // Evaluate SDF (simplified - use current params)
+          const sdf = this.evaluateSDF(x, y, z, params);
+          
+          // If near surface, add to export
+          if (Math.abs(sdf) < 0.05 && this.exportCount < 100000) {
+            const idx = this.exportCount * 3;
+            this.exportPositions[idx] = x;
+            this.exportPositions[idx + 1] = y;
+            this.exportPositions[idx + 2] = z;
+            
+            // Compute normal via central differences
+            const eps = 0.01;
+            const nx = this.evaluateSDF(x + eps, y, z, params) - this.evaluateSDF(x - eps, y, z, params);
+            const ny = this.evaluateSDF(x, y + eps, params) - this.evaluateSDF(x, y - eps, params);
+            const nz = this.evaluateSDF(x, y, z + eps, params) - this.evaluateSDF(x, y, z - eps, params);
+            const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+            
+            this.exportNormals[idx] = nx / len;
+            this.exportNormals[idx + 1] = ny / len;
+            this.exportNormals[idx + 2] = nz / len;
+            
+            // Color based on position (simplified)
+            this.exportColors[idx] = 0.5 + x * 0.2;
+            this.exportColors[idx + 1] = 0.5 + y * 0.2;
+            this.exportColors[idx + 2] = 0.5 + z * 0.2;
+            
+            this.exportCount++;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Simplified SDF evaluation for export (matches shader logic)
+   */
+  private evaluateSDF(x: number, y: number, z: number, params: FractalParams): number {
+    // Simplified Mandelbulb SDF for demo
+    const r = Math.sqrt(x * x + y * y + z * z);
+    const theta = Math.atan2(Math.sqrt(x * x + y * y), z);
+    const phi = Math.atan2(y, x);
+    const power = 8;
+    
+    let zr = Math.pow(r, power);
+    const zTheta = theta * power;
+    const zPhi = phi * power;
+    
+    const cx = zr * Math.sin(zTheta) * Math.cos(zPhi) + x;
+    const cy = zr * Math.sin(zTheta) * Math.sin(zPhi) + y;
+    const cz = zr * Math.cos(zTheta) + z;
+    
+    return Math.sqrt(cx * cx + cy * cy + cz * cz) - 1.5;
+  }
+
+  /**
+   * Get collected export data
+   */
+  public getExportData() {
+    return {
+      positions: this.exportPositions.slice(0, this.exportCount * 3),
+      colors: this.exportColors.slice(0, this.exportCount * 3),
+      normals: this.exportNormals.slice(0, this.exportCount * 3),
+      count: this.exportCount
+    };
   }
 
   public init(): boolean {

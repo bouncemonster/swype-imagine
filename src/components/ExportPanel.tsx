@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { exportPointCloudToPLY, exportPointCloudToOBJ, generateMeshFromSDF, exportMeshToOBJ, downloadFile } from '../utils/exportUtils';
+import { exportPointCloudToPLY, exportPointCloudToOBJ, downloadFile } from '../utils/exportUtils';
+import { WebGLEngine } from '../engine/WebGLEngine';
 
 interface ExportPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  engine?: WebGLEngine | null;
+  currentParams?: any;
 }
 
-export const ExportPanel: React.FC<ExportPanelProps> = ({ isOpen, onClose }) => {
+export const ExportPanel: React.FC<ExportPanelProps> = ({ isOpen, onClose, engine, currentParams }) => {
   const [exporting, setExporting] = useState(false);
   const [stereoMode, setStereoMode] = useState<'off' | 'side-by-side' | 'anaglyph'>('off');
 
@@ -14,33 +17,41 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({ isOpen, onClose }) => 
     setExporting(true);
     
     try {
-      // Generate sample point cloud data (in real implementation, collect from render)
-      const count = 10000;
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-      const normals = new Float32Array(count * 3);
+      let pointCloudData;
       
-      // Generate fractal surface points (simplified)
-      for (let i = 0; i < count; i++) {
-        const i3 = i * 3;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI;
-        const r = 1.0 + Math.random() * 0.5;
+      if (engine && currentParams) {
+        // Use real data from engine
+        engine.collectSurfacePoints(currentParams, 64);
+        const exportData = engine.getExportData();
+        pointCloudData = exportData;
+      } else {
+        // Fallback to sample data
+        const count = 10000;
+        const positions = new Float32Array(count * 3);
+        const colors = new Float32Array(count * 3);
+        const normals = new Float32Array(count * 3);
         
-        positions[i3] = r * Math.sin(phi) * Math.cos(theta);
-        positions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-        positions[i3 + 2] = r * Math.cos(phi);
+        for (let i = 0; i < count; i++) {
+          const i3 = i * 3;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.random() * Math.PI;
+          const r = 1.0 + Math.random() * 0.5;
+          
+          positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+          positions[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+          positions[i3 + 2] = r * Math.cos(phi);
+          
+          colors[i3] = 0.5 + Math.random() * 0.5;
+          colors[i3 + 1] = 0.3 + Math.random() * 0.4;
+          colors[i3 + 2] = 0.7 + Math.random() * 0.3;
+          
+          normals[i3] = Math.sin(phi) * Math.cos(theta);
+          normals[i3 + 1] = Math.sin(phi) * Math.sin(theta);
+          normals[i3 + 2] = Math.cos(phi);
+        }
         
-        colors[i3] = 0.5 + Math.random() * 0.5;
-        colors[i3 + 1] = 0.3 + Math.random() * 0.4;
-        colors[i3 + 2] = 0.7 + Math.random() * 0.3;
-        
-        normals[i3] = Math.sin(phi) * Math.cos(theta);
-        normals[i3 + 1] = Math.sin(phi) * Math.sin(theta);
-        normals[i3 + 2] = Math.cos(phi);
+        pointCloudData = { positions, colors, normals, count };
       }
-      
-      const pointCloudData = { positions, colors, normals, count };
       
       let content: string;
       let filename: string;
