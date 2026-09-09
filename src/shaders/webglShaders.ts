@@ -1,3 +1,10 @@
+// Import fractal variation modules
+import { JULIA_VARIATIONS_GLSL } from './modules/juliaVariations';
+import { IFS_VARIATIONS_GLSL } from './modules/ifsVariations';
+import { LSYSTEM_VARIATIONS_GLSL } from './modules/lsystemVariations';
+import { FLAME_VARIATIONS_GLSL } from './modules/flameVariations';
+import { HYBRID_VARIATIONS_GLSL } from './modules/hybridVariations';
+
 export const VERTEX_SHADER_SOURCE = `#version 300 es
 in vec2 a_position;
 out vec2 v_uv;
@@ -2768,6 +2775,20 @@ float mapMandelbrotVariant10(vec3 p, float t, float phi, int iters) {
   
   return 0.5 * log(r) * r / dr;
 }
+
+// ===================================================================
+// FRACTAL VARIATION MODULES (300 types total)
+// ===================================================================
+
+${JULIA_VARIATIONS_GLSL}
+
+${IFS_VARIATIONS_GLSL}
+
+${LSYSTEM_VARIATIONS_GLSL}
+
+${FLAME_VARIATIONS_GLSL}
+
+${HYBRID_VARIATIONS_GLSL}
 
 float map24Cell(vec3 p, float t, float phi, int iters) {
   float angle = t * 0.3;
