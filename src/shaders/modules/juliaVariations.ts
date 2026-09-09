@@ -1,1234 +1,1350 @@
 /**
  * Julia Variations 1-50 for WebGL2 Shaders
- * DIVERSE MATHEMATICAL APPROACHES
+ * CORRECT MANDELBULB MATHEMATICS
+ * Based on: https://en.wikipedia.org/wiki/Mandelbulb
  */
 
 export const JULIA_VARIATIONS_GLSL = `
 // ===================================================================
-// Julia Variations 1-50 - DIVERSE APPROACHES
+// Julia Variations 1-50 - CORRECT MANDELBULB FORMULAS
 // ===================================================================
 
-// Variant 1: Classic Julia Set
+// Variant 1: Classic Mandelbulb (Power 8)
 float mapJuliaVariant1(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.355, 0.355, 0.355);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0; // Classic Mandelbulb power
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
+    
+    // Convert to polar coordinates
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    
+    // Raise to power
+    float zr = pow(r, power);
+    theta = theta * power;
+    phiAngle = phiAngle * power;
+    
+    // Convert back to cartesian
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z += p; // Add original point (Mandelbrot formula)
+    
+    // Update distance estimation
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+
+// Variant 2: Mandelbulb Power 4.2
+float mapJuliaVariant2(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 4.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-
-// Variant 2: Quaternion Julia
-float mapJuliaVariant2(vec3 p, float t, float phi, int iters) {
-  vec4 z = vec4(p, 0.0);
-  vec4 c = vec4(0.320, 0.210, 0.0, 0.0);
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    vec4 z2 = vec4(
-      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
-      2.0*z.x*z.y,
-      2.0*z.x*z.z,
-      2.0*z.x*z.w
-    );
-    z = z2 + c;
-    dr = 2.0 * r * dr + 1.0;
-  }
-  
-  return 0.5 * log(r) * r / dr;
-}
-
-// Variant 3: Burning Ship Julia
+// Variant 3: Mandelbulb Power 12.6
 float mapJuliaVariant3(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.370, 0.615, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 12.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z = abs(z) + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 4: Tricorn Julia
+// Variant 4: Julia Set (Power 8)
 float mapJuliaVariant4(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.232, 0.040, 0.0);
+  vec3 c = vec3(0.340, 0.320, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
-    z += c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += c; // Julia uses constant c, not p
+    dr = pow(r, power - 1.0) * power * dr;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 5: Newton Julia
+// Variant 5: Burning Ship Mandelbulb
 float mapJuliaVariant5(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
+  float dr = 1.0;
   float r = 0.0;
+  float power = 8.75;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 100.0) break;
+    if (r > 2.0) break;
     
-    float zr2 = r * r;
-    vec3 fz = z * (zr2 - 1.10);
-    vec3 fpz = 3.0 * z * zr2;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
     
-    float fpz_len2 = dot(fpz, fpz);
-    if (fpz_len2 < 0.0001) break;
-    
-    z = z - fz / fpz_len2;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship uses abs
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return log(r + 1.0) * 0.1;
+  return 0.5 * log(r) * r / dr;
 }
 
-// Variant 6: Phoenix Julia
+// Variant 6: Tricorn Mandelbulb
 float mapJuliaVariant6(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 z_prev = vec3(0.0);
-  vec3 c = vec3(0.530, -0.282, 0.0);
-  vec3 p_param = vec3(-0.476, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + p_param * z_prev;
-    z_prev = z;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    // Tricorn: conjugate (negate imaginary parts)
+    z = zr * vec3(sin(theta * power) * cos(-phiAngle * power), 
+                  sin(theta * power) * sin(-phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 7: Celtic Julia
+// Variant 7: Rotated Mandelbulb
 float mapJuliaVariant7(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.258, 0.728, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 9.40;
+  float rot = 0.240;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
-    float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float phiAngle = atan(z.y, z.x) + rot; // Add rotation
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    
-    if (z_new.x > 0.07) {
-      z_new.x = -z_new.x;
-    }
-    
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 8: Buffalo Julia
+// Variant 8: Folded Mandelbulb
 float mapJuliaVariant8(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.440, 0.332, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 9.20;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
+    
+    // Folding before transformation
+    z = abs(z);
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 9: Spider Julia
+// Variant 9: Mandelbulb Power 6.9
 float mapJuliaVariant9(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.336, 0.427, 0.0);
-  vec3 c_prev = c;
   float dr = 1.0;
   float r = 0.0;
+  float power = 6.90;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + c_prev * 0.34;
-    c_prev = c;
-    c = z_new;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 10: Lambdoma Julia
+// Variant 10: Mandelbulb Power 19.0
 float mapJuliaVariant10(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.050, 0.540, 0.530);
   float dr = 1.0;
   float r = 0.0;
+  float power = 19.00;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    z = abs(z) / dot(z, z) - c;
-    dr = dr / (r * r) + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 11: IFS-style Julia
+// Variant 11: Mandelbulb (Escape 2.55)
 float mapJuliaVariant11(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float scale = 2.02;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    z = abs(z);
-    if (z.x + z.y < z.z) z.z -= z.x + z.y;
-    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
-    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
-    
-    z = z * scale - vec3(1.61, 1.67, 1.72);
-  }
-  
-  return length(z) * pow(scale, -float(iters));
-}
-
-// Variant 12: Quaternion Julia
-float mapJuliaVariant12(vec3 p, float t, float phi, int iters) {
-  vec4 z = vec4(p, 0.0);
-  vec4 c = vec4(0.420, 0.260, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 9.10;
+  float escapeR = 2.55;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > escapeR) break;
     
-    vec4 z2 = vec4(
-      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
-      2.0*z.x*z.y,
-      2.0*z.x*z.z,
-      2.0*z.x*z.w
-    );
-    z = z2 + c;
-    dr = 2.0 * r * dr + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 13: Burning Ship Julia
+// Variant 12: Mandelbulb Power 5.2
+float mapJuliaVariant12(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 5.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 13: Mandelbulb Power 14.6
 float mapJuliaVariant13(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.270, 0.665, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 14.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z = abs(z) + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 14: Tricorn Julia
+// Variant 14: Julia Set (Power 8)
 float mapJuliaVariant14(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.312, 0.140, 0.0);
+  vec3 c = vec3(0.440, 0.370, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
-    z += c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += c; // Julia uses constant c, not p
+    dr = pow(r, power - 1.0) * power * dr;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 15: Newton Julia
+// Variant 15: Burning Ship Mandelbulb
 float mapJuliaVariant15(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
+  float dr = 1.0;
   float r = 0.0;
+  float power = 10.25;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 100.0) break;
+    if (r > 2.0) break;
     
-    float zr2 = r * r;
-    vec3 fz = z * (zr2 - 1.30);
-    vec3 fpz = 3.0 * z * zr2;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
     
-    float fpz_len2 = dot(fpz, fpz);
-    if (fpz_len2 < 0.0001) break;
-    
-    z = z - fz / fpz_len2;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship uses abs
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return log(r + 1.0) * 0.1;
+  return 0.5 * log(r) * r / dr;
 }
 
-// Variant 16: Phoenix Julia
+// Variant 16: Tricorn Mandelbulb
 float mapJuliaVariant16(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 z_prev = vec3(0.0);
-  vec3 c = vec3(0.580, -0.252, 0.0);
-  vec3 p_param = vec3(-0.436, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 9.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + p_param * z_prev;
-    z_prev = z;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    // Tricorn: conjugate (negate imaginary parts)
+    z = zr * vec3(sin(theta * power) * cos(-phiAngle * power), 
+                  sin(theta * power) * sin(-phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 17: Celtic Julia
+// Variant 17: Rotated Mandelbulb
 float mapJuliaVariant17(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.198, 0.768, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 11.40;
+  float rot = 0.440;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
-    float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float phiAngle = atan(z.y, z.x) + rot; // Add rotation
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    
-    if (z_new.x > 0.17) {
-      z_new.x = -z_new.x;
-    }
-    
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 18: Buffalo Julia
+// Variant 18: Folded Mandelbulb
 float mapJuliaVariant18(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.490, 0.372, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 10.70;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
+    
+    // Folding before transformation
+    z = abs(z);
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 19: Spider Julia
+// Variant 19: Mandelbulb Power 7.9
 float mapJuliaVariant19(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.376, 0.457, 0.0);
-  vec3 c_prev = c;
   float dr = 1.0;
   float r = 0.0;
+  float power = 7.90;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + c_prev * 0.40;
-    c_prev = c;
-    c = z_new;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 20: Lambdoma Julia
+// Variant 20: Mandelbulb Power 22.0
 float mapJuliaVariant20(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.100, 0.580, 0.560);
   float dr = 1.0;
   float r = 0.0;
+  float power = 22.00;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    z = abs(z) / dot(z, z) - c;
-    dr = dr / (r * r) + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 21: IFS-style Julia
+// Variant 21: Mandelbulb (Escape 3.05)
 float mapJuliaVariant21(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float scale = 2.22;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    z = abs(z);
-    if (z.x + z.y < z.z) z.z -= z.x + z.y;
-    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
-    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
-    
-    z = z * scale - vec3(1.71, 1.81, 1.92);
-  }
-  
-  return length(z) * pow(scale, -float(iters));
-}
-
-// Variant 22: Quaternion Julia
-float mapJuliaVariant22(vec3 p, float t, float phi, int iters) {
-  vec4 z = vec4(p, 0.0);
-  vec4 c = vec4(0.520, 0.310, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 10.10;
+  float escapeR = 3.05;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > escapeR) break;
     
-    vec4 z2 = vec4(
-      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
-      2.0*z.x*z.y,
-      2.0*z.x*z.z,
-      2.0*z.x*z.w
-    );
-    z = z2 + c;
-    dr = 2.0 * r * dr + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 23: Burning Ship Julia
+// Variant 22: Mandelbulb Power 6.2
+float mapJuliaVariant22(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 6.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 23: Mandelbulb Power 16.6
 float mapJuliaVariant23(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.170, 0.715, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 16.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z = abs(z) + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 24: Tricorn Julia
+// Variant 24: Julia Set (Power 8)
 float mapJuliaVariant24(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.392, 0.240, 0.0);
+  vec3 c = vec3(0.540, 0.420, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
-    z += c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += c; // Julia uses constant c, not p
+    dr = pow(r, power - 1.0) * power * dr;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 25: Newton Julia
+// Variant 25: Burning Ship Mandelbulb
 float mapJuliaVariant25(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
+  float dr = 1.0;
   float r = 0.0;
+  float power = 11.75;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 100.0) break;
+    if (r > 2.0) break;
     
-    float zr2 = r * r;
-    vec3 fz = z * (zr2 - 1.50);
-    vec3 fpz = 3.0 * z * zr2;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
     
-    float fpz_len2 = dot(fpz, fpz);
-    if (fpz_len2 < 0.0001) break;
-    
-    z = z - fz / fpz_len2;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship uses abs
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return log(r + 1.0) * 0.1;
+  return 0.5 * log(r) * r / dr;
 }
 
-// Variant 26: Phoenix Julia
+// Variant 26: Tricorn Mandelbulb
 float mapJuliaVariant26(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 z_prev = vec3(0.0);
-  vec3 c = vec3(0.630, -0.222, 0.0);
-  vec3 p_param = vec3(-0.396, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 10.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + p_param * z_prev;
-    z_prev = z;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    // Tricorn: conjugate (negate imaginary parts)
+    z = zr * vec3(sin(theta * power) * cos(-phiAngle * power), 
+                  sin(theta * power) * sin(-phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 27: Celtic Julia
+// Variant 27: Rotated Mandelbulb
 float mapJuliaVariant27(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.138, 0.808, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 13.40;
+  float rot = 0.640;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
-    float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float phiAngle = atan(z.y, z.x) + rot; // Add rotation
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    
-    if (z_new.x > 0.27) {
-      z_new.x = -z_new.x;
-    }
-    
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 28: Buffalo Julia
+// Variant 28: Folded Mandelbulb
 float mapJuliaVariant28(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.540, 0.412, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 12.20;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
+    
+    // Folding before transformation
+    z = abs(z);
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 29: Spider Julia
+// Variant 29: Mandelbulb Power 8.9
 float mapJuliaVariant29(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.416, 0.487, 0.0);
-  vec3 c_prev = c;
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.90;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + c_prev * 0.44;
-    c_prev = c;
-    c = z_new;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 30: Lambdoma Julia
+// Variant 30: Mandelbulb Power 25.0
 float mapJuliaVariant30(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.150, 0.620, 0.590);
   float dr = 1.0;
   float r = 0.0;
+  float power = 25.00;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    z = abs(z) / dot(z, z) - c;
-    dr = dr / (r * r) + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 31: IFS-style Julia
+// Variant 31: Mandelbulb (Escape 3.55)
 float mapJuliaVariant31(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float scale = 2.42;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    z = abs(z);
-    if (z.x + z.y < z.z) z.z -= z.x + z.y;
-    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
-    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
-    
-    z = z * scale - vec3(1.81, 1.96, 2.12);
-  }
-  
-  return length(z) * pow(scale, -float(iters));
-}
-
-// Variant 32: Quaternion Julia
-float mapJuliaVariant32(vec3 p, float t, float phi, int iters) {
-  vec4 z = vec4(p, 0.0);
-  vec4 c = vec4(0.620, 0.360, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 11.10;
+  float escapeR = 3.55;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > escapeR) break;
     
-    vec4 z2 = vec4(
-      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
-      2.0*z.x*z.y,
-      2.0*z.x*z.z,
-      2.0*z.x*z.w
-    );
-    z = z2 + c;
-    dr = 2.0 * r * dr + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 33: Burning Ship Julia
+// Variant 32: Mandelbulb Power 7.2
+float mapJuliaVariant32(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 7.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 33: Mandelbulb Power 18.6
 float mapJuliaVariant33(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.070, 0.765, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 18.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z = abs(z) + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 34: Tricorn Julia
+// Variant 34: Julia Set (Power 8)
 float mapJuliaVariant34(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.472, 0.340, 0.0);
+  vec3 c = vec3(0.640, 0.470, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
-    z += c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += c; // Julia uses constant c, not p
+    dr = pow(r, power - 1.0) * power * dr;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 35: Newton Julia
+// Variant 35: Burning Ship Mandelbulb
 float mapJuliaVariant35(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
+  float dr = 1.0;
   float r = 0.0;
+  float power = 13.25;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 100.0) break;
+    if (r > 2.0) break;
     
-    float zr2 = r * r;
-    vec3 fz = z * (zr2 - 1.70);
-    vec3 fpz = 3.0 * z * zr2;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
     
-    float fpz_len2 = dot(fpz, fpz);
-    if (fpz_len2 < 0.0001) break;
-    
-    z = z - fz / fpz_len2;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship uses abs
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return log(r + 1.0) * 0.1;
+  return 0.5 * log(r) * r / dr;
 }
 
-// Variant 36: Phoenix Julia
+// Variant 36: Tricorn Mandelbulb
 float mapJuliaVariant36(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 z_prev = vec3(0.0);
-  vec3 c = vec3(0.680, -0.192, 0.0);
-  vec3 p_param = vec3(-0.356, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 11.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + p_param * z_prev;
-    z_prev = z;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    // Tricorn: conjugate (negate imaginary parts)
+    z = zr * vec3(sin(theta * power) * cos(-phiAngle * power), 
+                  sin(theta * power) * sin(-phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 37: Celtic Julia
+// Variant 37: Rotated Mandelbulb
 float mapJuliaVariant37(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.078, 0.848, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 15.40;
+  float rot = 0.840;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
-    float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float phiAngle = atan(z.y, z.x) + rot; // Add rotation
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    
-    if (z_new.x > 0.37) {
-      z_new.x = -z_new.x;
-    }
-    
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 38: Buffalo Julia
+// Variant 38: Folded Mandelbulb
 float mapJuliaVariant38(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.590, 0.452, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 13.70;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
+    
+    // Folding before transformation
+    z = abs(z);
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 39: Spider Julia
+// Variant 39: Mandelbulb Power 9.9
 float mapJuliaVariant39(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.456, 0.517, 0.0);
-  vec3 c_prev = c;
   float dr = 1.0;
   float r = 0.0;
+  float power = 9.90;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + c_prev * 0.49;
-    c_prev = c;
-    c = z_new;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 40: Lambdoma Julia
+// Variant 40: Mandelbulb Power 28.0
 float mapJuliaVariant40(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.200, 0.660, 0.620);
   float dr = 1.0;
   float r = 0.0;
+  float power = 28.00;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    z = abs(z) / dot(z, z) - c;
-    dr = dr / (r * r) + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 41: IFS-style Julia
+// Variant 41: Mandelbulb (Escape 4.05)
 float mapJuliaVariant41(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float scale = 2.62;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    z = abs(z);
-    if (z.x + z.y < z.z) z.z -= z.x + z.y;
-    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
-    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
-    
-    z = z * scale - vec3(1.91, 2.12, 2.32);
-  }
-  
-  return length(z) * pow(scale, -float(iters));
-}
-
-// Variant 42: Quaternion Julia
-float mapJuliaVariant42(vec3 p, float t, float phi, int iters) {
-  vec4 z = vec4(p, 0.0);
-  vec4 c = vec4(0.720, 0.410, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 12.10;
+  float escapeR = 4.05;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > escapeR) break;
     
-    vec4 z2 = vec4(
-      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
-      2.0*z.x*z.y,
-      2.0*z.x*z.z,
-      2.0*z.x*z.w
-    );
-    z = z2 + c;
-    dr = 2.0 * r * dr + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 43: Burning Ship Julia
+// Variant 42: Mandelbulb Power 8.2
+float mapJuliaVariant42(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 8.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 43: Mandelbulb Power 20.6
 float mapJuliaVariant43(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.030, 0.815, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 20.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z = abs(z) + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 44: Tricorn Julia
+// Variant 44: Julia Set (Power 8)
 float mapJuliaVariant44(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.552, 0.440, 0.0);
+  vec3 c = vec3(0.740, 0.520, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
-    z += c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += c; // Julia uses constant c, not p
+    dr = pow(r, power - 1.0) * power * dr;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 45: Newton Julia
+// Variant 45: Burning Ship Mandelbulb
 float mapJuliaVariant45(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
+  float dr = 1.0;
   float r = 0.0;
+  float power = 14.75;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 100.0) break;
+    if (r > 2.0) break;
     
-    float zr2 = r * r;
-    vec3 fz = z * (zr2 - 1.90);
-    vec3 fpz = 3.0 * z * zr2;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
     
-    float fpz_len2 = dot(fpz, fpz);
-    if (fpz_len2 < 0.0001) break;
-    
-    z = z - fz / fpz_len2;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship uses abs
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return log(r + 1.0) * 0.1;
+  return 0.5 * log(r) * r / dr;
 }
 
-// Variant 46: Phoenix Julia
+// Variant 46: Tricorn Mandelbulb
 float mapJuliaVariant46(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 z_prev = vec3(0.0);
-  vec3 c = vec3(0.730, -0.162, 0.0);
-  vec3 p_param = vec3(-0.316, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 12.60;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + p_param * z_prev;
-    z_prev = z;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    // Tricorn: conjugate (negate imaginary parts)
+    z = zr * vec3(sin(theta * power) * cos(-phiAngle * power), 
+                  sin(theta * power) * sin(-phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 47: Celtic Julia
+// Variant 47: Rotated Mandelbulb
 float mapJuliaVariant47(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.018, 0.888, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 17.40;
+  float rot = 1.040;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
-    float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float phiAngle = atan(z.y, z.x) + rot; // Add rotation
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    
-    if (z_new.x > 0.47) {
-      z_new.x = -z_new.x;
-    }
-    
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 48: Buffalo Julia
+// Variant 48: Folded Mandelbulb
 float mapJuliaVariant48(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.640, 0.492, 0.0);
   float dr = 1.0;
   float r = 0.0;
+  float power = 15.20;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
+    
+    // Folding before transformation
+    z = abs(z);
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
-    z = z_new + c;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 49: Spider Julia
+// Variant 49: Mandelbulb Power 10.9
 float mapJuliaVariant49(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.496, 0.547, 0.0);
-  vec3 c_prev = c;
   float dr = 1.0;
   float r = 0.0;
+  float power = 10.90;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = r * r;
+    float zr = pow(r, power);
     
-    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + c_prev * 0.54;
-    c_prev = c;
-    c = z_new;
-    z = z_new;
-    dr = 2.0 * r * dr + 1.0;
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 50: Lambdoma Julia
+// Variant 50: Mandelbulb Power 31.0
 float mapJuliaVariant50(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.250, 0.700, 0.650);
   float dr = 1.0;
   float r = 0.0;
+  float power = 31.00;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    z = abs(z) / dot(z, z) - c;
-    dr = dr / (r * r) + 1.0;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
