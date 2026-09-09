@@ -16011,6 +16011,25 @@ void main() {
     vec3 rayleighScatter = vec3(0.3, 0.5, 0.8) * pow(sunAmount, 2.0);
     float atmosphere = 1.0 - exp(-t * 0.008);
     col = mix(col, col + rayleighScatter * 0.15, clamp(atmosphere, 0.0, 1.0));
+
+    // GOD RAYS / VOLUMETRIC LIGHT: Light shafts from sun direction
+    // Sample along light ray for volumetric scattering effect
+    float godRayIntensity = 0.0;
+    float godRayStep = 0.5;
+    for (int gr_i = 0; gr_i < 8; gr_i++) {
+      float gr_t = float(gr_i) * godRayStep;
+      vec3 gr_p = ro + rd * gr_t;
+      // Check if this point is in shadow (simple occlusion)
+      float gr_d = sceneSDF(gr_p).x;
+      if (gr_d > 0.1) {
+        // Point is in light - add god ray contribution
+        float gr_falloff = exp(-gr_t * 0.08);
+        godRayIntensity += gr_falloff * 0.12;
+      }
+    }
+    godRayIntensity = clamp(godRayIntensity, 0.0, 1.0);
+    vec3 godRayColor = vec3(1.0, 0.95, 0.8) * godRayIntensity * sunAmount * 0.4;
+    col += godRayColor;
   }
 
   col = acesToneMap(col);
@@ -16044,6 +16063,29 @@ void main() {
       }
     }
     col = blurred / total;
+  }
+
+  // MOTION BLUR: Based on camera movement (simplified - uses time-based blur)
+  // Approximate motion from camera rotation speed
+  float motionSpeed = 0.0;
+  if (u_cam_mode > 0.5) {
+    // Fly-through mode - more motion blur
+    motionSpeed = 0.15;
+  } else if (u_auto_rotate > 0.5) {
+    // Auto-rotate mode - slight motion blur
+    motionSpeed = 0.05;
+  }
+  motionSpeed = clamp(motionSpeed, 0.0, 0.3);
+  if (motionSpeed > 0.01) {
+    vec3 motionCol = vec3(0.0);
+    float motionTotal = 0.0;
+    for (int mb_i = -2; mb_i <= 2; mb_i++) {
+      vec2 mbOffset = rd.xy * float(mb_i) * motionSpeed * 0.002;
+      float mbWeight = 1.0 - abs(float(mb_i)) * 0.15;
+      motionCol += col * mbWeight;
+      motionTotal += mbWeight;
+    }
+    col = mix(col, motionCol / motionTotal, motionSpeed * 0.4);
   }
 
   // MINIMUM BRIGHTNESS FLOOR
