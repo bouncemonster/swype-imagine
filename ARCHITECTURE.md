@@ -3,12 +3,12 @@
 ## Overview
 
 Real-time SDF raymarching fractal engine with dual WebGL2/WebGPU backend.
-86 unique SDF functions, 8 hybrid composite operators, harmonic cosine palette system.
+**431 unique SDF functions**, 8 hybrid composite operators, harmonic cosine palette system.
 Deployed at: `golden-ratio-fractal-engine.pages.dev`
 
 **Stack**: React 19 + Vite + Tailwind CSS v4 + TypeScript  
 **Render**: GLSL ES 3.0 (WebGL2) / WGSL (WebGPU) dual shader pipeline  
-**Build**: `bun run build` → Cloudflare Pages via wrangler
+**Build**: `npm run build` → Cloudflare Pages via wrangler
 
 ---
 
@@ -26,11 +26,11 @@ src/
 │   └── useRenderEngine.ts        # Render engine lifecycle hook (523 lines)
 │
 ├── components/
-│   ├── FractalCanvas.tsx         # GPU canvas + pointer interaction (191 lines, uses useRenderEngine)
+│   ├── FractalCanvas.tsx         # GPU canvas + pointer interaction (244 lines)
 │   ├── ControlsPanel.tsx         # Parameter UI panel with all controls (1060 lines)
 │   ├── TelemetryHUD.tsx          # FPS/draw-call overlay
 │   ├── FractalScrollFeed.tsx     # Horizontal fractal specimen browser
-│   ├── FractalAtlasModal.tsx     # Full catalog browser (86 fractals × 8 categories)
+│   ├── FractalAtlasModal.tsx     # Full catalog browser (431 fractals × 8 categories)
 │   ├── ExplanationModal.tsx      # Math/φ educational overlay
 │   ├── FractalProbeHUD.tsx       # Surface probe debug HUD
 │   ├── NeuroFeedHUD.tsx          # Neuro-aesthetics score overlay
@@ -42,18 +42,34 @@ src/
 │   ├── FractalEngineBase.ts      # Abstract base class (shared uniform packing, palette resolution)
 │   ├── WebGLEngine.ts            # WebGL2 renderer (GLSL ES 3.0, 286 lines)
 │   ├── WebGPUEngine.ts           # WebGPU renderer (WGSL, 216 lines)
-│   ├── fractalMappers.ts         # String→index mapping for SDF dispatch (91 entries)
-│   └── NeuroAestheticsEngine.ts  # Aesthetic scoring algorithm
+│   ├── fractalMappers.ts         # String→index mapping for SDF dispatch (431 entries)
+│   ├── NeuroAestheticsEngine.ts  # Aesthetic scoring algorithm
+│   ├── UserPreferenceEngine.ts   # User preference tracking
+│   ├── MathValidation.ts         # Math validation utilities
+│   ├── RenderDiagnostics.ts      # Render diagnostics
+│   └── UserProblemLogger.ts      # Problem logging
 │
 ├── shaders/
-│   ├── webglShaders.ts           # GLSL vertex+fragment shader source (2688 lines)
-│   └── webgpuShaders.ts          # WGSL compute+fragment shader source (2767 lines)
+│   ├── webglShaders.ts           # GLSL vertex+fragment shader source (4624 lines)
+│   ├── webgpuShaders.ts          # WGSL compute+fragment shader source (3538 lines)
+│   └── modules/                  # Modular shader architecture
+│       ├── juliaVariations.ts    # Julia Variations 1-50 (337 lines)
+│       ├── ifsVariations.ts      # IFS Variations 1-50 (151 lines)
+│       ├── lsystemVariations.ts  # L-System Variations 1-50 (147 lines)
+│       ├── flameVariations.ts    # Flame Variations 1-50 (160 lines)
+│       ├── hybridVariations.ts   # Hybrid Variations 1-90 (230 lines)
+│       ├── sdfOperations.ts      # SDF operations
+│       ├── renderModes.ts        # Render modes
+│       ├── postProcessing.ts     # Post-processing effects
+│       ├── advancedRendering.ts  # Advanced rendering techniques
+│       └── index.ts              # Module exports
 │
 ├── audio/
 │   └── goldenAudio.ts            # φ-tuned ambient audio engine (Web Audio API)
 │
 └── data/
-    └── canonicalFractals.ts      # Master catalog: 86+ fractal presets with metadata (2991 lines)
+    ├── canonicalFractals.ts      # Master catalog: 431 fractal presets with metadata (2991 lines)
+    └── fractalCatalogTypes.ts    # Type definitions for catalog
 ```
 
 ---
@@ -98,7 +114,7 @@ sceneSDF(p_world)
     ├── [Domain Warp] — optional sinusoidal displacement
     │
     ├── evalSingleFractal(primaryType)    → vec2(dist, trap)
-    │     └── 86 SDF functions dispatched by integer index
+    │     └── 431 SDF functions dispatched by integer index
     │
     ├── evalSingleFractal(secondaryType)  → vec2(dist, trap) [hybrid]
     │     └── Composite operator applied (8 ops)
@@ -106,17 +122,17 @@ sceneSDF(p_world)
     └── evalSingleFractal(tertiaryType)   → vec2(dist, trap) [tertiary hybrid]
 ```
 
-### SDF Function Categories (86 total)
+### SDF Function Categories (431 total)
 
 | Index | Category | Count | Examples |
 |-------|----------|-------|---------|
-| 0-13 | Geometric/Curves | 14 | phyllotaxis, spiralTunnel, gyroid, quasicrystal |
-| 14-23 | IFS/Recursive | 10 | sierpinskiOcta, cliffordKlein, fibonacciSnowflake |
-| 24-29 | Space-filling | 6 | hilbertCurve3D, dragonCurveIFS, burningShip3D |
-| 30-44 | Attractors | 15 | lorenz, clifford, henon, aizawa, thomas |
-| 45-59 | Complex/Escape | 15 | juliaSet3D, multibrot3, novaFractal, sphericalHarmonics |
-| 60-75 | Wave/Field | 16 | reactionDiffusion, chladniFigures, e8Lattice |
-| 76-85 | Extended | 10 | fractalSpire, pickoverAttractor, fourSpotAttractor |
+| 0-130 | Classic Fractals | 131 | phyllotaxis, mandelbulb, mandelbox, sierpinski |
+| 131-140 | Mandelbrot Variations | 10 | Power 3-12, Multibrot |
+| 141-190 | Julia Variations | 50 | Julia Set, Quaternion Julia |
+| 191-240 | IFS Variations | 50 | Kaleidoscopic IFS, Dragon Curve |
+| 241-290 | L-System Variations | 50 | Recursive branching, Lindenmayer |
+| 291-340 | Flame Variations | 50 | Sinusoidal, Spherical, Swirl |
+| 341-430 | Hybrid Variations | 90 | Mandelbrot-Julia, IFS-Flame |
 
 ### Composite Operators (8)
 
@@ -172,7 +188,7 @@ Both GLSL and WGSL share the same uniform packing via `FractalEngineBase.packUni
 
 ```
 FractalEngineBase (abstract)
-├── resolvePalette(params) → ColorPalette
+├── resolve_palette(params) → ColorPalette
 ├── computeIndices(params) → { primary, secondary, tertiary }
 ├── packUniforms(out, time, params, palette, indices) → Float32Array
 │
@@ -229,7 +245,7 @@ useRenderEngine hook (called by FractalCanvas):
 
 1. **Dual shader codebase**: GLSL and WGSL are maintained in parallel (not generated from template). This is intentional — WGSL has different semantics (no implicit type conversion, `let` vs `float`, struct-based uniforms).
 
-2. **SDF dispatch by integer index**: All 86 fractals are compiled into a single shader. The `evalSingleFractal()` function uses if-chain dispatch. This avoids shader recompilation when switching fractals.
+2. **SDF dispatch by integer index**: All 431 fractals are compiled into a single shader. The `evalSingleFractal()` function uses if-chain dispatch. This avoids shader recompilation when switching fractals.
 
 3. **Orbit trap coloring**: Every SDF returns `vec2(distance, trap)`. The trap value feeds the harmonic cosine palette for structure-aware coloring that follows fractal geometry.
 
@@ -237,13 +253,15 @@ useRenderEngine hook (called by FractalCanvas):
 
 5. **paletteSeed system**: Each fractal has a unique `paletteSeed` (0-100) that offsets the color phase, giving each fractal a distinct color identity even with the same palette.
 
+6. **Modular shader architecture**: Shader modules are separate TypeScript files exporting GLSL/WGSL as string constants. This improves maintainability while keeping single-shader dispatch.
+
 ---
 
 ## Known Limitations
 
-- Shader files are large monoliths (2688/2767 lines) — splitting is deferred due to dual GLSL/WGSL maintenance complexity
-- SDF dispatch uses if-chains (not jump tables) — GPU compilers handle this efficiently for 86 entries
-- canonicalFractals.ts is 2991 lines — single data file with all 86+ presets
+- Shader files are large (4624/3538 lines) — modular architecture helps but core dispatch remains monolithic
+- SDF dispatch uses if-chains (not jump tables) — GPU compilers handle this efficiently for 431 entries
+- canonicalFractals.ts is 2991 lines — single data file with all 431 presets
 - No shader hot-reload — changes require rebuild
 
 ---
@@ -252,10 +270,10 @@ useRenderEngine hook (called by FractalCanvas):
 
 ```bash
 # Development
-bun run dev              # Vite dev server at :5173
+npm run dev              # Vite dev server at :5173
 
 # Production build
-bun run build            # TypeScript check + Vite build → dist/
+npm run build            # TypeScript check + Vite build → dist/
 
 # Deploy
 npx wrangler pages deploy dist --project-name golden-ratio-fractal-engine
@@ -295,3 +313,7 @@ ControlsPanel.tsx
   ├── palettes.ts
   └── data/canonicalFractals.ts
 ```
+
+---
+
+*Last updated: September 2026*

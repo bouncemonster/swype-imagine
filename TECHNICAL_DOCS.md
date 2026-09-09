@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-**100 уникальных 3D фракталов** с современным рендерингом на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением.
+**431 уникальный 3D фрактал** с современным рендерингом на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением.
 
 ---
 
@@ -13,17 +13,23 @@
 ```
 src/
 ├── shaders/
-│   ├── webglShaders.ts    # GLSL ES 3.0 шейдеры (WebGL2)
-│   └── webgpuShaders.ts   # WGSL шейдеры (WebGPU)
+│   ├── webglShaders.ts    # GLSL ES 3.0 шейдеры (4624 lines)
+│   ├── webgpuShaders.ts   # WGSL шейдеры (3538 lines)
+│   └── modules/           # Модульная архитектура
+│       ├── juliaVariations.ts    # Julia Variations 1-50
+│       ├── ifsVariations.ts      # IFS Variations 1-50
+│       ├── lsystemVariations.ts  # L-System Variations 1-50
+│       ├── flameVariations.ts    # Flame Variations 1-50
+│       └── hybridVariations.ts   # Hybrid Variations 1-90
 ├── engine/
 │   ├── WebGLEngine.ts     # WebGL2 рендерер
 │   ├── WebGPUEngine.ts    # WebGPU рендерер
-│   └── fractalMappers.ts  # Фрактальные функции
+│   └── fractalMappers.ts  # Маппинги типов (431 entry)
 ├── components/
-│   ├── FractalCanvas.tsx  # Canvas компонент
+│   ├── FractalCanvas.tsx  # Canvas компонент (244 lines)
 │   └── ControlsPanel.tsx  # UI контролы
 └── data/
-    └── canonicalFractals.ts  # Каталог 100 фракталов
+    └── canonicalFractals.ts  # Каталог 431 фракталов
 ```
 
 ### Rendering Pipeline
@@ -35,9 +41,10 @@ src/
    - Space Leaping (bounding sphere)
    - Adaptive Step Size (4-tier)
    - Early Ray Termination
+   - Max 640 steps (close), 480 (medium), 320 (far)
    ↓
 3. Surface Detection
-   - Hit threshold: cam_dist * 0.0003 + 0.0002
+   - Hit threshold: cam_dist * 0.0003 + 0.0001
    - Refinement pass (16 iterations)
    - Near-miss fallback
    ↓
@@ -61,21 +68,19 @@ src/
 
 ---
 
-## 🎨 Fractal Types (100 Total)
+## 🎨 Fractal Types (431 Total)
 
 ### Categories
 
-| Category | Count | Examples |
-|----------|-------|----------|
-| **Classic Fractals** | 15 | Mandelbulb, Mandelbox, Menger, Sierpinski |
-| **IFS Fractals** | 12 | Kaleidoscopic IFS, Dragon Curve, Hilbert |
-| **Mathematical** | 18 | Quaternion Julia, Apollonian, Kleinian |
-| **Organic** | 10 | Coral, Cell, Nebula, Crystal Growth |
-| **Attractors** | 15 | Lorenz, Rossler, Aizawa, Thomas |
-| **Modern Hybrids** | 10 | Mandelbox-KIFS, Flame IFS, Multibrot |
-| **Sacred Geometry** | 8 | Flower of Life, Hyperbolic Tiling |
-| **Cosmic** | 7 | Cosmic Spiral, Quantum Foam, Golden Helix |
-| **Power Variations** | 5 | Mandelbulb Power 4, 12, Multibrot 3 |
+| Category | Count | Range | Examples |
+|----------|-------|-------|----------|
+| **Classic Fractals** | 131 | 0-130 | Mandelbulb, Mandelbox, Menger, Sierpinski |
+| **Mandelbrot Variations** | 10 | 131-140 | Power 3-12, Multibrot |
+| **Julia Variations** | 50 | 141-190 | Julia Set, Quaternion Julia |
+| **IFS Variations** | 50 | 191-240 | Kaleidoscopic IFS, Dragon Curve |
+| **L-System Variations** | 50 | 241-290 | Recursive branching, Lindenmayer |
+| **Flame Variations** | 50 | 291-340 | Sinusoidal, Spherical, Swirl |
+| **Hybrid Variations** | 90 | 341-430 | Mandelbrot-Julia, IFS-Flame |
 
 ### Notable Fractals
 
@@ -84,6 +89,9 @@ src/
 **Kaleidoscopic IFS** — Симметричный фрактал с бесконечными отражениями  
 **Hybrid Mandelbox-KIFS** — Современный гибрид двух техник  
 **Fractal Flame IFS** — Нелинейный пламенный фрактал  
+**Julia Variations** — 50 вариантов Julia set с разными c values  
+**L-System Variations** — 50 вариантов рекурсивного ветвления  
+**Hybrid Variations** — 90 комбинаций разных типов фракталов
 
 ---
 
@@ -301,14 +309,16 @@ z = vec3(
 
 | Metric | Value |
 |--------|-------|
-| **Total Fractals** | 100 |
+| **Total Fractals** | 431 |
 | **Render Styles** | 7 |
 | **Palettes** | 26 × 101 seeds |
-| **Max Raymarch Steps** | 256 |
+| **Max Raymarch Steps** | 640 (close), 480 (medium), 320 (far) |
+| **Max Iterations** | 64 (adaptive per type) |
+| **Zoom Range** | 0.01 - 100.0 |
 | **AO Probes** | 8 + 3 |
 | **Shadow Steps** | 0 (removed) |
 | **Normal Epsilon** | Scale-adaptive |
-| **Hit Threshold** | cam_dist * 0.0003 + 0.0002 |
+| **Hit Threshold** | cam_dist * 0.0003 + 0.0001 |
 
 ### Optimization Impact
 
@@ -354,7 +364,7 @@ npx tsx tests/fractal-autotest.ts
 ```
 
 **Coverage:**
-- 86 SDF functions
+- 431 SDF functions
 - 26 palettes × 101 seeds
 - 7 render styles
 - 5 audio families
@@ -387,6 +397,7 @@ npx tsx tests/fractal-autotest.ts
 - ✅ Running Derivative (implemented)
 - ✅ Hybrid Folding (implemented)
 - ✅ Nonlinear IFS (implemented)
+- ✅ Modular Shader Architecture (implemented)
 
 ### Future Research
 
@@ -421,7 +432,17 @@ npx tsx tests/fractal-autotest.ts
 
 ## 📝 Changelog
 
-### Phase 4.15 (Current)
+### Phase 5.0 (Current) - September 2026
+- ✅ Added 300 new fractal types (Julia, IFS, L-System, Flame, Hybrid variations)
+- ✅ Total fractals: 431 (was 131)
+- ✅ Modular shader architecture implemented
+- ✅ Increased max raymarch steps: 640/480/320 (was 512/384/256)
+- ✅ Increased max iterations: 64 (was 48)
+- ✅ Increased zoom range: 0.01-100.0 (was 0.05-32.0)
+- ✅ Fixed rotation braking logic
+- ✅ Updated documentation
+
+### Phase 4.15
 - ✅ Removed soft shadows from dynamic lights
 - ✅ Camera/objects no longer cast shadows on fractal
 - ✅ Only self-shadowing through AO
