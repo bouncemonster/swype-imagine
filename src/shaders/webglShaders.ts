@@ -3619,15 +3619,17 @@ void main() {
     
     // PROCEDURAL FRACTAL TEXTURE: Add micro-detail using fractal noise
     // Creates surface variation that scales with fractal complexity
-    float texScale = 8.0; // Texture frequency
+    float texScale = 12.0; // Increased texture frequency for more detail
     float texDetail = 0.0;
-    for (int ti = 0; ti < 3; ti++) {
+    for (int ti = 0; ti < 5; ti++) { // Increased from 3 to 5 octaves
       float ti_f = float(ti);
       vec3 texP = p * texScale * pow(2.0, ti_f);
+      // Multi-frequency noise for richer detail
       texDetail += sin(texP.x * 1.3 + texP.y * 0.7) * sin(texP.y * 1.1 + texP.z * 0.9) * sin(texP.z * 1.5 + texP.x * 0.8);
-      texDetail *= 0.5; // Reduce amplitude per octave
+      texDetail += cos(texP.x * 2.1 - texP.y * 1.7) * 0.5; // Additional high-frequency detail
+      texDetail *= 0.6; // Reduce amplitude per octave
     }
-    texDetail = texDetail * 0.15 + 0.85; // Scale to [0.85, 1.15] range for subtle variation
+    texDetail = texDetail * 0.2 + 0.8; // Scale to [0.8, 1.2] range for more pronounced variation
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     float effectiveTrap = max(min_trap, curvNorm * 0.15);
     // FIX: More responsive trap detail (was 1.0 / (1.0 + effectiveTrap * 2.0))

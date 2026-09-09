@@ -147,6 +147,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     isDraggingRef.current = true;
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+    // STOP ROTATION: When user clicks/holds, stop all rotation immediately
     velocityRef.current = { x: 0, y: 0 };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
