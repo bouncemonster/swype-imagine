@@ -536,14 +536,16 @@ export function useRenderEngine(
         } else if (e.key >= '1' && e.key <= '7') {
           // Quick render mode switch (1-7)
           e.preventDefault();
-          const renderStyle = parseFloat(e.key);
+          const RENDER_STYLE_NAMES = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
+          const renderStyleIndex = parseInt(e.key) - 1;
+          const renderStyleName = RENDER_STYLE_NAMES[renderStyleIndex] || 'solid';
           if (paramsRef.current) {
             paramsRef.current = {
               ...paramsRef.current,
-              renderStyle: renderStyle,
+              renderStyle: renderStyleName,
             };
           }
-          console.info(`[Controls] Render mode: ${renderStyle} (${e.key} key)`);
+          console.info(`[Controls] Render mode: ${renderStyleName} (${e.key} key)`);
         } else if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
           // Toggle fly-through camera (F or Russian А)
           e.preventDefault();
