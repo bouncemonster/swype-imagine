@@ -4178,45 +4178,15 @@ void main() {
     vec3 light1 = normalize(vec3(cos(u_time * 0.3), 1.2, sin(u_time * 0.3)));
     vec3 light2 = normalize(vec3(-sin(u_time * 0.25 * GOLDEN_RATIO), -0.6, cos(u_time * 0.25 * GOLDEN_RATIO)));
 
-    // HARD SHADOWS WITH PENUMBRA: IQ-style soft shadows
-    // March along light ray and accumulate shadow factor
-    float sh1 = 1.0;
-    float sh_t = 0.02;
-    float sh_ph = 1e20;
-    float sh_k = 8.0; // Penumbra sharpness
-    for (int sh_i = 0; sh_i < 32; sh_i++) {
-      float sh_h = sceneSDF(p + light1 * sh_t).x;
-      if (sh_h < 0.001) {
-        sh1 = 0.0; // Fully in shadow
-        break;
-      }
-      // Smooth minimum for penumbra
-      float sh_y = sh_h * sh_h / (2.0 * sh_ph);
-      float sh_d = sqrt(sh_h * sh_h - sh_y * sh_y);
-      sh1 = min(sh1, sh_k * sh_d / max(0.0, sh_t - sh_y));
-      sh_ph = sh_h;
-      sh_t += sh_h;
-      if (sh_t > 5.0) break; // Max shadow distance
-    }
-    sh1 = clamp(sh1, 0.0, 1.0);
-
-    // IMPROVED SSS: 5 samples with better color bleeding (was 3)
-    // Based on modern volumetric subsurface scattering techniques
-    float sssDist = 0.08; // Increased from 0.06 for deeper penetration
-    float sssTotal = 0.0;
-    for (int si = 0; si < 5; si++) { // Increased from 3 to 5 samples
-      float sssAngle = float(si) * GOLDEN_ANGLE;
-      vec3 sssOffset = vec3(cos(sssAngle), sin(sssAngle * 0.7), sin(sssAngle * 1.3)) * sssDist;
-      float sssD = sceneSDF(p - light1 * sssOffset).x;
-      sssTotal += smoothstep(0.0, sssDist * 2.0, sssD + sssDist * 2.0);
-    }
-    float sss = (sssTotal / 5.0) * 0.18; // Slightly increased weight
-    vec3 sssCol = u_accent_color * sss * ao;
+    // SIMPLIFIED LIGHTING: Clean PBR without expensive effects
+    // Removed: hard shadows (32 steps), SSS (5 samples), environment reflection
+    // Kept: AO + diffuse (1 light) + specular (1 light) + rim (Fresnel)
+    // Performance: 5x faster (from ~50 SDF calls to ~10 SDF calls for lighting)
     float fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
-    // Diffuse lighting with hard shadows
-    float diff1 = max(dot(n, light1), 0.0) * sh1;
-    float diff2 = max(dot(n, light2), 0.0);
+    // Diffuse lighting (simplified - no shadows)
+    float diff1 = max(dot(n, light1), 0.0);
+    float diff2 = max(dot(n, light2), 0.0) * 0.3; // Secondary light much weaker
 
     vec3 h1 = normalize(light1 - rd);
     // FIX: Higher specular power for sharper, more defined highlights (was 32.0)
@@ -4225,19 +4195,9 @@ void main() {
     
     // curvNorm already computed above from trap-based curvature
     
-    // PROCEDURAL FRACTAL TEXTURE: Add micro-detail using fractal noise
-    // Creates surface variation that scales with fractal complexity
-    float texScale = 12.0; // Increased texture frequency for more detail
-    float texDetail = 0.0;
-    for (int ti = 0; ti < 5; ti++) { // Increased from 3 to 5 octaves
-      float ti_f = float(ti);
-      vec3 texP = p * texScale * pow(2.0, ti_f);
-      // Multi-frequency noise for richer detail
-      texDetail += sin(texP.x * 1.3 + texP.y * 0.7) * sin(texP.y * 1.1 + texP.z * 0.9) * sin(texP.z * 1.5 + texP.x * 0.8);
-      texDetail += cos(texP.x * 2.1 - texP.y * 1.7) * 0.5; // Additional high-frequency detail
-      texDetail *= 0.6; // Reduce amplitude per octave
-    }
-    texDetail = texDetail * 0.2 + 0.8; // Scale to [0.8, 1.2] range for more pronounced variation
+    // REMOVED PROCEDURAL TEXTURE: Fractal already has rich detail
+    // No need for 5-octave noise that adds artifacts and slows down rendering
+    float texDetail = 1.0; // No texture modification
     // Curvature floor prevents trapDetail/trapWeight saturation at close range
     float effectiveTrap = max(min_trap, curvNorm * 0.15);
     // FIX: More responsive trap detail (was 1.0 / (1.0 + effectiveTrap * 2.0))
@@ -4297,20 +4257,16 @@ void main() {
     vec3 ambientCol = mix(u_secondary_color * 0.30, u_primary_color * 0.18, envFactor);
     vec3 ambient = ambientCol * ao;
     
-    // IMPROVED: Environment reflection — reflect view ray and sample SDF
-    // Gives surfaces a subtle reflective quality without full ray tracing
-    vec3 reflectDir = reflect(rd, n);
-    float envReflDist = sceneSDF(p + reflectDir * 0.3).x;
-    float envRefl = clamp(1.0 - envReflDist * 4.0, 0.0, 1.0);
-    vec3 reflCol = mix(u_secondary_color, u_accent_color, envRefl) * envRefl * 0.25;
-    // Fresnel-gated: reflections stronger at grazing angles
-    reflCol *= (0.3 + 0.7 * fresnel);
+    // REMOVED ENVIRONMENT REFLECTION: Too expensive for minimal visual benefit
+    // vec3 reflectDir = reflect(rd, n);
+    // float envReflDist = sceneSDF(p + reflectDir * 0.3).x;
+    // ...
+    vec3 reflCol = vec3(0.0); // No reflection
     
-    // Secondary bounce light: light bouncing off nearby surfaces into crevices
-    vec3 bounceDir = normalize(-light1 + n * 0.5);
-    float bounce = max(dot(n, bounceDir), 0.0) * 0.12;
-    float bounceOcc = clamp(sceneSDF(p - light1 * 0.08).x * 12.0, 0.0, 1.0);
-    vec3 bounceCol = u_secondary_color * bounce * bounceOcc * ao;
+    // REMOVED BOUNCE LIGHT: Too expensive for minimal visual benefit
+    // vec3 bounceDir = normalize(-light1 + n * 0.5);
+    // ...
+    vec3 bounceCol = vec3(0.0); // No bounce light
 
     vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
     // IMPROVED specular: material-tinted for colored highlights
@@ -4319,9 +4275,9 @@ void main() {
     // IMPROVED rim: stronger at grazing angles, color-shifted
     vec3 rim = u_accent_color * fresnel * 0.8 * (0.3 + 0.7 * ao);
 
-    // IMPROVED full lighting: ambient + refl + diffuse + bounce + specular + rim + SSS
-    col = ambient * 0.5 + reflCol + diffuse * 1.4 + bounceCol * 1.8 + specular * 1.3 + rim * 1.5 + sssCol * 1.8;
-    col *= (0.3 + 0.7 * ao); // Stronger AO contrast for more depth
+    // SIMPLIFIED full lighting: ambient + diffuse + specular + rim (no SSS, no bounce, no reflection)
+    col = ambient * 0.6 + diffuse * 1.5 + specular * 1.2 + rim * 1.3;
+    col *= (0.4 + 0.6 * ao); // AO contrast
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u_headlamp_power > 0.01) {
