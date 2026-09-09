@@ -1,35 +1,34 @@
 /**
  * Hybrid Variations 1-90 for WebGL2 Shaders
- * Hybrid fractals combining Mandelbrot, Julia, IFS, and Flames
+ * CORRECT HYBRID FRACTAL MATHEMATICS
+ * Combining Mandelbrot, Julia, IFS, and Flames with proper formulas
  */
 
 export const HYBRID_VARIATIONS_GLSL = `
 // ===================================================================
-// Hybrid Variations 1-90
-// Combining Mandelbrot, Julia, IFS, and Flames
+// Hybrid Variations 1-90 - CORRECT HYBRID FORMULAS
 // ===================================================================
 
+// Variant 1: Mandelbrot-Julia Hybrid
 float mapHybridVariant1(vec3 p, float t, float phi, int iters) {
-  // Mandelbrot-Julia hybrid
   vec3 z = p;
   vec3 c = vec3(0.355 + sin(t * 0.05) * 0.1, 0.355, 0.355);
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.0;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    float power = 2.0 + cos(t * 0.08) * 0.3;
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    
     float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
     
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
     z = mix(z, c, 0.3); // Julia blend
     z += p;
     
@@ -39,191 +38,2641 @@ float mapHybridVariant1(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
+
+// Variant 2: Mandelbrot-IFS Hybrid
 float mapHybridVariant2(vec3 p, float t, float phi, int iters) {
-  // Mandelbrot-IFS hybrid
   vec3 z = p;
-  float scale = 2.0 + sin(t * 0.1) * 0.2;
   float dr = 1.0;
   float r = 0.0;
+  float scale = 2.04;
+  float power = 8.20;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    z.xy = abs(z.xy);
-    z.xz = abs(z.xz);
-    float angle = t * 0.05 + float(i) * 0.1;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    z.xy = rot * z.xy;
-    z *= scale;
-    z -= vec3(1.0, 0.5, 0.3);
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
     
-    dr *= scale;
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
+// Variant 3: Julia-Flame Hybrid
 float mapHybridVariant3(vec3 p, float t, float phi, int iters) {
-  // Julia-Flame hybrid
   vec3 z = p;
   vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
-  float d = 1e10;
-  
-  for (int i = 0; i < 16; i++) {
-    if (i >= iters) break;
-    float r = length(z);
-    
-    // Flame variation
-    z = vec3(sin(r) * cos(r), sin(r) * sin(r), cos(r));
-    z *= 1.5 + sin(t * 0.1) * 0.3;
-    z += c;
-    
-    d = min(d, length(z) - 0.5);
-  }
-  return d;
-}
-
-float mapHybridVariant4(vec3 p, float t, float phi, int iters) {
-  // IFS-L-System hybrid
-  float d = length(p) - 1.0;
-  float scale = 0.5 + sin(t * 0.1) * 0.1;
-  
-  for (int i = 0; i < 8; i++) {
-    if (i >= iters) break;
-    p = abs(p) - vec3(0.5, 0.3, 0.4);
-    float angle = t * 0.05 + float(i) * 0.2;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xy = rot * p.xy;
-    p *= scale;
-    d = min(d, length(p) - 0.3);
-  }
-  return d;
-}
-
-float mapHybridVariant5(vec3 p, float t, float phi, int iters) {
-  // Mandelbrot-Flame hybrid
-  vec3 z = p;
   float dr = 1.0;
   float r = 0.0;
+  float power = 8.45;
+  float blend = 0.215;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 4.0) break;
+    if (r > 2.0) break;
     
-    float angle = atan(z.y, z.x) + t * 0.05;
-    z.xy = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * z.xy;
-    z *= 1.6 + sin(t * 0.08) * 0.28;
-    z += p * 0.28;
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
     
-    dr *= 1.6;
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Hybrid Variants 6-90: Parametric generation using base functions
-float mapHybridVariant6(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(6) * 0.015), t + float(6) * 0.1, phi, iters); }
-float mapHybridVariant7(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(7) * 0.015), t + float(7) * 0.1, phi, iters); }
-float mapHybridVariant8(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(8) * 0.015), t + float(8) * 0.1, phi, iters); }
-float mapHybridVariant9(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(9) * 0.015), t + float(9) * 0.1, phi, iters); }
-float mapHybridVariant10(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(10) * 0.015), t + float(10) * 0.1, phi, iters); }
+// Variant 4: IFS-L-System Hybrid
+float mapHybridVariant4(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 1.90;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant11(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(11) * 0.015), t + float(11) * 0.1, phi, iters); }
-float mapHybridVariant12(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(12) * 0.015), t + float(12) * 0.1, phi, iters); }
-float mapHybridVariant13(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(13) * 0.015), t + float(13) * 0.1, phi, iters); }
-float mapHybridVariant14(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(14) * 0.015), t + float(14) * 0.1, phi, iters); }
-float mapHybridVariant15(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(15) * 0.015), t + float(15) * 0.1, phi, iters); }
+// Variant 5: Mandelbrot Power 5.0
+float mapHybridVariant5(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 5.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant16(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(16) * 0.015), t + float(16) * 0.1, phi, iters); }
-float mapHybridVariant17(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(17) * 0.015), t + float(17) * 0.1, phi, iters); }
-float mapHybridVariant18(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(18) * 0.015), t + float(18) * 0.1, phi, iters); }
-float mapHybridVariant19(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(19) * 0.015), t + float(19) * 0.1, phi, iters); }
-float mapHybridVariant20(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(20) * 0.015), t + float(20) * 0.1, phi, iters); }
+// Variant 6: Mandelbrot Power 13.8
+float mapHybridVariant6(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 13.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant21(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(21) * 0.015), t + float(21) * 0.1, phi, iters); }
-float mapHybridVariant22(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(22) * 0.015), t + float(22) * 0.1, phi, iters); }
-float mapHybridVariant23(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(23) * 0.015), t + float(23) * 0.1, phi, iters); }
-float mapHybridVariant24(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(24) * 0.015), t + float(24) * 0.1, phi, iters); }
-float mapHybridVariant25(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(25) * 0.015), t + float(25) * 0.1, phi, iters); }
+// Variant 7: Burning Ship Hybrid
+float mapHybridVariant7(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 9.05;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant26(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(26) * 0.015), t + float(26) * 0.1, phi, iters); }
-float mapHybridVariant27(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(27) * 0.015), t + float(27) * 0.1, phi, iters); }
-float mapHybridVariant28(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(28) * 0.015), t + float(28) * 0.1, phi, iters); }
-float mapHybridVariant29(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(29) * 0.015), t + float(29) * 0.1, phi, iters); }
-float mapHybridVariant30(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(30) * 0.015), t + float(30) * 0.1, phi, iters); }
+// Variant 8: Rotated Mandelbrot
+float mapHybridVariant8(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 9.60;
+  float rot = 0.260;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant31(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(31) * 0.015), t + float(31) * 0.1, phi, iters); }
-float mapHybridVariant32(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(32) * 0.015), t + float(32) * 0.1, phi, iters); }
-float mapHybridVariant33(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(33) * 0.015), t + float(33) * 0.1, phi, iters); }
-float mapHybridVariant34(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(34) * 0.015), t + float(34) * 0.1, phi, iters); }
-float mapHybridVariant35(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(35) * 0.015), t + float(35) * 0.1, phi, iters); }
+// Variant 9: Folded Mandelbrot
+float mapHybridVariant9(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 9.35;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant36(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(36) * 0.015), t + float(36) * 0.1, phi, iters); }
-float mapHybridVariant37(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(37) * 0.015), t + float(37) * 0.1, phi, iters); }
-float mapHybridVariant38(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(38) * 0.015), t + float(38) * 0.1, phi, iters); }
-float mapHybridVariant39(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(39) * 0.015), t + float(39) * 0.1, phi, iters); }
-float mapHybridVariant40(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(40) * 0.015), t + float(40) * 0.1, phi, iters); }
+// Variant 10: Mandelbrot Power 8.5
+float mapHybridVariant10(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 8.50;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant41(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(41) * 0.015), t + float(41) * 0.1, phi, iters); }
-float mapHybridVariant42(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(42) * 0.015), t + float(42) * 0.1, phi, iters); }
-float mapHybridVariant43(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(43) * 0.015), t + float(43) * 0.1, phi, iters); }
-float mapHybridVariant44(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(44) * 0.015), t + float(44) * 0.1, phi, iters); }
-float mapHybridVariant45(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(45) * 0.015), t + float(45) * 0.1, phi, iters); }
+// Variant 11: Mandelbrot Power 20.4
+float mapHybridVariant11(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 20.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant46(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(46) * 0.015), t + float(46) * 0.1, phi, iters); }
-float mapHybridVariant47(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(47) * 0.015), t + float(47) * 0.1, phi, iters); }
-float mapHybridVariant48(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(48) * 0.015), t + float(48) * 0.1, phi, iters); }
-float mapHybridVariant49(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(49) * 0.015), t + float(49) * 0.1, phi, iters); }
-float mapHybridVariant50(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(50) * 0.015), t + float(50) * 0.1, phi, iters); }
+// Variant 12: Mandelbrot-IFS Hybrid
+float mapHybridVariant12(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.24;
+  float power = 9.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant51(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(51) * 0.015), t + float(51) * 0.1, phi, iters); }
-float mapHybridVariant52(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(52) * 0.015), t + float(52) * 0.1, phi, iters); }
-float mapHybridVariant53(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(53) * 0.015), t + float(53) * 0.1, phi, iters); }
-float mapHybridVariant54(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(54) * 0.015), t + float(54) * 0.1, phi, iters); }
-float mapHybridVariant55(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(55) * 0.015), t + float(55) * 0.1, phi, iters); }
+// Variant 13: Julia-Flame Hybrid
+float mapHybridVariant13(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 9.95;
+  float blend = 0.265;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant56(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(56) * 0.015), t + float(56) * 0.1, phi, iters); }
-float mapHybridVariant57(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(57) * 0.015), t + float(57) * 0.1, phi, iters); }
-float mapHybridVariant58(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(58) * 0.015), t + float(58) * 0.1, phi, iters); }
-float mapHybridVariant59(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(59) * 0.015), t + float(59) * 0.1, phi, iters); }
-float mapHybridVariant60(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(60) * 0.015), t + float(60) * 0.1, phi, iters); }
+// Variant 14: IFS-L-System Hybrid
+float mapHybridVariant14(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.15;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant61(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(61) * 0.015), t + float(61) * 0.1, phi, iters); }
-float mapHybridVariant62(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(62) * 0.015), t + float(62) * 0.1, phi, iters); }
-float mapHybridVariant63(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(63) * 0.015), t + float(63) * 0.1, phi, iters); }
-float mapHybridVariant64(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(64) * 0.015), t + float(64) * 0.1, phi, iters); }
-float mapHybridVariant65(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(65) * 0.015), t + float(65) * 0.1, phi, iters); }
+// Variant 15: Mandelbrot Power 7.0
+float mapHybridVariant15(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 7.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant66(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(66) * 0.015), t + float(66) * 0.1, phi, iters); }
-float mapHybridVariant67(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(67) * 0.015), t + float(67) * 0.1, phi, iters); }
-float mapHybridVariant68(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(68) * 0.015), t + float(68) * 0.1, phi, iters); }
-float mapHybridVariant69(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(69) * 0.015), t + float(69) * 0.1, phi, iters); }
-float mapHybridVariant70(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(70) * 0.015), t + float(70) * 0.1, phi, iters); }
+// Variant 16: Mandelbrot Power 16.8
+float mapHybridVariant16(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 16.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant71(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(71) * 0.015), t + float(71) * 0.1, phi, iters); }
-float mapHybridVariant72(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(72) * 0.015), t + float(72) * 0.1, phi, iters); }
-float mapHybridVariant73(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(73) * 0.015), t + float(73) * 0.1, phi, iters); }
-float mapHybridVariant74(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(74) * 0.015), t + float(74) * 0.1, phi, iters); }
-float mapHybridVariant75(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(75) * 0.015), t + float(75) * 0.1, phi, iters); }
+// Variant 17: Burning Ship Hybrid
+float mapHybridVariant17(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 10.55;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant76(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(76) * 0.015), t + float(76) * 0.1, phi, iters); }
-float mapHybridVariant77(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(77) * 0.015), t + float(77) * 0.1, phi, iters); }
-float mapHybridVariant78(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(78) * 0.015), t + float(78) * 0.1, phi, iters); }
-float mapHybridVariant79(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(79) * 0.015), t + float(79) * 0.1, phi, iters); }
-float mapHybridVariant80(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(80) * 0.015), t + float(80) * 0.1, phi, iters); }
+// Variant 18: Rotated Mandelbrot
+float mapHybridVariant18(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 11.60;
+  float rot = 0.460;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant81(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(81) * 0.015), t + float(81) * 0.1, phi, iters); }
-float mapHybridVariant82(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(82) * 0.015), t + float(82) * 0.1, phi, iters); }
-float mapHybridVariant83(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(83) * 0.015), t + float(83) * 0.1, phi, iters); }
-float mapHybridVariant84(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(84) * 0.015), t + float(84) * 0.1, phi, iters); }
-float mapHybridVariant85(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(85) * 0.015), t + float(85) * 0.1, phi, iters); }
+// Variant 19: Folded Mandelbrot
+float mapHybridVariant19(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 10.85;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 
-float mapHybridVariant86(vec3 p, float t, float phi, int iters) { return mapHybridVariant1(p * (1.0 + float(86) * 0.015), t + float(86) * 0.1, phi, iters); }
-float mapHybridVariant87(vec3 p, float t, float phi, int iters) { return mapHybridVariant2(p * (1.0 + float(87) * 0.015), t + float(87) * 0.1, phi, iters); }
-float mapHybridVariant88(vec3 p, float t, float phi, int iters) { return mapHybridVariant3(p * (1.0 + float(88) * 0.015), t + float(88) * 0.1, phi, iters); }
-float mapHybridVariant89(vec3 p, float t, float phi, int iters) { return mapHybridVariant4(p * (1.0 + float(89) * 0.015), t + float(89) * 0.1, phi, iters); }
-float mapHybridVariant90(vec3 p, float t, float phi, int iters) { return mapHybridVariant5(p * (1.0 + float(90) * 0.015), t + float(90) * 0.1, phi, iters); }
+// Variant 20: Mandelbrot Power 11.0
+float mapHybridVariant20(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 11.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 21: Mandelbrot Power 24.4
+float mapHybridVariant21(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 24.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 22: Mandelbrot-IFS Hybrid
+float mapHybridVariant22(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.44;
+  float power = 10.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 23: Julia-Flame Hybrid
+float mapHybridVariant23(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 11.45;
+  float blend = 0.315;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 24: IFS-L-System Hybrid
+float mapHybridVariant24(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 25: Mandelbrot Power 9.0
+float mapHybridVariant25(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 9.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 26: Mandelbrot Power 19.8
+float mapHybridVariant26(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 19.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 27: Burning Ship Hybrid
+float mapHybridVariant27(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 12.05;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 28: Rotated Mandelbrot
+float mapHybridVariant28(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 13.60;
+  float rot = 0.660;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 29: Folded Mandelbrot
+float mapHybridVariant29(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 12.35;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 30: Mandelbrot Power 13.5
+float mapHybridVariant30(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 13.50;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 31: Mandelbrot Power 28.4
+float mapHybridVariant31(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 28.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 32: Mandelbrot-IFS Hybrid
+float mapHybridVariant32(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.64;
+  float power = 11.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 33: Julia-Flame Hybrid
+float mapHybridVariant33(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 12.95;
+  float blend = 0.365;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 34: IFS-L-System Hybrid
+float mapHybridVariant34(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.65;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 35: Mandelbrot Power 11.0
+float mapHybridVariant35(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 11.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 36: Mandelbrot Power 22.8
+float mapHybridVariant36(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 22.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 37: Burning Ship Hybrid
+float mapHybridVariant37(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 13.55;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 38: Rotated Mandelbrot
+float mapHybridVariant38(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 15.60;
+  float rot = 0.860;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 39: Folded Mandelbrot
+float mapHybridVariant39(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 13.85;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 40: Mandelbrot Power 16.0
+float mapHybridVariant40(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 16.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 41: Mandelbrot Power 32.4
+float mapHybridVariant41(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 32.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 42: Mandelbrot-IFS Hybrid
+float mapHybridVariant42(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.84;
+  float power = 12.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 43: Julia-Flame Hybrid
+float mapHybridVariant43(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 14.45;
+  float blend = 0.415;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 44: IFS-L-System Hybrid
+float mapHybridVariant44(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 2.90;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 45: Mandelbrot Power 13.0
+float mapHybridVariant45(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 13.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 46: Mandelbrot Power 25.8
+float mapHybridVariant46(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 25.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 47: Burning Ship Hybrid
+float mapHybridVariant47(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 15.05;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 48: Rotated Mandelbrot
+float mapHybridVariant48(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 17.60;
+  float rot = 1.060;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 49: Folded Mandelbrot
+float mapHybridVariant49(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 15.35;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 50: Mandelbrot Power 18.5
+float mapHybridVariant50(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 18.50;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 51: Mandelbrot Power 36.4
+float mapHybridVariant51(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 36.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 52: Mandelbrot-IFS Hybrid
+float mapHybridVariant52(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.04;
+  float power = 13.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 53: Julia-Flame Hybrid
+float mapHybridVariant53(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 15.95;
+  float blend = 0.465;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 54: IFS-L-System Hybrid
+float mapHybridVariant54(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.15;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 55: Mandelbrot Power 15.0
+float mapHybridVariant55(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 15.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 56: Mandelbrot Power 28.8
+float mapHybridVariant56(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 28.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 57: Burning Ship Hybrid
+float mapHybridVariant57(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 16.55;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 58: Rotated Mandelbrot
+float mapHybridVariant58(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 19.60;
+  float rot = 1.260;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 59: Folded Mandelbrot
+float mapHybridVariant59(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 16.85;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 60: Mandelbrot Power 21.0
+float mapHybridVariant60(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 21.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 61: Mandelbrot Power 40.4
+float mapHybridVariant61(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 40.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 62: Mandelbrot-IFS Hybrid
+float mapHybridVariant62(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.24;
+  float power = 14.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 63: Julia-Flame Hybrid
+float mapHybridVariant63(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 17.45;
+  float blend = 0.515;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 64: IFS-L-System Hybrid
+float mapHybridVariant64(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 65: Mandelbrot Power 17.0
+float mapHybridVariant65(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 17.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 66: Mandelbrot Power 31.8
+float mapHybridVariant66(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 31.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 67: Burning Ship Hybrid
+float mapHybridVariant67(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 18.05;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 68: Rotated Mandelbrot
+float mapHybridVariant68(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 21.60;
+  float rot = 1.460;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 69: Folded Mandelbrot
+float mapHybridVariant69(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 18.35;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 70: Mandelbrot Power 23.5
+float mapHybridVariant70(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 23.50;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 71: Mandelbrot Power 44.4
+float mapHybridVariant71(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 44.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 72: Mandelbrot-IFS Hybrid
+float mapHybridVariant72(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.44;
+  float power = 15.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 73: Julia-Flame Hybrid
+float mapHybridVariant73(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 18.95;
+  float blend = 0.565;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 74: IFS-L-System Hybrid
+float mapHybridVariant74(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.65;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 75: Mandelbrot Power 19.0
+float mapHybridVariant75(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 19.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 76: Mandelbrot Power 34.8
+float mapHybridVariant76(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 34.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 77: Burning Ship Hybrid
+float mapHybridVariant77(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 19.55;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 78: Rotated Mandelbrot
+float mapHybridVariant78(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 23.60;
+  float rot = 1.660;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 79: Folded Mandelbrot
+float mapHybridVariant79(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 19.85;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 80: Mandelbrot Power 26.0
+float mapHybridVariant80(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 26.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 81: Mandelbrot Power 48.4
+float mapHybridVariant81(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 48.40;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 82: Mandelbrot-IFS Hybrid
+float mapHybridVariant82(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.64;
+  float power = 16.20;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    // Mandelbulb transformation
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z *= scale * 0.5;
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 83: Julia-Flame Hybrid
+float mapHybridVariant83(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.7 + cos(t * 0.06) * 0.15, 0.27015, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 20.45;
+  float blend = 0.615;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    // Mandelbulb
+    vec3 mb = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                        sin(theta * power) * sin(phiAngle * power), 
+                        cos(theta * power));
+    
+    // Flame variation (sinusoidal)
+    vec3 flame = vec3(sin(z.x) * cos(z.y), sin(z.x) * sin(z.y), cos(z.z));
+    
+    z = mix(mb, flame, blend);
+    z += c;
+    
+    dr = pow(r, power - 1.0) * power * dr;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 84: IFS-L-System Hybrid
+float mapHybridVariant84(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float scale = 3.90;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // L-System branching
+    if (z.x > 0.0) {
+      z.x = z.x - 1.0;
+      z.xy = mat2(0.7, -0.7, 0.7, 0.7) * z.xy;
+    } else {
+      z.x = z.x + 1.0;
+      z.xy = mat2(0.7, 0.7, -0.7, 0.7) * z.xy;
+    }
+    
+    // IFS folding
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    
+    z *= scale;
+    
+    dr = dr * scale + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 85: Mandelbrot Power 21.0
+float mapHybridVariant85(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 21.00;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 86: Mandelbrot Power 37.8
+float mapHybridVariant86(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 37.80;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 87: Burning Ship Hybrid
+float mapHybridVariant87(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 21.05;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z = abs(z) + p; // Burning ship
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 88: Rotated Mandelbrot
+float mapHybridVariant88(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 25.60;
+  float rot = 1.860;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x) + rot;
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 89: Folded Mandelbrot
+float mapHybridVariant89(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 21.35;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    // Folding
+    z = abs(z);
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 90: Mandelbrot Power 28.5
+float mapHybridVariant90(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float dr = 1.0;
+  float r = 0.0;
+  float power = 28.50;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 2.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = pow(r, power);
+    
+    z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
+                  sin(theta * power) * sin(phiAngle * power), 
+                  cos(theta * power));
+    z += p;
+    
+    dr = pow(r, power - 1.0) * power * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 `;
