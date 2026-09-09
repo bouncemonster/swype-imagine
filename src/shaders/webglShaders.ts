@@ -3820,8 +3820,19 @@ vec3 calcMicroNormal(vec3 p, float scale) {
   return len > 0.00001 ? n / len : vec3(0.0, 1.0, 0.0);
 }
 
-// calcSoftShadow removed - was dead code (not used since Phase 4.15)
-// Kept for reference but commented out to save shader compilation time
+// SOFT SHADOWS: 16 steps for realistic penumbra (optimized from 32)
+float calcSoftShadow(vec3 p, vec3 lightDir) {
+  float shadow = 1.0;
+  float t = 0.01;
+  for (int i = 0; i < 16; i++) {
+    float d = sceneSDF(p + lightDir * t).x;
+    if (d < 0.0001) return 0.0;
+    shadow = min(shadow, 12.0 * d / t);
+    t += clamp(d, 0.01, 0.2);
+    if (t > 8.0) break;
+  }
+  return clamp(shadow, 0.0, 1.0);
+}
 
 float calcAO(vec3 p, vec3 n, float t) {
   float aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive
@@ -4170,28 +4181,33 @@ void main() {
     float curvDetail = min_trap * 12.0; // Scale trap to curvature range
     float curvNorm = clamp(curvDetail / 3.0, 0.0, 1.0);
     
-    // Use base normal directly — no perturbation noise
-    // Fractal geometry is already rich; procedural perturbation adds artifacts
+    // Use base normal + micro detail for surface richness
     float ndotv = dot(base_n, rd);
-    vec3 n = ndotv > 0.0 ? -base_n : base_n;
+    vec3 n = ndotv > 0.0 ? -base_n : base;
+    
+    // MICRO NORMAL: Add fine surface detail from fractal geometry
+    float microScale = clamp(cam_dist * 0.5, 0.5, 2.0);
+    vec3 micro_n = calcMicroNormal(p, microScale);
+    n = normalize(mix(n, micro_n, 0.15)); // 15% micro detail blend
 
     vec3 light1 = normalize(vec3(cos(u_time * 0.3), 1.2, sin(u_time * 0.3)));
     vec3 light2 = normalize(vec3(-sin(u_time * 0.25 * GOLDEN_RATIO), -0.6, cos(u_time * 0.25 * GOLDEN_RATIO)));
 
-    // SIMPLIFIED LIGHTING: Clean PBR without expensive effects
-    // Removed: hard shadows (32 steps), SSS (5 samples), environment reflection
-    // Kept: AO + diffuse (1 light) + specular (1 light) + rim (Fresnel)
-    // Performance: 5x faster (from ~50 SDF calls to ~10 SDF calls for lighting)
+    // ENHANCED PBR LIGHTING: Soft shadows + SSS + Environment reflections
     float fresnel = pow(clamp(1.0 + dot(rd, n), 0.0, 1.0), 3.0);
 
-    // Diffuse lighting (simplified - no shadows)
-    float diff1 = max(dot(n, light1), 0.0);
-    float diff2 = max(dot(n, light2), 0.0) * 0.3; // Secondary light much weaker
+    // SOFT SHADOWS: 16-step penumbra for realistic lighting
+    float shadow1 = calcSoftShadow(p, light1);
+    float shadow2 = calcSoftShadow(p, light2);
+
+    // Diffuse lighting WITH soft shadows
+    float diff1 = max(dot(n, light1), 0.0) * shadow1;
+    float diff2 = max(dot(n, light2), 0.0) * shadow2 * 0.3;
 
     vec3 h1 = normalize(light1 - rd);
-    // FIX: Higher specular power for sharper, more defined highlights (was 32.0)
-    float spec1 = pow(max(dot(n, h1), 0.0), 64.0);
-    float spec2 = pow(max(dot(n, normalize(light2 - rd)), 0.0), 48.0);
+    // Higher specular power for sharper, more defined highlights
+    float spec1 = pow(max(dot(n, h1), 0.0), 64.0) * shadow1;
+    float spec2 = pow(max(dot(n, normalize(light2 - rd)), 0.0), 48.0) * shadow2;
     
     // curvNorm already computed above from trap-based curvature
     
@@ -4250,33 +4266,49 @@ void main() {
     // Apply procedural fractal texture detail
     mat_col *= texDetail;
 
-    // IMPROVED PBR Lighting: Environment reflections + better balance
+    // ENHANCED PBR Lighting: Environment reflections + SSS + soft shadows
     // Environment ambient: sample SDF along normal for color-bleeding approximation
     float envOcc = sceneSDF(p + n * 0.15).x;
     float envFactor = clamp(envOcc * 6.0, 0.0, 1.0);
     vec3 ambientCol = mix(u_secondary_color * 0.30, u_primary_color * 0.18, envFactor);
     vec3 ambient = ambientCol * ao;
     
-    // REMOVED ENVIRONMENT REFLECTION: Too expensive for minimal visual benefit
-    // vec3 reflectDir = reflect(rd, n);
-    // float envReflDist = sceneSDF(p + reflectDir * 0.3).x;
-    // ...
-    vec3 reflCol = vec3(0.0); // No reflection
+    // ENVIRONMENT REFLECTIONS: 1 sample for subtle reflections
+    vec3 reflectDir = reflect(rd, n);
+    float envReflDist = sceneSDF(p + reflectDir * 0.3).x;
+    float envRefl = clamp(1.0 - envReflDist * 4.0, 0.0, 1.0);
+    vec3 reflCol = mix(u_secondary_color, u_accent_color, envRefl) * envRefl * 0.25;
+    reflCol *= (0.3 + 0.7 * fresnel);
     
-    // REMOVED BOUNCE LIGHT: Too expensive for minimal visual benefit
-    // vec3 bounceDir = normalize(-light1 + n * 0.5);
-    // ...
-    vec3 bounceCol = vec3(0.0); // No bounce light
+    // BOUNCE LIGHT: Simplified indirect illumination
+    vec3 bounceDir = normalize(-light1 + n * 0.5);
+    float bounceDist = sceneSDF(p + bounceDir * 0.2).x;
+    float bounceFactor = clamp(1.0 - bounceDist * 5.0, 0.0, 1.0);
+    vec3 bounceCol = u_primary_color * bounceFactor * 0.15 * ao;
+
+    // SUBSURFACE SCATTERING: 3 samples for light bleeding through thin parts
+    vec3 sssLightDir = normalize(vec3(0.5, 1.0, -0.3));
+    vec3 sssEnterPoint = p - n * 0.01;
+    float sssThickness = 0.0;
+    for (int sss_i = 1; sss_i <= 3; sss_i++) {
+      float sssDist = float(sss_i) * 0.05;
+      vec3 sssSamplePos = sssEnterPoint + sssLightDir * sssDist;
+      float sssD = sceneSDF(sssSamplePos).x;
+      sssThickness += max(0.0, -sssD);
+    }
+    float sss = exp(-sssThickness * 8.0);
+    vec3 sssColor = vec3(1.0, 0.4, 0.2) * sss * 0.4;
+    float sssBackLight = max(dot(-n, sssLightDir), 0.0) * sss;
 
     vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
-    // IMPROVED specular: material-tinted for colored highlights
-    vec3 specColor = mix(vec3(1.0, 0.97, 0.92), mat_col, 0.15); // Slight material tint
+    // Material-tinted specular for colored highlights
+    vec3 specColor = mix(vec3(1.0, 0.97, 0.92), mat_col, 0.15);
     vec3 specular = specColor * (spec1 * 1.3 + spec2 * 0.7) * ao;
-    // IMPROVED rim: stronger at grazing angles, color-shifted
+    // Stronger rim at grazing angles, color-shifted
     vec3 rim = u_accent_color * fresnel * 0.8 * (0.3 + 0.7 * ao);
 
-    // SIMPLIFIED full lighting: ambient + diffuse + specular + rim (no SSS, no bounce, no reflection)
-    col = ambient * 0.6 + diffuse * 1.5 + specular * 1.2 + rim * 1.3;
+    // FULL PBR Lighting: ambient + diffuse + specular + rim + SSS + bounce + reflection
+    col = ambient * 0.6 + diffuse * 1.5 + specular * 1.2 + rim * 1.3 + sssColor * sssBackLight + bounceCol * 1.8 + reflCol * 0.8;
     col *= (0.4 + 0.6 * ao); // AO contrast
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
