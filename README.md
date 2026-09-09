@@ -10,9 +10,11 @@
 - **Двойной бэкенд**: WebGL2 (GLSL) + WebGPU (WGSL) с автоматическим переключением
 - **Ray Marching**: До 640 шагов, 64 итерации фрактала
 - **Адаптивный рендеринг**: LOD, space leaping, early termination
-- **Продвинутое освещение**: AO (8 probes), diffuse, specular, rim, SSS
+- **Продвинутое освещение**: Soft shadows, SSS, environment reflections, bounce light, god rays, motion blur
+- **7 режимов рендеринга**: Solid PBR, X-Ray, Topography, Hologram, Iridescent, Quantum, Crystal
 - **26 палитр**: Harmonic cosine palette system с φ-сдвигами
 - **Интерактивность**: Вращение, zoom, морфинг в реальном времени
+- **Keyboard shortcuts**: 1-7 (режимы), F (камера), R (сброс), I (инерция), S (стоп)
 - **Аудио**: φ-tuned ambient audio engine (Web Audio API)
 
 ## 📦 Установка и запуск
