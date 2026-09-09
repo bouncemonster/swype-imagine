@@ -6603,12 +6603,12 @@ vec2 sceneSDF(vec3 p_world) {
   float k = max(0.04, u_smooth_k * 0.45);
 
   // FRACTAL BREATHING: Organic radial pulsation at golden-ratio frequencies
-  // Creates living, breathing geometry that subtly grows and contracts
-  float breathPrimary = sin(u_time * 0.4) * 0.5 + 0.5; // 0-1, ~15.7s period
-  float breathSecondary = sin(u_time * 0.4 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
-  float breathTertiary = sin(u_time * 0.4 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
+  // Creates living, breathing geometry that visibly grows and contracts
+  float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5; // 0-1, ~7.85s period (faster)
+  float breathSecondary = sin(u_time * 0.8 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
+  float breathTertiary = sin(u_time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
   // Combine for non-repeating organic motion (sum of golden-ratio frequencies)
-  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.025;
+  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06; // Increased from 0.025 to 0.06 for more visible growth
   // Distance-weighted: surface breathes more than interior
   float breathWeight = 1.0 - exp(-r_bound * 0.8);
   p_eval *= 1.0 + breathAmount * breathWeight;
