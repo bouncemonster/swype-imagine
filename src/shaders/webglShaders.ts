@@ -48,6 +48,8 @@ uniform float u_cam_mode;
 uniform vec3 u_cam_pos;
 uniform float u_slice_plane;
 uniform float u_slice_axis;
+uniform float u_stereo_mode; // 0=off, 1=side-by-side, 2=anaglyph
+uniform float u_stereo_eye; // 0=left, 1=right
 uniform float u_render_style;
 uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
@@ -3298,6 +3300,14 @@ void main() {
   } else {
     // Mode 0: Outside-In Orbit & Mode 3: Kelvin Inversion
     ro = vec3(0.0, 0.0, -cam_dist);
+    
+    // STEREO RENDERING: Add eye offset for side-by-side or anaglyph
+    if (u_stereo_mode > 0.5) {
+      float eyeSeparation = 0.065; // Average human IPD in world units
+      float eyeOffset = (u_stereo_eye > 0.5) ? eyeSeparation * 0.5 : -eyeSeparation * 0.5;
+      ro.x += eyeOffset;
+    }
+    
     ro = rotateVec(ro, u_cam_rot.y, u_cam_rot.x);
     vec3 lookTarget = vec3(0.0, 0.0, 0.0);
     vec3 ww = (lookTarget - ro) / max(length(lookTarget - ro), 1e-6);
@@ -3983,6 +3993,18 @@ void main() {
   // Subpixel anti-aliasing boost — sharpen edges via fwidth unsharp mask
   float edgeDetect = length(fwidth(col)) * 0.5;
   col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
+
+  // ANAGYPH STEREO: Apply red/cyan coloring for anaglyph glasses
+  if (u_stereo_mode > 1.5) {
+    if (u_stereo_eye > 0.5) {
+      // Right eye: cyan only
+      col.r = 0.0;
+    } else {
+      // Left eye: red only
+      col.g = 0.0;
+      col.b = 0.0;
+    }
+  }
 
   fragColor = vec4(col, 1.0);
 }
