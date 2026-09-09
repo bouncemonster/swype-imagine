@@ -181,19 +181,23 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     
     // If opposite movement detected, reduce velocity (braking effect)
     const brakingFactor = 0.3;
+    let newVelX = dx / dt;
+    let newVelY = dy / dt;
+    
     if (isOppositeX) {
-      velocityRef.current.x *= brakingFactor;
+      newVelX *= brakingFactor;
     }
     if (isOppositeY) {
-      velocityRef.current.y *= brakingFactor;
+      newVelY *= brakingFactor;
     }
+    
+    // Update velocity with braking applied
+    velocityRef.current = { x: newVelX, y: newVelY };
     
     // If velocity is very low after braking, stop completely
     if (Math.abs(velocityRef.current.x) < 0.001 && Math.abs(velocityRef.current.y) < 0.001) {
       velocityRef.current = { x: 0, y: 0 };
     }
-
-    velocityRef.current = { x: dx / dt, y: dy / dt };
 
     // Limit maximum rotation per frame
     const maxRotationPerFrame = 0.08;
