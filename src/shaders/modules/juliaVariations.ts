@@ -1,5 +1,13 @@
-// Julia Variations 1-50 for webglShaders.ts
-// Add these functions after mapMandelbrotVariant10
+/**
+ * Julia Variations 1-50 for WebGL2 Shaders
+ * Modular approach for better maintainability
+ */
+
+export const JULIA_VARIATIONS_GLSL = `
+// ===================================================================
+// Julia Variations 1-50
+// Based on Mandelbrot power formula with Julia set constants
+// ===================================================================
 
 float mapJuliaVariant1(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
@@ -141,9 +149,6 @@ float mapJuliaVariant5(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variants 6-50 follow similar pattern with different c values and power ranges
-// For brevity, generating remaining 45 variants with parameter variations
-
 float mapJuliaVariant6(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   vec3 c = vec3(-0.8 + sin(t * 0.1) * 0.1, 0.156 + cos(t * 0.08) * 0.05, 0.0);
@@ -284,9 +289,7 @@ float mapJuliaVariant10(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Julia Variants 11-50: Using parametric generation
-// Each variant uses different c values and power ranges for unique characteristics
-
+// Julia Variants 11-50: Parametric generation
 float mapJuliaVariant11(vec3 p, float t, float phi, int iters) { return mapJuliaVariant1(p * (1.0 + float(11) * 0.02), t + float(11) * 0.1, phi, iters); }
 float mapJuliaVariant12(vec3 p, float t, float phi, int iters) { return mapJuliaVariant2(p * (1.0 + float(12) * 0.02), t + float(12) * 0.1, phi, iters); }
 float mapJuliaVariant13(vec3 p, float t, float phi, int iters) { return mapJuliaVariant3(p * (1.0 + float(13) * 0.02), t + float(13) * 0.1, phi, iters); }
@@ -330,3 +333,4 @@ float mapJuliaVariant47(vec3 p, float t, float phi, int iters) { return mapJulia
 float mapJuliaVariant48(vec3 p, float t, float phi, int iters) { return mapJuliaVariant8(p * (1.0 + float(48) * 0.02), t + float(48) * 0.1, phi, iters); }
 float mapJuliaVariant49(vec3 p, float t, float phi, int iters) { return mapJuliaVariant9(p * (1.0 + float(49) * 0.02), t + float(49) * 0.1, phi, iters); }
 float mapJuliaVariant50(vec3 p, float t, float phi, int iters) { return mapJuliaVariant10(p * (1.0 + float(50) * 0.02), t + float(50) * 0.1, phi, iters); }
+`;
