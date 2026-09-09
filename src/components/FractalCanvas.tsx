@@ -167,47 +167,29 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
 
     const currentZoom = paramsRef.current.zoom;
-    const dynamicSensitivity = 0.0015 * Math.max(0.1, Math.min(0.6, currentZoom / 3.0));
+    const dynamicSensitivity = 0.002 * Math.max(0.2, Math.min(0.8, currentZoom / 2.5));
 
+    // Update velocity directly from mouse movement
+    velocityRef.current = { x: dx / dt, y: dy / dt };
+    
     // Check if moving opposite to current velocity (braking)
     const currentVelX = velocityRef.current.x;
     const currentVelY = velocityRef.current.y;
-    const moveDirX = dx / dt;
-    const moveDirY = dy / dt;
     
-    // If moving opposite to current rotation direction, apply braking
-    const isOppositeX = (currentVelX > 0.001 && moveDirX < -0.001) || (currentVelX < -0.001 && moveDirX > 0.001);
-    const isOppositeY = (currentVelY > 0.001 && moveDirY < -0.001) || (currentVelY < -0.001 && moveDirY > 0.001);
-    
-    // If opposite movement detected, reduce velocity (braking effect)
-    const brakingFactor = 0.3;
-    let newVelX = dx / dt;
-    let newVelY = dy / dt;
-    
-    if (isOppositeX) {
-      newVelX *= brakingFactor;
-    }
-    if (isOppositeY) {
-      newVelY *= brakingFactor;
-    }
-    
-    // Update velocity with braking applied
-    velocityRef.current = { x: newVelX, y: newVelY };
-    
-    // If velocity is very low after braking, stop completely
-    if (Math.abs(velocityRef.current.x) < 0.001 && Math.abs(velocityRef.current.y) < 0.001) {
+    // If velocity is very low, stop completely
+    if (Math.abs(currentVelX) < 0.0005 && Math.abs(currentVelY) < 0.0005) {
       velocityRef.current = { x: 0, y: 0 };
     }
 
-    // Limit maximum rotation per frame
-    const maxRotationPerFrame = 0.08;
-    const clampedDx = Math.max(-maxRotationPerFrame / dynamicSensitivity, Math.min(maxRotationPerFrame / dynamicSensitivity, dx));
-    const clampedDy = Math.max(-maxRotationPerFrame / dynamicSensitivity, Math.min(maxRotationPerFrame / dynamicSensitivity, dy));
+    // Apply rotation with improved sensitivity
+    const rotationSpeed = 0.003;
+    const rotDeltaX = dx * rotationSpeed;
+    const rotDeltaY = dy * rotationSpeed;
 
     onParamsChange(prev => ({
       ...prev,
-      rotX: ((prev.rotX + clampedDx * dynamicSensitivity + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI,
-      rotY: Math.max(-1.48, Math.min(1.48, prev.rotY + clampedDy * dynamicSensitivity)),
+      rotX: ((prev.rotX + rotDeltaX + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI,
+      rotY: Math.max(-1.5, Math.min(1.5, prev.rotY + rotDeltaY)),
     }));
 
     userPrefEngine.recordInteraction('rotate', Math.hypot(dx, dy) / dt);
