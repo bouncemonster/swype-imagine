@@ -1,150 +1,369 @@
 /**
  * IFS Variations 1-50 for WebGL2 Shaders
- * Iterated Function Systems with folding, rotation, and scaling
+ * DIVERSE MATHEMATICAL APPROACHES - Kaleidoscopic, Sierpinski, Menger, Dragon, etc.
  */
 
 export const IFS_VARIATIONS_GLSL = `
 // ===================================================================
-// IFS Variations 1-50
-// Based on iterated function systems with folding and rotation
+// IFS Variations 1-50 - DIVERSE APPROACHES
+// Each variant uses DIFFERENT folding and iteration techniques
 // ===================================================================
 
+// Variant 1: Classic Kaleidoscopic IFS
 float mapIFSVariant1(vec3 p, float t, float phi, int iters) {
-  float scale = 2.0 + sin(t * 0.1) * 0.2;
-  float minDist = 1e10;
+  vec3 z = p;
+  float scale = 2.0;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
-    p.xy = abs(p.xy);
-    p.xz = abs(p.xz);
-    float angle = t * 0.05 + float(i) * 0.1;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xy = rot * p.xy;
-    p *= scale;
-    p -= vec3(1.0, 0.5, 0.3);
-    minDist = min(minDist, length(p) - 0.5);
+    
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    if (z.x < z.z) z.xz = z.zx;
+    if (z.y < z.z) z.yz = z.zy;
+    
+    z = z * scale - vec3(1.5, 1.5, 1.5);
   }
-  return minDist;
+  
+  return length(z) * pow(scale, -float(iters));
 }
 
+// Variant 2: Sierpinski Tetrahedron IFS
 float mapIFSVariant2(vec3 p, float t, float phi, int iters) {
-  float scale = 2.2 + cos(t * 0.12) * 0.25;
-  float minDist = 1e10;
+  vec3 z = p;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
-    p = abs(p) - vec3(0.5, 0.3, 0.4);
-    float angle = t * 0.06 + float(i) * 0.15;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.yz = rot * p.yz;
-    p *= scale;
-    minDist = min(minDist, length(p) - 0.6);
+    
+    if (z.x + z.y < 0.0) z.xy = -z.yx;
+    if (z.x + z.z < 0.0) z.xz = -z.zx;
+    if (z.y + z.z < 0.0) z.yz = -z.zy;
+    
+    z = z * 2.0 - vec3(1.0, 1.0, 1.0);
   }
-  return minDist;
+  
+  return length(z) * 0.25;
 }
 
+// Variant 3: Menger Sponge IFS
 float mapIFSVariant3(vec3 p, float t, float phi, int iters) {
-  float scale = 1.8 + sin(t * 0.08) * 0.3;
-  float minDist = 1e10;
+  vec3 z = p;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
-    p.xy = abs(p.xy) - vec2(0.4, 0.6);
-    p.xz = abs(p.xz) - vec2(0.3, 0.5);
-    float angle = t * 0.07 + float(i) * 0.12;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xz = rot * p.xz;
-    p *= scale;
-    minDist = min(minDist, length(p) - 0.4);
+    
+    if (abs(z.x) < abs(z.y)) z.xy = z.yx;
+    if (abs(z.x) < abs(z.z)) z.xz = z.zx;
+    if (abs(z.y) < abs(z.z)) z.yz = z.zy;
+    
+    z = z * 3.0 - vec3(2.0, 2.0, 2.0);
   }
-  return minDist;
+  
+  return length(z) * 0.33;
 }
 
+// Variant 4: Dragon Curve IFS
 float mapIFSVariant4(vec3 p, float t, float phi, int iters) {
-  float scale = 2.5 + cos(t * 0.15) * 0.2;
-  float minDist = 1e10;
+  vec3 z = p;
+  float angle = 0.785398; // pi/4
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
-    p = abs(p) - vec3(0.6, 0.4, 0.5);
-    float angle = t * 0.04 + float(i) * 0.08;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.xy = rot * p.xy;
-    p *= scale;
-    minDist = min(minDist, length(p) - 0.7);
+    
+    z = abs(z);
+    
+    // Rotate
+    float c = cos(angle);
+    float s = sin(angle);
+    z.xy = mat2(c, -s, s, c) * z.xy;
+    
+    z = z * 1.414 - vec3(1.0, 1.0, 0.0);
   }
-  return minDist;
+  
+  return length(z) * 0.5;
 }
 
+// Variant 5: Vicsek Fractal IFS
 float mapIFSVariant5(vec3 p, float t, float phi, int iters) {
-  float scale = 2.1 + sin(t * 0.11) * 0.28;
-  float minDist = 1e10;
+  vec3 z = p;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
-    p.yz = abs(p.yz) - vec2(0.5, 0.3);
-    p.xy = abs(p.xy) - vec2(0.4, 0.6);
-    float angle = t * 0.09 + float(i) * 0.14;
-    mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-    p.yz = rot * p.yz;
-    p *= scale;
-    minDist = min(minDist, length(p) - 0.55);
+    
+    z = abs(z) - vec3(1.0, 1.0, 1.0);
+    
+    if (z.x < z.y) z.xy = z.yx;
+    if (z.x < z.z) z.xz = z.zx;
+    
+    z = z * 3.0;
   }
-  return minDist;
+  
+  return length(z) * 0.33;
 }
 
-// IFS Variants 6-50: Parametric generation
-float mapIFSVariant6(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(6) * 0.03), t + float(6) * 0.12, phi, iters); }
-float mapIFSVariant7(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(7) * 0.03), t + float(7) * 0.12, phi, iters); }
-float mapIFSVariant8(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(8) * 0.03), t + float(8) * 0.12, phi, iters); }
-float mapIFSVariant9(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(9) * 0.03), t + float(9) * 0.12, phi, iters); }
-float mapIFSVariant10(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(10) * 0.03), t + float(10) * 0.12, phi, iters); }
+// Variant 6: Apollonian Gasket IFS
+float mapIFSVariant6(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    float r2 = dot(z, z);
+    if (r2 < 0.5) {
+      z = z / r2 - vec3(2.0, 0.0, 0.0);
+    } else {
+      z = z * 2.0 - vec3(1.0, 1.0, 1.0);
+    }
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapIFSVariant11(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(11) * 0.03), t + float(11) * 0.12, phi, iters); }
-float mapIFSVariant12(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(12) * 0.03), t + float(12) * 0.12, phi, iters); }
-float mapIFSVariant13(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(13) * 0.03), t + float(13) * 0.12, phi, iters); }
-float mapIFSVariant14(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(14) * 0.03), t + float(14) * 0.12, phi, iters); }
-float mapIFSVariant15(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(15) * 0.03), t + float(15) * 0.12, phi, iters); }
+// Variant 7: Tetrix (3D Sierpinski) IFS
+float mapIFSVariant7(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    // Tetrahedron folding
+    if (z.x + z.y + z.z < 0.0) {
+      z = -z;
+    }
+    
+    z = z * 2.0 - vec3(1.0, 1.0, 1.0);
+  }
+  
+  return length(z) * 0.25;
+}
 
-float mapIFSVariant16(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(16) * 0.03), t + float(16) * 0.12, phi, iters); }
-float mapIFSVariant17(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(17) * 0.03), t + float(17) * 0.12, phi, iters); }
-float mapIFSVariant18(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(18) * 0.03), t + float(18) * 0.12, phi, iters); }
-float mapIFSVariant19(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(19) * 0.03), t + float(19) * 0.12, phi, iters); }
-float mapIFSVariant20(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(20) * 0.03), t + float(20) * 0.12, phi, iters); }
+// Variant 8: Cubic IFS
+float mapIFSVariant8(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    z = abs(z);
+    z = z * 2.0 - vec3(1.5, 1.5, 1.5);
+    
+    if (z.x > 1.0) z.x = 2.0 - z.x;
+    if (z.y > 1.0) z.y = 2.0 - z.y;
+    if (z.z > 1.0) z.z = 2.0 - z.z;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapIFSVariant21(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(21) * 0.03), t + float(21) * 0.12, phi, iters); }
-float mapIFSVariant22(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(22) * 0.03), t + float(22) * 0.12, phi, iters); }
-float mapIFSVariant23(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(23) * 0.03), t + float(23) * 0.12, phi, iters); }
-float mapIFSVariant24(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(24) * 0.03), t + float(24) * 0.12, phi, iters); }
-float mapIFSVariant25(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(25) * 0.03), t + float(25) * 0.12, phi, iters); }
+// Variant 9: Spiral IFS
+float mapIFSVariant9(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float angle = 0.5;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    z = abs(z);
+    
+    // Spiral rotation
+    float c = cos(angle);
+    float s = sin(angle);
+    z.xy = mat2(c, -s, s, c) * z.xy;
+    z.yz = mat2(c, -s, s, c) * z.yz;
+    
+    z = z * 2.0 - vec3(1.0, 1.0, 1.0);
+    angle += 0.1;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapIFSVariant26(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(26) * 0.03), t + float(26) * 0.12, phi, iters); }
-float mapIFSVariant27(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(27) * 0.03), t + float(27) * 0.12, phi, iters); }
-float mapIFSVariant28(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(28) * 0.03), t + float(28) * 0.12, phi, iters); }
-float mapIFSVariant29(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(29) * 0.03), t + float(29) * 0.12, phi, iters); }
-float mapIFSVariant30(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(30) * 0.03), t + float(30) * 0.12, phi, iters); }
+// Variant 10: Fractal Plasma IFS
+float mapIFSVariant10(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    z = abs(z) - vec3(0.5, 0.5, 0.5);
+    
+    float r = length(z);
+    if (r < 1.0) {
+      z = z / (r * r);
+    }
+    
+    z = z * 2.0;
+  }
+  
+  return length(z) * 0.5;
+}
 
-float mapIFSVariant31(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(31) * 0.03), t + float(31) * 0.12, phi, iters); }
-float mapIFSVariant32(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(32) * 0.03), t + float(32) * 0.12, phi, iters); }
-float mapIFSVariant33(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(33) * 0.03), t + float(33) * 0.12, phi, iters); }
-float mapIFSVariant34(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(34) * 0.03), t + float(34) * 0.12, phi, iters); }
-float mapIFSVariant35(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(35) * 0.03), t + float(35) * 0.12, phi, iters); }
-
-float mapIFSVariant36(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(36) * 0.03), t + float(36) * 0.12, phi, iters); }
-float mapIFSVariant37(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(37) * 0.03), t + float(37) * 0.12, phi, iters); }
-float mapIFSVariant38(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(38) * 0.03), t + float(38) * 0.12, phi, iters); }
-float mapIFSVariant39(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(39) * 0.03), t + float(39) * 0.12, phi, iters); }
-float mapIFSVariant40(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(40) * 0.03), t + float(40) * 0.12, phi, iters); }
-
-float mapIFSVariant41(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(41) * 0.03), t + float(41) * 0.12, phi, iters); }
-float mapIFSVariant42(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(42) * 0.03), t + float(42) * 0.12, phi, iters); }
-float mapIFSVariant43(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(43) * 0.03), t + float(43) * 0.12, phi, iters); }
-float mapIFSVariant44(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(44) * 0.03), t + float(44) * 0.12, phi, iters); }
-float mapIFSVariant45(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(45) * 0.03), t + float(45) * 0.12, phi, iters); }
-
-float mapIFSVariant46(vec3 p, float t, float phi, int iters) { return mapIFSVariant1(p * (1.0 + float(46) * 0.03), t + float(46) * 0.12, phi, iters); }
-float mapIFSVariant47(vec3 p, float t, float phi, int iters) { return mapIFSVariant2(p * (1.0 + float(47) * 0.03), t + float(47) * 0.12, phi, iters); }
-float mapIFSVariant48(vec3 p, float t, float phi, int iters) { return mapIFSVariant3(p * (1.0 + float(48) * 0.03), t + float(48) * 0.12, phi, iters); }
-float mapIFSVariant49(vec3 p, float t, float phi, int iters) { return mapIFSVariant4(p * (1.0 + float(49) * 0.03), t + float(49) * 0.12, phi, iters); }
-float mapIFSVariant50(vec3 p, float t, float phi, int iters) { return mapIFSVariant5(p * (1.0 + float(50) * 0.03), t + float(50) * 0.12, phi, iters); }
+// Variants 11-50: Use DIFFERENT IFS techniques
+${Array.from({length: 40}, (_, i) => {
+  const n = i + 11;
+  const technique = i % 8;
+  
+  if (technique === 0) {
+    // Kaleidoscopic with different scale
+    const scale = 1.8 + (i % 10) * 0.1;
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    z = abs(z);
+    if (z.x < z.y) z.xy = z.yx;
+    if (z.x < z.z) z.xz = z.zx;
+    if (z.y < z.z) z.yz = z.zy;
+    
+    z = z * ${scale.toFixed(1)} - vec3(${1.2 + i * 0.02}, ${1.2 + i * 0.03}, ${1.2 + i * 0.04});
+  }
+  
+  return length(z) * pow(${scale.toFixed(1)}, -float(iters));
+}`;
+  } else if (technique === 1) {
+    // Sierpinski-style with different conditions
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    if (z.x + z.y < ${-0.5 + i * 0.05}) z.xy = -z.yx;
+    if (z.x + z.z < ${-0.5 + i * 0.04}) z.xz = -z.zx;
+    if (z.y + z.z < ${-0.5 + i * 0.03}) z.yz = -z.zy;
+    
+    z = z * ${1.8 + i * 0.05} - vec3(${1.0 + i * 0.02}, ${1.0 + i * 0.03}, ${1.0 + i * 0.04});
+  }
+  
+  return length(z) * 0.25;
+}`;
+  } else if (technique === 2) {
+    // Menger-style with different multipliers
+    const mult = 2.5 + (i % 5) * 0.5;
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    if (abs(z.x) < abs(z.y)) z.xy = z.yx;
+    if (abs(z.x) < abs(z.z)) z.xz = z.zx;
+    if (abs(z.y) < abs(z.z)) z.yz = z.zy;
+    
+    z = z * ${mult.toFixed(1)} - vec3(${mult - 0.5}, ${mult - 0.5}, ${mult - 0.5});
+  }
+  
+  return length(z) * ${(1.0 / mult).toFixed(2)};
+}`;
+  } else if (technique === 3) {
+    // Dragon-style with rotation
+    const angle = 0.5 + (i % 10) * 0.1;
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float angle = ${angle.toFixed(2)};
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    z = abs(z);
+    
+    float c = cos(angle);
+    float s = sin(angle);
+    z.xy = mat2(c, -s, s, c) * z.xy;
+    
+    z = z * ${1.3 + i * 0.03} - vec3(${0.8 + i * 0.02}, ${0.8 + i * 0.03}, 0.0);
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 4) {
+    // Apollonian-style with inversion
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    float r2 = dot(z, z);
+    if (r2 < ${0.3 + i * 0.02}) {
+      z = z / r2 - vec3(${1.5 + i * 0.05}, 0.0, 0.0);
+    } else {
+      z = z * ${1.8 + i * 0.04} - vec3(${1.0 + i * 0.02}, ${1.0 + i * 0.03}, ${1.0 + i * 0.04});
+    }
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 5) {
+    // Spiral IFS with different rotation
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float angle = ${(0.3 + i * 0.08).toFixed(2)};
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    z = abs(z);
+    
+    float c = cos(angle);
+    float s = sin(angle);
+    z.xy = mat2(c, -s, s, c) * z.xy;
+    z.yz = mat2(c, -s, s, c) * z.yz;
+    
+    z = z * ${1.7 + i * 0.05} - vec3(${0.9 + i * 0.02}, ${0.9 + i * 0.03}, ${0.9 + i * 0.04});
+    angle += ${(0.05 + i * 0.01).toFixed(2)};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else if (technique === 6) {
+    // Cubic IFS with different folding
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    z = abs(z);
+    z = z * ${1.6 + i * 0.06} - vec3(${1.3 + i * 0.02}, ${1.3 + i * 0.03}, ${1.3 + i * 0.04});
+    
+    if (z.x > ${0.8 + i * 0.02}) z.x = ${1.6 + i * 0.04} - z.x;
+    if (z.y > ${0.8 + i * 0.03}) z.y = ${1.6 + i * 0.06} - z.y;
+    if (z.z > ${0.8 + i * 0.04}) z.z = ${1.6 + i * 0.08} - z.z;
+  }
+  
+  return length(z) * 0.5;
+}`;
+  } else {
+    // Fractal Plasma with different parameters
+    return `
+float mapIFSVariant${n}(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  
+  for (int j = 0; j < 32; j++) {
+    if (j >= iters) break;
+    
+    z = abs(z) - vec3(${0.4 + i * 0.02}, ${0.4 + i * 0.03}, ${0.4 + i * 0.04});
+    
+    float r = length(z);
+    if (r < ${0.8 + i * 0.02}) {
+      z = z / (r * r);
+    }
+    
+    z = z * ${1.9 + i * 0.03};
+  }
+  
+  return length(z) * 0.5;
+}`;
+  }
+}).join('\n')}
 `;
