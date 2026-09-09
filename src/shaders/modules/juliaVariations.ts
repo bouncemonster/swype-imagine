@@ -1,15 +1,14 @@
 /**
  * Julia Variations 1-50 for WebGL2 Shaders
- * DIVERSE MATHEMATICAL APPROACHES - not just parameter variations
+ * DIVERSE MATHEMATICAL APPROACHES
  */
 
 export const JULIA_VARIATIONS_GLSL = `
 // ===================================================================
 // Julia Variations 1-50 - DIVERSE APPROACHES
-// Each variant uses DIFFERENT mathematical techniques
 // ===================================================================
 
-// Variant 1: Classic Julia Set (Mandelbrot formula)
+// Variant 1: Classic Julia Set
 float mapJuliaVariant1(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   vec3 c = vec3(0.355, 0.355, 0.355);
@@ -33,10 +32,11 @@ float mapJuliaVariant1(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 2: Quaternion Julia (4D rotation)
+
+// Variant 2: Quaternion Julia
 float mapJuliaVariant2(vec3 p, float t, float phi, int iters) {
   vec4 z = vec4(p, 0.0);
-  vec4 c = vec4(-0.7, 0.27015, 0.0, 0.0);
+  vec4 c = vec4(0.320, 0.210, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
   
@@ -45,7 +45,6 @@ float mapJuliaVariant2(vec3 p, float t, float phi, int iters) {
     r = length(z);
     if (r > 4.0) break;
     
-    // Quaternion multiplication: z = z^2 + c
     vec4 z2 = vec4(
       z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
       2.0*z.x*z.y,
@@ -59,10 +58,10 @@ float mapJuliaVariant2(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 3: Burning Ship Julia (abs in iteration)
+// Variant 3: Burning Ship Julia
 float mapJuliaVariant3(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.4, 0.6, 0.0);
+  vec3 c = vec3(-0.370, 0.615, 0.0);
   float dr = 1.0;
   float r = 0.0;
   
@@ -76,17 +75,17 @@ float mapJuliaVariant3(vec3 p, float t, float phi, int iters) {
     float zr = r * r;
     
     z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z = abs(z) + c;  // Burning ship: abs before adding c
+    z = abs(z) + c;
     dr = 2.0 * r * dr + 1.0;
   }
   
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 4: Tricorn Julia (conjugate)
+// Variant 4: Tricorn Julia
 float mapJuliaVariant4(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.285, 0.0, 0.0);
+  vec3 c = vec3(0.232, 0.040, 0.0);
   float dr = 1.0;
   float r = 0.0;
   
@@ -99,7 +98,6 @@ float mapJuliaVariant4(vec3 p, float t, float phi, int iters) {
     float phiAngle = atan(z.y, z.x);
     float zr = r * r;
     
-    // Conjugate: negate imaginary parts
     z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
     z += c;
     dr = 2.0 * r * dr + 1.0;
@@ -108,7 +106,7 @@ float mapJuliaVariant4(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 5: Newton Julia (fractal basin boundaries)
+// Variant 5: Newton Julia
 float mapJuliaVariant5(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   float r = 0.0;
@@ -118,9 +116,8 @@ float mapJuliaVariant5(vec3 p, float t, float phi, int iters) {
     r = length(z);
     if (r > 100.0) break;
     
-    // Newton's method: z = z - f(z)/f'(z) for f(z) = z^3 - 1
     float zr2 = r * r;
-    vec3 fz = z * (zr2 - 1.0);
+    vec3 fz = z * (zr2 - 1.10);
     vec3 fpz = 3.0 * z * zr2;
     
     float fpz_len2 = dot(fpz, fpz);
@@ -132,12 +129,12 @@ float mapJuliaVariant5(vec3 p, float t, float phi, int iters) {
   return log(r + 1.0) * 0.1;
 }
 
-// Variant 6: Phoenix Julia (memory term)
+// Variant 6: Phoenix Julia
 float mapJuliaVariant6(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   vec3 z_prev = vec3(0.0);
-  vec3 c = vec3(0.56667, -0.5, 0.0);
-  vec3 p_param = vec3(-0.5, 0.0, 0.0);
+  vec3 c = vec3(0.530, -0.282, 0.0);
+  vec3 p_param = vec3(-0.476, 0.0, 0.0);
   float dr = 1.0;
   float r = 0.0;
   
@@ -151,7 +148,7 @@ float mapJuliaVariant6(vec3 p, float t, float phi, int iters) {
     float zr = r * r;
     
     vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + p_param * z_prev;  // Phoenix: uses previous z
+    z_new += c + p_param * z_prev;
     z_prev = z;
     z = z_new;
     dr = 2.0 * r * dr + 1.0;
@@ -160,10 +157,10 @@ float mapJuliaVariant6(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 7: Celtic Julia (real part condition)
+// Variant 7: Celtic Julia
 float mapJuliaVariant7(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(-0.3, 0.7, 0.0);
+  vec3 c = vec3(-0.258, 0.728, 0.0);
   float dr = 1.0;
   float r = 0.0;
   
@@ -178,8 +175,7 @@ float mapJuliaVariant7(vec3 p, float t, float phi, int iters) {
     
     vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
     
-    // Celtic: condition on real part
-    if (z_new.x > 0.0) {
+    if (z_new.x > 0.07) {
       z_new.x = -z_new.x;
     }
     
@@ -190,10 +186,10 @@ float mapJuliaVariant7(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 8: Buffalo Julia (mixed abs)
+// Variant 8: Buffalo Julia
 float mapJuliaVariant8(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.4, 0.3, 0.0);
+  vec3 c = vec3(0.440, 0.332, 0.0);
   float dr = 1.0;
   float r = 0.0;
   
@@ -207,8 +203,6 @@ float mapJuliaVariant8(vec3 p, float t, float phi, int iters) {
     float zr = r * r;
     
     vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    
-    // Buffalo: mix of abs and non-abs
     z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
     z = z_new + c;
     dr = 2.0 * r * dr + 1.0;
@@ -217,10 +211,10 @@ float mapJuliaVariant8(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 9: Spider Julia (two memory terms)
+// Variant 9: Spider Julia
 float mapJuliaVariant9(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.3, 0.4, 0.0);
+  vec3 c = vec3(0.336, 0.427, 0.0);
   vec3 c_prev = c;
   float dr = 1.0;
   float r = 0.0;
@@ -235,7 +229,7 @@ float mapJuliaVariant9(vec3 p, float t, float phi, int iters) {
     float zr = r * r;
     
     vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z_new += c + c_prev * 0.5;  // Spider: two c terms
+    z_new += c + c_prev * 0.34;
     c_prev = c;
     c = z_new;
     z = z_new;
@@ -245,10 +239,10 @@ float mapJuliaVariant9(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variant 10: Lambdoma Julia (special symmetry)
+// Variant 10: Lambdoma Julia
 float mapJuliaVariant10(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  vec3 c = vec3(0.0, 0.5, 0.5);
+  vec3 c = vec3(0.050, 0.540, 0.530);
   float dr = 1.0;
   float r = 0.0;
   
@@ -257,7 +251,6 @@ float mapJuliaVariant10(vec3 p, float t, float phi, int iters) {
     r = length(z);
     if (r > 4.0) break;
     
-    // Lambdoma: special folding
     z = abs(z) / dot(z, z) - c;
     dr = dr / (r * r) + 1.0;
   }
@@ -265,13 +258,10 @@ float mapJuliaVariant10(vec3 p, float t, float phi, int iters) {
   return 0.5 * log(r) * r / dr;
 }
 
-// Variants 11-50: Use DIFFERENT techniques (not just parameter changes)
-// Each uses a unique mathematical approach
-
+// Variant 11: IFS-style Julia
 float mapJuliaVariant11(vec3 p, float t, float phi, int iters) {
-  // IFS-style Julia with folding
   vec3 z = p;
-  float scale = 2.0;
+  float scale = 2.02;
   
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
@@ -281,15 +271,17 @@ float mapJuliaVariant11(vec3 p, float t, float phi, int iters) {
     else if (z.x + z.z < z.y) z.y -= z.x + z.z;
     else if (z.y + z.z < z.x) z.x -= z.y + z.z;
     
-    z = z * scale - vec3(1.5, 1.5, 1.5);
+    z = z * scale - vec3(1.61, 1.67, 1.72);
   }
   
   return length(z) * pow(scale, -float(iters));
 }
 
+// Variant 12: Quaternion Julia
 float mapJuliaVariant12(vec3 p, float t, float phi, int iters) {
-  // Rotational Julia with spiral
-  vec3 z = p;
+  vec4 z = vec4(p, 0.0);
+  vec4 c = vec4(0.420, 0.260, 0.0, 0.0);
+  float dr = 1.0;
   float r = 0.0;
   
   for (int i = 0; i < 32; i++) {
@@ -297,183 +289,948 @@ float mapJuliaVariant12(vec3 p, float t, float phi, int iters) {
     r = length(z);
     if (r > 4.0) break;
     
-    float angle = atan(z.y, z.x) + 0.5;
-    float zr = r * r;
-    z = zr * vec3(cos(angle), sin(angle), z.z * 0.5);
-    z += vec3(0.3, 0.3, 0.0);
+    vec4 z2 = vec4(
+      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
+      2.0*z.x*z.y,
+      2.0*z.x*z.z,
+      2.0*z.x*z.w
+    );
+    z = z2 + c;
+    dr = 2.0 * r * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r;
+  return 0.5 * log(r) * r / dr;
 }
 
+// Variant 13: Burning Ship Julia
 float mapJuliaVariant13(vec3 p, float t, float phi, int iters) {
-  // Kaleidoscopic Julia
   vec3 z = p;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    z = abs(z);
-    float r = length(z);
-    if (r > 4.0) break;
-    
-    // Kaleidoscopic fold
-    if (z.x < z.y) z.xy = z.yx;
-    if (z.x < z.z) z.xz = z.zx;
-    if (z.y < z.z) z.yz = z.zy;
-    
-    z = z * 2.0 - vec3(1.5, 1.5, 1.5);
-  }
-  
-  return length(z) * 0.5;
-}
-
-float mapJuliaVariant14(vec3 p, float t, float phi, int iters) {
-  // Mandelbox-style Julia
-  vec3 z = p;
-  float scale = 2.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    // Box fold
-    z = clamp(z, -1.0, 1.0) * 2.0 - z;
-    
-    // Sphere fold
-    float r2 = dot(z, z);
-    if (r2 < 0.25) z *= 4.0;
-    else if (r2 < 1.0) z /= r2;
-    
-    z = z * scale + p;
-  }
-  
-  return length(z) * pow(scale, -float(iters));
-}
-
-float mapJuliaVariant15(vec3 p, float t, float phi, int iters) {
-  // Sierpinski-style Julia
-  vec3 z = p;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    
-    if (z.x + z.y < 0.0) { z.xy = -z.yx; }
-    if (z.x + z.z < 0.0) { z.xz = -z.zx; }
-    if (z.y + z.z < 0.0) { z.yz = -z.zy; }
-    
-    z = z * 2.0 - vec3(1.0, 1.0, 1.0);
-  }
-  
-  return length(z) * 0.25;
-}
-
-// Variants 16-50: Continue with diverse approaches
-${Array.from({length: 35}, (_, i) => {
-  const n = i + 16;
-  const technique = i % 5;
-  
-  if (technique === 0) {
-    // Power variation
-    const power = 2.0 + (i % 10) * 0.5;
-    return `
-float mapJuliaVariant${n}(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
+  vec3 c = vec3(-0.270, 0.665, 0.0);
+  float dr = 1.0;
   float r = 0.0;
   
-  for (int j = 0; j < 32; j++) {
-    if (j >= iters) break;
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
     r = length(z);
     if (r > 4.0) break;
     
     float theta = acos(z.z / r);
     float phiAngle = atan(z.y, z.x);
-    float zr = pow(r, ${power.toFixed(1)});
+    float zr = r * r;
     
-    z = zr * vec3(sin(theta * ${power.toFixed(1)}) * cos(phiAngle * ${power.toFixed(1)}), 
-                  sin(theta * ${power.toFixed(1)}) * sin(phiAngle * ${power.toFixed(1)}), 
-                  cos(theta * ${power.toFixed(1)}));
-    z += vec3(${(i % 10) * 0.1}, ${(i % 7) * 0.1}, 0.0);
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z = abs(z) + c;
+    dr = 2.0 * r * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r;
-}`;
-  } else if (technique === 1) {
-    // IFS with different folding
-    return `
-float mapJuliaVariant${n}(vec3 p, float t, float phi, int iters) {
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 14: Tricorn Julia
+float mapJuliaVariant14(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  
-  for (int j = 0; j < 32; j++) {
-    if (j >= iters) break;
-    
-    z = abs(z);
-    if (z.x < z.y) z.xy = z.yx;
-    if (z.x < z.z) z.xz = z.zx;
-    
-    z = z * 2.0 - vec3(${1.0 + i * 0.05}, ${1.0 + i * 0.03}, ${1.0 + i * 0.04});
-  }
-  
-  return length(z) * 0.5;
-}`;
-  } else if (technique === 2) {
-    // Rotational
-    return `
-float mapJuliaVariant${n}(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
+  vec3 c = vec3(0.312, 0.140, 0.0);
+  float dr = 1.0;
   float r = 0.0;
   
-  for (int j = 0; j < 32; j++) {
-    if (j >= iters) break;
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
     r = length(z);
     if (r > 4.0) break;
     
-    float angle = atan(z.y, z.x) + ${0.3 + i * 0.05};
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
     float zr = r * r;
-    z = zr * vec3(cos(angle), sin(angle), z.z * ${0.5 + i * 0.02});
-    z += vec3(${(i % 8) * 0.1}, ${(i % 6) * 0.1}, ${(i % 5) * 0.1});
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
+    z += c;
+    dr = 2.0 * r * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r;
-}`;
-  } else if (technique === 3) {
-    // Mandelbox-style
-    return `
-float mapJuliaVariant${n}(vec3 p, float t, float phi, int iters) {
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 15: Newton Julia
+float mapJuliaVariant15(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float scale = ${1.5 + i * 0.1};
+  float r = 0.0;
   
-  for (int j = 0; j < 32; j++) {
-    if (j >= iters) break;
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 100.0) break;
     
-    z = clamp(z, -1.0, 1.0) * 2.0 - z;
-    float r2 = dot(z, z);
-    if (r2 < 0.25) z *= 4.0;
-    else if (r2 < 1.0) z /= r2;
+    float zr2 = r * r;
+    vec3 fz = z * (zr2 - 1.30);
+    vec3 fpz = 3.0 * z * zr2;
     
-    z = z * scale + p * ${0.8 + i * 0.02};
+    float fpz_len2 = dot(fpz, fpz);
+    if (fpz_len2 < 0.0001) break;
+    
+    z = z - fz / fpz_len2;
+  }
+  
+  return log(r + 1.0) * 0.1;
+}
+
+// Variant 16: Phoenix Julia
+float mapJuliaVariant16(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 z_prev = vec3(0.0);
+  vec3 c = vec3(0.580, -0.252, 0.0);
+  vec3 p_param = vec3(-0.436, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + p_param * z_prev;
+    z_prev = z;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 17: Celtic Julia
+float mapJuliaVariant17(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.198, 0.768, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    
+    if (z_new.x > 0.17) {
+      z_new.x = -z_new.x;
+    }
+    
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 18: Buffalo Julia
+float mapJuliaVariant18(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.490, 0.372, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 19: Spider Julia
+float mapJuliaVariant19(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.376, 0.457, 0.0);
+  vec3 c_prev = c;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + c_prev * 0.40;
+    c_prev = c;
+    c = z_new;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 20: Lambdoma Julia
+float mapJuliaVariant20(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.100, 0.580, 0.560);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    z = abs(z) / dot(z, z) - c;
+    dr = dr / (r * r) + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 21: IFS-style Julia
+float mapJuliaVariant21(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float scale = 2.22;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    z = abs(z);
+    if (z.x + z.y < z.z) z.z -= z.x + z.y;
+    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
+    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
+    
+    z = z * scale - vec3(1.71, 1.81, 1.92);
   }
   
   return length(z) * pow(scale, -float(iters));
-}`;
-  } else {
-    // Kaleidoscopic
-    return `
-float mapJuliaVariant${n}(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
+}
+
+// Variant 22: Quaternion Julia
+float mapJuliaVariant22(vec3 p, float t, float phi, int iters) {
+  vec4 z = vec4(p, 0.0);
+  vec4 c = vec4(0.520, 0.310, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
   
-  for (int j = 0; j < 32; j++) {
-    if (j >= iters) break;
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    vec4 z2 = vec4(
+      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
+      2.0*z.x*z.y,
+      2.0*z.x*z.z,
+      2.0*z.x*z.w
+    );
+    z = z2 + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 23: Burning Ship Julia
+float mapJuliaVariant23(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.170, 0.715, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z = abs(z) + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 24: Tricorn Julia
+float mapJuliaVariant24(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.392, 0.240, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
+    z += c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 25: Newton Julia
+float mapJuliaVariant25(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 100.0) break;
+    
+    float zr2 = r * r;
+    vec3 fz = z * (zr2 - 1.50);
+    vec3 fpz = 3.0 * z * zr2;
+    
+    float fpz_len2 = dot(fpz, fpz);
+    if (fpz_len2 < 0.0001) break;
+    
+    z = z - fz / fpz_len2;
+  }
+  
+  return log(r + 1.0) * 0.1;
+}
+
+// Variant 26: Phoenix Julia
+float mapJuliaVariant26(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 z_prev = vec3(0.0);
+  vec3 c = vec3(0.630, -0.222, 0.0);
+  vec3 p_param = vec3(-0.396, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + p_param * z_prev;
+    z_prev = z;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 27: Celtic Julia
+float mapJuliaVariant27(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.138, 0.808, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    
+    if (z_new.x > 0.27) {
+      z_new.x = -z_new.x;
+    }
+    
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 28: Buffalo Julia
+float mapJuliaVariant28(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.540, 0.412, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 29: Spider Julia
+float mapJuliaVariant29(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.416, 0.487, 0.0);
+  vec3 c_prev = c;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + c_prev * 0.44;
+    c_prev = c;
+    c = z_new;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 30: Lambdoma Julia
+float mapJuliaVariant30(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.150, 0.620, 0.590);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    z = abs(z) / dot(z, z) - c;
+    dr = dr / (r * r) + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 31: IFS-style Julia
+float mapJuliaVariant31(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float scale = 2.42;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
     
     z = abs(z);
-    if (z.x < z.y) z.xy = z.yx;
-    if (z.x < z.z) z.xz = z.zx;
-    if (z.y < z.z) z.yz = z.zy;
+    if (z.x + z.y < z.z) z.z -= z.x + z.y;
+    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
+    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
     
-    z = z * ${1.8 + i * 0.05} - vec3(${1.2 + i * 0.03}, ${1.2 + i * 0.04}, ${1.2 + i * 0.05});
+    z = z * scale - vec3(1.81, 1.96, 2.12);
   }
   
-  return length(z) * 0.5;
-}`;
+  return length(z) * pow(scale, -float(iters));
+}
+
+// Variant 32: Quaternion Julia
+float mapJuliaVariant32(vec3 p, float t, float phi, int iters) {
+  vec4 z = vec4(p, 0.0);
+  vec4 c = vec4(0.620, 0.360, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    vec4 z2 = vec4(
+      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
+      2.0*z.x*z.y,
+      2.0*z.x*z.z,
+      2.0*z.x*z.w
+    );
+    z = z2 + c;
+    dr = 2.0 * r * dr + 1.0;
   }
-}).join('\n')}
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 33: Burning Ship Julia
+float mapJuliaVariant33(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.070, 0.765, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z = abs(z) + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 34: Tricorn Julia
+float mapJuliaVariant34(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.472, 0.340, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
+    z += c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 35: Newton Julia
+float mapJuliaVariant35(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 100.0) break;
+    
+    float zr2 = r * r;
+    vec3 fz = z * (zr2 - 1.70);
+    vec3 fpz = 3.0 * z * zr2;
+    
+    float fpz_len2 = dot(fpz, fpz);
+    if (fpz_len2 < 0.0001) break;
+    
+    z = z - fz / fpz_len2;
+  }
+  
+  return log(r + 1.0) * 0.1;
+}
+
+// Variant 36: Phoenix Julia
+float mapJuliaVariant36(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 z_prev = vec3(0.0);
+  vec3 c = vec3(0.680, -0.192, 0.0);
+  vec3 p_param = vec3(-0.356, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + p_param * z_prev;
+    z_prev = z;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 37: Celtic Julia
+float mapJuliaVariant37(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.078, 0.848, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    
+    if (z_new.x > 0.37) {
+      z_new.x = -z_new.x;
+    }
+    
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 38: Buffalo Julia
+float mapJuliaVariant38(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.590, 0.452, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 39: Spider Julia
+float mapJuliaVariant39(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.456, 0.517, 0.0);
+  vec3 c_prev = c;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + c_prev * 0.49;
+    c_prev = c;
+    c = z_new;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 40: Lambdoma Julia
+float mapJuliaVariant40(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.200, 0.660, 0.620);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    z = abs(z) / dot(z, z) - c;
+    dr = dr / (r * r) + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 41: IFS-style Julia
+float mapJuliaVariant41(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float scale = 2.62;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    
+    z = abs(z);
+    if (z.x + z.y < z.z) z.z -= z.x + z.y;
+    else if (z.x + z.z < z.y) z.y -= z.x + z.z;
+    else if (z.y + z.z < z.x) z.x -= z.y + z.z;
+    
+    z = z * scale - vec3(1.91, 2.12, 2.32);
+  }
+  
+  return length(z) * pow(scale, -float(iters));
+}
+
+// Variant 42: Quaternion Julia
+float mapJuliaVariant42(vec3 p, float t, float phi, int iters) {
+  vec4 z = vec4(p, 0.0);
+  vec4 c = vec4(0.720, 0.410, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    vec4 z2 = vec4(
+      z.x*z.x - z.y*z.y - z.z*z.z - z.w*z.w,
+      2.0*z.x*z.y,
+      2.0*z.x*z.z,
+      2.0*z.x*z.w
+    );
+    z = z2 + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 43: Burning Ship Julia
+float mapJuliaVariant43(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.030, 0.815, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z = abs(z) + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 44: Tricorn Julia
+float mapJuliaVariant44(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.552, 0.440, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    z = zr * vec3(sin(theta) * cos(phiAngle), -sin(theta) * sin(phiAngle), -cos(theta));
+    z += c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 45: Newton Julia
+float mapJuliaVariant45(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 100.0) break;
+    
+    float zr2 = r * r;
+    vec3 fz = z * (zr2 - 1.90);
+    vec3 fpz = 3.0 * z * zr2;
+    
+    float fpz_len2 = dot(fpz, fpz);
+    if (fpz_len2 < 0.0001) break;
+    
+    z = z - fz / fpz_len2;
+  }
+  
+  return log(r + 1.0) * 0.1;
+}
+
+// Variant 46: Phoenix Julia
+float mapJuliaVariant46(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 z_prev = vec3(0.0);
+  vec3 c = vec3(0.730, -0.162, 0.0);
+  vec3 p_param = vec3(-0.316, 0.0, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + p_param * z_prev;
+    z_prev = z;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 47: Celtic Julia
+float mapJuliaVariant47(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(-0.018, 0.888, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    
+    if (z_new.x > 0.47) {
+      z_new.x = -z_new.x;
+    }
+    
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 48: Buffalo Julia
+float mapJuliaVariant48(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.640, 0.492, 0.0);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new = vec3(abs(z_new.x), z_new.y, abs(z_new.z));
+    z = z_new + c;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 49: Spider Julia
+float mapJuliaVariant49(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.496, 0.547, 0.0);
+  vec3 c_prev = c;
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    float theta = acos(z.z / r);
+    float phiAngle = atan(z.y, z.x);
+    float zr = r * r;
+    
+    vec3 z_new = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
+    z_new += c + c_prev * 0.54;
+    c_prev = c;
+    c = z_new;
+    z = z_new;
+    dr = 2.0 * r * dr + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
+
+// Variant 50: Lambdoma Julia
+float mapJuliaVariant50(vec3 p, float t, float phi, int iters) {
+  vec3 z = p;
+  vec3 c = vec3(0.250, 0.700, 0.650);
+  float dr = 1.0;
+  float r = 0.0;
+  
+  for (int i = 0; i < 32; i++) {
+    if (i >= iters) break;
+    r = length(z);
+    if (r > 4.0) break;
+    
+    z = abs(z) / dot(z, z) - c;
+    dr = dr / (r * r) + 1.0;
+  }
+  
+  return 0.5 * log(r) * r / dr;
+}
 `;
