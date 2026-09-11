@@ -1006,6 +1006,13 @@ export class NeuroAestheticsEngine {
     let specimenName = `${FRACTAL_NAMES[selectedType]} • φ-${this.currentGeneration}`;
 
     if (isHybrid) {
+      // Compute archetype and compatibility once — used by both random and curated paths
+      const selectedArch = getFractalArchetype(selectedType);
+      const compat = COMPATIBLE_HYBRIDS[selectedType] || {
+        partners: ALL_FRACTAL_TYPES.filter(t => t !== selectedType),
+        ops: ['smoothUnion', 'smoothMorph', 'domainWarp']
+      };
+
       // RANDOM HYBRID MODE: Allow ANY combination for thousands of hybrids
       if (this.RANDOM_HYBRID_MODE && Math.random() < 0.6) {
         // 60% chance: completely random partner from ALL types
@@ -1014,13 +1021,8 @@ export class NeuroAestheticsEngine {
         console.info(`[NeuroAesthetics] Random hybrid: ${selectedType} + ${hybridType}`);
       } else {
         // 40% chance: use compatibility matrix for curated hybrids
-        const compat = COMPATIBLE_HYBRIDS[selectedType] || {
-          partners: ALL_FRACTAL_TYPES.filter(t => t !== selectedType),
-          ops: ['smoothUnion', 'smoothMorph', 'domainWarp']
-        };
 
         // IMPROVED HYBRID SELECTION: Score each partner by archetype match + user affinity + exploration
-        const selectedArch = getFractalArchetype(selectedType);
         let bestPartner = compat.partners[0];
         let bestScore = -1;
         for (const partner of compat.partners) {

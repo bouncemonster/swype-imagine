@@ -41,7 +41,7 @@ const ALL_FRACTAL_TYPES: FractalType[] = [
   'mandelbar', 'weierstrass3D', 'popcornFunction', 'bedheadAttractor', 'fourSpotAttractor',
   'svenssonAttractor',
 ];
-const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
+const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'smoothCarve', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
 const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
 const CAMERA_MODES: CameraMode[] = ['orbit', 'flyThrough', 'goldenSpiral', 'kelvinInvert'];
 
@@ -124,6 +124,15 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Cleanup interaction timeout on unmount to prevent state updates on unmounted component
+  useEffect(() => {
+    return () => {
+      if (interactionTimeoutRef.current) {
+        clearTimeout(interactionTimeoutRef.current);
+      }
+    };
   }, []);
 
   // AUTO-EXPLORE: Golden ratio based cycling through ALL fractal types
@@ -636,7 +645,7 @@ export default function App() {
       />
 
       {/* Debug Overlay - Toggle with F3 */}
-      {showDebugOverlay && <DebugOverlay />}
+      {showDebugOverlay && <DebugOverlay visible={showDebugOverlay} />}
     </main>
   );
 }

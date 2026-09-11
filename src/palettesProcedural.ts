@@ -5,6 +5,9 @@ import { ColorPalette } from './types/fractal';
  * Generates hundreds of unique palettes using golden ratio and color theory
  */
 
+// Golden angle for maximum hue distribution
+const GOLDEN_ANGLE = 137.508;
+
 // Base hue rotations for variety
 const HUE_ROTATIONS = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
 const SATURATION_LEVELS = [0.6, 0.7, 0.8, 0.9, 1.0];
@@ -55,8 +58,6 @@ function generatePalette(
   baseHue: number,
   variation: number
 ): ColorPalette {
-  const GOLDEN_ANGLE = 137.508;
-  
   // Primary color
   const primaryHue = baseHue;
   const primarySat = SATURATION_LEVELS[Math.floor(variation / 5) % SATURATION_LEVELS.length];

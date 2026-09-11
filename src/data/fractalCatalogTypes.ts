@@ -1,4 +1,4 @@
-import { FractalType, CompositeOp } from '../types/fractal';
+import { FractalType, CompositeOp, RenderStyle } from '../types/fractal';
 
 export type FractalCategoryKey = 
   | 'geometric_curves'
@@ -28,13 +28,18 @@ export interface CanonicalFractal {
     warpStrength?: number;
     boxFold?: number;
     sphereFold?: number;
-    octaves?: number;
+    octaveLayers?: number;
     zoom?: number;
     phiMultiplier?: number;
     rotX?: number;
     rotY?: number;
     iterations?: number;
     paletteSeed?: number;
+    smoothK?: number;
+    glowIntensity?: number;
+    morphSpeed?: number;
+    interiorCut?: number;
+    renderStyle?: RenderStyle;
   };
 }
 
