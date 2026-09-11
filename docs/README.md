@@ -18,6 +18,7 @@
 - [App.md](App.md) - Main component, auto-explore, neuro-feed
 - [FractalCanvas.md](FractalCanvas.md) - Canvas controls and interaction
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
+- [UserPreferenceEngine.md](UserPreferenceEngine.md) - Interaction learning, adapted defaults
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
 - [palettes.md](palettes.md) - 24 hand-crafted + 640 procedural palettes
 - [fractal-catalog.md](fractal-catalog.md) - 110+ canonical fractals, 8 categories
