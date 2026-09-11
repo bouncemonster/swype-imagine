@@ -54,6 +54,16 @@
 - [ARCHITECTURE.md](../ARCHITECTURE.md) - Project structure, dependencies
 - [RENDERING_SYSTEM.md](../RENDERING_SYSTEM.md) - Render modes, lighting, post-processing
 - [WHITEPAPER.md](../WHITEPAPER.md) - Project overview, competitor analysis
+- [ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md) - Visual diagrams (Mermaid)
+
+## Guides & Tutorials
+
+- [TUTORIALS.md](TUTORIALS.md) - Step-by-step guides (add fractals, render modes, deploy)
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common problems and solutions
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide (Cloudflare, Vercel, Docker)
+- [FAQ.md](FAQ.md) - Frequently asked questions
+- [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
+- [CHANGELOG.md](CHANGELOG.md) - Version history
 
 ## Configuration
 
@@ -65,10 +75,13 @@
 
 - **86** fractal types (actively used)
 - **431** fractal types (total mapped)
+- **110+** canonical fractals in catalog
 - **7** render modes
 - **8** composite operations
 - **4** camera modes
-- **48** uniform buffer floats
-- **32** GLSL uniforms
-- **54** TypeScript files
+- **48** uniform buffer floats (192 bytes)
+- **54** TypeScript source files
+- **43** documentation files
 - **~650KB** source code
+- **~200KB** documentation
+- **327KB** shader code (GLSL + WGSL)
