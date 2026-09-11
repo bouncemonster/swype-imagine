@@ -44,7 +44,9 @@ struct Uniforms {
   palette_seed: f32,
 
   palette_rotation: f32,
-  pad5: vec3<f32>,
+  auto_rotate: f32,
+  quality_level: f32, // 0=low (mobile), 1=medium (laptop), 2=high (desktop)
+  pad5: f32,
 };
 
 @group(0) @binding(0) var<uniform> u: Uniforms;

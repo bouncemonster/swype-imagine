@@ -216,6 +216,12 @@ export function useRenderEngine(
           activeBackendLabelRef.current = 'WebGPU (WGSL)';
           setBackendLabel('WebGPU (WGSL)');
           setAdapterInfoState(gpuEngine.adapterInfo);
+          
+          // ADAPTIVE QUALITY: Set quality level based on device
+          const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 2);
+          gpuEngine.setQualityLevel(qualityLevel);
+          console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
+          
           setIsCompiling(false);
           console.info(`[DIAG] Engine ready: WebGPU | ${gpuEngine.adapterInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
           onEngineReady?.();
@@ -242,6 +248,12 @@ export function useRenderEngine(
         activeBackendLabelRef.current = 'WebGL2 (GLSL)';
         setBackendLabel('WebGL2 (GLSL)');
         setAdapterInfoState(glEngine.rendererInfo);
+        
+        // ADAPTIVE QUALITY: Set quality level based on device
+        const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 2);
+        glEngine.setQualityLevel(qualityLevel);
+        console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
+        
         setIsCompiling(false);
         console.info(`[DIAG] Engine ready: WebGL2 | ${glEngine.rendererInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
         onEngineReady?.();

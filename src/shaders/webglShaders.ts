@@ -63,6 +63,7 @@ uniform float u_volumetric_fog;
 uniform float u_palette_seed;
 uniform float u_palette_rotation;
 uniform float u_auto_rotate;
+uniform float u_quality_level; // 0=low (mobile), 1=medium (laptop), 2=high (desktop)
 
 const float PI = 3.141592653589793;
 const float TWO_PI = 6.283185307179586;
@@ -3994,9 +3995,13 @@ void main() {
   float lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
   int iterReduction = int(lodFactor * 4.0); // Reduced from 8 to 4 to preserve detail at distance
 
+  // ADAPTIVE QUALITY: Adjust performance based on device capability
+  // qualityLevel: 0=low (mobile), 1=medium (laptop), 2=high (desktop)
+  float qualityMult = 0.5 + u_quality_level * 0.25; // 0.5, 0.75, 1.0
+  
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
   // Close range: 512 steps, Medium: 384 steps, Far: 256 steps
-  int maxSteps = (cam_dist < 1.0) ? 512 : (cam_dist < 3.0) ? 384 : 256;
+  int maxSteps = int(((cam_dist < 1.0) ? 512.0 : (cam_dist < 3.0) ? 384.0 : 256.0) * qualityMult);
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
   float hit_threshold = max(hitScale * 3.0, 0.002); // Declared here, used in loop + binary search
@@ -4068,12 +4073,12 @@ void main() {
     }
     prevNegative = curNegative;
 
-    // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
-    // Don't count negative distances as "increasing" — they mean we're inside
-    // INCREASED from 16 to 32 to handle sparse fractal regions
+    // EARLY TERMINATION: Quality-adaptive miss threshold
+    // Low quality: 16 misses, Medium: 24, High: 32
+    int missThreshold = int(16.0 + u_quality_level * 8.0);
     if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount++;
-      if (missCount > 32) break;
+      if (missCount > missThreshold) break;
     } else if (d < 0.0) {
       missCount = 0; // Inside fractal = definitely not missing
     } else {
