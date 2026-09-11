@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.2.0  
+**Version**: 1.3.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Ready — All Critical Bugs Fixed
+**Status**: Production Live — All Critical + Runtime Bugs Fixed
 
 ---
 
@@ -107,7 +107,7 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 ### Components (Must Know)
 - `src/App.tsx` - Root component (593 lines)
 - `src/components/ControlsPanel.tsx` - Main controls (1012 lines)
-- `src/components/FractalCanvas.tsx` - Canvas (231 lines)
+- `src/components/FractalCanvas.tsx` - Canvas (260 lines)
 - `src/hooks/useRenderEngine.ts` - Engine hook (570 lines)
 
 ### Data (Must Know)
@@ -298,10 +298,12 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: smoothCarve missing from COMPOSITE_OPS
 - ✅ Fixed: interactionTimeout cleanup on unmount
 - ✅ Fixed: fractalCatalogTypes enginePreset interface (octaves→octaveLayers, added 5 fields)
+- ✅ Fixed: preventDefault passive listener errors (added stopPropagation to wheel/touch native handlers)
 - ⚠️ Remaining: TypeScript strict mode not enabled
 - ⚠️ Remaining: 27 fractal types in NeuroAestheticsEngine not in FractalType union
-- ⚠️ Remaining: ~140 data type mismatches in category files
+- ️ Remaining: ~140 data type mismatches in category files
 - ⚠️ Remaining: fractalFactory.ts non-standard import paths
+- ️ Remaining: No git remote configured (push not possible)
 
 ### Short-term
 - Add more fractal types (target: 200+)
@@ -365,6 +367,7 @@ Each component has dedicated doc in `docs/`:
 - 5D archetype space for personalization
 - Real-time ray marching at 60+ FPS
 - Post-audit: zero per-frame allocations, all bugs documented
+- v1.3.0: React 19 passive listener conflict resolved (stopPropagation on native wheel/touch handlers)
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
