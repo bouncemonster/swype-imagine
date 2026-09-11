@@ -98,6 +98,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     const wheelHandler = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation(); // Prevent React 19 root-level passive listener from also calling preventDefault
+      lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during zoom
       // Reduced sensitivity: 0.0012 instead of 0.0018 for smoother zoom
       const zoomFactor = Math.exp(Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY) * 0.0012, 0.18));
       onInteraction?.(Math.abs(e.deltaY) * 0.015, 0);
@@ -113,6 +114,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       if (e.touches.length === 2) {
         e.preventDefault();
         e.stopPropagation(); // Prevent React 19 root-level passive listener conflict
+        lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during pinch
         const t1 = e.touches[0], t2 = e.touches[1];
         touchDistanceRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       }
@@ -123,6 +125,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       if (e.touches.length === 2) {
         e.preventDefault();
         e.stopPropagation(); // Prevent React 19 root-level passive listener conflict
+        lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during pinch-zoom
         const t1 = e.touches[0], t2 = e.touches[1];
         const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
         if (touchDistanceRef.current !== null && touchDistanceRef.current > 5) {

@@ -121,6 +121,7 @@ export function useRenderEngine(
   const inertiaDecay = 0.94; // Smoother decay (was 0.92)
   const inertiaThreshold = 0.00008; // Lower threshold for longer glide
   const inertiaEnabledRef = useRef(true); // Allow toggling inertia on/off
+  const AUTO_ROTATION_RESUME_DELAY = 3000; // ms of no interaction before auto-rotation resumes
 
   // Keep screenshot ref in sync
   useEffect(() => {
@@ -391,20 +392,24 @@ export function useRenderEngine(
           }
         }
 
-        // Auto rotation
-        const autoRotX = currentParams.autoRotate ? (simTime * currentParams.autoRotateSpeed * 0.12) : 0;
-        const autoRotY = currentParams.autoRotate ? (Math.sin(simTime * 0.18) * 0.06) : 0;
+        // Auto rotation — PAUSED during interaction (drag/zoom), resumes after 3s idle
+        const timeSinceLastMove = timestamp - lastMoveTimeRef.current;
+        const isInteracting = isDraggingRef.current || timeSinceLastMove < AUTO_ROTATION_RESUME_DELAY;
+        const autoRotX = (currentParams.autoRotate && !isInteracting) ? (simTime * currentParams.autoRotateSpeed * 0.12) : 0;
+        const autoRotY = (currentParams.autoRotate && !isInteracting) ? (Math.sin(simTime * 0.18) * 0.06) : 0;
 
-        // Inertia - smoother with better momentum
+        // Inertia - frame-rate independent decay (was per-frame, now per-second)
         let inertiaRotX = 0, inertiaRotY = 0;
         if (inertiaEnabledRef.current && !isDraggingRef.current && (Math.abs(velocityRef.current.x) > inertiaThreshold || Math.abs(velocityRef.current.y) > inertiaThreshold)) {
           const currentZoom = currentParams.zoom;
           const dynamicSensitivity = 0.005 * Math.max(0.1, Math.min(1.2, currentZoom / 2.5));
-          const dt = deltaMs;
-          inertiaRotX = velocityRef.current.x * dt * dynamicSensitivity * 0.6;
-          inertiaRotY = velocityRef.current.y * dt * dynamicSensitivity * 0.6;
-          velocityRef.current.x *= inertiaDecay;
-          velocityRef.current.y *= inertiaDecay;
+          const dtSec = deltaMs / 1000.0;
+          inertiaRotX = velocityRef.current.x * deltaMs * dynamicSensitivity * 0.6;
+          inertiaRotY = velocityRef.current.y * deltaMs * dynamicSensitivity * 0.6;
+          // Frame-rate independent decay: 0.94 at 60fps → same feel at any FPS
+          const frameRateIndependentDecay = Math.pow(inertiaDecay, dtSec * 60);
+          velocityRef.current.x *= frameRateIndependentDecay;
+          velocityRef.current.y *= frameRateIndependentDecay;
           if (Math.abs(velocityRef.current.x) < inertiaThreshold) velocityRef.current.x = 0;
           if (Math.abs(velocityRef.current.y) < inertiaThreshold) velocityRef.current.y = 0;
         }
