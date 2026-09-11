@@ -16,7 +16,7 @@ Real-time 3D fractal visualization engine showcasing mathematical beauty through
 
 ### Code Metrics
 ```
-Source Files:     54 TypeScript/TSX
+Source Files:     56 TypeScript/TSX
 Documentation:    44 markdown files (219KB)
 Shader Code:      327KB (GLSL + WGSL)
 Total Lines:      ~25,000 (code + docs)
@@ -106,13 +106,15 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 
 ### Components (Must Know)
 - `src/App.tsx` - Root component (~657 lines)
-- `src/components/ControlsPanel.tsx` - Main controls (~1061 lines)
+- `src/components/ControlsPanel.tsx` - Main controls (~876 lines, architectures data extracted)
 - `src/components/FractalCanvas.tsx` - Canvas (~260 lines)
 - `src/hooks/useRenderEngine.ts` - Engine hook (~620 lines)
 
 ### Data (Must Know)
 - `src/data/canonicalFractals.ts` - 431 fractals across 10 categories
-- `src/types/fractal.ts` - Core types (584 lines)
+- `src/data/compatibleHybrids.ts` - Hybrid breeding compatibility matrix (249 lines)
+- `src/data/fractalArchitectures.ts` - Architecture tab data (193 lines)
+- `src/types/fractal.ts` - Core types (576 lines)
 - `src/palettes.ts` - 24 palettes
 - `src/palettesProcedural.ts` - 640 palettes
 

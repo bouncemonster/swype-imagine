@@ -30,8 +30,9 @@ Stored in `localStorage` as `golden_ratio_taste_profile_v2`.
 - **primes** - primeSpiral, riemannZeta, gaussianPrimes
 - **attractors** - lorenz, hopf, dla (default)
 
-### COMPATIBLE_HYBRIDS (lines 38-248)
+### COMPATIBLE_HYBRIDS (extracted to `src/data/compatibleHybrids.ts`)
 Curated compatibility matrix: each fractal type has 3-5 compatible partners and preferred composite ops.
+Imported from separate data file to reduce NeuroAestheticsEngine.ts monolith size (was 241 lines inline).
 
 ## Key Methods
 

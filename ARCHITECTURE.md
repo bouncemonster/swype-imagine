@@ -51,6 +51,8 @@ src/
 │   ├── canonicalFractals.ts     # Fractal catalog (1.4KB)
 │   ├── fractalCatalogTypes.ts   # Catalog types (3.4KB)
 │   ├── fractalFactory.ts        # Factory function (2.2KB)
+│   ├── compatibleHybrids.ts     # Hybrid breeding compatibility matrix (8KB)
+│   ├── fractalArchitectures.ts  # Architecture tab data (6KB)
 │   └── categories/              # 10 fractal categories
 │       ├── geometricCurves.ts   # Geometric curves (16KB)
 │       ├── constructiveFractals.ts  # Constructive fractals (8.7KB)
@@ -73,7 +75,7 @@ src/
 └── main.tsx                     # Entry point (407B)
 ```
 
-**Total**: 54 TypeScript/TSX files, ~650KB source code
+**Total**: 56 TypeScript/TSX files, ~660KB source code
 
 ## Critical Architecture Decisions
 

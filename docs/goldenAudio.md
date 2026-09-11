@@ -7,10 +7,12 @@ Generates mathematically-coupled audio drones based on fractal geometry, tuned t
 
 ## Key Concepts
 
-### AudioTuningMode (line 9)
+### AudioTuning (imported from `types/fractal.ts`)
 - **phi432** - Golden ratio tuning at 432 Hz
 - **fibonacci** - Fibonacci sequence intervals
 - **zenChimes** - Pentatonic zen intervals
+
+Previously defined as `AudioTuningMode` locally — now uses single `AudioTuning` type from fractal.ts.
 
 ### FractalHarmonicFamily (lines 11-61)
 5 mathematical families map to unique chord voicings:

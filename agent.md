@@ -8,7 +8,7 @@
 **Language**: Russian UI, English code comments
 
 ## Core Statistics
-- **Source files**: 54 TypeScript/TSX files (~650KB)
+- **Source files**: 56 TypeScript/TSX files (~660KB)
 - **Documentation**: 44 markdown files (219KB, 5,965 lines)
 - **Shader code**: 327KB (187KB GLSL + 140KB WGSL)
 - **Fractal types**: 431 active (all mapped in WebGL + WGSL, 104/431 implemented in WebGPU)

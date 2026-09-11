@@ -16,8 +16,8 @@ interface UserProfileModalProps {
   resonanceScore: number;
   isEngineerMode: boolean;
   onToggleEngineerMode: () => void;
-  audioTuning: AudioTuningMode;
-  onSelectAudioTuning: (mode: AudioTuningMode) => void;
+  audioTuning: AudioTuning;
+  onSelectAudioTuning: (mode: AudioTuning) => void;
   onResetTasteProfile?: () => void;
   onOpenManifest?: () => void;
   likedSpecimens?: FractalSpecimen[];
@@ -196,5 +196,5 @@ Opens ProjectManifestModal
 ## Dependencies
 - `TasteProfile`, `AestheticArchetype`, `ARCHETYPE_LABELS` from NeuroAestheticsEngine
 - `FractalSpecimen` from types
-- `AudioTuningMode` from goldenAudio
+- `AudioTuning` from types/fractal.ts
 - `lucide-react` icons (14 icons)
