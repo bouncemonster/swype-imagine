@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.7.0  
+**Version**: 1.8.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Live — Interaction + Render Mechanics Fixed
+**Status**: Production Live — Ray-Marching Bounds Expanded, Rendering Distance Fixed
 
 ---
 
@@ -311,6 +311,10 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: 27 newer fractal types archetype classification (were all defaulting to 'attractors')
 - ✅ Fixed: auto-rotation now pauses during interaction (drag/zoom), resumes after 3s idle
 - ✅ Fixed: inertia decay is now frame-rate independent (was 35x faster at 144fps vs 60fps)
+- ✅ Fixed: ray-marching bounding box expanded ±2.5 → ±5.0 (fractals were clipped at edges)
+- ✅ Fixed: bounding sphere expanded 6.0 → 10.0 (larger fractal structures now visible)
+- ✅ Fixed: early termination missCount 16 → 32 (sparse fractal regions no longer prematurely terminated)
+- ✅ Fixed: LOD iteration reduction 8 → 4 (preserves detail at distance)
 - ️ Remaining: TypeScript strict mode not enabled
 - ⚠️ Remaining: ~140 data type mismatches in category files (handled by alias mappings at runtime)
 - ️ Remaining: fractalFactory.ts non-standard import paths
@@ -384,6 +388,7 @@ Each component has dedicated doc in `docs/`:
 - v1.5.0: Deep math audit initiated
 - v1.6.0: 600+ shader math bugs fixed — unclamped log/acos, double-power angles, BurningShip double-add, RenderStyle aliases, archetype classification for 27 types
 - v1.7.0: Auto-rotation pauses during interaction (3s resume), inertia decay frame-rate independent
+- v1.8.0: Ray-marching bounds expanded — bounding box ±5.0, sphere 10.0, missCount 32, LOD reduction 4
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
