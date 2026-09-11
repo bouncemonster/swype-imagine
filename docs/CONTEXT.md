@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.9.1  
+**Version**: 1.10.0  
 **Last Updated**: 2026-09-11  
-**Status**: Local Build Ready — All Fixes Applied, Awaiting Git Deploy
+**Status**: Production Deployed — Adaptive Quality System Active
 
 ---
 
@@ -399,6 +399,7 @@ Each component has dedicated doc in `docs/`:
 - v1.8.0: Ray-marching bounds expanded — bounding box ±5.0, sphere 10.0, missCount 32, LOD reduction 4
 - v1.9.0: Shader compilation errors fixed, 13 math bugs fixed (3 CRITICAL, 2 HIGH, 8 MEDIUM)
 - v1.9.1: CRITICAL transparent sphere clipping fixed — r_bound 5.0→12.0 in GLSL+WGSL
+- v1.10.0: Adaptive quality system — mobile/desktop auto-detection, quality-aware ray marching
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
