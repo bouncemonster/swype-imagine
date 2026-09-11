@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.10.0  
+**Version**: 2.0.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Deployed — Adaptive Quality System Active
+**Status**: Production Deployed — 431 Fractal Types Active
 
 ---
 
@@ -21,7 +21,7 @@ Documentation:    44 markdown files (219KB)
 Shader Code:      327KB (GLSL + WGSL)
 Total Lines:      ~25,000 (code + docs)
 Components:       12 UI components
-Fractal Types:    86 active, 431 total
+Fractal Types:    431 active (86 classic + 345 expansion)
 Render Modes:     7
 Color Palettes:   664
 ```
@@ -400,6 +400,7 @@ Each component has dedicated doc in `docs/`:
 - v1.9.0: Shader compilation errors fixed, 13 math bugs fixed (3 CRITICAL, 2 HIGH, 8 MEDIUM)
 - v1.9.1: CRITICAL transparent sphere clipping fixed — r_bound 5.0→12.0 in GLSL+WGSL
 - v1.10.0: Adaptive quality system — mobile/desktop auto-detection, quality-aware ray marching
+- v2.0.0: **MAJOR** — Activated 345 dead fractal types (86→431 total). Types 86-430 now accessible from UI
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy

@@ -114,6 +114,26 @@ export function getFractalIndex(type?: string): number {
     case 'bedheadAttractor': return 83;
     case 'fourSpotAttractor': return 84;
     case 'svenssonAttractor': return 85;
+    // BEAUTIFUL FRACTALS (86-95)
+    case 'kaleidoscopicIFS': return 86;
+    case 'flowerOfLife': return 87;
+    case 'cosmicSpiral': return 88;
+    case 'crystalGrowth': return 89;
+    case 'quantumFoam': return 90;
+    case 'fractalCoral': return 91;
+    case 'nebulaCloud': return 92;
+    case 'hyperbolicTiling': return 93;
+    case 'organicCell': return 94;
+    case 'goldenHelix': return 95;
+    // MODERN FRACTALS (96-103)
+    case 'mandelbulbPower4': return 96;
+    case 'mandelbulbPower12': return 97;
+    case 'hybridMandelboxKIFS': return 98;
+    case 'multibrot3Advanced': return 99;
+    case 'fractalFlameIFS': return 100;
+    case 'amazingBox': return 101;
+    case 'mandelbulbMandelboxHybrid': return 102;
+    case 'mengerMandelboxHybrid': return 103;
     // ADDITIONAL TYPES from categories (were missing, causing black screens)
     case 'burningShip': return 27; // Map to burningShip3D
     case 'chenAttractor': return 73; // Map to rosslerAttractor (similar)
@@ -144,6 +164,7 @@ export function getFractalIndex(type?: string): number {
     case 'kleinBottle': return 109;
     case 'projectivePlane': return 110;
     case 'mobiusStrip': return 111;
+    case 'mobiusStrip3D': return 111; // Alias
     case 'torusKnot4D': return 112;
     // FRACTAL FLAMES (113-125)
     case 'flameSinusoidal': return 113;

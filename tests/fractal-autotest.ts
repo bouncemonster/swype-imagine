@@ -41,6 +41,7 @@ function section(name: string) {
 section('1. Catalog Integrity');
 
 const ALL_FRACTAL_TYPES: FractalType[] = [
+  // Classic Fractals (0-85)
   'phyllotaxis', 'mandelbulb', 'quaternionJulia', 'apollonian', 'spiralTunnel',
   'mandelbox', 'icosahedral', 'menger', 'gyroid', 'primeSpiral',
   'quasicrystal', 'hopfFibration', 'calabiYau', 'riemannZeta', 'sierpinskiOcta',
@@ -59,23 +60,105 @@ const ALL_FRACTAL_TYPES: FractalType[] = [
   'logisticBifurcation', 'fractalSpire', 'deJongAttractor', 'pickoverAttractor', 'vicsekFractal',
   'mandelbar', 'weierstrass3D', 'popcornFunction', 'bedheadAttractor', 'fourSpotAttractor',
   'svenssonAttractor',
+  // Beautiful Fractals (86-95)
+  'kaleidoscopicIFS', 'flowerOfLife', 'cosmicSpiral', 'crystalGrowth', 'quantumFoam',
+  'fractalCoral', 'nebulaCloud', 'hyperbolicTiling', 'organicCell', 'goldenHelix',
+  // Modern Fractals (96-103)
+  'mandelbulbPower4', 'mandelbulbPower12', 'hybridMandelboxKIFS', 'multibrot3Advanced',
+  'fractalFlameIFS', 'amazingBox', 'mandelbulbMandelboxHybrid', 'mengerMandelboxHybrid',
+  // 4D Polytopes (104-108)
+  'tesseract', '120Cell', '600Cell', '24Cell', '5Cell',
+  // Higher-Dimensional Manifolds (109-112)
+  'kleinBottle', 'projectivePlane', 'mobiusStrip3D', 'torusKnot4D',
+  // Fractal Flames (113-125)
+  'flameSinusoidal', 'flameSpherical', 'flameSwirl', 'flameHorseshoe', 'flameButterfly',
+  'flameHeart', 'flameSpiral', 'flameHyperbolic', 'flameDiamond', 'flameWaves',
+  'flamePopcorn', 'flameRings', 'flameFan',
+  // Advanced IFS (126-130)
+  'ifs3DTree', 'ifs3DFern', 'ifs3DSierpinski', 'ifs3DCantor', 'ifs3DKoch',
+  // Mandelbrot Variants (131-140)
+  'mandelbrotVariant1', 'mandelbrotVariant2', 'mandelbrotVariant3', 'mandelbrotVariant4', 'mandelbrotVariant5',
+  'mandelbrotVariant6', 'mandelbrotVariant7', 'mandelbrotVariant8', 'mandelbrotVariant9', 'mandelbrotVariant10',
+  // Julia Variants (141-190)
+  'juliaVariant1', 'juliaVariant2', 'juliaVariant3', 'juliaVariant4', 'juliaVariant5',
+  'juliaVariant6', 'juliaVariant7', 'juliaVariant8', 'juliaVariant9', 'juliaVariant10',
+  'juliaVariant11', 'juliaVariant12', 'juliaVariant13', 'juliaVariant14', 'juliaVariant15',
+  'juliaVariant16', 'juliaVariant17', 'juliaVariant18', 'juliaVariant19', 'juliaVariant20',
+  'juliaVariant21', 'juliaVariant22', 'juliaVariant23', 'juliaVariant24', 'juliaVariant25',
+  'juliaVariant26', 'juliaVariant27', 'juliaVariant28', 'juliaVariant29', 'juliaVariant30',
+  'juliaVariant31', 'juliaVariant32', 'juliaVariant33', 'juliaVariant34', 'juliaVariant35',
+  'juliaVariant36', 'juliaVariant37', 'juliaVariant38', 'juliaVariant39', 'juliaVariant40',
+  'juliaVariant41', 'juliaVariant42', 'juliaVariant43', 'juliaVariant44', 'juliaVariant45',
+  'juliaVariant46', 'juliaVariant47', 'juliaVariant48', 'juliaVariant49', 'juliaVariant50',
+  // IFS Variants (191-240)
+  'ifsVariant1', 'ifsVariant2', 'ifsVariant3', 'ifsVariant4', 'ifsVariant5',
+  'ifsVariant6', 'ifsVariant7', 'ifsVariant8', 'ifsVariant9', 'ifsVariant10',
+  'ifsVariant11', 'ifsVariant12', 'ifsVariant13', 'ifsVariant14', 'ifsVariant15',
+  'ifsVariant16', 'ifsVariant17', 'ifsVariant18', 'ifsVariant19', 'ifsVariant20',
+  'ifsVariant21', 'ifsVariant22', 'ifsVariant23', 'ifsVariant24', 'ifsVariant25',
+  'ifsVariant26', 'ifsVariant27', 'ifsVariant28', 'ifsVariant29', 'ifsVariant30',
+  'ifsVariant31', 'ifsVariant32', 'ifsVariant33', 'ifsVariant34', 'ifsVariant35',
+  'ifsVariant36', 'ifsVariant37', 'ifsVariant38', 'ifsVariant39', 'ifsVariant40',
+  'ifsVariant41', 'ifsVariant42', 'ifsVariant43', 'ifsVariant44', 'ifsVariant45',
+  'ifsVariant46', 'ifsVariant47', 'ifsVariant48', 'ifsVariant49', 'ifsVariant50',
+  // LSystem Variants (241-290)
+  'lsystemVariant1', 'lsystemVariant2', 'lsystemVariant3', 'lsystemVariant4', 'lsystemVariant5',
+  'lsystemVariant6', 'lsystemVariant7', 'lsystemVariant8', 'lsystemVariant9', 'lsystemVariant10',
+  'lsystemVariant11', 'lsystemVariant12', 'lsystemVariant13', 'lsystemVariant14', 'lsystemVariant15',
+  'lsystemVariant16', 'lsystemVariant17', 'lsystemVariant18', 'lsystemVariant19', 'lsystemVariant20',
+  'lsystemVariant21', 'lsystemVariant22', 'lsystemVariant23', 'lsystemVariant24', 'lsystemVariant25',
+  'lsystemVariant26', 'lsystemVariant27', 'lsystemVariant28', 'lsystemVariant29', 'lsystemVariant30',
+  'lsystemVariant31', 'lsystemVariant32', 'lsystemVariant33', 'lsystemVariant34', 'lsystemVariant35',
+  'lsystemVariant36', 'lsystemVariant37', 'lsystemVariant38', 'lsystemVariant39', 'lsystemVariant40',
+  'lsystemVariant41', 'lsystemVariant42', 'lsystemVariant43', 'lsystemVariant44', 'lsystemVariant45',
+  'lsystemVariant46', 'lsystemVariant47', 'lsystemVariant48', 'lsystemVariant49', 'lsystemVariant50',
+  // Flame Variants (291-340)
+  'flameVariant1', 'flameVariant2', 'flameVariant3', 'flameVariant4', 'flameVariant5',
+  'flameVariant6', 'flameVariant7', 'flameVariant8', 'flameVariant9', 'flameVariant10',
+  'flameVariant11', 'flameVariant12', 'flameVariant13', 'flameVariant14', 'flameVariant15',
+  'flameVariant16', 'flameVariant17', 'flameVariant18', 'flameVariant19', 'flameVariant20',
+  'flameVariant21', 'flameVariant22', 'flameVariant23', 'flameVariant24', 'flameVariant25',
+  'flameVariant26', 'flameVariant27', 'flameVariant28', 'flameVariant29', 'flameVariant30',
+  'flameVariant31', 'flameVariant32', 'flameVariant33', 'flameVariant34', 'flameVariant35',
+  'flameVariant36', 'flameVariant37', 'flameVariant38', 'flameVariant39', 'flameVariant40',
+  'flameVariant41', 'flameVariant42', 'flameVariant43', 'flameVariant44', 'flameVariant45',
+  'flameVariant46', 'flameVariant47', 'flameVariant48', 'flameVariant49', 'flameVariant50',
+  // Hybrid Variants (341-430)
+  'hybridVariant1', 'hybridVariant2', 'hybridVariant3', 'hybridVariant4', 'hybridVariant5',
+  'hybridVariant6', 'hybridVariant7', 'hybridVariant8', 'hybridVariant9', 'hybridVariant10',
+  'hybridVariant11', 'hybridVariant12', 'hybridVariant13', 'hybridVariant14', 'hybridVariant15',
+  'hybridVariant16', 'hybridVariant17', 'hybridVariant18', 'hybridVariant19', 'hybridVariant20',
+  'hybridVariant21', 'hybridVariant22', 'hybridVariant23', 'hybridVariant24', 'hybridVariant25',
+  'hybridVariant26', 'hybridVariant27', 'hybridVariant28', 'hybridVariant29', 'hybridVariant30',
+  'hybridVariant31', 'hybridVariant32', 'hybridVariant33', 'hybridVariant34', 'hybridVariant35',
+  'hybridVariant36', 'hybridVariant37', 'hybridVariant38', 'hybridVariant39', 'hybridVariant40',
+  'hybridVariant41', 'hybridVariant42', 'hybridVariant43', 'hybridVariant44', 'hybridVariant45',
+  'hybridVariant46', 'hybridVariant47', 'hybridVariant48', 'hybridVariant49', 'hybridVariant50',
+  'hybridVariant51', 'hybridVariant52', 'hybridVariant53', 'hybridVariant54', 'hybridVariant55',
+  'hybridVariant56', 'hybridVariant57', 'hybridVariant58', 'hybridVariant59', 'hybridVariant60',
+  'hybridVariant61', 'hybridVariant62', 'hybridVariant63', 'hybridVariant64', 'hybridVariant65',
+  'hybridVariant66', 'hybridVariant67', 'hybridVariant68', 'hybridVariant69', 'hybridVariant70',
+  'hybridVariant71', 'hybridVariant72', 'hybridVariant73', 'hybridVariant74', 'hybridVariant75',
+  'hybridVariant76', 'hybridVariant77', 'hybridVariant78', 'hybridVariant79', 'hybridVariant80',
+  'hybridVariant81', 'hybridVariant82', 'hybridVariant83', 'hybridVariant84', 'hybridVariant85',
+  'hybridVariant86', 'hybridVariant87', 'hybridVariant88', 'hybridVariant89', 'hybridVariant90',
 ];
 
-assert(ALL_FRACTAL_TYPES.length === 86, `Expected 86 fractal types, got ${ALL_FRACTAL_TYPES.length}`);
+assert(ALL_FRACTAL_TYPES.length === 431, `Expected 431 fractal types, got ${ALL_FRACTAL_TYPES.length}`);
 
-// Verify all types have unique indices 0-85
+// Verify all types have unique indices 0-430
 const indices = new Set<number>();
 const typeToIndex: Record<string, number> = {};
 for (const type of ALL_FRACTAL_TYPES) {
   const idx = getFractalIndex(type);
-  assert(idx >= 0 && idx <= 85, `${type} has invalid index ${idx} (expected 0-85)`);
+  assert(idx >= 0 && idx <= 430, `${type} has invalid index ${idx} (expected 0-430)`);
   assert(!indices.has(idx), `Duplicate index ${idx} for ${type}`);
   indices.add(idx);
   typeToIndex[type] = idx;
 }
-assert(indices.size === 86, `Expected 86 unique indices, got ${indices.size}`);
+assert(indices.size === 431, `Expected 431 unique indices, got ${indices.size}`);
 
-console.log(`  ✓ All 86 fractal types have unique indices 0-85`);
+console.log(`  ✓ All 431 fractal types have unique indices 0-430`);
 
 // ============================================
 // 2. SHADER DISPATCH PARITY — evalSingleFractal coverage
