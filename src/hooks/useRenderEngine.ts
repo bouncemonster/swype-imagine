@@ -143,7 +143,7 @@ export function useRenderEngine(
     } else if (forcedBackend === 'auto') {
       setActiveEngineType('webgl2');
     }
-  }, [forcedBackend]);
+  }, [forcedBackend, isEmbeddedBrowser]);
 
   // Resize handler — always syncs canvas buffer to container CSS size × DPR
   const handleResize = useCallback(() => {
@@ -438,7 +438,7 @@ export function useRenderEngine(
         // Telemetry
         const frameHistory = frameTimesRef.current;
         frameHistory.push(deltaMs);
-        if (frameHistory.length > 72) frameHistory.shift();
+        if (frameHistory.length > 40) frameHistory.shift();
 
         if (timestamp - lastTelemetryDispatchRef.current > 250) {
           lastTelemetryDispatchRef.current = timestamp;

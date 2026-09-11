@@ -20,6 +20,31 @@ import { PROCEDURAL_PALETTES } from './palettesProcedural';
 // Combine hand-crafted and procedural palettes
 const ALL_COLOR_PALETTES = [...COLOR_PALETTES, ...PROCEDURAL_PALETTES];
 
+// Constant arrays used by auto-explore — defined outside component to avoid per-render allocation
+const ALL_FRACTAL_TYPES: FractalType[] = [
+  'phyllotaxis', 'mandelbulb', 'quaternionJulia', 'apollonian', 'spiralTunnel',
+  'mandelbox', 'icosahedral', 'menger', 'gyroid', 'primeSpiral',
+  'quasicrystal', 'hopfFibration', 'calabiYau', 'riemannZeta', 'sierpinskiOcta',
+  'cliffordKlein', 'poincareSphere', 'gaussianPrimes', 'neoviusMinimal', 'eulerTotientSpiral',
+  'cliffordTorus4D', 'kleinianLimit', 'fibonacciSnowflake', 'quaternionMandelbrot', 'hilbertCurve3D',
+  'dragonCurveIFS', 'pythagorasTree3D', 'burningShip3D', 'newtonBasins', 'jerusalemCube',
+  'lorenzAttractor', 'hofstadterButterfly', 'antoineNecklace', 'dlaCluster', 'rosslerHyperchaos',
+  'cliffordAttractor', 'abrikosovLattice', 'beltramiPseudosphere', 'spinFoamNetwork', 'ramanujanTau',
+  'belousovWaves', 'henonAttractor', 'aizawaAttractor', 'thomasAttractor', 'halvorsenAttractor',
+  'juliaSet3D', 'multibrot3', 'tetrix', 'gosperCurve', 'lSystemPlant',
+  'schwarzP', 'schwarzD', 'apollonianGasket', 'barnsleyFern3D', 'kleinQuartic',
+  'spherePacking', 'novaFractal', 'goldenKnot', 'sphericalHarmonics', 'fractalCross',
+  'reactionDiffusion', 'sierpinskiCarpet', 'tricorn', 'chuaCircuit', 'standardMap',
+  'ikedaMap', 'kochSnowflake3D', 'cantorDust', 'phoenixFractal', 'fatouSet',
+  'e8Lattice', 'chladniFigures', 'fitzHugh', 'rosslerAttractor', 'duffingAttractor',
+  'logisticBifurcation', 'fractalSpire', 'deJongAttractor', 'pickoverAttractor', 'vicsekFractal',
+  'mandelbar', 'weierstrass3D', 'popcornFunction', 'bedheadAttractor', 'fourSpotAttractor',
+  'svenssonAttractor',
+];
+const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
+const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
+const CAMERA_MODES: CameraMode[] = ['orbit', 'flyThrough', 'goldenSpiral', 'kelvinInvert'];
+
 const INITIAL_PARAMS: FractalParams = {
   type: 'phyllotaxis',
   hybridType: 'mandelbulb',
@@ -103,29 +128,6 @@ export default function App() {
 
   // AUTO-EXPLORE: Golden ratio based cycling through ALL fractal types
   // Prevents getting stuck on the same models — explores the full fractal space
-  const ALL_FRACTAL_TYPES: FractalType[] = [
-    'phyllotaxis', 'mandelbulb', 'quaternionJulia', 'apollonian', 'spiralTunnel',
-    'mandelbox', 'icosahedral', 'menger', 'gyroid', 'primeSpiral',
-    'quasicrystal', 'hopfFibration', 'calabiYau', 'riemannZeta', 'sierpinskiOcta',
-    'cliffordKlein', 'poincareSphere', 'gaussianPrimes', 'neoviusMinimal', 'eulerTotientSpiral',
-    'cliffordTorus4D', 'kleinianLimit', 'fibonacciSnowflake', 'quaternionMandelbrot', 'hilbertCurve3D',
-    'dragonCurveIFS', 'pythagorasTree3D', 'burningShip3D', 'newtonBasins', 'jerusalemCube',
-    'lorenzAttractor', 'hofstadterButterfly', 'antoineNecklace', 'dlaCluster', 'rosslerHyperchaos',
-    'cliffordAttractor', 'abrikosovLattice', 'beltramiPseudosphere', 'spinFoamNetwork', 'ramanujanTau',
-    'belousovWaves', 'henonAttractor', 'aizawaAttractor', 'thomasAttractor', 'halvorsenAttractor',
-    'juliaSet3D', 'multibrot3', 'tetrix', 'gosperCurve', 'lSystemPlant',
-    'schwarzP', 'schwarzD', 'apollonianGasket', 'barnsleyFern3D', 'kleinQuartic',
-    'spherePacking', 'novaFractal', 'goldenKnot', 'sphericalHarmonics', 'fractalCross',
-    'reactionDiffusion', 'sierpinskiCarpet', 'tricorn', 'chuaCircuit', 'standardMap',
-    'ikedaMap', 'kochSnowflake3D', 'cantorDust', 'phoenixFractal', 'fatouSet',
-    'e8Lattice', 'chladniFigures', 'fitzHugh', 'rosslerAttractor', 'duffingAttractor',
-    'logisticBifurcation', 'fractalSpire', 'deJongAttractor', 'pickoverAttractor', 'vicsekFractal',
-    'mandelbar', 'weierstrass3D', 'popcornFunction', 'bedheadAttractor', 'fourSpotAttractor',
-    'svenssonAttractor',
-  ];
-  const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
-  const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
-  const CAMERA_MODES: CameraMode[] = ['orbit', 'flyThrough', 'goldenSpiral', 'kelvinInvert'];
   const exploreIndexRef = useRef(0);
   const PHI_INV = 0.61803398875; // Golden ratio inverse for maximum spread
 
@@ -301,6 +303,7 @@ export default function App() {
   }, [neuroEngine, applySpecimen]);
 
   // Synchronize audio engine with param state
+  // Only restarts when enableAudio toggles — volume/tuning are updated in real-time by the next effect
   useEffect(() => {
     if (params.enableAudio) {
       goldenAudio.start(params.audioVolume ?? 0.65, params.audioTuning ?? 'phi432');
@@ -310,6 +313,7 @@ export default function App() {
     return () => {
       goldenAudio.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.enableAudio]);
 
   // Update dynamic acoustic parameters in real-time (without restarting audio engine)

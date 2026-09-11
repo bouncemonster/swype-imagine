@@ -131,42 +131,13 @@ float smin(float a, float b, float k) {
 - Golden angle ≈ 137.508°
 - Used in phyllotaxis, color distribution, aesthetics
 
-## Uniform Buffer Layout (48 floats)
+## Uniform Buffer Layout
+**WebGL (GLSL)**: 48 floats, 192 bytes — individual uniform uploads  
+**WebGPU (WGSL)**: 52 floats, 208 bytes — vec3<f32> alignment padding adds 4 floats
 ```
-[0-1]   resolution: vec2
-[2]     time: f32
-[3]     phi_val: f32
-[4-5]   cam_rot: vec2
-[6]     zoom: f32
-[7]     fractal_type: f32
-[8]     iterations: f32
-[9]     glow_intensity: f32
-[10]    morph_speed: f32
-[11]    hybrid_type: f32
-[12]    hybrid_blend: f32
-[13]    box_fold: f32
-[14]    sphere_fold: f32
-[15]    interior_cut: f32
-[16-18] primary_color: vec3
-[19]    tertiary_type: f32
-[20-22] secondary_color: vec3
-[23]    tertiary_blend: f32
-[24-26] accent_color: vec3
-[27]    compose_op: f32
-[28]    smooth_k: f32
-[29]    warp_strength: f32
-[30]    octave_layers: f32
-[31]    cam_mode: f32
-[32-34] cam_pos: vec3
-[35]    slice_plane: f32
-[36]    headlamp_power: f32
-[37]    volumetric_fog: f32
-[38]    slice_axis: f32
-[39]    render_style: f32
-[40-42] ambient_color: vec3
-[43]    palette_seed: f32
-[44]    palette_rotation: f32
-[45-47] pad5: vec3
+CPU packUniforms writes 48 floats (indices 0-47)
+WGSL struct maps 1:1 for first 48 floats
+Indices 48-51: padding (pad5: vec3<f32> + 1 unused) — always zero
 ```
 
 ## Performance Characteristics
@@ -216,12 +187,20 @@ npm run lint     # Run linter
 - **Auto-deploy**: On push to main branch
 
 ## Key Conventions
-- **TypeScript**: Strict mode, interfaces for props
+- **TypeScript**: Strict mode NOT yet enabled (see AUDIT_REPORT.md) — `as any` casts exist
 - **React**: Functional components, hooks
 - **Shaders**: GLSL for WebGL, WGSL for WebGPU
 - **Naming**: camelCase for variables, PascalCase for components
 - **Comments**: English for code, Russian for UI
 - **Documentation**: Markdown with consistent structure
+
+## Known Issues (from audit 2026-09-11)
+- TypeScript strict mode not enabled in tsconfig.json
+- `as any` casts in FractalEngineBase.ts and App.tsx (URL parsing)
+- Unused GLSL stereo uniforms in webglShaders.ts
+- No ESLint configuration (lint script = tsc --noEmit only)
+- `express` dependency unnecessary in package.json
+- See AUDIT_REPORT.md for full details
 
 ## Related Documentation
 - [docs/README.md](docs/README.md) - Full documentation index

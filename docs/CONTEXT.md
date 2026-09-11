@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.0.0  
+**Version**: 1.1.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Ready
+**Status**: Production Ready — Post-Audit Fixes Applied
 
 ---
 
@@ -72,8 +72,10 @@ Display
 
 ## 🔑 Critical Concepts
 
-### 1. Uniform Buffer (48 floats)
-All GPU parameters packed into single 192-byte buffer. Must match struct layout exactly.
+### 1. Uniform Buffer
+**WebGL (GLSL)**: 48 floats, 192 bytes — individual uniform uploads.  
+**WebGPU (WGSL)**: 52 floats, 208 bytes — vec3<f32> alignment padding adds 4 floats.  
+CPU packUniforms writes 48 floats; WGSL struct maps 1:1 for first 48; indices 48-51 are padding.
 
 ### 2. Ray Marching
 Rendering technique for SDF-defined surfaces. Steps along ray until surface hit.
@@ -180,7 +182,7 @@ npm run lint     # Check code style
 ### Black Screen
 - Check GPU backend support (WebGPU/WebGL2)
 - Verify shader compilation
-- Check uniform buffer size (192 bytes)
+- Check uniform buffer size (192 bytes GLSL / 208 bytes WGSL)
 - Look at DebugOverlay (press 'D')
 
 ### Low FPS
@@ -280,11 +282,19 @@ Each component has dedicated doc in `docs/`:
 
 ## 🎯 Current Priorities
 
-### Immediate
-- Monitor production performance
-- Gather user feedback
-- Fix critical bugs
-- Optimize mobile experience
+### Immediate (Post-Audit)
+- ✅ Fixed: syntax error in fractalMappers.ts
+- ✅ Fixed: WGSL uniform buffer size (192→208 bytes)
+- ✅ Fixed: per-frame allocation in WebGLEngine
+- ✅ Fixed: division by zero in normal computation
+- ✅ Fixed: arrays recreated in component body (moved outside)
+- ✅ Fixed: per-frame logging (now only on type change)
+- ✅ Fixed: frame history cap (72→40)
+- ✅ Fixed: Russian comments → English
+- ⚠️ Remaining: TypeScript strict mode not enabled
+- ⚠️ Remaining: `as any` casts need proper types
+- ⚠️ Remaining: unused GLSL stereo uniforms
+- ⚠️ Remaining: no ESLint config
 
 ### Short-term
 - Add more fractal types (target: 200+)
@@ -341,12 +351,13 @@ Each component has dedicated doc in `docs/`:
 7. **Golden ratio** - Aesthetic harmony throughout
 
 ### Technical Achievements
-- 48-float uniform buffer optimization
+- 48-float uniform buffer optimization (52 floats for WGSL with alignment)
 - Dual GPU backend (WebGPU + WebGL2)
 - 327KB shader code (86 fractal types)
 - 664 color palettes (24 + 640 procedural)
 - 5D archetype space for personalization
 - Real-time ray marching at 60+ FPS
+- Post-audit: zero per-frame allocations, all bugs documented
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy

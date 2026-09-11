@@ -528,17 +528,13 @@ export function getSliceAxisIndex(axis?: string): number {
   }
 }
 
-    default: return 0; // Default to golden axis (most visually interesting)
-  }
-}
-
 /**
- * Преобразует строковый стиль рендеринга в числовой индекс
- * КРИТИЧЕСКАЯ ФУНКЦИЯ: Индекс 39 в uniform buffer содержит этот индекс
- * и переключает между 7 режимами рендеринга в шейдере
- * 
- * @param style - Строковый стиль (например, 'solid', 'xray', 'hologram')
- * @returns Числовой индекс (0-6) или 0 (solid) по умолчанию
+ * Converts a string render style to its numeric shader index.
+ * CRITICAL: Index 39 in the uniform buffer holds this value and
+ * switches between 7 render modes in the shader.
+ *
+ * @param style - Render style string (e.g. 'solid', 'xray', 'hologram')
+ * @returns Numeric index (0-6) or 0 (solid) as default
  */
 export function getRenderStyleIndex(style?: string): number {
   switch (style) {

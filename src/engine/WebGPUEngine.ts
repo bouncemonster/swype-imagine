@@ -13,7 +13,7 @@ export class WebGPUEngine extends FractalEngineBase {
   private pipeline: GPURenderPipeline | null = null;
   private uniformBuffer: GPUBuffer | null = null;
   private bindGroup: GPUBindGroup | null = null;
-  private uniformValues = new Float32Array(48); // 192 bytes (aligned to 16 bytes: 12 * 16)
+  private uniformValues = new Float32Array(52); // 208 bytes (WGSL struct with vec3 alignment padding)
   private isDestroyed = false;
   public adapterInfo: string = 'Unknown GPU';
 
@@ -136,9 +136,9 @@ export class WebGPUEngine extends FractalEngineBase {
         },
       });
 
-      // 48 floats * 4 bytes = 192 bytes (aligned to 16 bytes: 12 * 16)
+      // 52 floats * 4 bytes = 208 bytes (WGSL struct size with vec3 alignment padding)
       this.uniformBuffer = this.device.createBuffer({
-        size: 192,
+        size: 208,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
 

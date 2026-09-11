@@ -12,11 +12,15 @@ export class WebGLEngine extends FractalEngineBase {
   private vbo: WebGLBuffer | null = null;
   private uniformLocs: Record<string, WebGLUniformLocation | null> = {};
   
-  // Export data collection
-  private exportPositions: Float32Array = new Float32Array(100000 * 3);
-  private exportColors: Float32Array = new Float32Array(100000 * 3);
-  private exportNormals: Float32Array = new Float32Array(100000 * 3);
+  // Export data collection (lazy-allocated on first use)
+  private exportPositions: Float32Array | null = null;
+  private exportColors: Float32Array | null = null;
+  private exportNormals: Float32Array | null = null;
   private exportCount = 0;
+
+  // Pre-allocated uniform buffer to avoid per-frame allocation
+  private packedUniforms = new Float32Array(48);
+  private lastLoggedFractalType: string = '';
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
@@ -27,6 +31,12 @@ export class WebGLEngine extends FractalEngineBase {
    * Collect surface points for export by sampling SDF
    */
   public collectSurfacePoints(params: FractalParams, resolution: number = 64): void {
+    // Lazy-allocate export buffers on first use
+    if (!this.exportPositions) {
+      this.exportPositions = new Float32Array(100000 * 3);
+      this.exportColors = new Float32Array(100000 * 3);
+      this.exportNormals = new Float32Array(100000 * 3);
+    }
     this.exportCount = 0;
     const bounds = 2.5;
     const step = (bounds * 2) / resolution;
@@ -45,25 +55,26 @@ export class WebGLEngine extends FractalEngineBase {
           // If near surface, add to export
           if (Math.abs(sdf) < 0.05 && this.exportCount < 100000) {
             const idx = this.exportCount * 3;
-            this.exportPositions[idx] = x;
-            this.exportPositions[idx + 1] = y;
-            this.exportPositions[idx + 2] = z;
+            this.exportPositions![idx] = x;
+            this.exportPositions![idx + 1] = y;
+            this.exportPositions![idx + 2] = z;
             
             // Compute normal via central differences
             const eps = 0.01;
             const nx = this.evaluateSDF(x + eps, y, z, params) - this.evaluateSDF(x - eps, y, z, params);
-            const ny = this.evaluateSDF(x, y + eps, params) - this.evaluateSDF(x, y - eps, params);
+            const ny = this.evaluateSDF(x, y + eps, z, params) - this.evaluateSDF(x, y - eps, z, params);
             const nz = this.evaluateSDF(x, y, z + eps, params) - this.evaluateSDF(x, y, z - eps, params);
             const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+            const safeLen = len < 1e-6 ? 1e-6 : len;
             
-            this.exportNormals[idx] = nx / len;
-            this.exportNormals[idx + 1] = ny / len;
-            this.exportNormals[idx + 2] = nz / len;
+            this.exportNormals![idx] = nx / safeLen;
+            this.exportNormals![idx + 1] = ny / safeLen;
+            this.exportNormals![idx + 2] = nz / safeLen;
             
             // Color based on position (simplified)
-            this.exportColors[idx] = 0.5 + x * 0.2;
-            this.exportColors[idx + 1] = 0.5 + y * 0.2;
-            this.exportColors[idx + 2] = 0.5 + z * 0.2;
+            this.exportColors![idx] = 0.5 + x * 0.2;
+            this.exportColors![idx + 1] = 0.5 + y * 0.2;
+            this.exportColors![idx + 2] = 0.5 + z * 0.2;
             
             this.exportCount++;
           }
@@ -98,9 +109,9 @@ export class WebGLEngine extends FractalEngineBase {
    */
   public getExportData() {
     return {
-      positions: this.exportPositions.slice(0, this.exportCount * 3),
-      colors: this.exportColors.slice(0, this.exportCount * 3),
-      normals: this.exportNormals.slice(0, this.exportCount * 3),
+      positions: this.exportPositions!.slice(0, this.exportCount * 3),
+      colors: this.exportColors!.slice(0, this.exportCount * 3),
+      normals: this.exportNormals!.slice(0, this.exportCount * 3),
       count: this.exportCount
     };
   }
@@ -299,20 +310,23 @@ export class WebGLEngine extends FractalEngineBase {
       return;
     }
 
-    // LOG FRACTAL TYPE for debugging black screens
+    // LOG FRACTAL TYPE only when it changes (not every frame)
     const indices = this.computeIndices(params);
-    userProblemLogger.log({
-      level: 'info',
-      category: 'render',
-      message: `Rendering fractal type: ${params.type} (idx: ${indices.fractalIdx})`,
-      details: { 
-        type: params.type,
-        fractalIdx: indices.fractalIdx,
-        hybridType: params.hybridType,
-        renderStyle: params.renderStyle,
-        zoom: params.zoom
-      }
-    });
+    if (params.type !== this.lastLoggedFractalType) {
+      this.lastLoggedFractalType = params.type;
+      userProblemLogger.log({
+        level: 'info',
+        category: 'render',
+        message: `Rendering fractal type: ${params.type} (idx: ${indices.fractalIdx})`,
+        details: { 
+          type: params.type,
+          fractalIdx: indices.fractalIdx,
+          hybridType: params.hybridType,
+          renderStyle: params.renderStyle,
+          zoom: params.zoom
+        }
+      });
+    }
 
     // Start performance measurement
     const { duration: setupTime } = measurePerformance(() => {
@@ -323,16 +337,15 @@ export class WebGLEngine extends FractalEngineBase {
       const palette = this.resolvePalette(params);
       // indices already computed above for logging, reuse it
 
-      // Upload all uniforms via packed buffer
-      const packed = new Float32Array(48);
-      this.packUniforms(packed, timeSec, params, palette, indices);
+      // Upload all uniforms via pre-allocated buffer (no per-frame allocation)
+      this.packUniforms(this.packedUniforms, timeSec, params, palette, indices);
 
       // Validate uniform values
-      if (!validateScalar(packed[2], 'u_time', undefined, [0, 1000])) {
-        renderDiagnostics.log('error', 'render', 'Invalid time value', { time: packed[2] });
+      if (!validateScalar(this.packedUniforms[2], 'u_time', undefined, [0, 1000])) {
+        renderDiagnostics.log('error', 'render', 'Invalid time value', { time: this.packedUniforms[2] });
       }
-      if (!validateScalar(packed[6], 'u_zoom', undefined, [0.01, 100])) {
-        renderDiagnostics.log('warn', 'render', 'Zoom out of range', { zoom: packed[6] });
+      if (!validateScalar(this.packedUniforms[6], 'u_zoom', undefined, [0.01, 100])) {
+        renderDiagnostics.log('warn', 'render', 'Zoom out of range', { zoom: this.packedUniforms[6] });
       }
 
       const set = (name: string, val: number) => {
@@ -348,39 +361,39 @@ export class WebGLEngine extends FractalEngineBase {
         if (loc) gl.uniform3f(loc, x, y, z);
       };
 
-      set2('u_resolution', packed[0], packed[1]);
-      set('u_time', packed[2]);
-      set('u_phi_val', packed[3]);
-      set2('u_cam_rot', packed[4], packed[5]);
-      set('u_zoom', packed[6]);
-      set('u_fractal_type', packed[7]);
-      set('u_iterations', packed[8]);
-      set('u_glow_intensity', packed[9]);
-      set('u_morph_speed', packed[10]);
-      set('u_hybrid_type', packed[11]);
-      set('u_hybrid_blend', packed[12]);
-      set('u_box_fold', packed[13]);
-      set('u_sphere_fold', packed[14]);
-      set('u_interior_cut', packed[15]);
-      set3('u_primary_color', packed[16], packed[17], packed[18]);
-      set('u_tertiary_type', packed[19]);
-      set3('u_secondary_color', packed[20], packed[21], packed[22]);
-      set('u_tertiary_blend', packed[23]);
-      set3('u_accent_color', packed[24], packed[25], packed[26]);
-      set('u_compose_op', packed[27]);
-      set('u_smooth_k', packed[28]);
-      set('u_warp_strength', packed[29]);
-      set('u_octave_layers', packed[30]);
-      set('u_cam_mode', packed[31]);
-      set3('u_cam_pos', packed[32], packed[33], packed[34]);
-      set('u_slice_plane', packed[35]);
-      set('u_headlamp_power', packed[36]);
-      set('u_volumetric_fog', packed[37]);
-      set('u_slice_axis', packed[38]);
-      set('u_render_style', packed[39]);
+      set2('u_resolution', this.packedUniforms[0], this.packedUniforms[1]);
+      set('u_time', this.packedUniforms[2]);
+      set('u_phi_val', this.packedUniforms[3]);
+      set2('u_cam_rot', this.packedUniforms[4], this.packedUniforms[5]);
+      set('u_zoom', this.packedUniforms[6]);
+      set('u_fractal_type', this.packedUniforms[7]);
+      set('u_iterations', this.packedUniforms[8]);
+      set('u_glow_intensity', this.packedUniforms[9]);
+      set('u_morph_speed', this.packedUniforms[10]);
+      set('u_hybrid_type', this.packedUniforms[11]);
+      set('u_hybrid_blend', this.packedUniforms[12]);
+      set('u_box_fold', this.packedUniforms[13]);
+      set('u_sphere_fold', this.packedUniforms[14]);
+      set('u_interior_cut', this.packedUniforms[15]);
+      set3('u_primary_color', this.packedUniforms[16], this.packedUniforms[17], this.packedUniforms[18]);
+      set('u_tertiary_type', this.packedUniforms[19]);
+      set3('u_secondary_color', this.packedUniforms[20], this.packedUniforms[21], this.packedUniforms[22]);
+      set('u_tertiary_blend', this.packedUniforms[23]);
+      set3('u_accent_color', this.packedUniforms[24], this.packedUniforms[25], this.packedUniforms[26]);
+      set('u_compose_op', this.packedUniforms[27]);
+      set('u_smooth_k', this.packedUniforms[28]);
+      set('u_warp_strength', this.packedUniforms[29]);
+      set('u_octave_layers', this.packedUniforms[30]);
+      set('u_cam_mode', this.packedUniforms[31]);
+      set3('u_cam_pos', this.packedUniforms[32], this.packedUniforms[33], this.packedUniforms[34]);
+      set('u_slice_plane', this.packedUniforms[35]);
+      set('u_headlamp_power', this.packedUniforms[36]);
+      set('u_volumetric_fog', this.packedUniforms[37]);
+      set('u_slice_axis', this.packedUniforms[38]);
+      set('u_render_style', this.packedUniforms[39]);
       // Ambient color not a separate GLSL uniform — palette colors used directly in shader
-      set('u_palette_seed', packed[43]);
-      set('u_palette_rotation', packed[44]);
+      set('u_palette_seed', this.packedUniforms[43]);
+      set('u_palette_rotation', this.packedUniforms[44]);
 
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       

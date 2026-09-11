@@ -3,7 +3,7 @@
 ## Code Style
 
 ### TypeScript
-- **Strict mode**: Enabled in tsconfig.json
+- **Strict mode**: NOT yet enabled — `as any` casts exist (see AUDIT_REPORT.md)
 - **Interfaces**: Use for component props and data structures
 - **Types**: Use `type` for unions, aliases
 - **Naming**:
@@ -30,7 +30,7 @@
   - `mapXxx()` for SDF functions
   - `renderXxx()` for render mode functions
 - **Constants**: `UPPER_SNAKE_CASE` (PI, TWO_PI, GOLDEN_RATIO)
-- **Uniforms**: Match struct layout exactly (48 floats)
+- **Uniforms**: Match struct layout exactly (48 floats CPU → 52 floats WGSL with alignment)
 - **Comments**: Explain complex math
 
 ### CSS/Tailwind
@@ -205,7 +205,7 @@ try {
 
 ### Validation
 - **Math**: Check for NaN, Infinity
-- **Uniforms**: Validate buffer size (192 bytes)
+- **Uniforms**: Validate buffer size (192 bytes GLSL / 208 bytes WGSL)
 - **Types**: Validate enum values
 - **Bounds**: Check array indices
 
@@ -297,7 +297,7 @@ try {
 
 Before merging:
 - [ ] Code follows style guide
-- [ ] TypeScript strict mode passes
+- [ ] TypeScript strict mode passes (when enabled)
 - [ ] No console errors
 - [ ] Tested on desktop
 - [ ] Tested on mobile
