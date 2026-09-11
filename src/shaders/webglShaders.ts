@@ -3238,57 +3238,8 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   // IFS VARIATIONS (191-240) - compressed from 50 lines to 1
   if (ftype >= 191 && ftype <= 240) return vec2(mapIFSVariant(p, t, phi, iters, ftype - 190), 0.0);
   
-  // L-SYSTEM VARIATIONS (241-290)
-  if (ftype == 241) return vec2(mapLSystemVariant1(p, t, phi, iters), 0.0);
-  if (ftype == 242) return vec2(mapLSystemVariant2(p, t, phi, iters), 0.0);
-  if (ftype == 243) return vec2(mapLSystemVariant3(p, t, phi, iters), 0.0);
-  if (ftype == 244) return vec2(mapLSystemVariant4(p, t, phi, iters), 0.0);
-  if (ftype == 245) return vec2(mapLSystemVariant5(p, t, phi, iters), 0.0);
-  if (ftype == 246) return vec2(mapLSystemVariant6(p, t, phi, iters), 0.0);
-  if (ftype == 247) return vec2(mapLSystemVariant7(p, t, phi, iters), 0.0);
-  if (ftype == 248) return vec2(mapLSystemVariant8(p, t, phi, iters), 0.0);
-  if (ftype == 249) return vec2(mapLSystemVariant9(p, t, phi, iters), 0.0);
-  if (ftype == 250) return vec2(mapLSystemVariant10(p, t, phi, iters), 0.0);
-  if (ftype == 251) return vec2(mapLSystemVariant11(p, t, phi, iters), 0.0);
-  if (ftype == 252) return vec2(mapLSystemVariant12(p, t, phi, iters), 0.0);
-  if (ftype == 253) return vec2(mapLSystemVariant13(p, t, phi, iters), 0.0);
-  if (ftype == 254) return vec2(mapLSystemVariant14(p, t, phi, iters), 0.0);
-  if (ftype == 255) return vec2(mapLSystemVariant15(p, t, phi, iters), 0.0);
-  if (ftype == 256) return vec2(mapLSystemVariant16(p, t, phi, iters), 0.0);
-  if (ftype == 257) return vec2(mapLSystemVariant17(p, t, phi, iters), 0.0);
-  if (ftype == 258) return vec2(mapLSystemVariant18(p, t, phi, iters), 0.0);
-  if (ftype == 259) return vec2(mapLSystemVariant19(p, t, phi, iters), 0.0);
-  if (ftype == 260) return vec2(mapLSystemVariant20(p, t, phi, iters), 0.0);
-  if (ftype == 261) return vec2(mapLSystemVariant21(p, t, phi, iters), 0.0);
-  if (ftype == 262) return vec2(mapLSystemVariant22(p, t, phi, iters), 0.0);
-  if (ftype == 263) return vec2(mapLSystemVariant23(p, t, phi, iters), 0.0);
-  if (ftype == 264) return vec2(mapLSystemVariant24(p, t, phi, iters), 0.0);
-  if (ftype == 265) return vec2(mapLSystemVariant25(p, t, phi, iters), 0.0);
-  if (ftype == 266) return vec2(mapLSystemVariant26(p, t, phi, iters), 0.0);
-  if (ftype == 267) return vec2(mapLSystemVariant27(p, t, phi, iters), 0.0);
-  if (ftype == 268) return vec2(mapLSystemVariant28(p, t, phi, iters), 0.0);
-  if (ftype == 269) return vec2(mapLSystemVariant29(p, t, phi, iters), 0.0);
-  if (ftype == 270) return vec2(mapLSystemVariant30(p, t, phi, iters), 0.0);
-  if (ftype == 271) return vec2(mapLSystemVariant31(p, t, phi, iters), 0.0);
-  if (ftype == 272) return vec2(mapLSystemVariant32(p, t, phi, iters), 0.0);
-  if (ftype == 273) return vec2(mapLSystemVariant33(p, t, phi, iters), 0.0);
-  if (ftype == 274) return vec2(mapLSystemVariant34(p, t, phi, iters), 0.0);
-  if (ftype == 275) return vec2(mapLSystemVariant35(p, t, phi, iters), 0.0);
-  if (ftype == 276) return vec2(mapLSystemVariant36(p, t, phi, iters), 0.0);
-  if (ftype == 277) return vec2(mapLSystemVariant37(p, t, phi, iters), 0.0);
-  if (ftype == 278) return vec2(mapLSystemVariant38(p, t, phi, iters), 0.0);
-  if (ftype == 279) return vec2(mapLSystemVariant39(p, t, phi, iters), 0.0);
-  if (ftype == 280) return vec2(mapLSystemVariant40(p, t, phi, iters), 0.0);
-  if (ftype == 281) return vec2(mapLSystemVariant41(p, t, phi, iters), 0.0);
-  if (ftype == 282) return vec2(mapLSystemVariant42(p, t, phi, iters), 0.0);
-  if (ftype == 283) return vec2(mapLSystemVariant43(p, t, phi, iters), 0.0);
-  if (ftype == 284) return vec2(mapLSystemVariant44(p, t, phi, iters), 0.0);
-  if (ftype == 285) return vec2(mapLSystemVariant45(p, t, phi, iters), 0.0);
-  if (ftype == 286) return vec2(mapLSystemVariant46(p, t, phi, iters), 0.0);
-  if (ftype == 287) return vec2(mapLSystemVariant47(p, t, phi, iters), 0.0);
-  if (ftype == 288) return vec2(mapLSystemVariant48(p, t, phi, iters), 0.0);
-  if (ftype == 289) return vec2(mapLSystemVariant49(p, t, phi, iters), 0.0);
-  if (ftype == 290) return vec2(mapLSystemVariant50(p, t, phi, iters), 0.0);
+  // L-SYSTEM VARIATIONS (241-290) - compressed from 50 lines to 1
+  if (ftype >= 241 && ftype <= 290) return vec2(mapLSystemVariant(p, t, phi, iters, ftype - 240), 0.0);
   
   // FLAME VARIATIONS (291-340)
   if (ftype == 291) return vec2(mapFlameVariant1(p, t, phi, iters), 0.0);
