@@ -16,6 +16,8 @@
 ## Detailed Analysis
 
 - [App.md](App.md) - Main component, auto-explore, neuro-feed
+- [main-tsx.md](main-tsx.md) - Entry point (no StrictMode for WebGPU)
+- [index-css.md](index-css.md) - Global styles (full-screen dark canvas)
 - [FractalCanvas.md](FractalCanvas.md) - Canvas controls and interaction
 - [ControlsPanel.md](ControlsPanel.md) - Main control panel with 8 tabs
 - [FractalScrollFeed.md](FractalScrollFeed.md) - Neuro-feed ribbon for specimens
