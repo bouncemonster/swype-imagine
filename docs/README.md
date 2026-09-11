@@ -8,7 +8,7 @@
 | [fractalMappers.ts](../src/engine/fractalMappers.ts) | 505 | 19KB | String→index mappings (431 types) |
 | [types/fractal.ts](../src/types/fractal.ts) | 215 | 13KB | TypeScript interfaces |
 | [WebGLEngine.ts](../src/engine/WebGLEngine.ts) | 445 | 18KB | WebGL2 renderer |
-| [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | ~300 | 8.8KB | WebGPU renderer |
+| [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | 236 | 8.8KB | WebGPU renderer |
 | [useRenderEngine.ts](../src/hooks/useRenderEngine.ts) | 636 | 25KB | React hook, lifecycle, render loop |
 | [webglShaders.ts](../src/shaders/webglShaders.ts) | 4654 | 187KB | GLSL shaders, 86 SDFs, 7 modes |
 | [webgpuShaders.ts](../src/shaders/webgpuShaders.ts) | 3538 | 140KB | WGSL shaders |
@@ -22,6 +22,8 @@
 - [palettes.md](palettes.md) - 24 hand-crafted + 640 procedural palettes
 - [fractal-catalog.md](fractal-catalog.md) - 110+ canonical fractals, 8 categories
 - [goldenAudio.md](goldenAudio.md) - 432 Hz sacred geometry audio engine
+- [FractalEngineBase.md](FractalEngineBase.md) - Base class, 48-float uniform layout
+- [WebGPUEngine.md](WebGPUEngine.md) - WebGPU renderer details
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
