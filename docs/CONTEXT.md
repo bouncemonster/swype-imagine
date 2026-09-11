@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.5.0  
+**Version**: 1.6.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Live — Deep Math Audit In Progress
+**Status**: Production Live — Deep Math Audit Complete, 600+ Shader Bugs Fixed
 
 ---
 
@@ -301,12 +301,19 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: preventDefault passive listener errors (added stopPropagation to wheel/touch native handlers)
 - ✅ Fixed: F-key flyThrough toggle trapped inside `!== 'flyThrough'` guard (could enter but never exit flyThrough mode)
 - ✅ Fixed: renderStyle type error (string → RenderStyle[] typed array)
+- ✅ Fixed: unclamped log(r) in 300 shader functions (julia/ifs/lsystem/hybrid/flame variants + Mandelbrot variants)
+- ✅ Fixed: unguarded acos(z.z/r) without r=0 protection in 150 functions
+- ✅ Fixed: Burning Ship double-add bug (z = abs(z) + p; z += p) in 9 hybrid variants
+- ✅ Fixed: double-power angle bug (sin(theta*power) instead of sin(theta)) in 139 functions
+- ✅ Fixed: unclamped log(length(z)) in hybrid mandelbox (both GLSL and WGSL)
+- ✅ Fixed: GLSL vs WGSL discrepancies (Nebula Cloud tube radius, Ikeda Map trap value)
+- ✅ Fixed: invalid RenderStyle fallback — added aliases for crystal/plasma/pbr/topography
+- ✅ Fixed: 27 newer fractal types archetype classification (were all defaulting to 'attractors')
 - ⚠️ Remaining: TypeScript strict mode not enabled
-- ⚠️ Remaining: 27 fractal types in NeuroAestheticsEngine not in FractalType union
-- ⚠️ Remaining: ~140 data type mismatches in category files
-- ⚠️ Remaining: fractalFactory.ts non-standard import paths
+- ⚠️ Remaining: ~140 data type mismatches in category files (handled by alias mappings at runtime)
+- ️ Remaining: fractalFactory.ts non-standard import paths
 - ⚠️ Remaining: No git remote configured (push not possible)
-- 📊 TypeScript errors: 34 → 30 (down 4, all remaining are pre-existing)
+- 📊 Shader functions fixed: 600+ across 7 files
 
 ### Short-term
 - Add more fractal types (target: 200+)
@@ -372,6 +379,8 @@ Each component has dedicated doc in `docs/`:
 - Post-audit: zero per-frame allocations, all bugs documented
 - v1.3.0: React 19 passive listener conflict resolved (stopPropagation on native wheel/touch handlers)
 - v1.4.0: F-key flyThrough toggle bug fixed (was trapped in guard block), renderStyle type fixed
+- v1.5.0: Deep math audit initiated
+- v1.6.0: 600+ shader math bugs fixed — unclamped log/acos, double-power angles, BurningShip double-add, RenderStyle aliases, archetype classification for 27 types
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
