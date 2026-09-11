@@ -3999,9 +3999,9 @@ void main() {
   // qualityLevel: 0=low (mobile), 1=medium (laptop), 2=high (desktop)
   float qualityMult = 0.5 + u_quality_level * 0.25; // 0.5, 0.75, 1.0
   
-  // MASSIVE INCREASE: Adaptive step budget for extreme detail
-  // Close range: 512 steps, Medium: 384 steps, Far: 256 steps
-  int maxSteps = int(((cam_dist < 1.0) ? 512.0 : (cam_dist < 3.0) ? 384.0 : 256.0) * qualityMult);
+  // Adaptive step budget: balanced for real-time performance
+  // Close range: 256 steps, Medium: 192 steps, Far: 128 steps
+  int maxSteps = int(((cam_dist < 1.0) ? 256.0 : (cam_dist < 3.0) ? 192.0 : 128.0) * qualityMult);
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
   float hit_threshold = max(hitScale * 3.0, 0.002); // Declared here, used in loop + binary search

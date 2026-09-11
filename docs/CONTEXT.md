@@ -27,11 +27,11 @@ Color Palettes:   664
 ```
 
 ### Performance Targets
-- Desktop (RTX 3060+): 120+ FPS
-- Desktop (GTX 1060): 90+ FPS
-- Laptop (Integrated): 60+ FPS
-- Mobile (Flagship): 60+ FPS
-- Mobile (Mid-range): 30+ FPS
+- Desktop (RTX 3060+): 60+ FPS
+- Desktop (GTX 1060): 45+ FPS
+- Laptop (Integrated): 30+ FPS
+- Mobile (Flagship): 30+ FPS
+- Mobile (Mid-range): 20+ FPS
 
 ---
 

@@ -218,7 +218,7 @@ export function useRenderEngine(
           setAdapterInfoState(gpuEngine.adapterInfo);
           
           // ADAPTIVE QUALITY: Set quality level based on device
-          const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 2);
+          const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
           gpuEngine.setQualityLevel(qualityLevel);
           console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
           
@@ -250,7 +250,7 @@ export function useRenderEngine(
         setAdapterInfoState(glEngine.rendererInfo);
         
         // ADAPTIVE QUALITY: Set quality level based on device
-        const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 2);
+        const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
         glEngine.setQualityLevel(qualityLevel);
         console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
         
