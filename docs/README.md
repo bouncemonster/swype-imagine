@@ -54,6 +54,12 @@
 - [RENDERING_SYSTEM.md](../RENDERING_SYSTEM.md) - Render modes, lighting, post-processing
 - [WHITEPAPER.md](../WHITEPAPER.md) - Project overview, competitor analysis
 
+## Configuration
+
+- [vite-config.md](vite-config.md) - Vite build configuration (React + Tailwind v4)
+- [wrangler-toml.md](wrangler-toml.md) - Cloudflare Pages deployment
+- [index-html.md](index-html.md) - HTML entry point with meta tags
+
 ## Key Numbers
 
 - **86** fractal types (actively used)
