@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.8.0  
+**Version**: 1.9.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Live — Ray-Marching Bounds Expanded, Rendering Distance Fixed
+**Status**: Production Live — Shader Compilation Errors Fixed, 13 Math Bugs Fixed
 
 ---
 
@@ -315,7 +315,14 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: bounding sphere expanded 6.0 → 10.0 (larger fractal structures now visible)
 - ✅ Fixed: early termination missCount 16 → 32 (sparse fractal regions no longer prematurely terminated)
 - ✅ Fixed: LOD iteration reduction 8 → 4 (preserves detail at distance)
-- ️ Remaining: TypeScript strict mode not enabled
+- ✅ Fixed: shader compilation errors — hit_threshold scope, base→base_n typo, sssCol→sssColor typo, u_auto_rotate uniform
+- ✅ Fixed: 3 CRITICAL div-by-zero in mapFlameSpherical, mapAmazingBox, mapMandelboxMandelboxHybrid
+- ✅ Fixed: 5 HIGH unguarded log(r) in spiral flame variants
+- ✅ Fixed: HIGH gammaCorrect NaN with negative color components
+- ✅ Fixed: 5 MEDIUM Plasma IFS stale r-squared causing div-by-zero
+- ✅ Fixed: MEDIUM MathValidation determinant check improved
+- ✅ Fixed: MEDIUM COMPATIBLE_HYBRIDS added 27 missing fractal type entries
+- ⚠️ Remaining: TypeScript strict mode not enabled
 - ⚠️ Remaining: ~140 data type mismatches in category files (handled by alias mappings at runtime)
 - ️ Remaining: fractalFactory.ts non-standard import paths
 - ⚠️ Remaining: No git remote configured (push not possible)
@@ -389,6 +396,7 @@ Each component has dedicated doc in `docs/`:
 - v1.6.0: 600+ shader math bugs fixed — unclamped log/acos, double-power angles, BurningShip double-add, RenderStyle aliases, archetype classification for 27 types
 - v1.7.0: Auto-rotation pauses during interaction (3s resume), inertia decay frame-rate independent
 - v1.8.0: Ray-marching bounds expanded — bounding box ±5.0, sphere 10.0, missCount 32, LOD reduction 4
+- v1.9.0: Shader compilation errors fixed, 13 math bugs fixed (3 CRITICAL, 2 HIGH, 8 MEDIUM)
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy

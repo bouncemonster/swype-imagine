@@ -245,6 +245,37 @@ export const COMPATIBLE_HYBRIDS: Record<FractalType, { partners: FractalType[]; 
   bedheadAttractor: { partners: ['lorenzAttractor', 'rosslerAttractor', 'fourSpotAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
   fourSpotAttractor: { partners: ['bedheadAttractor', 'halvorsenAttractor', 'thomasAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
   svenssonAttractor: { partners: ['deJongAttractor', 'pickoverAttractor', 'cliffordAttractor'], ops: ['smoothMorph', 'smoothUnion'] },
+  // 4D POLYTOPES
+  tesseract: { partners: ['mandelbulb', 'cliffordTorus4D', 'hopfFibration'], ops: ['smoothUnion', 'domainWarp'] },
+  '120Cell': { partners: ['icosahedral', 'poincareSphere', 'apollonian'], ops: ['smoothUnion', 'smoothMorph'] },
+  '600Cell': { partners: ['icosahedral', 'apollonian', 'antoineNecklace'], ops: ['smoothUnion', 'domainWarp'] },
+  '24Cell': { partners: ['menger', 'jerusalemCube', 'sierpinskiOcta'], ops: ['smoothUnion', 'smoothCarve'] },
+  '5Cell': { partners: ['sierpinskiOcta', 'tetrix', 'menger'], ops: ['smoothUnion', 'fractalLattice'] },
+  // HIGHER-DIMENSIONAL MANIFOLDS
+  kleinBottle: { partners: ['cliffordTorus4D', 'hopfFibration', 'mobiusStrip'], ops: ['smoothMorph', 'domainWarp'] },
+  projectivePlane: { partners: ['poincareSphere', 'cliffordKlein', 'kleinQuartic'], ops: ['smoothUnion', 'domainWarp'] },
+  mobiusStrip: { partners: ['cliffordTorus4D', 'goldenKnot', 'hopfFibration'], ops: ['smoothMorph', 'domainWarp'] },
+  torusKnot4D: { partners: ['hopfFibration', 'cliffordTorus4D', 'goldenKnot'], ops: ['smoothUnion', 'domainWarp'] },
+  // FRACTAL FLAMES
+  flameSinusoidal: { partners: ['flameSpherical', 'flameSwirl', 'mandelbulb'], ops: ['smoothMorph', 'domainWarp'] },
+  flameSpherical: { partners: ['flameSinusoidal', 'flameHorseshoe', 'flameHeart'], ops: ['smoothUnion', 'domainWarp'] },
+  flameSwirl: { partners: ['flameSinusoidal', 'flameButterfly', 'gyroid'], ops: ['smoothMorph', 'domainWarp'] },
+  flameHorseshoe: { partners: ['flameSpherical', 'flameRings', 'mandelbulb'], ops: ['smoothUnion', 'domainWarp'] },
+  flameButterfly: { partners: ['flameSwirl', 'flameHeart', 'phyllotaxis'], ops: ['smoothMorph', 'domainWarp'] },
+  flameHeart: { partners: ['flameButterfly', 'flameSpherical', 'apollonian'], ops: ['smoothUnion', 'domainWarp'] },
+  flameSpiral: { partners: ['spiralTunnel', 'eulerTotientSpiral', 'flameSinusoidal'], ops: ['smoothMorph', 'goldenSpiralFold'] },
+  flameHyperbolic: { partners: ['poincareSphere', 'beltramiPseudosphere', 'kleinQuartic'], ops: ['smoothUnion', 'domainWarp'] },
+  flameDiamond: { partners: ['menger', 'jerusalemCube', 'flameRings'], ops: ['smoothUnion', 'smoothCarve'] },
+  flameWaves: { partners: ['belousovWaves', 'reactionDiffusion', 'flamePopcorn'], ops: ['smoothMorph', 'domainWarp'] },
+  flamePopcorn: { partners: ['popcornFunction', 'flameWaves', 'phyllotaxis'], ops: ['smoothUnion', 'domainWarp'] },
+  flameRings: { partners: ['flameHorseshoe', 'flameDiamond', 'hopfFibration'], ops: ['smoothUnion', 'domainWarp'] },
+  flameFan: { partners: ['flameSinusoidal', 'flameSwirl', 'sphericalHarmonics'], ops: ['smoothMorph', 'domainWarp'] },
+  // ADVANCED IFS
+  ifs3DTree: { partners: ['tetrix', 'menger', 'sierpinskiOcta'], ops: ['smoothUnion', 'fractalLattice'] },
+  ifs3DFern: { partners: ['barnsleyFern3D', 'lSystemPlant', 'phyllotaxis'], ops: ['smoothUnion', 'domainWarp'] },
+  ifs3DSierpinski: { partners: ['sierpinskiOcta', 'sierpinskiCarpet', 'tetrix'], ops: ['smoothUnion', 'smoothCarve'] },
+  ifs3DCantor: { partners: ['cantorDust', 'sierpinskiCarpet', 'vicsekFractal'], ops: ['smoothUnion', 'fractalLattice'] },
+  ifs3DKoch: { partners: ['kochSnowflake3D', 'gosperCurve', 'apollonianGasket'], ops: ['smoothUnion', 'fractalLattice'] },
 };
 
 const GOLDEN_RATIO = 1.61803398875;

@@ -116,7 +116,7 @@ vec3 acesToneMap(vec3 col) {
 
 // Gamma correction
 vec3 gammaCorrect(vec3 col, float gamma) {
-  return pow(col, vec3(1.0 / gamma));
+  return pow(max(col, 0.0), vec3(1.0 / gamma)); // Guard against negative values causing NaN
 }
 `;
 

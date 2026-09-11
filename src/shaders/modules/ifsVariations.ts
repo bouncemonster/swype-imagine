@@ -240,7 +240,7 @@ float mapIFSVariant10(vec3 p, float t, float phi, int iters) {
     
     z = abs(z) - vec3(0.50, 0.55, 0.60);
     
-    float r2 = r * r;
+    float r2 = max(dot(z, z), 0.0001); // Compute from modified z, guard against div-by-zero
     if (r2 < 0.88) {
       z = z / r2;
     }
@@ -483,7 +483,7 @@ float mapIFSVariant20(vec3 p, float t, float phi, int iters) {
     
     z = abs(z) - vec3(0.60, 0.70, 0.80);
     
-    float r2 = r * r;
+    float r2 = max(dot(z, z), 0.0001); // Compute from modified z, guard against div-by-zero
     if (r2 < 0.96) {
       z = z / r2;
     }
@@ -726,7 +726,7 @@ float mapIFSVariant30(vec3 p, float t, float phi, int iters) {
     
     z = abs(z) - vec3(0.70, 0.85, 1.00);
     
-    float r2 = r * r;
+    float r2 = max(dot(z, z), 0.0001); // Compute from modified z, guard against div-by-zero
     if (r2 < 1.04) {
       z = z / r2;
     }
@@ -969,7 +969,7 @@ float mapIFSVariant40(vec3 p, float t, float phi, int iters) {
     
     z = abs(z) - vec3(0.80, 1.00, 1.20);
     
-    float r2 = r * r;
+    float r2 = max(dot(z, z), 0.0001); // Compute from modified z, guard against div-by-zero
     if (r2 < 1.12) {
       z = z / r2;
     }
@@ -1212,7 +1212,7 @@ float mapIFSVariant50(vec3 p, float t, float phi, int iters) {
     
     z = abs(z) - vec3(0.90, 1.15, 1.40);
     
-    float r2 = r * r;
+    float r2 = max(dot(z, z), 0.0001); // Compute from modified z, guard against div-by-zero
     if (r2 < 1.20) {
       z = z / r2;
     }

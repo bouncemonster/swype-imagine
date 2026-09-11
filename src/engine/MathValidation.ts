@@ -234,9 +234,15 @@ export function validateTransform(
   
   // Check determinant for invertibility (for 4x4 matrix)
   if (matrix.length === 16) {
-    // Simplified determinant check - just verify it's not zero
-    const det = matrix[0] * matrix[5] * matrix[10] * matrix[15];
-    if (Math.abs(det) < 1e-10) {
+    // Simplified determinant check using diagonal product as heuristic
+    // Note: Full 4x4 determinant requires 24-term cofactor expansion
+    const diagProduct = matrix[0] * matrix[5] * matrix[10] * matrix[15];
+    // Also check if any diagonal element is near-zero (singular indicator)
+    const anyZeroDiag = Math.abs(matrix[0]) < 1e-10 || 
+                        Math.abs(matrix[5]) < 1e-10 || 
+                        Math.abs(matrix[10]) < 1e-10 || 
+                        Math.abs(matrix[15]) < 1e-10;
+    if (Math.abs(diagProduct) < 1e-10 || anyZeroDiag) {
       renderDiagnostics.log('warn', 'math', `Transform may be singular: ${context}`, { matrix });
     }
   }
