@@ -1,3 +1,31 @@
+/**
+ * fractalMappers.ts - Маппинг строковых типов в числовые индексы для шейдера
+ * 
+ * КРИТИЧЕСКИЙ ФАЙЛ: Все строковые типы фракталов, операций композиции,
+ * режимов камеры и стилей рендеринга преобразуются здесь в числовые индексы
+ * которые передаются в шейдер через uniform buffer.
+ * 
+ * Диапазоны индексов:
+ * - 0-85: Classic Fractals (86 типов)
+ * - 104-108: 4D Polytopes (5 типов)
+ * - 109-112: Higher-Dimensional Manifolds (4 типа)
+ * - 113-125: Fractal Flames (13 типов)
+ * - 126-130: Advanced IFS (5 типов)
+ * - 131-140: Mandelbrot Variations (10 типов)
+ * - 141-190: Julia Variations (50 типов)
+ * - 191-240: IFS Variations (50 типов)
+ * - 241-290: L-System Variations (50 типов)
+ * - 291-340: Flame Variations (50 типов)
+ * - 341-430: Hybrid Variations (90 типов)
+ * 
+ * ВСЕГО: 431 тип (но реально используется 86 в types/fractal.ts)
+ */
+
+/**
+ * Преобразует строковый тип фрактала в числовой индекс для шейдера
+ * @param type - Строковый тип фрактала (например, 'mandelbulb')
+ * @returns Числовой индекс (0-430) или 0 для неизвестных типов
+ */
 export function getFractalIndex(type?: string): number {
   switch (type) {
     case 'phyllotaxis': return 0;
@@ -450,10 +478,16 @@ export function getFractalIndex(type?: string): number {
     case 'hybridVariant89': return 429;
     case 'hybridVariant90': return 430;
     
-    default: return 0;
+    default: return 0; // Unknown types default to phyllotaxis (index 0)
   }
 }
 
+/**
+ * Преобразует строковую операцию композиции в числовой индекс
+ * Операции композиции определяют как комбинируются primary/hybrid/tertiary SDF
+ * @param op - Строковая операция (например, 'smoothUnion')
+ * @returns Числовой индекс (0-7) или 1 (smoothUnion) по умолчанию
+ */
 export function getCompositeOpIndex(op?: string): number {
   switch (op) {
     case 'smoothMorph': return 0;
@@ -474,10 +508,16 @@ export function getCameraModeIndex(mode?: string): number {
     case 'flyThrough': return 1;
     case 'goldenSpiral': return 2;
     case 'kelvinInvert': return 3;
-    default: return 0;
+    default: return 0; // Default to orbit mode (safest for most fractals)
   }
 }
 
+/**
+ * Преобразует строковую ось среза в числовой индекс
+ * Ось среза определяет плоскость для slice plane визуализации
+ * @param axis - Строковая ось ('golden', 'x', 'y', 'z')
+ * @returns Числовой индекс (0-3) или 0 (golden) по умолчанию
+ */
 export function getSliceAxisIndex(axis?: string): number {
   switch (axis) {
     case 'golden': return 0;
@@ -488,6 +528,18 @@ export function getSliceAxisIndex(axis?: string): number {
   }
 }
 
+    default: return 0; // Default to golden axis (most visually interesting)
+  }
+}
+
+/**
+ * Преобразует строковый стиль рендеринга в числовой индекс
+ * КРИТИЧЕСКАЯ ФУНКЦИЯ: Индекс 39 в uniform buffer содержит этот индекс
+ * и переключает между 7 режимами рендеринга в шейдере
+ * 
+ * @param style - Строковый стиль (например, 'solid', 'xray', 'hologram')
+ * @returns Числовой индекс (0-6) или 0 (solid) по умолчанию
+ */
 export function getRenderStyleIndex(style?: string): number {
   switch (style) {
     case 'solid': return 0;
