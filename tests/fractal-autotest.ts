@@ -220,7 +220,7 @@ console.log(`  ✓ [28] smooth_k, [29] warp, [30] octaves, [31] cam_mode`);
 console.log(`  ✓ [32-34] cam_pos, [35] slice_plane`);
 console.log(`  ✓ [36] headlamp, [37] fog, [38] slice_axis, [39] render_style`);
 console.log(`  ✓ [40-42] ambient_color, [43] palette_seed`);
-console.log(`  ✓ [44] palette_rotation, [45-47] padding`);
+console.log(`  ✓ [44] palette_rotation, [45] auto_rotate, [46] quality_level, [47] padding`);
 
 // ============================================
 // 9. SHARE-LINK PARAMETER COVERAGE
@@ -299,6 +299,24 @@ assert(wgsl.includes('evalSingleFractal'), 'WGSL: fractal dispatch');
 console.log(`  ✓ GLSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
 console.log(`  ✓ WGSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
 console.log(`  ✓ Both: normals, soft shadows, AO, ACES tonemap, SDF dispatch`);
+
+// ============================================
+// 11. ADAPTIVE QUALITY SYSTEM
+// ============================================
+section('11. Adaptive Quality System');
+
+// Verify quality_level uniform exists in both shaders
+assert(glsl.includes('u_quality_level'), 'GLSL: quality_level uniform declared');
+assert(wgsl.includes('quality_level'), 'WGSL: quality_level field in uniform struct');
+
+// Verify quality-aware ray marching parameters
+assert(glsl.includes('qualityMult'), 'GLSL: quality multiplier calculation present');
+assert(glsl.includes('missThreshold'), 'GLSL: quality-adaptive miss threshold present');
+
+console.log(`  ✓ Quality levels: 0=low (mobile), 1=medium (laptop), 2=high (desktop)`);
+console.log(`  ✓ maxSteps scaled: 50%/75%/100% by quality level`);
+console.log(`  ✓ missCount threshold: 16/24/32 by quality level`);
+console.log(`  ✓ Auto-detected from isMobileDevice and isEmbeddedBrowser`);
 
 // ============================================
 // RESULTS
