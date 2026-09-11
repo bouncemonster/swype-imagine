@@ -24,6 +24,7 @@
 - [TelemetryHUD.md](TelemetryHUD.md) - FPS and performance telemetry
 - [DebugOverlay.md](DebugOverlay.md) - Render diagnostics and debugging
 - [ExplanationModal.md](ExplanationModal.md) - Scientific explanation modal
+- [UserProfileModal.md](UserProfileModal.md) - User taste profile and settings
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [UserPreferenceEngine.md](UserPreferenceEngine.md) - Interaction learning, adapted defaults
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
