@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 2.1.1  
+**Version**: 2.2.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Deployed — Stability Hardened
+**Status**: Production Deployed — Code Polished & Type-Safe
 
 ---
 
@@ -403,6 +403,7 @@ Each component has dedicated doc in `docs/`:
 - v2.0.0: **MAJOR** — Activated 345 dead fractal types (86→431 total). Types 86-430 now accessible from UI
 - v2.1.0: Removed 5 dead shader module files (-964 lines). Added FPS-based dynamic quality adjustment
 - v2.1.1: Stability hardened — share link parsing wrapped in try-catch
+- v2.2.0: Code polishing — added headless testing suite, fixed 10 'as any' casts, added SliceAxis/AudioTuning types
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
