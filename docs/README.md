@@ -40,6 +40,7 @@
 - [MathValidation.md](MathValidation.md) - Scalar, vec3, matrix validation
 - [UserProblemLogger.md](UserProblemLogger.md) - IndexedDB error tracking
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
+- [juliaVariations.md](juliaVariations.md) - 50 Mandelbulb/Julia GLSL variations
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
 - [webglShaders.md](webglShaders.md) - Shader structure and uniforms
