@@ -502,6 +502,25 @@ export function useRenderEngine(
             const p = paramsRef.current;
             console.info(`[DIAG] Health: fps=${currentFps} avg=${avgFps} 1%=${onePercentLow} | fractal=${p.type} hybrid=${p.hybridType} | style=${p.renderStyle} cam=${p.cameraMode} | palette=${p.paletteId} seed=${p.paletteSeed ?? 0} rot=${p.paletteRotation} | audio=${p.enableAudio} tuning=${p.audioTuning} | res=${curCanvas?.width}x${curCanvas?.height}`);
           }
+
+          // DYNAMIC QUALITY: Auto-adjust based on FPS
+          // If FPS drops below threshold, lower quality; if stable, raise it
+          const engine = webglEngineRef.current || webgpuEngineRef.current;
+          if (engine) {
+            const currentQuality = engine.qualityLevel;
+            const targetFps = currentParams.targetFps || 60;
+            const fpsThreshold = targetFps * 0.5; // 50% of target
+            
+            if (avgFps < fpsThreshold && currentQuality > 0) {
+              // FPS too low — downgrade quality
+              engine.setQualityLevel(currentQuality - 1);
+              console.warn(`[DynamicQuality] FPS ${avgFps} < ${fpsThreshold} → quality ${currentQuality} → ${currentQuality - 1}`);
+            } else if (avgFps > targetFps * 0.9 && currentQuality < 2) {
+              // FPS stable — upgrade quality (only if we're at 90%+ of target)
+              engine.setQualityLevel(currentQuality + 1);
+              console.info(`[DynamicQuality] FPS ${avgFps} > ${targetFps * 0.9} → quality ${currentQuality} → ${currentQuality + 1}`);
+            }
+          }
         }
       }
 
