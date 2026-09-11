@@ -1,5 +1,42 @@
 # Development Log - Golden Ratio Fractal Engine
 
+## Session: September 11, 2026
+
+### Critical Fixes (v1.9.0 - v1.9.1)
+
+#### 1. Shader Compilation Errors (CRITICAL — broke rendering)
+**Problem**: GLSL shader failed to compile — `hit_threshold` undeclared, `base` typo, `sssCol` typo, `u_auto_rotate` missing
+**Root Cause**: Variable declared inside loop scope but used outside; typos in variable names; uniform used but never declared
+**Fix**: Moved `hit_threshold` before loop; `base`→`base_n`; `sssCol`→`sssColor`; added `uniform float u_auto_rotate;`
+**Commit**: 07da512
+
+#### 2. Transparent Sphere Clipping (CRITICAL — visible boundary)
+**Problem**: User sees a transparent sphere; fractal clipped beyond radius 5.0
+**Root Cause**: `sceneSDF` returns large distance when `r_bound > 5.0`, creating hard boundary
+**Fix**: Expanded threshold from 5.0 to 12.0; softened boundary from 2.8 to 5.0
+**Commit**: 05b65ba
+
+#### 3. Division-by-Zero Guards (CRITICAL — NaN propagation)
+**Problem**: `mapFlameSpherical`, `mapAmazingBox`, `mapMandelboxMandelboxHybrid` divide by `r2` without guard
+**Fix**: `r2 = max(dot(z,z), 0.0001)` in all affected functions
+**Commit**: 07da512
+
+#### 4. Ray-Marching Bounds Expanded
+**Problem**: Fractals clipped at edges, sparse regions prematurely terminated
+**Fix**: Bounding box ±2.5→±5.0, sphere 6→10, missCount 16→32, LOD reduction 8→4
+**Commit**: 65fa879
+
+#### 5. Auto-Rotation Pause During Interaction
+**Problem**: Rotation never stops when user interacts with fractal
+**Fix**: Added `isInteracting` check using `isDraggingRef` + 3s resume delay; `stopPropagation()` for React 19 passive listener conflict
+**Commit**: 293c72e
+
+#### 6. Math Audit (600+ shader functions)
+**Fixed**: unclamped `log(r)`, unguarded `acos`, BurningShip double-add, double-power angle, RenderStyle aliases, 27 archetype classifications, gammaCorrect NaN, Plasma IFS stale r²
+**Commits**: 8a09b21, 7c5ed7d
+
+---
+
 ## Session: September 9, 2026
 
 ### Critical Bug Fixes

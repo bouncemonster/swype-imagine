@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.9.0  
+**Version**: 1.9.1  
 **Last Updated**: 2026-09-11  
-**Status**: Production Live — Shader Compilation Errors Fixed, 13 Math Bugs Fixed
+**Status**: Local Build Ready — All Fixes Applied, Awaiting Git Deploy
 
 ---
 
@@ -322,6 +322,7 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: 5 MEDIUM Plasma IFS stale r-squared causing div-by-zero
 - ✅ Fixed: MEDIUM MathValidation determinant check improved
 - ✅ Fixed: MEDIUM COMPATIBLE_HYBRIDS added 27 missing fractal type entries
+- ✅ Fixed: CRITICAL transparent sphere clipping — r_bound 5.0→12.0 in both GLSL/WGSL
 - ⚠️ Remaining: TypeScript strict mode not enabled
 - ⚠️ Remaining: ~140 data type mismatches in category files (handled by alias mappings at runtime)
 - ️ Remaining: fractalFactory.ts non-standard import paths
@@ -397,6 +398,7 @@ Each component has dedicated doc in `docs/`:
 - v1.7.0: Auto-rotation pauses during interaction (3s resume), inertia decay frame-rate independent
 - v1.8.0: Ray-marching bounds expanded — bounding box ±5.0, sphere 10.0, missCount 32, LOD reduction 4
 - v1.9.0: Shader compilation errors fixed, 13 math bugs fixed (3 CRITICAL, 2 HIGH, 8 MEDIUM)
+- v1.9.1: CRITICAL transparent sphere clipping fixed — r_bound 5.0→12.0 in GLSL+WGSL
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy

@@ -19,6 +19,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ongoing: Performance optimizations for mobile devices
 - Ongoing: Additional fractal types (target: 200+)
 
+## [1.9.0] - 2026-09-11
+
+### Fixed
+- **CRITICAL: Transparent sphere clipping eliminated** — `r_bound` threshold expanded from 5.0 to 12.0 in both GLSL and WGSL shaders. Fractals now render beyond the previous hard boundary sphere.
+- **CRITICAL: Shader compilation errors fixed** — `hit_threshold` scope issue, `base` → `base_n` typo, `sssCol` → `sssColor` typo, missing `u_auto_rotate` uniform declaration
+- **CRITICAL: Division-by-zero guards** — `mapFlameSpherical`, `mapAmazingBox`, `mapMandelboxMandelboxHybrid` now guard against `r2 = 0`
+- **HIGH: Unguarded log(r)** — 5 spiral flame variants now use `log(max(r, 0.0001))`
+- **HIGH: gammaCorrect NaN** — `pow(max(col, 0.0), ...)` prevents NaN from negative color components
+- **MEDIUM: Plasma IFS stale r-squared** — 5 variants now compute `r2` from modified `z` with div-by-zero guard
+- **MEDIUM: MathValidation determinant** — improved singular matrix detection
+- **MEDIUM: COMPATIBLE_HYBRIDS** — added 27 missing fractal type entries (4D polytopes, manifolds, flames, advanced IFS)
+- **Ray-marching bounds expanded** — bounding box ±2.5→±5.0, sphere 6.0→10.0, missCount 16→32, LOD reduction 8→4
+- **Auto-rotation pauses during interaction** — drag/zoom/pinch stops rotation, resumes after 3s idle
+- **Inertia decay frame-rate independent** — `Math.pow(decay, dtSec * 60)` normalizes to 60fps baseline
+- **preventDefault passive listener errors** — `stopPropagation()` on wheel/touch handlers prevents React 19 conflict
+
 ## [1.0.0] - 2026-09-10
 
 ### Added
