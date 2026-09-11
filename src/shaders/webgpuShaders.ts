@@ -1619,7 +1619,7 @@ fn mapIkedaMap(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   let tubeR = 0.02 + maxDensity * 0.01;
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.3;
-  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.2);
+  return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
 }
 
 // 66. Koch Snowflake 3D (recursive triangular IFS)
@@ -2226,7 +2226,7 @@ fn mapNebulaCloud(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> f32 {
     minDist2 = min(minDist2, qlen);
     maxDensity = max(maxDensity, exp(-qlen * 2.0));
   }
-  let tubeR = 0.15 + maxDensity * 0.1;
+  let tubeR = 0.08 + maxDensity * 0.05;
   let d = minDist2 - tubeR;
   let bound = length(p) - 2.0;
   return max(d * 0.6, bound) * 0.7;
@@ -2432,7 +2432,7 @@ fn mapMandelbulbMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> v
     }
     minDist = min(minDist, length(z) * 0.5);
   }
-  return vec2<f32>(0.5 * log(length(z)) * length(z) / dr, 0.0);
+  return vec2<f32>(0.5 * log(max(length(z), 1.0001)) * length(z) / max(dr, 0.0001), 0.0);
 }
 
 // 103: Menger-Mandelbox Hybrid — Sponge meets box

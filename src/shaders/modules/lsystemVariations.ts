@@ -32,7 +32,7 @@ float mapLSystemVariant1(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 
@@ -64,7 +64,7 @@ float mapLSystemVariant2(vec3 p, float t, float phi, int iters) {
     angle += 0.056;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 3: Koch Curve
@@ -89,7 +89,7 @@ float mapLSystemVariant3(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 4: Dragon Curve
@@ -117,7 +117,7 @@ float mapLSystemVariant4(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 5: Sierpinski
@@ -144,7 +144,7 @@ float mapLSystemVariant5(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 6: Hilbert Curve
@@ -172,7 +172,7 @@ float mapLSystemVariant6(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 7: Barnsley Fern
@@ -203,7 +203,7 @@ float mapLSystemVariant7(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 8: Spiral Phyllotaxis
@@ -230,7 +230,7 @@ float mapLSystemVariant8(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 9: Cube Subdivision
@@ -255,7 +255,7 @@ float mapLSystemVariant9(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 10: Apical Dominance
@@ -284,7 +284,7 @@ float mapLSystemVariant10(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 11: Binary Tree
@@ -314,7 +314,7 @@ float mapLSystemVariant11(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 12: Fractal Plant
@@ -345,7 +345,7 @@ float mapLSystemVariant12(vec3 p, float t, float phi, int iters) {
     angle += 0.086;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 13: Koch Curve
@@ -370,7 +370,7 @@ float mapLSystemVariant13(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 14: Dragon Curve
@@ -398,7 +398,7 @@ float mapLSystemVariant14(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 15: Sierpinski
@@ -425,7 +425,7 @@ float mapLSystemVariant15(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 16: Hilbert Curve
@@ -453,7 +453,7 @@ float mapLSystemVariant16(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 17: Barnsley Fern
@@ -484,7 +484,7 @@ float mapLSystemVariant17(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 18: Spiral Phyllotaxis
@@ -511,7 +511,7 @@ float mapLSystemVariant18(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 19: Cube Subdivision
@@ -536,7 +536,7 @@ float mapLSystemVariant19(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 20: Apical Dominance
@@ -565,7 +565,7 @@ float mapLSystemVariant20(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 21: Binary Tree
@@ -595,7 +595,7 @@ float mapLSystemVariant21(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 22: Fractal Plant
@@ -626,7 +626,7 @@ float mapLSystemVariant22(vec3 p, float t, float phi, int iters) {
     angle += 0.116;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 23: Koch Curve
@@ -651,7 +651,7 @@ float mapLSystemVariant23(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 24: Dragon Curve
@@ -679,7 +679,7 @@ float mapLSystemVariant24(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 25: Sierpinski
@@ -706,7 +706,7 @@ float mapLSystemVariant25(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 26: Hilbert Curve
@@ -734,7 +734,7 @@ float mapLSystemVariant26(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 27: Barnsley Fern
@@ -765,7 +765,7 @@ float mapLSystemVariant27(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 28: Spiral Phyllotaxis
@@ -792,7 +792,7 @@ float mapLSystemVariant28(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 29: Cube Subdivision
@@ -817,7 +817,7 @@ float mapLSystemVariant29(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 30: Apical Dominance
@@ -846,7 +846,7 @@ float mapLSystemVariant30(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 31: Binary Tree
@@ -876,7 +876,7 @@ float mapLSystemVariant31(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 32: Fractal Plant
@@ -907,7 +907,7 @@ float mapLSystemVariant32(vec3 p, float t, float phi, int iters) {
     angle += 0.146;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 33: Koch Curve
@@ -932,7 +932,7 @@ float mapLSystemVariant33(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 34: Dragon Curve
@@ -960,7 +960,7 @@ float mapLSystemVariant34(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 35: Sierpinski
@@ -987,7 +987,7 @@ float mapLSystemVariant35(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 36: Hilbert Curve
@@ -1015,7 +1015,7 @@ float mapLSystemVariant36(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 37: Barnsley Fern
@@ -1046,7 +1046,7 @@ float mapLSystemVariant37(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 38: Spiral Phyllotaxis
@@ -1073,7 +1073,7 @@ float mapLSystemVariant38(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 39: Cube Subdivision
@@ -1098,7 +1098,7 @@ float mapLSystemVariant39(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 40: Apical Dominance
@@ -1127,7 +1127,7 @@ float mapLSystemVariant40(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 41: Binary Tree
@@ -1157,7 +1157,7 @@ float mapLSystemVariant41(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 42: Fractal Plant
@@ -1188,7 +1188,7 @@ float mapLSystemVariant42(vec3 p, float t, float phi, int iters) {
     angle += 0.176;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 43: Koch Curve
@@ -1213,7 +1213,7 @@ float mapLSystemVariant43(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 44: Dragon Curve
@@ -1241,7 +1241,7 @@ float mapLSystemVariant44(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 45: Sierpinski
@@ -1268,7 +1268,7 @@ float mapLSystemVariant45(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 46: Hilbert Curve
@@ -1296,7 +1296,7 @@ float mapLSystemVariant46(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 47: Barnsley Fern
@@ -1327,7 +1327,7 @@ float mapLSystemVariant47(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 48: Spiral Phyllotaxis
@@ -1354,7 +1354,7 @@ float mapLSystemVariant48(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 49: Cube Subdivision
@@ -1379,7 +1379,7 @@ float mapLSystemVariant49(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 50: Apical Dominance
@@ -1408,6 +1408,6 @@ float mapLSystemVariant50(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 `;

@@ -683,6 +683,23 @@ export function getFractalArchetype(type: FractalType): AestheticArchetype {
     case 'spinFoamNetwork':
     case 'beltramiPseudosphere':
     case 'vicsekFractal':
+    // 4D polytopes
+    case 'tesseract':
+    case '120Cell':
+    case '600Cell':
+    case '24Cell':
+    case '5Cell':
+    // Manifolds
+    case 'kleinBottle':
+    case 'projectivePlane':
+    case 'mobiusStrip':
+    case 'torusKnot4D':
+    // Advanced IFS
+    case 'ifs3DTree':
+    case 'ifs3DFern':
+    case 'ifs3DSierpinski':
+    case 'ifs3DCantor':
+    case 'ifs3DKoch':
       return 'geometry';
 
     case 'mandelbulb':
@@ -696,6 +713,20 @@ export function getFractalArchetype(type: FractalType): AestheticArchetype {
     case 'fractalSpire':
     case 'mandelbar':
     case 'popcornFunction':
+    // Flame fractals
+    case 'flameSinusoidal':
+    case 'flameSpherical':
+    case 'flameSwirl':
+    case 'flameHorseshoe':
+    case 'flameButterfly':
+    case 'flameHeart':
+    case 'flameSpiral':
+    case 'flameHyperbolic':
+    case 'flameDiamond':
+    case 'flameWaves':
+    case 'flamePopcorn':
+    case 'flameRings':
+    case 'flameFan':
       return 'complex';
 
     case 'gyroid':

@@ -2415,7 +2415,7 @@ float mapMandelbulbMandelboxHybrid(vec3 p, float t, float phi, int iters) {
     }
     minDist = min(minDist, length(z) * 0.5);
   }
-  return 0.5 * log(length(z)) * length(z) / dr;
+  return 0.5 * log(max(length(z), 1.0001)) * length(z) / max(dr, 0.0001);
 }
 
 // 103: Menger-Mandelbox Hybrid — Sponge meets box
@@ -2515,7 +2515,7 @@ float mapMandelbrotVariant1(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.0 + sin(t * 0.1) * 0.5;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2528,7 +2528,7 @@ float mapMandelbrotVariant1(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant2(vec3 p, float t, float phi, int iters) {
@@ -2542,7 +2542,7 @@ float mapMandelbrotVariant2(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.0 + cos(t * 0.15) * 0.4;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2555,7 +2555,7 @@ float mapMandelbrotVariant2(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant3(vec3 p, float t, float phi, int iters) {
@@ -2569,7 +2569,7 @@ float mapMandelbrotVariant3(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 3.0 + sin(t * 0.12) * 0.6;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2582,7 +2582,7 @@ float mapMandelbrotVariant3(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant4(vec3 p, float t, float phi, int iters) {
@@ -2596,7 +2596,7 @@ float mapMandelbrotVariant4(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.5 + cos(t * 0.18) * 0.5;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2609,7 +2609,7 @@ float mapMandelbrotVariant4(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant5(vec3 p, float t, float phi, int iters) {
@@ -2623,7 +2623,7 @@ float mapMandelbrotVariant5(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.0 + sin(t * 0.2) * 0.7;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2637,7 +2637,7 @@ float mapMandelbrotVariant5(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant6(vec3 p, float t, float phi, int iters) {
@@ -2651,7 +2651,7 @@ float mapMandelbrotVariant6(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.2 + cos(t * 0.14) * 0.45;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2664,7 +2664,7 @@ float mapMandelbrotVariant6(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant7(vec3 p, float t, float phi, int iters) {
@@ -2678,7 +2678,7 @@ float mapMandelbrotVariant7(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.8 + sin(t * 0.16) * 0.55;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2691,7 +2691,7 @@ float mapMandelbrotVariant7(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant8(vec3 p, float t, float phi, int iters) {
@@ -2705,7 +2705,7 @@ float mapMandelbrotVariant8(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.0 + cos(t * 0.22) * 0.65;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2718,7 +2718,7 @@ float mapMandelbrotVariant8(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant9(vec3 p, float t, float phi, int iters) {
@@ -2732,7 +2732,7 @@ float mapMandelbrotVariant9(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.4 + sin(t * 0.19) * 0.5;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2746,7 +2746,7 @@ float mapMandelbrotVariant9(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 float mapMandelbrotVariant10(vec3 p, float t, float phi, int iters) {
@@ -2760,7 +2760,7 @@ float mapMandelbrotVariant10(vec3 p, float t, float phi, int iters) {
     if (r > 4.0) break;
     
     float power = 2.6 + cos(t * 0.17) * 0.58;
-    float theta = acos(z.z / r);
+    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     
     float zr = pow(r, power);
@@ -2773,7 +2773,7 @@ float mapMandelbrotVariant10(vec3 p, float t, float phi, int iters) {
     dr = pow(r, power - 1.0) * power * dr + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // ===================================================================

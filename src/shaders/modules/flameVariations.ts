@@ -29,7 +29,7 @@ float mapFlameVariant1(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 
@@ -53,7 +53,7 @@ float mapFlameVariant2(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 3: Swirl Flame
@@ -80,7 +80,7 @@ float mapFlameVariant3(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 4: Horseshoe Flame
@@ -103,7 +103,7 @@ float mapFlameVariant4(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 5: Heart Flame
@@ -129,7 +129,7 @@ float mapFlameVariant5(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 6: Disc Flame
@@ -154,7 +154,7 @@ float mapFlameVariant6(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 7: Spiral Flame
@@ -181,7 +181,7 @@ float mapFlameVariant7(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 8: Hyperbolic Flame
@@ -206,7 +206,7 @@ float mapFlameVariant8(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 9: Diamond Flame
@@ -231,7 +231,7 @@ float mapFlameVariant9(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 10: Exponential Flame
@@ -256,7 +256,7 @@ float mapFlameVariant10(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 11: Power Flame
@@ -282,7 +282,7 @@ float mapFlameVariant11(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 12: Spherical Flame
@@ -305,7 +305,7 @@ float mapFlameVariant12(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 13: Swirl Flame
@@ -332,7 +332,7 @@ float mapFlameVariant13(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 14: Horseshoe Flame
@@ -355,7 +355,7 @@ float mapFlameVariant14(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 15: Heart Flame
@@ -381,7 +381,7 @@ float mapFlameVariant15(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 16: Disc Flame
@@ -406,7 +406,7 @@ float mapFlameVariant16(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 17: Spiral Flame
@@ -433,7 +433,7 @@ float mapFlameVariant17(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 18: Hyperbolic Flame
@@ -458,7 +458,7 @@ float mapFlameVariant18(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 19: Diamond Flame
@@ -483,7 +483,7 @@ float mapFlameVariant19(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 20: Exponential Flame
@@ -508,7 +508,7 @@ float mapFlameVariant20(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 21: Power Flame
@@ -534,7 +534,7 @@ float mapFlameVariant21(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 22: Spherical Flame
@@ -557,7 +557,7 @@ float mapFlameVariant22(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 23: Swirl Flame
@@ -584,7 +584,7 @@ float mapFlameVariant23(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 24: Horseshoe Flame
@@ -607,7 +607,7 @@ float mapFlameVariant24(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 25: Heart Flame
@@ -633,7 +633,7 @@ float mapFlameVariant25(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 26: Disc Flame
@@ -658,7 +658,7 @@ float mapFlameVariant26(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 27: Spiral Flame
@@ -685,7 +685,7 @@ float mapFlameVariant27(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 28: Hyperbolic Flame
@@ -710,7 +710,7 @@ float mapFlameVariant28(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 29: Diamond Flame
@@ -735,7 +735,7 @@ float mapFlameVariant29(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 30: Exponential Flame
@@ -760,7 +760,7 @@ float mapFlameVariant30(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 31: Power Flame
@@ -786,7 +786,7 @@ float mapFlameVariant31(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 32: Spherical Flame
@@ -809,7 +809,7 @@ float mapFlameVariant32(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 33: Swirl Flame
@@ -836,7 +836,7 @@ float mapFlameVariant33(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 34: Horseshoe Flame
@@ -859,7 +859,7 @@ float mapFlameVariant34(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 35: Heart Flame
@@ -885,7 +885,7 @@ float mapFlameVariant35(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 36: Disc Flame
@@ -910,7 +910,7 @@ float mapFlameVariant36(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 37: Spiral Flame
@@ -937,7 +937,7 @@ float mapFlameVariant37(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 38: Hyperbolic Flame
@@ -962,7 +962,7 @@ float mapFlameVariant38(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 39: Diamond Flame
@@ -987,7 +987,7 @@ float mapFlameVariant39(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 40: Exponential Flame
@@ -1012,7 +1012,7 @@ float mapFlameVariant40(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 41: Power Flame
@@ -1038,7 +1038,7 @@ float mapFlameVariant41(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 42: Spherical Flame
@@ -1061,7 +1061,7 @@ float mapFlameVariant42(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 43: Swirl Flame
@@ -1088,7 +1088,7 @@ float mapFlameVariant43(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 44: Horseshoe Flame
@@ -1111,7 +1111,7 @@ float mapFlameVariant44(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 45: Heart Flame
@@ -1137,7 +1137,7 @@ float mapFlameVariant45(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 46: Disc Flame
@@ -1162,7 +1162,7 @@ float mapFlameVariant46(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 47: Spiral Flame
@@ -1189,7 +1189,7 @@ float mapFlameVariant47(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 48: Hyperbolic Flame
@@ -1214,7 +1214,7 @@ float mapFlameVariant48(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 49: Diamond Flame
@@ -1239,7 +1239,7 @@ float mapFlameVariant49(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 50: Exponential Flame
@@ -1264,6 +1264,6 @@ float mapFlameVariant50(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 `;

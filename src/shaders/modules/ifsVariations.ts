@@ -29,7 +29,7 @@ float mapIFSVariant1(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 
@@ -53,7 +53,7 @@ float mapIFSVariant2(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 3: Menger IFS
@@ -76,7 +76,7 @@ float mapIFSVariant3(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 4: Dragon IFS
@@ -101,7 +101,7 @@ float mapIFSVariant4(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 5: Vicsek IFS
@@ -125,7 +125,7 @@ float mapIFSVariant5(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 6: Apollonian IFS
@@ -149,7 +149,7 @@ float mapIFSVariant6(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 7: Tetrix IFS
@@ -172,7 +172,7 @@ float mapIFSVariant7(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 8: Cubic IFS
@@ -196,7 +196,7 @@ float mapIFSVariant8(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 9: Spiral IFS
@@ -223,7 +223,7 @@ float mapIFSVariant9(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 10: Plasma IFS
@@ -249,7 +249,7 @@ float mapIFSVariant10(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 11: Kaleidoscopic IFS
@@ -273,7 +273,7 @@ float mapIFSVariant11(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 12: Sierpinski IFS
@@ -296,7 +296,7 @@ float mapIFSVariant12(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 13: Menger IFS
@@ -319,7 +319,7 @@ float mapIFSVariant13(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 14: Dragon IFS
@@ -344,7 +344,7 @@ float mapIFSVariant14(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 15: Vicsek IFS
@@ -368,7 +368,7 @@ float mapIFSVariant15(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 16: Apollonian IFS
@@ -392,7 +392,7 @@ float mapIFSVariant16(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 17: Tetrix IFS
@@ -415,7 +415,7 @@ float mapIFSVariant17(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 18: Cubic IFS
@@ -439,7 +439,7 @@ float mapIFSVariant18(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 19: Spiral IFS
@@ -466,7 +466,7 @@ float mapIFSVariant19(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 20: Plasma IFS
@@ -492,7 +492,7 @@ float mapIFSVariant20(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 21: Kaleidoscopic IFS
@@ -516,7 +516,7 @@ float mapIFSVariant21(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 22: Sierpinski IFS
@@ -539,7 +539,7 @@ float mapIFSVariant22(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 23: Menger IFS
@@ -562,7 +562,7 @@ float mapIFSVariant23(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 24: Dragon IFS
@@ -587,7 +587,7 @@ float mapIFSVariant24(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 25: Vicsek IFS
@@ -611,7 +611,7 @@ float mapIFSVariant25(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 26: Apollonian IFS
@@ -635,7 +635,7 @@ float mapIFSVariant26(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 27: Tetrix IFS
@@ -658,7 +658,7 @@ float mapIFSVariant27(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 28: Cubic IFS
@@ -682,7 +682,7 @@ float mapIFSVariant28(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 29: Spiral IFS
@@ -709,7 +709,7 @@ float mapIFSVariant29(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 30: Plasma IFS
@@ -735,7 +735,7 @@ float mapIFSVariant30(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 31: Kaleidoscopic IFS
@@ -759,7 +759,7 @@ float mapIFSVariant31(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 32: Sierpinski IFS
@@ -782,7 +782,7 @@ float mapIFSVariant32(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 33: Menger IFS
@@ -805,7 +805,7 @@ float mapIFSVariant33(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 34: Dragon IFS
@@ -830,7 +830,7 @@ float mapIFSVariant34(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 35: Vicsek IFS
@@ -854,7 +854,7 @@ float mapIFSVariant35(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 36: Apollonian IFS
@@ -878,7 +878,7 @@ float mapIFSVariant36(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 37: Tetrix IFS
@@ -901,7 +901,7 @@ float mapIFSVariant37(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 38: Cubic IFS
@@ -925,7 +925,7 @@ float mapIFSVariant38(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 39: Spiral IFS
@@ -952,7 +952,7 @@ float mapIFSVariant39(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 40: Plasma IFS
@@ -978,7 +978,7 @@ float mapIFSVariant40(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 41: Kaleidoscopic IFS
@@ -1002,7 +1002,7 @@ float mapIFSVariant41(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 42: Sierpinski IFS
@@ -1025,7 +1025,7 @@ float mapIFSVariant42(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 43: Menger IFS
@@ -1048,7 +1048,7 @@ float mapIFSVariant43(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 44: Dragon IFS
@@ -1073,7 +1073,7 @@ float mapIFSVariant44(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 45: Vicsek IFS
@@ -1097,7 +1097,7 @@ float mapIFSVariant45(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 46: Apollonian IFS
@@ -1121,7 +1121,7 @@ float mapIFSVariant46(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 47: Tetrix IFS
@@ -1144,7 +1144,7 @@ float mapIFSVariant47(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 48: Cubic IFS
@@ -1168,7 +1168,7 @@ float mapIFSVariant48(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 49: Spiral IFS
@@ -1195,7 +1195,7 @@ float mapIFSVariant49(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 
 // Variant 50: Plasma IFS
@@ -1221,6 +1221,6 @@ float mapIFSVariant50(vec3 p, float t, float phi, int iters) {
     dr = dr * scale + 1.0;
   }
   
-  return 0.5 * log(r) * r / dr;
+  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
 }
 `;

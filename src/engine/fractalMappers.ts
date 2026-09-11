@@ -538,15 +538,19 @@ export function getSliceAxisIndex(axis?: string): number {
  */
 export function getRenderStyleIndex(style?: string): number {
   switch (style) {
-    case 'solid': return 0;
+    case 'solid':
+    case 'pbr': return 0; // pbr alias for solid
     case 'xray': return 1;
     case 'topo':
+    case 'topography':
     case 'sonar':
-    case 'lidar': return 2;
+    case 'lidar': return 2; // topography alias for topo
     case 'hologram': return 3;
     case 'iridescent': return 4;
-    case 'quantum': return 5;
-    case 'gemstone': return 6;
+    case 'quantum':
+    case 'plasma': return 5; // plasma alias for quantum
+    case 'gemstone':
+    case 'crystal': return 6; // crystal alias for gemstone
     default: return 0;
   }
 }
