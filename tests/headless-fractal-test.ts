@@ -56,7 +56,15 @@ function testFractalType(type: string, index: number): FractalTestResult {
     );
     
     // Check if type has shader implementation
-    const hasShaderImpl = shaderContent.includes(`ftype == ${index}`);
+    // Support both individual checks (ftype == N) and range checks (ftype >= N && ftype <= M)
+    const hasIndividualImpl = shaderContent.includes(`ftype == ${index}`);
+    const hasRangeImpl = (index >= 341 && index <= 430 && shaderContent.includes('ftype >= 341 && ftype <= 430')) ||
+                         (index >= 291 && index <= 340 && shaderContent.includes('ftype >= 291 && ftype <= 340')) ||
+                         (index >= 241 && index <= 290 && shaderContent.includes('ftype >= 241 && ftype <= 290')) ||
+                         (index >= 191 && index <= 240 && shaderContent.includes('ftype >= 191 && ftype <= 240')) ||
+                         (index >= 141 && index <= 190 && shaderContent.includes('ftype >= 141 && ftype <= 190')) ||
+                         (index >= 104 && index <= 140 && shaderContent.includes('ftype >= 104 && ftype <= 140'));
+    const hasShaderImpl = hasIndividualImpl || hasRangeImpl;
     if (!hasShaderImpl) {
       return {
         type,
