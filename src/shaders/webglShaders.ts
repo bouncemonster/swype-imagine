@@ -3603,8 +3603,8 @@ vec2 sceneSDF(vec3 p_world) {
   }
 
   float r_bound = length(p_eval);
-  if (r_bound > 12.0) { // Expanded from 5.0 to 12.0 — fractals can extend further
-    return vec2((r_bound - 5.0) / max(inv_scale, 0.0001), r_bound); // Softened boundary (was 2.8)
+  if (r_bound > 8.0) { // Expanded from 5.0 to 8.0 — balance between visibility and performance
+    return vec2((r_bound - 3.5) / max(inv_scale, 0.0001), r_bound); // Soft boundary
   }
 
   int ftypeA = int(u_fractal_type + 0.5);
@@ -3957,7 +3957,7 @@ void main() {
 
   // OPTIMIZATION 1: HIERARCHICAL SPACE LEAPING
   // Multi-level bounding volumes for maximum performance
-  float boundingRadius = 10.0; // Expanded from 6.0 to capture larger fractal structures
+  float boundingRadius = 8.0; // Expanded from 6.0 — balance visibility vs performance
   float rayOriginDist = length(ro);
   
   // Level 1: Large bounding sphere (fast skip)
@@ -3967,15 +3967,15 @@ void main() {
   }
   
   // Level 2: Medium bounding sphere (refined skip)
-  float medRadius = 5.0; // Expanded from 3.5
+  float medRadius = 4.5; // Expanded from 3.5
   if (rayOriginDist > medRadius && rayOriginDist < boundingRadius) {
     float tmin = rayOriginDist - medRadius;
     if (tmin > t) t = tmin * 0.98;
   }
   
-  // Level 3: Tight bounding box (final approach) — EXPANDED from ±2.5 to ±5.0
-  vec3 bboxMin = vec3(-5.0);
-  vec3 bboxMax = vec3(5.0);
+  // Level 3: Tight bounding box (final approach) — EXPANDED from ±2.5 to ±4.0
+  vec3 bboxMin = vec3(-4.0);
+  vec3 bboxMax = vec3(4.0);
   vec3 invRd = 1.0 / rd;
   vec3 t0 = (bboxMin - ro) * invRd;
   vec3 t1 = (bboxMax - ro) * invRd;
@@ -3993,8 +3993,8 @@ void main() {
   int iterReduction = int(lodFactor * 4.0); // Reduced from 8 to 4 to preserve detail at distance
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
-  // Close range: 640 steps, Medium: 480 steps, Far: 320 steps (was 512/384/256)
-  int maxSteps = (cam_dist < 1.0) ? 640 : (cam_dist < 3.0) ? 480 : 320;
+  // Close range: 480 steps, Medium: 384 steps, Far: 256 steps (was 640/480/320)
+  int maxSteps = (cam_dist < 1.0) ? 480 : (cam_dist < 3.0) ? 384 : 256;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
   float hit_threshold = max(hitScale * 3.0, 0.002); // Declared here, used in loop + binary search
@@ -4059,10 +4059,10 @@ void main() {
 
     // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
     // Don't count negative distances as "increasing" — they mean we're inside
-    // INCREASED from 16 to 32 to handle sparse fractal regions
+    // Threshold 24: balance between sparse fractals and performance
     if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount++;
-      if (missCount > 32) break;
+      if (missCount > 24) break;
     } else if (d < 0.0) {
       missCount = 0; // Inside fractal = definitely not missing
     } else {

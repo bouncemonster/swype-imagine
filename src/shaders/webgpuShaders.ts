@@ -44,7 +44,8 @@ struct Uniforms {
   palette_seed: f32,
 
   palette_rotation: f32,
-  pad5: vec3<f32>,
+  auto_rotate: f32, // Auto-rotation flag for motion blur
+  pad5: vec2<f32>,
 };
 
 @group(0) @binding(0) var<uniform> u: Uniforms;
@@ -2642,8 +2643,8 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   }
 
   let r_bound = length(p_eval);
-  if (r_bound > 12.0) { // Expanded from 5.0 to 12.0 — fractals can extend further
-    return vec2<f32>((r_bound - 5.0) / max(inv_scale, 0.0001), r_bound); // Softened boundary
+  if (r_bound > 8.0) { // Expanded from 5.0 to 8.0 — balance between visibility and performance
+    return vec2<f32>((r_bound - 3.5) / max(inv_scale, 0.0001), r_bound); // Soft boundary
   }
 
   let ftypeA = i32(u.fractal_type + 0.5);
@@ -2957,8 +2958,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   var steps: i32 = 0;
 
   // OPTIMIZATION 1: Space Leaping — skip empty space with bounding sphere
-  // EXPANDED from 6.0 to 10.0 to capture larger fractal structures
-  let boundingRadius: f32 = 10.0;
+  // EXPANDED from 6.0 to 8.0 — balance visibility vs performance
+  let boundingRadius: f32 = 8.0;
   let rayOriginDist = length(ro);
   if (rayOriginDist > boundingRadius) {
     let tmin = rayOriginDist - boundingRadius;
@@ -2970,8 +2971,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   let iterReduction = i32(lodFactor * 4.0); // Reduced from 8 to 4 to preserve detail
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
-  // Close range: 640 steps, Medium: 480 steps, Far: 320 steps (was 512/384/256)
-  let maxSteps: i32 = select(select(select(320, 480, cam_dist < 3.0), 640, cam_dist < 1.0), 640, false);
+  // Close range: 480 steps, Medium: 384 steps, Far: 256 steps
+  let maxSteps: i32 = select(select(select(256, 384, cam_dist < 3.0), 480, cam_dist < 1.0), 480, false);
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   let hitScale = max(cam_dist * 0.0003, 0.0001);
 
@@ -3029,10 +3030,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     prevNegative = curNegative;
 
-    // EARLY TERMINATION: INCREASED from 16 to 32 to handle sparse fractal regions
+    // EARLY TERMINATION: Threshold 24 — balance sparse fractals vs performance
     if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount = missCount + 1;
-      if (missCount > 32) { break; }
+      if (missCount > 24) { break; }
     } else if (d < 0.0) {
       missCount = 0; // Inside fractal = definitely not missing
     } else {
