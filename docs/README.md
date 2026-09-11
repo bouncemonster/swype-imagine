@@ -20,6 +20,7 @@
 - [ControlsPanel.md](ControlsPanel.md) - Main control panel with 8 tabs
 - [FractalScrollFeed.md](FractalScrollFeed.md) - Neuro-feed ribbon for specimens
 - [FractalInfoHUD.md](FractalInfoHUD.md) - HUD overlay with specimen info
+- [FractalProbeHUD.md](FractalProbeHUD.md) - Topological probe telemetry
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [UserPreferenceEngine.md](UserPreferenceEngine.md) - Interaction learning, adapted defaults
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
