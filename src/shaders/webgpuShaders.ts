@@ -2641,11 +2641,10 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
     }
   }
 
-  // Soft outer boundary — return SMALL distance to prevent ray overshoot
+  // Boundary SDF: moderate distance to balance speed vs surface detection
   let r_bound = length(p_eval);
   if (r_bound > 5.0) {
-    let excess = r_bound - 5.0;
-    return vec2<f32>((0.1 + excess * 0.2) / max(inv_scale, 0.0001), r_bound);
+    return vec2<f32>((r_bound - 4.5) / max(inv_scale, 0.0001), r_bound);
   }
 
   let ftypeA = i32(u.fractal_type + 0.5);
