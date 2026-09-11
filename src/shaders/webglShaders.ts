@@ -3603,8 +3603,8 @@ vec2 sceneSDF(vec3 p_world) {
   }
 
   float r_bound = length(p_eval);
-  if (r_bound > 5.0) {
-    return vec2((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);
+  if (r_bound > 12.0) { // Expanded from 5.0 to 12.0 — fractals can extend further
+    return vec2((r_bound - 5.0) / max(inv_scale, 0.0001), r_bound); // Softened boundary (was 2.8)
   }
 
   int ftypeA = int(u_fractal_type + 0.5);

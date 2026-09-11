@@ -2642,8 +2642,8 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   }
 
   let r_bound = length(p_eval);
-  if (r_bound > 5.0) {
-    return vec2<f32>((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);
+  if (r_bound > 12.0) { // Expanded from 5.0 to 12.0 — fractals can extend further
+    return vec2<f32>((r_bound - 5.0) / max(inv_scale, 0.0001), r_bound); // Softened boundary
   }
 
   let ftypeA = i32(u.fractal_type + 0.5);
