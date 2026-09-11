@@ -1,6 +1,6 @@
 # ControlsPanel.tsx
 
-**1061 lines | 52KB | Main control panel with 8 tabs**
+**1012 lines | 52KB | Main control panel with 8 tabs**
 
 ## Purpose
 Full-featured engineering control panel for all rendering parameters. Organized into 8 tabs covering architectures, composition, camera, palettes, morphology, GPU, audio, and neuro-aesthetics.

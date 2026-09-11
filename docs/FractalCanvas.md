@@ -1,6 +1,6 @@
 # FractalCanvas.tsx
 
-**257 lines | Main canvas component**
+**231 lines | Main canvas component**
 
 ## Purpose
 GPU canvas with pointer/touch controls, zoom, orbit with inertia.

@@ -1,6 +1,6 @@
 # FractalAtlasModal.tsx
 
-**574 lines | Scientific atlas of canonical fractals with search and categories**
+**538 lines | Scientific atlas of canonical fractals with search and categories**
 
 ## Purpose
 Comprehensive atlas showing all 100+ canonical fractals with scientific descriptions, formulas, and the ability to apply presets. Includes search, category filtering, and detailed information panels.

@@ -1,6 +1,6 @@
 # goldenAudio.ts
 
-**551 lines | Sacred geometry harmonic acoustic engine**
+**469 lines | Sacred geometry harmonic acoustic engine**
 
 ## Purpose
 Generates mathematically-coupled audio drones based on fractal geometry, tuned to 432 Hz sacred frequency.

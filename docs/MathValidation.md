@@ -1,6 +1,6 @@
 # MathValidation.ts
 
-**264 lines | Mathematical validation utilities**
+**253 lines | Mathematical validation utilities**
 
 ## Purpose
 Validate mathematical operations in fractal rendering pipeline. Logs errors/warnings via RenderDiagnostics.

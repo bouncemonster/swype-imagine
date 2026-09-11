@@ -1,6 +1,6 @@
 # FractalInfoHUD.tsx
 
-**389 lines | HUD overlay with specimen info and controls**
+**364 lines | HUD overlay with specimen info and controls**
 
 ## Purpose
 Heads-up display showing current fractal specimen info, navigation controls, and quick action buttons. Auto-hides after 3 seconds of inactivity.

@@ -1,6 +1,6 @@
 # WebGPUEngine.ts
 
-**236 lines | WebGPU renderer**
+**204 lines | WebGPU renderer**
 
 ## Purpose
 WebGPU rendering engine using WGSL shaders. Alternative to WebGLEngine with modern GPU API.

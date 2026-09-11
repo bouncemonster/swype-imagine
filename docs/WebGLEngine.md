@@ -1,6 +1,6 @@
 # WebGLEngine.ts
 
-**445 lines | WebGL2 renderer**
+**404 lines | WebGL2 renderer**
 
 ## Purpose
 Primary rendering engine. Compiles GLSL shaders, uploads uniforms, renders fractals.

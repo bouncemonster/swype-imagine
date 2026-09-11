@@ -1,6 +1,6 @@
 # juliaVariations.ts
 
-**1353 lines | 50 Mandelbulb/Julia fractal variations in GLSL**
+**1300 lines | 50 Mandelbulb/Julia fractal variations in GLSL**
 
 ## Purpose
 Collection of 50 Julia/Mandelbulb fractal variations with different power values, escape radii, and transformations. All use the same core Mandelbulb algorithm with variations in parameters.

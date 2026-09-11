@@ -1,6 +1,6 @@
 # wrangler.toml
 
-**4 lines | Cloudflare Pages deployment configuration**
+**3 lines | Cloudflare Pages deployment configuration**
 
 ## Purpose
 Configuration for deploying static site to Cloudflare Pages via Wrangler CLI.

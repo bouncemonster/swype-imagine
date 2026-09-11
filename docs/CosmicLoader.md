@@ -1,6 +1,6 @@
 # CosmicLoader.tsx
 
-**174 lines | Loading screen with animated fractal emblem**
+**157 lines | Loading screen with animated fractal emblem**
 
 ## Purpose
 Full-screen loading overlay shown during GPU initialization. Displays animated fractal emblem, progress phases, and force-dismisses after 15 seconds if engine fails.

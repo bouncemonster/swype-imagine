@@ -1,6 +1,6 @@
 # types/fractal.ts
 
-**215 lines | Core TypeScript interfaces**
+**206 lines | Core TypeScript interfaces**
 
 ## Type Definitions
 

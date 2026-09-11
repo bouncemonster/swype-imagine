@@ -1,6 +1,6 @@
 # useRenderEngine.ts
 
-**636 lines | React hook for engine lifecycle**
+**570 lines | React hook for engine lifecycle**
 
 ## Purpose
 Manages WebGPU/WebGL2 initialization, render loop, keyboard shortcuts, telemetry.

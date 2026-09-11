@@ -1,6 +1,6 @@
 # ProjectManifestModal.tsx
 
-**176 lines | Project introduction and welcome modal**
+**161 lines | Project introduction and welcome modal**
 
 ## Purpose
 Welcome modal introducing the project to new users. Shows on first visit and explains core features, gesture controls, and provides entry points to the atlas.

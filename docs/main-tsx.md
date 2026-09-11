@@ -1,6 +1,6 @@
 # main.tsx
 
-**12 lines | Application entry point**
+**10 lines | Application entry point**
 
 ## Purpose
 React application bootstrap - renders the root App component into the DOM.

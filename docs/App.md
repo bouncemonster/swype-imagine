@@ -1,6 +1,6 @@
 # App.tsx
 
-**639 lines | Main application component**
+**593 lines | Main application component**
 
 ## Purpose
 Orchestrates all UI components, manages fractal parameters, neuro-aesthetic engine, auto-explore mode.

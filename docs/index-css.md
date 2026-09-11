@@ -1,6 +1,6 @@
 # index.css
 
-**20 lines | Global application styles**
+**17 lines | Global application styles**
 
 ## Purpose
 Minimal global CSS establishing the full-screen dark canvas environment for the fractal renderer.

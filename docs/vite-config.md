@@ -1,6 +1,6 @@
 # vite.config.ts
 
-**16 lines | Vite build configuration**
+**14 lines | Vite build configuration**
 
 ## Purpose
 Vite bundler configuration for React + Tailwind CSS application.

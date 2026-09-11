@@ -1,6 +1,6 @@
 # FractalProbeHUD.tsx
 
-**128 lines | Topological probe telemetry overlay**
+**115 lines | Topological probe telemetry overlay**
 
 ## Purpose
 Scientific measurement overlay showing distance to SDF surface, camera position, and topological data. Activated when `params.probeActive` is true.

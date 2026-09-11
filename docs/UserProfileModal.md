@@ -1,6 +1,6 @@
 # UserProfileModal.tsx
 
-**364 lines | User taste profile, liked fractals, and settings**
+**342 lines | User taste profile, liked fractals, and settings**
 
 ## Purpose
 Modal displaying user's neuro-aesthetic taste profile, liked fractals playlist, audio tuning settings, and engineer mode toggle.

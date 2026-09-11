@@ -1,6 +1,6 @@
 # NeuroAestheticsEngine.ts
 
-**1299 lines | 56KB | Neuro-aesthetic recommendation engine**
+**1224 lines | 56KB | Neuro-aesthetic recommendation engine**
 
 ## Purpose
 Generates evolved fractal specimens based on user taste profile, tracks engagement, manages history.

@@ -1,6 +1,6 @@
 # FractalEngineBase.ts
 
-**147 lines | Abstract base class for GPU engines**
+**126 lines | Abstract base class for GPU engines**
 
 ## Purpose
 Shared base for WebGLEngine and WebGPUEngine. Handles uniform packing, palette resolution, index computation.

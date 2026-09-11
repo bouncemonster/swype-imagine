@@ -1,6 +1,6 @@
 # webgpuShaders.ts
 
-**3538 lines | WGSL shaders for WebGPU renderer**
+**3288 lines | WGSL shaders for WebGPU renderer**
 
 ## Purpose
 Complete WGSL shader implementation for WebGPU fractal rendering. Mirrors webglShaders.ts functionality but uses WebGPU Shading Language (WGSL) syntax.

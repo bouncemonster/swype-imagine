@@ -1,6 +1,6 @@
 # ExplanationModal.tsx
 
-**207 lines | Scientific explanation and mathematical justification**
+**196 lines | Scientific explanation and mathematical justification**
 
 ## Purpose
 Educational modal explaining the mathematical foundations of the project: golden ratio, prime numbers, quasicrystals, SDF algebra, WebGPU rendering, and neuro-aesthetics.

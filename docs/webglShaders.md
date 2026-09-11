@@ -1,6 +1,6 @@
 # webglShaders.ts
 
-**4654 lines | 187KB | GLSL ES 3.0 shaders**
+**4357 lines | 187KB | GLSL ES 3.0 shaders**
 
 ## Purpose
 Complete WebGL2 shader pipeline: vertex shader, fragment shader, 86 SDF functions, 7 render modes, post-processing.

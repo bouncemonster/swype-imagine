@@ -1,6 +1,6 @@
 # UserPreferenceEngine.ts
 
-**251 lines | Learns user interaction patterns**
+**226 lines | Learns user interaction patterns**
 
 ## Purpose
 Analyzes user behavior and adapts rendering parameters to match user's style.

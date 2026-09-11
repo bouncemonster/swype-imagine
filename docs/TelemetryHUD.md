@@ -1,6 +1,6 @@
 # TelemetryHUD.tsx
 
-**171 lines | Real-time performance telemetry display**
+**161 lines | Real-time performance telemetry display**
 
 ## Purpose
 Top-left HUD showing FPS, frame time, frame pacing graph, and GPU specs. Desktop only (hidden on mobile).

@@ -1,6 +1,6 @@
 # DebugOverlay.tsx
 
-**158 lines | Render diagnostics and performance monitoring overlay**
+**155 lines | Render diagnostics and performance monitoring overlay**
 
 ## Purpose
 Developer debug panel showing real-time render diagnostics, math validation, GPU health, and performance metrics. Updates 10 times per second.

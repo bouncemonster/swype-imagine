@@ -1,6 +1,6 @@
 # index.html
 
-**23 lines | HTML entry point**
+**21 lines | HTML entry point**
 
 ## Purpose
 HTML template for the Single Page Application (SPA). Contains meta tags for SEO, social sharing, and mobile web app capabilities.
