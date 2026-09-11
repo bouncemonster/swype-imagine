@@ -3232,57 +3232,8 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 139) return vec2(mapMandelbrotVariant9(p, t, phi, iters), 0.0);
   if (ftype == 140) return vec2(mapMandelbrotVariant10(p, t, phi, iters), 0.0);
   
-  // JULIA VARIATIONS (141-190)
-  if (ftype == 141) return vec2(mapJuliaVariant1(p, t, phi, iters), 0.0);
-  if (ftype == 142) return vec2(mapJuliaVariant2(p, t, phi, iters), 0.0);
-  if (ftype == 143) return vec2(mapJuliaVariant3(p, t, phi, iters), 0.0);
-  if (ftype == 144) return vec2(mapJuliaVariant4(p, t, phi, iters), 0.0);
-  if (ftype == 145) return vec2(mapJuliaVariant5(p, t, phi, iters), 0.0);
-  if (ftype == 146) return vec2(mapJuliaVariant6(p, t, phi, iters), 0.0);
-  if (ftype == 147) return vec2(mapJuliaVariant7(p, t, phi, iters), 0.0);
-  if (ftype == 148) return vec2(mapJuliaVariant8(p, t, phi, iters), 0.0);
-  if (ftype == 149) return vec2(mapJuliaVariant9(p, t, phi, iters), 0.0);
-  if (ftype == 150) return vec2(mapJuliaVariant10(p, t, phi, iters), 0.0);
-  if (ftype == 151) return vec2(mapJuliaVariant11(p, t, phi, iters), 0.0);
-  if (ftype == 152) return vec2(mapJuliaVariant12(p, t, phi, iters), 0.0);
-  if (ftype == 153) return vec2(mapJuliaVariant13(p, t, phi, iters), 0.0);
-  if (ftype == 154) return vec2(mapJuliaVariant14(p, t, phi, iters), 0.0);
-  if (ftype == 155) return vec2(mapJuliaVariant15(p, t, phi, iters), 0.0);
-  if (ftype == 156) return vec2(mapJuliaVariant16(p, t, phi, iters), 0.0);
-  if (ftype == 157) return vec2(mapJuliaVariant17(p, t, phi, iters), 0.0);
-  if (ftype == 158) return vec2(mapJuliaVariant18(p, t, phi, iters), 0.0);
-  if (ftype == 159) return vec2(mapJuliaVariant19(p, t, phi, iters), 0.0);
-  if (ftype == 160) return vec2(mapJuliaVariant20(p, t, phi, iters), 0.0);
-  if (ftype == 161) return vec2(mapJuliaVariant21(p, t, phi, iters), 0.0);
-  if (ftype == 162) return vec2(mapJuliaVariant22(p, t, phi, iters), 0.0);
-  if (ftype == 163) return vec2(mapJuliaVariant23(p, t, phi, iters), 0.0);
-  if (ftype == 164) return vec2(mapJuliaVariant24(p, t, phi, iters), 0.0);
-  if (ftype == 165) return vec2(mapJuliaVariant25(p, t, phi, iters), 0.0);
-  if (ftype == 166) return vec2(mapJuliaVariant26(p, t, phi, iters), 0.0);
-  if (ftype == 167) return vec2(mapJuliaVariant27(p, t, phi, iters), 0.0);
-  if (ftype == 168) return vec2(mapJuliaVariant28(p, t, phi, iters), 0.0);
-  if (ftype == 169) return vec2(mapJuliaVariant29(p, t, phi, iters), 0.0);
-  if (ftype == 170) return vec2(mapJuliaVariant30(p, t, phi, iters), 0.0);
-  if (ftype == 171) return vec2(mapJuliaVariant31(p, t, phi, iters), 0.0);
-  if (ftype == 172) return vec2(mapJuliaVariant32(p, t, phi, iters), 0.0);
-  if (ftype == 173) return vec2(mapJuliaVariant33(p, t, phi, iters), 0.0);
-  if (ftype == 174) return vec2(mapJuliaVariant34(p, t, phi, iters), 0.0);
-  if (ftype == 175) return vec2(mapJuliaVariant35(p, t, phi, iters), 0.0);
-  if (ftype == 176) return vec2(mapJuliaVariant36(p, t, phi, iters), 0.0);
-  if (ftype == 177) return vec2(mapJuliaVariant37(p, t, phi, iters), 0.0);
-  if (ftype == 178) return vec2(mapJuliaVariant38(p, t, phi, iters), 0.0);
-  if (ftype == 179) return vec2(mapJuliaVariant39(p, t, phi, iters), 0.0);
-  if (ftype == 180) return vec2(mapJuliaVariant40(p, t, phi, iters), 0.0);
-  if (ftype == 181) return vec2(mapJuliaVariant41(p, t, phi, iters), 0.0);
-  if (ftype == 182) return vec2(mapJuliaVariant42(p, t, phi, iters), 0.0);
-  if (ftype == 183) return vec2(mapJuliaVariant43(p, t, phi, iters), 0.0);
-  if (ftype == 184) return vec2(mapJuliaVariant44(p, t, phi, iters), 0.0);
-  if (ftype == 185) return vec2(mapJuliaVariant45(p, t, phi, iters), 0.0);
-  if (ftype == 186) return vec2(mapJuliaVariant46(p, t, phi, iters), 0.0);
-  if (ftype == 187) return vec2(mapJuliaVariant47(p, t, phi, iters), 0.0);
-  if (ftype == 188) return vec2(mapJuliaVariant48(p, t, phi, iters), 0.0);
-  if (ftype == 189) return vec2(mapJuliaVariant49(p, t, phi, iters), 0.0);
-  if (ftype == 190) return vec2(mapJuliaVariant50(p, t, phi, iters), 0.0);
+  // JULIA VARIATIONS (141-190) - compressed from 50 lines to 1
+  if (ftype >= 141 && ftype <= 190) return vec2(mapJuliaVariant(p, t, phi, iters, ftype - 140), 0.0);
   
   // IFS VARIATIONS (191-240)
   if (ftype == 191) return vec2(mapIFSVariant1(p, t, phi, iters), 0.0);
