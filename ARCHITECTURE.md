@@ -1,58 +1,91 @@
 # Golden Ratio WebGPU Fractal Engine - Architecture
 
 ## Project Overview
-Real-time 3D fractal visualization engine with 431 fractal types, 7 render modes, and advanced PBR lighting.
+Real-time 3D fractal visualization engine with **86 fractal types**, **7 render modes**, and advanced PBR lighting.
 
 ## Tech Stack
-- **Runtime**: TypeScript 5.x, React 19, Vite 6.x
+- **Runtime**: TypeScript 5.8, React 19, Vite 6.4
 - **Rendering**: WebGL2 (primary), WebGPU (fallback)
 - **Shaders**: GLSL ES 3.00 (WebGL2), WGSL (WebGPU)
-- **Build**: Vite with esbuild, 4.05s build time
+- **Build**: Vite with esbuild, ~4s build time
 - **Bundle**: 1029 KB JS, 76 KB CSS
 
 ## Directory Structure
 ```
 src/
-├── shaders/
-│   ├── webglShaders.ts          # Main shader (4631 lines) - ALL render modes embedded
-│   ├── webgpuShaders.ts         # WebGPU shader (WGSL)
+── shaders/
+│   ├── webglShaders.ts          # Main shader (187KB, 4655 lines) - ALL render modes embedded
+│   ├── webgpuShaders.ts         # WebGPU shader (140KB, 3538 lines)
 │   └── modules/
-│       ├── juliaVariations.ts   # 50 Julia set variations
-│       ├── flameVariations.ts   # 50 Fractal Flame variations
-│       ├── hybridVariations.ts  # 90 Hybrid fractal variations
-│       ├── ifsVariations.ts     # 50 IFS variations
-│       ├── lsystemVariations.ts # 50 L-System variations
+│       ├── juliaVariations.ts   # 50 Julia set variations (36KB)
+│       ├── flameVariations.ts   # 50 Fractal Flame variations (29KB)
+│       ├── hybridVariations.ts  # 90 Hybrid fractal variations (67KB)
+│       ├── ifsVariations.ts     # 50 IFS variations (27KB)
+│       ├── lsystemVariations.ts # 50 L-System variations (30KB)
 │       ├── renderModes.ts       # UNUSED DUPLICATE (code in webglShaders.ts)
 │       ├── advancedRendering.ts # UNUSED DUPLICATE (code in webglShaders.ts)
-│       └── postProcessing.ts    # UNUSED DUPLICATE (code in webglShaders.ts)
+│       ├── postProcessing.ts    # UNUSED DUPLICATE (code in webglShaders.ts)
+│       ├── sdfOperations.ts     # SDF operations (4.5KB)
+│       ── index.ts             # Module exports
 ├── engine/
-│   ├── FractalEngineBase.ts     # Base class, uniform packing
-│   ├── WebGLEngine.ts           # WebGL2 renderer
-│   ├── WebGPUEngine.ts          # WebGPU renderer
-│   ├── fractalMappers.ts        # Type/index mappings
-│   ├── NeuroAestheticsEngine.ts # AI aesthetics scoring
-│   └── UserPreferenceEngine.ts  # User learning
+│   ├── FractalEngineBase.ts     # Base class, uniform packing (4.7KB)
+│   ├── WebGLEngine.ts           # WebGL2 renderer (18KB)
+│   ├── WebGPUEngine.ts          # WebGPU renderer (8.8KB)
+│   ├── fractalMappers.ts        # Type/index mappings (19KB)
+│   ├── NeuroAestheticsEngine.ts # AI aesthetics scoring (56KB)
+│   ├── UserPreferenceEngine.ts  # User learning (8.3KB)
+│   ├── UserProblemLogger.ts     # Error logging (7.1KB)
+│   ├── RenderDiagnostics.ts     # Diagnostics (6.8KB)
+│   └── MathValidation.ts        # Math validation (6.5KB)
 ├── components/
-│   ├── FractalCanvas.tsx        # Main canvas, camera controls
-│   ├── ControlsPanel.tsx        # UI controls
-│   ├── TelemetryHUD.tsx         # FPS/stats display
-│   └── FractalInfoHUD.tsx       # Fractal info overlay
+│   ├── FractalCanvas.tsx        # Main canvas, camera controls (9.9KB)
+│   ├── ControlsPanel.tsx        # UI controls (52KB)
+│   ├── TelemetryHUD.tsx         # FPS/stats display (7.6KB)
+│   ├── FractalInfoHUD.tsx       # Fractal info overlay (17KB)
+│   ├── FractalProbeHUD.tsx      # Probe overlay (5.5KB)
+│   ├── FractalScrollFeed.tsx    # Horizontal browser (12KB)
+│   ├── FractalAtlasModal.tsx    # Atlas modal (33KB)
+│   ├── ExplanationModal.tsx     # Explanation modal (16KB)
+│   ├── UserProfileModal.tsx     # User profile modal (18KB)
+│   ├── ProjectManifestModal.tsx # Manifest modal (8.5KB)
+│   ├── CosmicLoader.tsx         # Loading animation (6.8KB)
+│   └── DebugOverlay.tsx         # Debug overlay (6.6KB)
 ├── hooks/
-│   └── useRenderEngine.ts       # Main render loop, keyboard shortcuts
+│   ── useRenderEngine.ts       # Main render loop, keyboard shortcuts (25KB)
 ├── data/
-│   ├── canonicalFractals.ts     # 431 fractal catalog
-│   ├── fractalFactory.ts        # Factory function
+│   ├── canonicalFractals.ts     # Fractal catalog (1.4KB)
+│   ├── fractalCatalogTypes.ts   # Catalog types (3.4KB)
+│   ├── fractalFactory.ts        # Factory function (2.2KB)
 │   └── categories/              # 10 fractal categories
-└── types/
-    ── fractal.ts               # TypeScript interfaces
+│       ├── geometricCurves.ts   # Geometric curves (16KB)
+│       ├── constructiveFractals.ts  # Constructive fractals (8.7KB)
+│       ├── algebraicFractals.ts     # Algebraic fractals (12KB)
+│       ├── multidimensionalFractals.ts # Multidimensional (3.9KB)
+│       ├── ifsFractals.ts           # IFS fractals (6.8KB)
+│       ├── stochasticFractals.ts      # Stochastic fractals (4.2KB)
+│       ├── physicalFractals.ts        # Physical fractals (6.5KB)
+│       ├── expandedRealFractals.ts    # Expanded real fractals (8.2KB)
+│       ├── visuallyDistinctFractals.ts # Visually distinct (6.7KB)
+│       ├── mandalas3D.ts              # 3D Mandalas (13KB)
+│       └── index.ts                   # Category exports
+├── audio/
+│   └── goldenAudio.ts           # φ-tuned ambient audio (22KB)
+├── types/
+│   └── fractal.ts               # TypeScript interfaces (13KB)
+├── palettes.ts                  # Color palettes (7.8KB)
+├── palettesProcedural.ts        # Procedural palettes (4.0KB)
+├── App.tsx                      # Main app component (27KB)
+└── main.tsx                     # Entry point (407B)
 ```
+
+**Total**: 54 TypeScript/TSX files, ~650KB source code
 
 ## Critical Architecture Decisions
 
 ### 1. Shader Code Duplication
 **PROBLEM**: `renderModes.ts`, `advancedRendering.ts`, `postProcessing.ts` are UNUSED DUPLICATES.
 
-**REASON**: All 7 render modes, post-processing, and advanced techniques are embedded directly in `webglShaders.ts` (4631 lines).
+**REASON**: All 7 render modes, post-processing, and advanced techniques are embedded directly in `webglShaders.ts` (4655 lines).
 
 **IMPACT**: Module files can be deleted safely. All rendering code is in `webglShaders.ts`.
 
@@ -114,28 +147,53 @@ Three modes:
 - Binary search refinement: 20 iterations
 - Sign tracking for stability
 
+## Module Dependency Graph
+
+```
+main.tsx
+  → App.tsx
+    → FractalCanvas.tsx
+      → useRenderEngine.ts
+        → WebGLEngine.ts / WebGPUEngine.ts
+          → FractalEngineBase.ts
+            → fractalMappers.ts
+          → webglShaders.ts / webgpuShaders.ts
+            → modules/*.ts (5 variation modules)
+    → ControlsPanel.tsx
+    → TelemetryHUD.tsx
+    → FractalInfoHUD.tsx
+    → FractalScrollFeed.tsx
+    → FractalAtlasModal.tsx
+    → ExplanationModal.tsx
+    → UserProfileModal.tsx
+    → ProjectManifestModal.tsx
+    → FractalProbeHUD.tsx
+    → CosmicLoader.tsx
+    → DebugOverlay.tsx
+    → NeuroAestheticsEngine.ts
+    → goldenAudio.ts
+    → palettes.ts
+    → palettesProcedural.ts
+
+data/canonicalFractals.ts
+  → categories/*.ts (10 category files)
+    → fractalCatalogTypes.ts
+    → fractalFactory.ts
+```
+
 ## Performance Characteristics
 - **Build time**: ~4s
-- **Bundle size**: 1029 KB JS
+- **Bundle size**: 1029 KB JS, 76 KB CSS
 - **FPS target**: 60 (configurable up to 240)
-- **SDF calls per pixel**: ~50 (with all effects)
+- **SDF calls per pixel**: ~170-270 (with all effects)
 - **Shader compilation**: Parallel (KHR_parallel_shader_compile)
+- **Source code**: ~650KB TypeScript
 
 ## Known Issues
 1. **Passive event listener warnings**: Fixed with `touchAction: 'none'`
 2. **Render mode switching**: Fixed to use string names
 3. **WebGPU crashes in embedded browsers**: Defaults to WebGL2
-
-## File Dependencies
-```
-FractalCanvas.tsx
-  → useRenderEngine.ts
-    → WebGLEngine.ts / WebGPUEngine.ts
-      → FractalEngineBase.ts
-        → fractalMappers.ts
-webglShaders.ts
-  → modules/*.ts (fractal variations only)
-```
+4. **Unused shader modules**: renderModes.ts, advancedRendering.ts, postProcessing.ts are duplicates
 
 ## Environment
 - **Browser**: Chrome 152+, Edge (Chromium)
@@ -145,9 +203,10 @@ webglShaders.ts
 
 ## Build Commands
 ```bash
-npm run dev      # Development server (localhost:5173)
+npm run dev      # Development server (localhost:3000)
 npm run build    # Production build (dist/)
 npm run preview  # Preview production build
+npm run deploy:cf # Deploy to Cloudflare Pages
 ```
 
 ## Deployment
@@ -155,3 +214,4 @@ npm run preview  # Preview production build
 - **URL**: https://golden-ratio-fractal-engine.pages.dev/
 - **Build command**: `npm run build`
 - **Output directory**: `dist`
+- **Deploy command**: `npm run deploy:cf`
