@@ -20,6 +20,7 @@
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
 - [palettes.md](palettes.md) - 24 hand-crafted + 640 procedural palettes
+- [fractal-catalog.md](fractal-catalog.md) - 110+ canonical fractals, 8 categories
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
