@@ -25,6 +25,9 @@
 - [goldenAudio.md](goldenAudio.md) - 432 Hz sacred geometry audio engine
 - [FractalEngineBase.md](FractalEngineBase.md) - Base class, 48-float uniform layout
 - [WebGPUEngine.md](WebGPUEngine.md) - WebGPU renderer details
+- [RenderDiagnostics.md](RenderDiagnostics.md) - Performance and math validation
+- [MathValidation.md](MathValidation.md) - Scalar, vec3, matrix validation
+- [UserProblemLogger.md](UserProblemLogger.md) - IndexedDB error tracking
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
