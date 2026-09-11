@@ -8,7 +8,7 @@
 
 ## 🎯 Project Mission
 
-Real-time 3D fractal visualization engine showcasing mathematical beauty through WebGPU/WebGL2 rendering. Combines scientific accuracy with artistic expression, featuring 100+ fractal types, neuro-aesthetics personalization, and golden ratio principles.
+Real-time 3D fractal visualization engine showcasing mathematical beauty through WebGPU/WebGL2 rendering. Combines scientific accuracy with artistic expression, featuring 431 fractal types, neuro-aesthetics personalization, and golden ratio principles.
 
 ---
 
@@ -100,19 +100,19 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 - `src/engine/fractalMappers.ts` - Type mappings
 
 ### Shaders (Must Know)
-- `src/shaders/webglShaders.ts` - GLSL shader (4357 lines)
-- `src/shaders/webgpuShaders.ts` - WGSL shader (3288 lines)
-- `src/shaders/modules/` - Modular shader components
+- `src/shaders/webglShaders.ts` - GLSL shader (4672 lines, ALL 431 types)
+- `src/shaders/webgpuShaders.ts` - WGSL shader (3546 lines, 104/431 types)
+- `src/shaders/modules/` - Modular shader components (5 variation modules)
 
 ### Components (Must Know)
-- `src/App.tsx` - Root component (593 lines)
-- `src/components/ControlsPanel.tsx` - Main controls (1012 lines)
-- `src/components/FractalCanvas.tsx` - Canvas (260 lines)
-- `src/hooks/useRenderEngine.ts` - Engine hook (570 lines)
+- `src/App.tsx` - Root component (~657 lines)
+- `src/components/ControlsPanel.tsx` - Main controls (~1061 lines)
+- `src/components/FractalCanvas.tsx` - Canvas (~260 lines)
+- `src/hooks/useRenderEngine.ts` - Engine hook (~620 lines)
 
 ### Data (Must Know)
-- `src/data/canonicalFractals.ts` - 110+ fractals
-- `src/types/fractal.ts` - Core types (206 lines)
+- `src/data/canonicalFractals.ts` - 431 fractals across 10 categories
+- `src/types/fractal.ts` - Core types (584 lines)
 - `src/palettes.ts` - 24 palettes
 - `src/palettesProcedural.ts` - 640 palettes
 
@@ -120,15 +120,12 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 
 ## 🎨 Fractal System
 
-### Fractal Types (86 active)
-- Mandelbulb (power 8)
-- Julia sets
-- Burning Ship
-- Tricorn
-- IFS attractors
-- L-systems
-- TPMS surfaces
-- Hybrids
+### Fractal Types (431 active)
+- Mandelbulb, Julia, Burning Ship, Tricorn
+- IFS attractors, L-systems, TPMS surfaces
+- Chaotic attractors (Lorenz, Rössler, Aizawa, Thomas, Halvorsen)
+- Algebraic (Newton basins, Quaternion sets)
+- Hybrids (90 hybrid variations, types 341-430)
 
 ### Render Modes (7)
 1. **Solid** - PBR + shadows + AO
@@ -140,6 +137,7 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 7. **Gemstone** - Refraction + caustics
 
 ### Composite Operations (8)
+- Smooth morph (default)
 - Smooth union
 - Smooth intersection
 - Smooth carve
@@ -147,7 +145,6 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 - Quantum resonance
 - Fractal lattice
 - Golden spiral fold
-- None
 
 ---
 
@@ -386,7 +383,7 @@ Each component has dedicated doc in `docs/`:
 ### Technical Achievements
 - 48-float uniform buffer optimization (52 floats for WGSL with alignment)
 - Dual GPU backend (WebGPU + WebGL2)
-- 327KB shader code (86 fractal types)
+- 327KB shader code (431 fractal types, WebGL has all 431, WebGPU has 104)
 - 664 color palettes (24 + 640 procedural)
 - 5D archetype space for personalization
 - Real-time ray marching at 60+ FPS

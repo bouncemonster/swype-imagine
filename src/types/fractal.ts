@@ -443,6 +443,14 @@ export type FractalType =
   | 'hybridVariant89'      // 429: Hybrid Variant 89
   | 'hybridVariant90';     // 430: Hybrid Variant 90
 
+// NOTE: The following types are used in data files (src/data/categories/) as semantic aliases.
+// They are NOT separate shader implementations — fractalMappers.ts redirects them to existing types.
+// E.g., 'mandala' → phyllotaxis (0), 'platonicSolids' → icosahedron (6), etc.
+export type FractalDataAlias =
+  | 'mandala' | 'platonicSolids' | 'torusKnot' | 'penroseTiling' | 'goldenSpiral'
+  | 'randomTerrain' | 'perlinNoise' | 'worleyNoise'
+  | 'percolationCluster' | 'dlAggregate';
+
 export type RenderStyle = 
   | 'solid'       // 0: PBR Solid with AO, Soft Shadows & Subsurface Scattering (SSS)
   | 'xray'        // 1: Volumetric Tomographic X-Ray & Internal Skeletons

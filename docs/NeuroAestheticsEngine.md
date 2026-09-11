@@ -36,7 +36,7 @@ Curated compatibility matrix: each fractal type has 3-5 compatible partners and 
 ## Key Methods
 
 ### `breedNextSpecimen(forceType?)` (lines 910-1129)
-1. **Type selection**: EXPLORATION_MODE shows all 86 types sequentially first
+1. **Type selection**: EXPLORATION_MODE shows all 431 types sequentially first
 2. **Palette evolution**: Golden angle stepping (137.5°) with 50% mutation chance
 3. **Hybrid breeding**: 80% chance, 60% random partner, 40% compatibility matrix
 4. **Tertiary layer**: 50% chance to add 3rd fractal

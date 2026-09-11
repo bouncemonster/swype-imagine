@@ -2644,9 +2644,9 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   }
 
   // Boundary SDF: original formula for performance
-  // Transparent sphere fix: safety check in ray march loop
+  // Transparent sphere fix: safety check in ray march loop (r_bound 5.0→12.0)
   let r_bound = length(p_eval);
-  if (r_bound > 5.0) {
+  if (r_bound > 12.0) {
     return vec2<f32>((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);
   }
 

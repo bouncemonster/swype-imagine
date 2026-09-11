@@ -1,14 +1,14 @@
 # types/fractal.ts
 
-**206 lines | Core TypeScript interfaces**
+**584 lines | Core TypeScript interfaces**
 
 ## Type Definitions
 
-### FractalType (lines 1-87)
-**86 fractal types** (phyllotaxis through svenssonAttractor)
+### FractalType (lines 1-431)
+**431 fractal types** (phyllotaxis through hybridVariant90)
 
 Each type has:
-- Numeric index (0-85)
+- Numeric index (0-430)
 - Description comment with mathematical context
 
 ### RenderStyle (lines 89-98)

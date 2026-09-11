@@ -203,7 +203,7 @@ const renderStyleName = RENDER_STYLE_NAMES[parseInt(e.key) - 1] || 'solid';
 
 ### Next Steps (Recommendations)
 
-1. **Path Tracing GI**: Activate existing code in advancedRendering.ts
+1. **Path Tracing GI**: Implement in webglShaders.ts (advancedRendering.ts was deleted — code merged into main shader)
 2. **Volume Rendering**: For ethereal/ghostly fractal appearance
 3. **Particle System**: For magical effects around fractal
 4. **Better UI**: Show current mode name and keyboard hints

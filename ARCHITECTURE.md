@@ -1,11 +1,11 @@
 # Golden Ratio WebGPU Fractal Engine - Architecture
 
 ## Project Overview
-Real-time 3D fractal visualization engine with **86 fractal types**, **7 render modes**, and advanced PBR lighting.
+Real-time 3D fractal visualization engine with **431 fractal types**, **7 render modes**, and advanced PBR lighting.
 
 ## Tech Stack
 - **Runtime**: TypeScript 5.8, React 19, Vite 6.4
-- **Rendering**: WebGL2 (primary), WebGPU (fallback)
+- **Rendering**: WebGL2 (primary), WebGPU (optional — 104/431 types implemented)
 - **Shaders**: GLSL ES 3.00 (WebGL2), WGSL (WebGPU)
 - **Build**: Vite with esbuild, ~4s build time
 - **Bundle**: 1029 KB JS, 76 KB CSS
@@ -21,12 +21,7 @@ src/
 │       ├── flameVariations.ts   # 50 Fractal Flame variations (29KB)
 │       ├── hybridVariations.ts  # 90 Hybrid fractal variations (67KB)
 │       ├── ifsVariations.ts     # 50 IFS variations (27KB)
-│       ├── lsystemVariations.ts # 50 L-System variations (30KB)
-│       ├── renderModes.ts       # UNUSED DUPLICATE (code in webglShaders.ts)
-│       ├── advancedRendering.ts # UNUSED DUPLICATE (code in webglShaders.ts)
-│       ├── postProcessing.ts    # UNUSED DUPLICATE (code in webglShaders.ts)
-│       ├── sdfOperations.ts     # SDF operations (4.5KB)
-│       ── index.ts             # Module exports
+│       └── lsystemVariations.ts # 50 L-System variations (30KB)
 ├── engine/
 │   ├── FractalEngineBase.ts     # Base class, uniform packing (4.7KB)
 │   ├── WebGLEngine.ts           # WebGL2 renderer (18KB)
@@ -82,12 +77,10 @@ src/
 
 ## Critical Architecture Decisions
 
-### 1. Shader Code Duplication
-**PROBLEM**: `renderModes.ts`, `advancedRendering.ts`, `postProcessing.ts` are UNUSED DUPLICATES.
+### 1. Shader Code Duplication (RESOLVED)
+**PROBLEM**: `renderModes.ts`, `advancedRendering.ts`, `postProcessing.ts` were UNUSED DUPLICATES.
 
-**REASON**: All 7 render modes, post-processing, and advanced techniques are embedded directly in `webglShaders.ts` (4655 lines).
-
-**IMPACT**: Module files can be deleted safely. All rendering code is in `webglShaders.ts`.
+**RESOLUTION**: All 5 duplicate module files were deleted. All rendering code lives in `webglShaders.ts` (4672 lines).
 
 ### 2. Uniform Buffer Layout
 48-float uniform buffer packed in `FractalEngineBase.ts`:
@@ -135,10 +128,11 @@ src/
 **CRITICAL**: Keyboard shortcuts must pass STRING names, not numbers!
 
 ### 4. Camera System
-Three modes:
+Four modes:
 - **Orbit** (0): External view, rotate around fractal
 - **Fly-Through** (1): First-person exploration inside fractal
 - **Golden Spiral Dive** (2): Automatic spiral into core
+- **Kelvin Invert** (3): Inside-Out Kelvin Inversion (spherical conformal inversion)
 
 ### 5. Ray Marching
 - Adaptive steps: 640 (close), 480 (medium), 320 (far)
@@ -193,7 +187,7 @@ data/canonicalFractals.ts
 1. **Passive event listener warnings**: Fixed with `touchAction: 'none'`
 2. **Render mode switching**: Fixed to use string names
 3. **WebGPU crashes in embedded browsers**: Defaults to WebGL2
-4. **Unused shader modules**: renderModes.ts, advancedRendering.ts, postProcessing.ts are duplicates
+4. **WebGPU shader coverage**: Only 104/431 fractal types implemented in WGSL — types 104-430 fall back to phyllotaxis on WebGPU (WebGL has all 431)
 
 ## Environment
 - **Browser**: Chrome 152+, Edge (Chromium)

@@ -128,7 +128,7 @@ setParams(prev => ({
 ```
 
 ## Critical Notes
-1. **86 FractalTypes** in types/fractal.ts, but **110+ canonical fractals** in catalog
+1. **431 FractalTypes** in types/fractal.ts, organized across **10 category files** in the catalog
 2. Multiple canonical fractals can map to same FractalType with different presets
 3. `enginePreset` contains optimized parameters for each fractal
 4. `phiPiRelation` explains golden ratio / pi mathematical connections

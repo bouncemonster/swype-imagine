@@ -67,6 +67,6 @@ Complete WebGL2 shader pipeline: vertex shader, fragment shader, 86 SDF function
 
 ## Notes
 - All 7 render modes embedded (no external modules needed)
-- Post-processing embedded (renderModes.ts, advancedRendering.ts, postProcessing.ts are UNUSED duplicates)
+- Post-processing embedded inline (duplicate module files were deleted)
 - KHR_parallel_shader_compile for async compilation
 - Binary search refinement (20 iterations) for surface accuracy

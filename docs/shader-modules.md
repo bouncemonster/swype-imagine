@@ -11,6 +11,8 @@ Both implement the same fractal types and rendering algorithms.
 
 ## Module Files
 
+**5 active module files** (~189KB total):
+
 ### 1. hybridVariations.ts (67KB)
 **Purpose**: Hybrid fractal combinations blending multiple fractal types
 **Contents**: ~50 hybrid variations combining different fractal algorithms
@@ -52,55 +54,20 @@ Both implement the same fractal types and rendering algorithms.
 
 ### 5. ifsVariations.ts (26KB)
 **Purpose**: General IFS (Iterated Function System) attractors
-**Contents**: ~30 IFS variations
+**Contents**: ~50 IFS variations
 **Key functions**: `mapIFSVariant1()` through `mapIFSVariantN()`
 **Attractors**:
 - Strange attractors (Lorenz, Rossler, etc.)
 - Fractal attractors (Hopalong, Phoenix, etc.)
 - Chaotic systems
 
-### 6. advancedRendering.ts (12KB)
-**Purpose**: Advanced rendering techniques
-**Contents**:
-- Ambient occlusion
-- Soft shadows
-- Global illumination approximations
-- Material properties (PBR)
-- Subsurface scattering
-
-### 7. renderModes.ts (10KB)
-**Purpose**: 7 render mode implementations
-**Contents**:
-- **solid**: PBR + shadows + AO
-- **xray**: Density tomography
-- **topo**: Curvature-based topography
-- **hologram**: Chromatic aberration, scan lines
-- **iridescent**: Multi-order interference
-- **quantum**: Energy field visualization
-- **gemstone**: Refraction, caustics, dispersion
-
-### 8. postProcessing.ts (6KB)
-**Purpose**: Post-processing effects
-**Contents**:
-- Tone mapping (HDR → LDR)
-- Bloom/glow effects
-- Color grading
-- Vignette
-- Depth of field hints
-- Anti-banding dithering
-
-### 9. sdfOperations.ts (5KB)
-**Purpose**: Signed Distance Field operations
-**Contents**:
-- **Boolean operations**: union, intersection, subtraction
-- **Smooth operations**: smin, smax (polynomial, exponential)
-- **Domain operations**: warp, repeat, bend, twist
-- **Transformations**: rotate, scale, translate
-- **Infinite repetition**: tile patterns with gaps
-
-### 10. index.ts (756B)
-**Purpose**: Module exports
-**Contents**: Re-exports all module constants
+### Deleted Modules (merged into webglShaders.ts)
+The following files were UNUSED DUPLICATES — all their code is embedded directly in `webglShaders.ts` (4672 lines):
+- ~~advancedRendering.ts~~ — AO, soft shadows, PBR, SSS
+- ~~renderModes.ts~~ — 7 render mode implementations
+- ~~postProcessing.ts~~ — Tone mapping, bloom, color grading
+- ~~sdfOperations.ts~~ — Boolean ops, domain warp, smooth ops
+- ~~index.ts~~ — Module re-exports
 
 ## Common Patterns
 

@@ -106,11 +106,11 @@ npm run preview
 
 ### Q: How many fractal types are there?
 **A:** 
-- **86 types** actively mapped in engine
-- **431 types** total in type system
-- **110+ canonical fractals** in catalog
+- **431 types** active in type system and WebGL shader
+- **104/431** implemented in WebGPU shader (rest fall back to phyllotaxis)
+- **10 category files** in data/categories/
 - **50 Julia variations** in shader modules
-- **50 hybrid variations** in shader modules
+- **90 hybrid variations** in shader modules
 
 ### Q: What are the 7 render modes?
 **A:**
@@ -206,7 +206,7 @@ npm run dev
 **A:** 187KB GLSL + 140KB WGSL = 327KB total because:
 - 50 Julia variations
 - 50 hybrid variations
-- 86 fractal types
+- 431 fractal types
 - 7 render modes
 - Post-processing effects
 - All inlined for performance

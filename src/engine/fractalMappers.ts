@@ -18,7 +18,7 @@
  * - 291-340: Flame Variations (50 типов)
  * - 341-430: Hybrid Variations (90 типов)
  * 
- * ВСЕГО: 431 тип (но реально используется 86 в types/fractal.ts)
+ * ВСЕГО: 431 тип в types/fractal.ts + 19 алиасов из data файлов
  */
 
 /**

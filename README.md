@@ -1,12 +1,12 @@
 # Golden Ratio WebGPU Fractal Engine
 
-**86 уникальных 3D фракталов** с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением.
+**431 уникальный 3D фрактал** с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением.
 
 🌐 **Live Demo**: https://golden-ratio-fractal-engine.pages.dev/
 
 ## 🚀 Возможности
 
-- **86 типов фракталов**: Mandelbrot, Julia, IFS, L-System, Flame, Hybrid variations
+- **431 тип фракталов**: Mandelbrot, Julia, IFS, L-System, Flame, Hybrid variations, Chaotic attractors, Algebraic fractals
 - **Двойной бэкенд**: WebGL2 (GLSL) + WebGPU (WGSL) с автоматическим переключением
 - **Ray Marching**: До 640 шагов, 64 итерации фрактала
 - **Адаптивный рендеринг**: LOD, space leaping, early termination
@@ -47,9 +47,6 @@ src/
 │       ├── flameVariations.ts    # Flame Variations 1-50
 │       ├── hybridVariations.ts   # Hybrid Variations 1-90
 │       ├── sdfOperations.ts      # SDF операции
-│       ├── renderModes.ts        # Режимы рендеринга (UNUSED)
-│       ├── postProcessing.ts     # Постобработка (UNUSED)
-│       ── advancedRendering.ts  # Продвинутые техники (UNUSED)
 ├── engine/
 │   ├── WebGLEngine.ts        # WebGL2 рендерер (18KB)
 │   ├── WebGPUEngine.ts       # WebGPU рендерер (8.8KB)

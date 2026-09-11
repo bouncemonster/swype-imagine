@@ -28,7 +28,7 @@
 | 291-340 | Flame Variations | 50 types |
 | 341-430 | Hybrid Variations | 90 types |
 
-**Total:** 431 types (but only 86 are actively used in types/fractal.ts)
+**Total:** 431 types — all active in types/fractal.ts, WebGL shader, and engine
 
 **Default behavior:** Unknown types return 0 (phyllotaxis)
 

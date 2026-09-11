@@ -99,7 +99,7 @@ Real-time modulation coupled to fractal parameters:
 1. **Base frequency**: 108 Hz = 432/4 (sacred tuning)
 2. **Binaural beat**: 0.618 Hz (golden brainwave frequency)
 3. **Cavity resonance**: Simulates acoustic caves when zooming deep
-4. **Microtonal**: Each of 86 fractals gets unique ±25 cent offset
+4. **Microtonal**: Each of 431 fractals gets unique ±25 cent offset
 5. **Voice roles**: sub, root, fifth, golden, shimmer, hybrid
 6. **Soft crossfade**: 350ms fade to eliminate clicks
 7. **Exported singleton**: `goldenAudio` instance

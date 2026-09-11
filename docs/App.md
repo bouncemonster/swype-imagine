@@ -16,7 +16,7 @@ Orchestrates all UI components, manages fractal parameters, neuro-aesthetic engi
 ## Key Features
 
 ### Auto-Explore Mode (lines 104-172)
-- Cycles through 86 fractal types every 18 seconds
+- Cycles through 431 fractal types every 18 seconds
 - Golden ratio stepping (`PHI_INV * length`) for maximum coverage
 - Varies: type, hybrid, tertiary, composite, render style, camera, zoom, iterations
 - Disables on user interaction (`setAutoExplore(false)`)

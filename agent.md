@@ -11,7 +11,7 @@
 - **Source files**: 54 TypeScript/TSX files (~650KB)
 - **Documentation**: 44 markdown files (219KB, 5,965 lines)
 - **Shader code**: 327KB (187KB GLSL + 140KB WGSL)
-- **Fractal types**: 86 active, 431 total mapped, 110+ canonical
+- **Fractal types**: 431 active (all mapped in WebGL + WGSL, 104/431 implemented in WebGPU)
 - **Render modes**: 7 (Solid, X-Ray, Topographic, Hologram, Iridescent, Quantum, Gemstone)
 - **Color palettes**: 664 (24 hand-crafted + 640 procedural)
 
@@ -59,18 +59,14 @@ GPU: Vertex Shader → Fragment Shader → Ray Marching → SDF Evaluation → L
 - `MathValidation.ts` - Math utilities (253 lines)
 - `UserProblemLogger.ts` - IndexedDB error tracking (206 lines)
 
-### Shaders (12 files)
-- `webglShaders.ts` - Main GLSL shader (4357 lines, 187KB)
-- `webgpuShaders.ts` - Main WGSL shader (3288 lines, 140KB)
+### Shaders (7 files)
+- `webglShaders.ts` - Main GLSL shader (4672 lines, 187KB, ALL 431 types)
+- `webgpuShaders.ts` - Main WGSL shader (3546 lines, 140KB, 104/431 types)
 - `modules/juliaVariations.ts` - 50 Mandelbulb variants (1300 lines)
-- `modules/hybridVariations.ts` - 50 hybrid combinations
-- `modules/flameVariations.ts` - 40 flame variations
-- `modules/ifsVariations.ts` - 30 IFS attractors
-- `modules/lsystemVariations.ts` - 30 L-systems
-- `modules/advancedRendering.ts` - AO, shadows, PBR
-- `modules/renderModes.ts` - 7 render modes
-- `modules/postProcessing.ts` - Tone mapping, bloom
-- `modules/sdfOperations.ts` - Boolean ops, domain warp
+- `modules/hybridVariations.ts` - 90 hybrid combinations
+- `modules/flameVariations.ts` - 50 flame variations
+- `modules/ifsVariations.ts` - 50 IFS attractors
+- `modules/lsystemVariations.ts` - 50 L-systems
 
 ### UI Components (13 files)
 - `ControlsPanel.tsx` - 8-tab control panel (1012 lines)
