@@ -3956,7 +3956,7 @@ void main() {
 
   // OPTIMIZATION 1: HIERARCHICAL SPACE LEAPING
   // Multi-level bounding volumes for maximum performance
-  float boundingRadius = 6.0;
+  float boundingRadius = 10.0; // Expanded from 6.0 to capture larger fractal structures
   float rayOriginDist = length(ro);
   
   // Level 1: Large bounding sphere (fast skip)
@@ -3966,15 +3966,15 @@ void main() {
   }
   
   // Level 2: Medium bounding sphere (refined skip)
-  float medRadius = 3.5;
+  float medRadius = 5.0; // Expanded from 3.5
   if (rayOriginDist > medRadius && rayOriginDist < boundingRadius) {
     float tmin = rayOriginDist - medRadius;
     if (tmin > t) t = tmin * 0.98;
   }
   
-  // Level 3: Tight bounding box (final approach)
-  vec3 bboxMin = vec3(-2.5);
-  vec3 bboxMax = vec3(2.5);
+  // Level 3: Tight bounding box (final approach) — EXPANDED from ±2.5 to ±5.0
+  vec3 bboxMin = vec3(-5.0);
+  vec3 bboxMax = vec3(5.0);
   vec3 invRd = 1.0 / rd;
   vec3 t0 = (bboxMin - ro) * invRd;
   vec3 t1 = (bboxMax - ro) * invRd;
@@ -3989,7 +3989,7 @@ void main() {
   // OPTIMIZATION 2: LOD System — reduce iterations based on distance
   // Far away fractals don't need as many iterations
   float lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
-  int iterReduction = int(lodFactor * 8.0); // Reduce up to 8 iterations at far distance
+  int iterReduction = int(lodFactor * 4.0); // Reduced from 8 to 4 to preserve detail at distance
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
   // Close range: 640 steps, Medium: 480 steps, Far: 320 steps (was 512/384/256)
@@ -4058,9 +4058,10 @@ void main() {
 
     // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
     // Don't count negative distances as "increasing" — they mean we're inside
+    // INCREASED from 16 to 32 to handle sparse fractal regions
     if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount++;
-      if (missCount > 16) break;
+      if (missCount > 32) break;
     } else if (d < 0.0) {
       missCount = 0; // Inside fractal = definitely not missing
     } else {

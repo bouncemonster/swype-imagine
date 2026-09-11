@@ -2957,17 +2957,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   var steps: i32 = 0;
 
   // OPTIMIZATION 1: Space Leaping — skip empty space with bounding sphere
-  // FIX: Bounding radius must match sceneSDF boundary (5.0) to prevent clipping
-  let boundingRadius: f32 = 6.0; // Increased from 4.0
+  // EXPANDED from 6.0 to 10.0 to capture larger fractal structures
+  let boundingRadius: f32 = 10.0;
   let rayOriginDist = length(ro);
   if (rayOriginDist > boundingRadius) {
     let tmin = rayOriginDist - boundingRadius;
-    if (tmin > t) { t = tmin * 0.95; } // More conservative (was 0.9)
+    if (tmin > t) { t = tmin * 0.95; }
   }
 
   // OPTIMIZATION 2: LOD System — reduce iterations based on distance
   let lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
-  let iterReduction = i32(lodFactor * 8.0);
+  let iterReduction = i32(lodFactor * 4.0); // Reduced from 8 to 4 to preserve detail
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
   // Close range: 640 steps, Medium: 480 steps, Far: 320 steps (was 512/384/256)
@@ -3029,11 +3029,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     prevNegative = curNegative;
 
-    // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
-    // Don't count negative distances as "increasing" — they mean we're inside
+    // EARLY TERMINATION: INCREASED from 16 to 32 to handle sparse fractal regions
     if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount = missCount + 1;
-      if (missCount > 16) { break; }
+      if (missCount > 32) { break; }
     } else if (d < 0.0) {
       missCount = 0; // Inside fractal = definitely not missing
     } else {
