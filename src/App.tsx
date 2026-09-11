@@ -244,66 +244,71 @@ export default function App() {
     
     const hash = window.location.hash.slice(1);
     if (hash) {
-      // Parse shared fractal URL
-      const params = new URLSearchParams(hash);
-      const type = params.get('type') as FractalType;
-      const hybridType = params.get('hybrid') as FractalType;
-      const tertiaryType = params.get('tertiary') as FractalType;
-      const compositeOp = params.get('op');
-      
-      if (type) {
-        const palette = ALL_COLOR_PALETTES.find(p => p.id === params.get('palette')) || ALL_COLOR_PALETTES[0];
-        const sharedSpecimen: FractalSpecimen = {
-          id: `shared-${Date.now().toString(36)}`,
-          seed: Math.floor(Math.random() * 1000000),
-          generation: 1,
-          name: params.get('name') || `Фрактал ${type}`,
-          type,
-          hybridType: hybridType || type,
-          tertiaryType: tertiaryType || 'riemannZeta',
-          compositeOp: (compositeOp as any) || 'smoothUnion',
-          hybridBlend: parseFloat(params.get('blend') || '0.35'),
-          tertiaryBlend: parseFloat(params.get('tertiaryBlend') || '0.2'),
-          smoothK: parseFloat(params.get('smoothK') || '0.35'),
-          warpStrength: parseFloat(params.get('warp') || '0.25'),
-          octaveLayers: parseInt(params.get('octaves') || '2'),
-          boxFold: parseFloat(params.get('boxFold') || '1.2'),
-          sphereFold: parseFloat(params.get('sphereFold') || '0.65'),
-          interiorCut: parseFloat(params.get('interiorCut') || '0.0'),
-          palette,
-          iterations: parseInt(params.get('iterations') || '20'),
-          phiMultiplier: parseFloat(params.get('phi') || '1.61803398875'),
-          morphSpeed: parseFloat(params.get('morphSpeed') || '0.45'),
-          glowIntensity: parseFloat(params.get('glow') || '1.1'),
-          zoom: parseFloat(params.get('zoom') || '3.2'),
-          affinityScore: 95,
-          dwellTimeSeconds: 0,
-          zoomInteractions: 0,
-          orbitInteractions: 0,
-        };
-        applySpecimen(sharedSpecimen);
-        // Apply ALL render params that were shared (not just specimen genome)
-        setParams(prev => ({
-          ...prev,
-          paletteSeed: parseInt(params.get('paletteSeed') || '0'),
-          paletteRotation: params.get('paletteRotation') === '1',
-          renderStyle: (params.get('renderStyle') as any) || prev.renderStyle,
-          cameraMode: (params.get('cameraMode') as any) || prev.cameraMode,
-          camPosX: parseFloat(params.get('camX') || '0'),
-          camPosY: parseFloat(params.get('camY') || '0'),
-          camPosZ: parseFloat(params.get('camZ') || '-3.2'),
-          headlampPower: parseFloat(params.get('headlamp') || '0'),
-          volumetricFog: parseFloat(params.get('fog') || '0.4'),
-          slicePlane: parseFloat(params.get('slicePlane') || '0'),
-          sliceAxis: (params.get('sliceAxis') as any) || 'golden',
-          enableAudio: params.get('audio') === '1',
-          audioVolume: parseFloat(params.get('audioVol') || '0.65'),
-          audioTuning: (params.get('audioTuning') as any) || 'phi432',
-          drsEnabled: params.get('drs') !== '0',
-        }));
-        // Clear hash after loading
-        window.history.replaceState(null, '', window.location.pathname);
-        return;
+      try {
+        // Parse shared fractal URL
+        const params = new URLSearchParams(hash);
+        const type = params.get('type') as FractalType;
+        const hybridType = params.get('hybrid') as FractalType;
+        const tertiaryType = params.get('tertiary') as FractalType;
+        const compositeOp = params.get('op');
+        
+        if (type) {
+          const palette = ALL_COLOR_PALETTES.find(p => p.id === params.get('palette')) || ALL_COLOR_PALETTES[0];
+          const sharedSpecimen: FractalSpecimen = {
+            id: `shared-${Date.now().toString(36)}`,
+            seed: Math.floor(Math.random() * 1000000),
+            generation: 1,
+            name: params.get('name') || `Фрактал ${type}`,
+            type,
+            hybridType: hybridType || type,
+            tertiaryType: tertiaryType || 'riemannZeta',
+            compositeOp: (compositeOp as any) || 'smoothUnion',
+            hybridBlend: parseFloat(params.get('blend') || '0.35'),
+            tertiaryBlend: parseFloat(params.get('tertiaryBlend') || '0.2'),
+            smoothK: parseFloat(params.get('smoothK') || '0.35'),
+            warpStrength: parseFloat(params.get('warp') || '0.25'),
+            octaveLayers: parseInt(params.get('octaves') || '2'),
+            boxFold: parseFloat(params.get('boxFold') || '1.2'),
+            sphereFold: parseFloat(params.get('sphereFold') || '0.65'),
+            interiorCut: parseFloat(params.get('interiorCut') || '0.0'),
+            palette,
+            iterations: parseInt(params.get('iterations') || '20'),
+            phiMultiplier: parseFloat(params.get('phi') || '1.61803398875'),
+            morphSpeed: parseFloat(params.get('morphSpeed') || '0.45'),
+            glowIntensity: parseFloat(params.get('glow') || '1.1'),
+            zoom: parseFloat(params.get('zoom') || '3.2'),
+            affinityScore: 95,
+            dwellTimeSeconds: 0,
+            zoomInteractions: 0,
+            orbitInteractions: 0,
+          };
+          applySpecimen(sharedSpecimen);
+          // Apply ALL render params that were shared (not just specimen genome)
+          setParams(prev => ({
+            ...prev,
+            paletteSeed: parseInt(params.get('paletteSeed') || '0'),
+            paletteRotation: params.get('paletteRotation') === '1',
+            renderStyle: (params.get('renderStyle') as any) || prev.renderStyle,
+            cameraMode: (params.get('cameraMode') as any) || prev.cameraMode,
+            camPosX: parseFloat(params.get('camX') || '0'),
+            camPosY: parseFloat(params.get('camY') || '0'),
+            camPosZ: parseFloat(params.get('camZ') || '-3.2'),
+            headlampPower: parseFloat(params.get('headlamp') || '0'),
+            volumetricFog: parseFloat(params.get('fog') || '0.4'),
+            slicePlane: parseFloat(params.get('slicePlane') || '0'),
+            sliceAxis: (params.get('sliceAxis') as any) || 'golden',
+            enableAudio: params.get('audio') === '1',
+            audioVolume: parseFloat(params.get('audioVol') || '0.65'),
+            audioTuning: (params.get('audioTuning') as any) || 'phi432',
+            drsEnabled: params.get('drs') !== '0',
+          }));
+          // Clear hash after loading
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
+      } catch (e) {
+        console.warn('[App] Failed to parse share link, using default specimen:', e);
+        // Fall through to default breeding
       }
     }
     
