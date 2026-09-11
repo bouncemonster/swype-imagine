@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Ready — Post-Audit Fixes Applied
+**Status**: Production Ready — All Critical Bugs Fixed
 
 ---
 
@@ -282,19 +282,26 @@ Each component has dedicated doc in `docs/`:
 
 ## 🎯 Current Priorities
 
-### Immediate (Post-Audit)
+### Immediate (Post-Audit) — ALL CRITICAL DONE
 - ✅ Fixed: syntax error in fractalMappers.ts
 - ✅ Fixed: WGSL uniform buffer size (192→208 bytes)
 - ✅ Fixed: per-frame allocation in WebGLEngine
 - ✅ Fixed: division by zero in normal computation
+- ✅ Fixed: missing z-arg in evaluateSDF (ny normal was wrong)
 - ✅ Fixed: arrays recreated in component body (moved outside)
 - ✅ Fixed: per-frame logging (now only on type change)
 - ✅ Fixed: frame history cap (72→40)
 - ✅ Fixed: Russian comments → English
+- ✅ Fixed: GOLDEN_ANGLE ReferenceError crash (moved to module scope)
+- ✅ Fixed: NeuroAestheticsEngine selectedArch/compat scoping (crashed 60% of hybrids)
+- ✅ Fixed: DebugOverlay never rendering (missing visible prop)
+- ✅ Fixed: smoothCarve missing from COMPOSITE_OPS
+- ✅ Fixed: interactionTimeout cleanup on unmount
+- ✅ Fixed: fractalCatalogTypes enginePreset interface (octaves→octaveLayers, added 5 fields)
 - ⚠️ Remaining: TypeScript strict mode not enabled
-- ⚠️ Remaining: `as any` casts need proper types
-- ⚠️ Remaining: unused GLSL stereo uniforms
-- ⚠️ Remaining: no ESLint config
+- ⚠️ Remaining: 27 fractal types in NeuroAestheticsEngine not in FractalType union
+- ⚠️ Remaining: ~140 data type mismatches in category files
+- ⚠️ Remaining: fractalFactory.ts non-standard import paths
 
 ### Short-term
 - Add more fractal types (target: 200+)
