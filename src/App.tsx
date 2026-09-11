@@ -11,7 +11,7 @@ import { FractalAtlasModal } from './components/FractalAtlasModal';
 import { FractalProbeHUD } from './components/FractalProbeHUD';
 import { FractalScrollFeed } from './components/FractalScrollFeed';
 import { DebugOverlay } from './components/DebugOverlay';
-import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle, CompositeOp, CameraMode } from './types/fractal';
+import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle, CompositeOp, CameraMode, SliceAxis, AudioTuning } from './types/fractal';
 import { NeuroAestheticsEngine } from './engine/NeuroAestheticsEngine';
 import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
@@ -262,7 +262,7 @@ export default function App() {
             type,
             hybridType: hybridType || type,
             tertiaryType: tertiaryType || 'riemannZeta',
-            compositeOp: (compositeOp as any) || 'smoothUnion',
+            compositeOp: (compositeOp as CompositeOp) || 'smoothUnion',
             hybridBlend: parseFloat(params.get('blend') || '0.35'),
             tertiaryBlend: parseFloat(params.get('tertiaryBlend') || '0.2'),
             smoothK: parseFloat(params.get('smoothK') || '0.35'),
@@ -288,18 +288,18 @@ export default function App() {
             ...prev,
             paletteSeed: parseInt(params.get('paletteSeed') || '0'),
             paletteRotation: params.get('paletteRotation') === '1',
-            renderStyle: (params.get('renderStyle') as any) || prev.renderStyle,
-            cameraMode: (params.get('cameraMode') as any) || prev.cameraMode,
+            renderStyle: (params.get('renderStyle') as RenderStyle) || prev.renderStyle,
+            cameraMode: (params.get('cameraMode') as CameraMode) || prev.cameraMode,
             camPosX: parseFloat(params.get('camX') || '0'),
             camPosY: parseFloat(params.get('camY') || '0'),
             camPosZ: parseFloat(params.get('camZ') || '-3.2'),
             headlampPower: parseFloat(params.get('headlamp') || '0'),
             volumetricFog: parseFloat(params.get('fog') || '0.4'),
             slicePlane: parseFloat(params.get('slicePlane') || '0'),
-            sliceAxis: (params.get('sliceAxis') as any) || 'golden',
+            sliceAxis: (params.get('sliceAxis') as SliceAxis) || 'golden',
             enableAudio: params.get('audio') === '1',
             audioVolume: parseFloat(params.get('audioVol') || '0.65'),
-            audioTuning: (params.get('audioTuning') as any) || 'phi432',
+            audioTuning: (params.get('audioTuning') as AudioTuning) || 'phi432',
             drsEnabled: params.get('drs') !== '0',
           }));
           // Clear hash after loading

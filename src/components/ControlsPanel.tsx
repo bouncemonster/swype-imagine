@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FractalParams, FractalType, CompositeOp, CameraMode } from '../types/fractal';
+import { FractalParams, FractalType, CompositeOp, CameraMode, RenderStyle, SliceAxis, AudioTuning } from '../types/fractal';
 import { 
   TasteProfile, 
   ALL_FRACTAL_TYPES, 
@@ -408,7 +408,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             ].map(grp => (
               <button
                 key={grp.id}
-                onClick={() => setSelectedGroup(grp.id as any)}
+                onClick={() => setSelectedGroup(grp.id)}
                 className={`px-2 py-1 rounded-md text-[9px] transition ${
                   selectedGroup === grp.id 
                     ? 'bg-amber-400 text-neutral-950 font-bold' 
@@ -613,7 +613,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               ].map((style) => (
                 <button
                   key={style.id}
-                  onClick={() => onParamsChange(prev => ({ ...prev, renderStyle: style.id as any }))}
+                  onClick={() => onParamsChange(prev => ({ ...prev, renderStyle: style.id as RenderStyle }))}
                   className={`p-2 rounded-lg border text-left transition ${
                     (params.renderStyle || 'solid') === style.id
                       ? 'bg-cyan-950/50 border-cyan-500/70 text-cyan-200'
@@ -646,7 +646,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               ].map((axis) => (
                 <button
                   key={axis.id}
-                  onClick={() => onParamsChange(prev => ({ ...prev, sliceAxis: axis.id as any }))}
+                  onClick={() => onParamsChange(prev => ({ ...prev, sliceAxis: axis.id as SliceAxis }))}
                   className={`py-1 px-1.5 rounded text-center text-[10px] font-mono transition border ${
                     (params.sliceAxis || 'golden') === axis.id
                       ? 'bg-amber-500/20 border-amber-500/60 text-amber-200'
@@ -934,7 +934,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               ].map(b => (
                 <button
                   key={b.id}
-                  onClick={() => onSelectBackend(b.id as any)}
+                  onClick={() => onSelectBackend(b.id as 'webgpu' | 'webgl2' | 'auto')}
                   className={`py-1.5 px-2 rounded-lg border text-center text-[10px] transition ${
                     forcedBackend === b.id
                       ? 'bg-amber-400 text-neutral-950 font-bold border-amber-300'
@@ -1005,7 +1005,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               ].map(mode => (
                 <button
                   key={mode.id}
-                  onClick={() => onParamsChange(prev => ({ ...prev, audioTuning: mode.id as any }))}
+                  onClick={() => onParamsChange(prev => ({ ...prev, audioTuning: mode.id as AudioTuning }))}
                   className={`w-full p-2 rounded-lg border text-left transition ${
                     (params.audioTuning || 'phi432') === mode.id
                       ? 'bg-amber-950/50 border-amber-500/70 text-amber-200'

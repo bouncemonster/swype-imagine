@@ -470,6 +470,10 @@ export type CameraMode =
   | 'goldenSpiral'   // Autonomous dive along logarithmic golden spiral into the fractal core
   | 'kelvinInvert';  // Inside-Out Kelvin Inversion (spherical conformal inversion p -> p / |p|^2)
 
+export type SliceAxis = 'golden' | 'x' | 'y' | 'z';
+
+export type AudioTuning = 'phi432' | 'fibonacci' | 'zenChimes';
+
 export interface ColorPalette {
   id: string;
   name: string;
