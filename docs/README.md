@@ -18,6 +18,7 @@
 - [App.md](App.md) - Main component, auto-explore, neuro-feed
 - [FractalCanvas.md](FractalCanvas.md) - Canvas controls and interaction
 - [ControlsPanel.md](ControlsPanel.md) - Main control panel with 8 tabs
+- [FractalScrollFeed.md](FractalScrollFeed.md) - Neuro-feed ribbon for specimens
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [UserPreferenceEngine.md](UserPreferenceEngine.md) - Interaction learning, adapted defaults
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
