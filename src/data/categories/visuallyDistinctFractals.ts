@@ -21,7 +21,7 @@ export const VISUALLY_DISTINCT_FRACTALS: CanonicalFractal[] = [
     type: 'mandelbulb',
     compositeOp: 'smoothUnion',
     zoom: 2.7,
-    renderStyle: 'crystal',
+    renderStyle: 'iridescent',
   }),
   createFractal({
     id: 'julia-plasma',
@@ -36,7 +36,7 @@ export const VISUALLY_DISTINCT_FRACTALS: CanonicalFractal[] = [
     type: 'quaternionJulia',
     compositeOp: 'smoothUnion',
     zoom: 2.8,
-    renderStyle: 'plasma',
+    renderStyle: 'quantum',
   }),
   createFractal({
     id: 'mandelbox-hologram',
@@ -96,7 +96,7 @@ export const VISUALLY_DISTINCT_FRACTALS: CanonicalFractal[] = [
     type: 'mandelbulb',
     compositeOp: 'smoothUnion',
     zoom: 2.7,
-    renderStyle: 'topography',
+    renderStyle: 'topo',
   }),
   createFractal({
     id: 'julia-pbr',
@@ -111,7 +111,7 @@ export const VISUALLY_DISTINCT_FRACTALS: CanonicalFractal[] = [
     type: 'quaternionJulia',
     compositeOp: 'smoothUnion',
     zoom: 2.75,
-    renderStyle: 'pbr',
+    renderStyle: 'solid',
   }),
   createFractal({
     id: 'mandelbox-crystal',
@@ -126,7 +126,7 @@ export const VISUALLY_DISTINCT_FRACTALS: CanonicalFractal[] = [
     type: 'mandelbox',
     compositeOp: 'smoothUnion',
     zoom: 2.65,
-    renderStyle: 'crystal',
+    renderStyle: 'iridescent',
   }),
   createFractal({
     id: 'mandelbulb-plasma',
@@ -141,7 +141,7 @@ export const VISUALLY_DISTINCT_FRACTALS: CanonicalFractal[] = [
     type: 'mandelbulb',
     compositeOp: 'smoothUnion',
     zoom: 2.8,
-    renderStyle: 'plasma',
+    renderStyle: 'quantum',
   }),
   createFractal({
     id: 'julia-iridescent',

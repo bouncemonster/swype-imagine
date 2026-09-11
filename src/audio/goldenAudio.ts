@@ -3,10 +3,10 @@
 // Features: Zero-Dissonance Golden Tuning, Acoustic Cavity Resonance, Riemann Zero Overtones,
 // Hybrid Cross-Blending, Spatial Binaural Entrainment, and Velvet Soft-Knee Limiting.
 
-import { FractalParams, FractalType } from '../types/fractal';
+import { FractalParams, FractalType, AudioTuning } from '../types/fractal';
 import { getFractalIndex } from '../engine/fractalMappers';
 
-export type AudioTuningMode = 'phi432' | 'fibonacci' | 'zenChimes';
+// AudioTuning is imported from types/fractal.ts (single source of truth)
 
 // 5 Mathematical Fractal Families
 export type FractalHarmonicFamily = 'sacred' | 'complex' | 'minimal' | 'primes' | 'attractors';
@@ -78,14 +78,14 @@ class GoldenAudioEngine {
   private compressor: DynamicsCompressorNode | null = null;
   private voices: HarmonicVoice[] = [];
   private currentVolume: number = 0.65;
-  private tuningMode: AudioTuningMode = 'phi432';
+  private tuningMode: AudioTuning = 'phi432';
   private currentFractalType: FractalType = 'phyllotaxis';
   private currentHybridType: FractalType = 'mandelbulb';
   private currentHybridBlend: number = 0.35;
 
   private stopTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  public start(initialVolume = 0.65, tuning: AudioTuningMode = 'phi432') {
+  public start(initialVolume = 0.65, tuning: AudioTuning = 'phi432') {
     if (this.isRunning) {
       this.setVolume(initialVolume);
       this.setTuning(tuning);
@@ -154,7 +154,7 @@ class GoldenAudioEngine {
   // Each individual fractal type gets a unique microtonal signature via golden-angle offset
   private getChordFrequenciesForFamily(
     family: FractalHarmonicFamily,
-    tuning: AudioTuningMode,
+    tuning: AudioTuning,
     fractalType?: FractalType
   ): { ratio: number; wave: OscillatorType; vol: number; pan: number; role: HarmonicVoice['role'] }[] {
     const phi = 1.61803398875;
@@ -476,7 +476,7 @@ class GoldenAudioEngine {
     return this.currentVolume;
   }
 
-  public setTuning(mode: AudioTuningMode) {
+  public setTuning(mode: AudioTuning) {
     if (this.tuningMode === mode) return;
     this.tuningMode = mode;
     if (this.isRunning) {
@@ -484,7 +484,7 @@ class GoldenAudioEngine {
     }
   }
 
-  public getTuning(): AudioTuningMode {
+  public getTuning(): AudioTuning {
     return this.tuningMode;
   }
 

@@ -443,14 +443,6 @@ export type FractalType =
   | 'hybridVariant89'      // 429: Hybrid Variant 89
   | 'hybridVariant90';     // 430: Hybrid Variant 90
 
-// NOTE: The following types are used in data files (src/data/categories/) as semantic aliases.
-// They are NOT separate shader implementations — fractalMappers.ts redirects them to existing types.
-// E.g., 'mandala' → phyllotaxis (0), 'platonicSolids' → icosahedron (6), etc.
-export type FractalDataAlias =
-  | 'mandala' | 'platonicSolids' | 'torusKnot' | 'penroseTiling' | 'goldenSpiral'
-  | 'randomTerrain' | 'perlinNoise' | 'worleyNoise'
-  | 'percolationCluster' | 'dlAggregate';
-
 export type RenderStyle = 
   | 'solid'       // 0: PBR Solid with AO, Soft Shadows & Subsurface Scattering (SSS)
   | 'xray'        // 1: Volumetric Tomographic X-Ray & Internal Skeletons
@@ -559,25 +551,25 @@ export interface FractalSpecimen {
   generation: number;
   name: string;
   type: FractalType;
-  hybridType: FractalType;     // Secondary layer
-  tertiaryType: FractalType;   // Tertiary layer
-  compositeOp: CompositeOp;    // Multi-layer overlay algebra
-  hybridBlend: number;         // Continuous blend factor
-  tertiaryBlend: number;       // Continuous blend factor
-  smoothK: number;             // Blend radius
-  warpStrength: number;        // Space fold warping
-  octaveLayers: number;        // 1 to 4 Fibonacci octaves
-  boxFold: number;             // Continuous folding gene
-  sphereFold: number;          // Continuous inversion gene
-  interiorCut: number;         // Continuous interior carving gene
-  palette: ColorPalette;
+  hybridType?: FractalType;        // Secondary layer (defaults to type)
+  tertiaryType?: FractalType;      // Tertiary layer (defaults to type)
+  compositeOp: CompositeOp;        // Multi-layer overlay algebra
+  hybridBlend: number;             // Continuous blend factor
+  tertiaryBlend: number;           // Continuous blend factor
+  smoothK: number;                 // Blend radius
+  warpStrength: number;            // Space fold warping
+  octaveLayers: number;            // 1 to 4 Fibonacci octaves
+  boxFold: number;                 // Continuous folding gene
+  sphereFold: number;              // Continuous inversion gene
+  interiorCut: number;             // Continuous interior carving gene
+  palette?: ColorPalette;          // Optional — assigned by engine if missing
   iterations: number;
   phiMultiplier: number;
   morphSpeed: number;
   glowIntensity: number;
   zoom: number;
-  affinityScore: number;       // 0 to 100 estimated affinity
-  dwellTimeSeconds: number;    // How long user enjoyed it
-  zoomInteractions: number;    // Deep dives into fractal
-  orbitInteractions: number;   // Rotations / angles explored
+  affinityScore?: number;          // 0 to 100 estimated affinity (default 0)
+  dwellTimeSeconds?: number;       // How long user enjoyed it (default 0)
+  zoomInteractions?: number;       // Deep dives into fractal (default 0)
+  orbitInteractions?: number;      // Rotations / angles explored (default 0)
 }

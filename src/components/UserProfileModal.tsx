@@ -9,8 +9,7 @@ import {
   AestheticArchetype, 
   ARCHETYPE_LABELS 
 } from '../engine/NeuroAestheticsEngine';
-import { FractalSpecimen } from '../types/fractal';
-import { AudioTuningMode } from '../audio/goldenAudio';
+import { FractalSpecimen, AudioTuning } from '../types/fractal';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -21,8 +20,8 @@ interface UserProfileModalProps {
   resonanceScore: number;
   isEngineerMode: boolean;
   onToggleEngineerMode: () => void;
-  audioTuning: AudioTuningMode;
-  onSelectAudioTuning: (mode: AudioTuningMode) => void;
+  audioTuning: AudioTuning;
+  onSelectAudioTuning: (mode: AudioTuning) => void;
   onResetTasteProfile?: () => void;
   onOpenManifest?: () => void;
   likedSpecimens?: FractalSpecimen[];
@@ -256,7 +255,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onClick={() => onSelectAudioTuning(opt.id as AudioTuningMode)}
+                  onClick={() => onSelectAudioTuning(opt.id as AudioTuning)}
                   className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
                     audioTuning === opt.id
                       ? 'bg-amber-500/20 border-amber-500/60 text-white'

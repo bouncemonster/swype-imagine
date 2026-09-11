@@ -38,7 +38,7 @@ export abstract class FractalEngineBase {
 
   /** Resolve palette from params (supports custom procedural palettes) */
   protected resolvePalette(params: FractalParams): ColorPalette {
-    return (params as any).customPalette
+    return params.customPalette
       || COLOR_PALETTES.find(p => p.id === params.paletteId)
       || COLOR_PALETTES[0];
   }

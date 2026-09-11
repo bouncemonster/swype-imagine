@@ -8,7 +8,9 @@ export type FractalCategoryKey =
   | 'ifs_attractors'
   | 'stochastic'
   | 'topological_physical'
-  | 'expanded_real';
+  | 'expanded_real'
+  | 'visually_distinct'
+  | 'mandalas_3d';
 
 export interface CanonicalFractal {
   id: string;
@@ -96,5 +98,17 @@ export const FRACTAL_CATEGORIES: {
     title: '8. Расширенный каталог реальных фракталов',
     subtitle: 'Странные аттракторы, комплексная динамика, TPMS, IFS и физические паттерны',
     iconName: 'FlaskConical',
+  },
+  {
+    id: 'visually_distinct',
+    title: '9. Визуально уникальные фракталы',
+    subtitle: 'Демонстрация различных стилей рендеринга на классических фракталах',
+    iconName: 'Eye',
+  },
+  {
+    id: 'mandalas_3d',
+    title: '10. 3D Мандалы и симметрии',
+    subtitle: 'Сферические симметрии, узлы и мозаики Пенроуза',
+    iconName: 'Flower2',
   },
 ];
