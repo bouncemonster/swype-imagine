@@ -20,7 +20,7 @@ Source Files:     54 TypeScript/TSX
 Documentation:    44 markdown files (219KB)
 Shader Code:      327KB (GLSL + WGSL)
 Total Lines:      ~25,000 (code + docs)
-Components:       13 UI components
+Components:       12 UI components
 Fractal Types:    86 active, 431 total
 Render Modes:     7
 Color Palettes:   664

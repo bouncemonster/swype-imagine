@@ -1,7 +1,7 @@
 # Rendering System Documentation
 
 ## Overview
-The rendering system uses WebGL2 with GLSL ES 3.00 shaders. All 7 render modes, post-processing effects, and advanced lighting are embedded in `src/shaders/webglShaders.ts` (4631 lines).
+The rendering system uses WebGL2 with GLSL ES 3.00 shaders. All 7 render modes, post-processing effects, and advanced lighting are embedded in `src/shaders/webglShaders.ts` (4672 lines).
 
 ## Render Modes (7 Total)
 

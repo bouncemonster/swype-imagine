@@ -14,8 +14,8 @@ Real-time 3D fractal visualization engine with **86 fractal types**, **7 render 
 ```
 src/
 ── shaders/
-│   ├── webglShaders.ts          # Main shader (187KB, 4655 lines) - ALL render modes embedded
-│   ├── webgpuShaders.ts         # WebGPU shader (140KB, 3538 lines)
+│   ├── webglShaders.ts          # Main shader (187KB, 4672 lines) - ALL render modes embedded
+│   ├── webgpuShaders.ts         # WebGPU shader (140KB, 3546 lines)
 │   └── modules/
 │       ├── juliaVariations.ts   # 50 Julia set variations (36KB)
 │       ├── flameVariations.ts   # 50 Fractal Flame variations (29KB)
