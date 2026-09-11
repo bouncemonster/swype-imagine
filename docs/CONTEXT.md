@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.3.0  
+**Version**: 1.4.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Live — All Critical + Runtime Bugs Fixed
+**Status**: Production Live — Runtime Bugs Fixed, Type Errors Reduced
 
 ---
 
@@ -299,11 +299,14 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: interactionTimeout cleanup on unmount
 - ✅ Fixed: fractalCatalogTypes enginePreset interface (octaves→octaveLayers, added 5 fields)
 - ✅ Fixed: preventDefault passive listener errors (added stopPropagation to wheel/touch native handlers)
+- ✅ Fixed: F-key flyThrough toggle trapped inside `!== 'flyThrough'` guard (could enter but never exit flyThrough mode)
+- ✅ Fixed: renderStyle type error (string → RenderStyle[] typed array)
 - ⚠️ Remaining: TypeScript strict mode not enabled
 - ⚠️ Remaining: 27 fractal types in NeuroAestheticsEngine not in FractalType union
-- ️ Remaining: ~140 data type mismatches in category files
+- ⚠️ Remaining: ~140 data type mismatches in category files
 - ⚠️ Remaining: fractalFactory.ts non-standard import paths
-- ️ Remaining: No git remote configured (push not possible)
+- ⚠️ Remaining: No git remote configured (push not possible)
+- 📊 TypeScript errors: 34 → 30 (down 4, all remaining are pre-existing)
 
 ### Short-term
 - Add more fractal types (target: 200+)
@@ -368,6 +371,7 @@ Each component has dedicated doc in `docs/`:
 - Real-time ray marching at 60+ FPS
 - Post-audit: zero per-frame allocations, all bugs documented
 - v1.3.0: React 19 passive listener conflict resolved (stopPropagation on native wheel/touch handlers)
+- v1.4.0: F-key flyThrough toggle bug fixed (was trapped in guard block), renderStyle type fixed
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
