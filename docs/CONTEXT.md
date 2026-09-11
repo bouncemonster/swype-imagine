@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 1.6.0  
+**Version**: 1.7.0  
 **Last Updated**: 2026-09-11  
-**Status**: Production Live — Deep Math Audit Complete, 600+ Shader Bugs Fixed
+**Status**: Production Live — Interaction + Render Mechanics Fixed
 
 ---
 
@@ -309,7 +309,9 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: GLSL vs WGSL discrepancies (Nebula Cloud tube radius, Ikeda Map trap value)
 - ✅ Fixed: invalid RenderStyle fallback — added aliases for crystal/plasma/pbr/topography
 - ✅ Fixed: 27 newer fractal types archetype classification (were all defaulting to 'attractors')
-- ⚠️ Remaining: TypeScript strict mode not enabled
+- ✅ Fixed: auto-rotation now pauses during interaction (drag/zoom), resumes after 3s idle
+- ✅ Fixed: inertia decay is now frame-rate independent (was 35x faster at 144fps vs 60fps)
+- ️ Remaining: TypeScript strict mode not enabled
 - ⚠️ Remaining: ~140 data type mismatches in category files (handled by alias mappings at runtime)
 - ️ Remaining: fractalFactory.ts non-standard import paths
 - ⚠️ Remaining: No git remote configured (push not possible)
@@ -381,6 +383,7 @@ Each component has dedicated doc in `docs/`:
 - v1.4.0: F-key flyThrough toggle bug fixed (was trapped in guard block), renderStyle type fixed
 - v1.5.0: Deep math audit initiated
 - v1.6.0: 600+ shader math bugs fixed — unclamped log/acos, double-power angles, BurningShip double-add, RenderStyle aliases, archetype classification for 27 types
+- v1.7.0: Auto-rotation pauses during interaction (3s resume), inertia decay frame-rate independent
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
