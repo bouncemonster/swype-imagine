@@ -17,6 +17,7 @@
 
 - [App.md](App.md) - Main component, auto-explore, neuro-feed
 - [FractalCanvas.md](FractalCanvas.md) - Canvas controls and interaction
+- [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
