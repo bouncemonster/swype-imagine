@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FractalParams, FractalType, CompositeOp, CameraMode, RenderStyle, SliceAxis, AudioTuning } from '../types/fractal';
+import { FractalParams, FractalType, CameraMode, RenderStyle, SliceAxis, AudioTuning } from '../types/fractal';
 import { 
   TasteProfile, 
   ALL_FRACTAL_TYPES, 

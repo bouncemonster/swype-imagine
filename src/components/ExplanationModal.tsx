@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Sparkles, Activity, Compass, Cpu, Brain, Layers, BookOpen } from 'lucide-react';
+import { X, Sparkles, Activity, Compass, Brain, Layers, BookOpen } from 'lucide-react';
 
 interface ExplanationModalProps {
   isOpen: boolean;
