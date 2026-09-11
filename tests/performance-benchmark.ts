@@ -80,7 +80,7 @@ function analyzeShaderComplexity(type: string, index: number): number {
   else if (index >= 341 && index <= 430) category = 'hybridVariants';
   
   // Base complexity from category
-  let complexity = COMPLEXITY_FACTORS[category as keyof typeof COMPLEXITY_FACTORS] || 1.0;
+  let complexity = (COMPLEXITY_FACTORS[category as keyof typeof COMPLEXITY_FACTORS] as number) || 1.0;
   
   // Check for specific complexity indicators in the shader
   const functionMatch = shaderContent.match(new RegExp(`ftype == ${index}.*?return.*?map(\\w+)`, 'i'));

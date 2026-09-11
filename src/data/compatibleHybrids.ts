@@ -222,9 +222,9 @@ export const COMPATIBLE_HYBRIDS: Record<FractalType, { partners: FractalType[]; 
   '24Cell': { partners: ['menger', 'jerusalemCube', 'sierpinskiOcta'], ops: ['smoothUnion', 'smoothCarve'] },
   '5Cell': { partners: ['sierpinskiOcta', 'tetrix', 'menger'], ops: ['smoothUnion', 'fractalLattice'] },
   // HIGHER-DIMENSIONAL MANIFOLDS
-  kleinBottle: { partners: ['cliffordTorus4D', 'hopfFibration', 'mobiusStrip'], ops: ['smoothMorph', 'domainWarp'] },
+  kleinBottle: { partners: ['cliffordTorus4D', 'hopfFibration', 'mobiusStrip3D'], ops: ['smoothMorph', 'domainWarp'] },
   projectivePlane: { partners: ['poincareSphere', 'cliffordKlein', 'kleinQuartic'], ops: ['smoothUnion', 'domainWarp'] },
-  mobiusStrip: { partners: ['cliffordTorus4D', 'goldenKnot', 'hopfFibration'], ops: ['smoothMorph', 'domainWarp'] },
+  mobiusStrip3D: { partners: ['cliffordTorus4D', 'goldenKnot', 'hopfFibration'], ops: ['smoothMorph', 'domainWarp'] },
   torusKnot4D: { partners: ['hopfFibration', 'cliffordTorus4D', 'goldenKnot'], ops: ['smoothUnion', 'domainWarp'] },
   // FRACTAL FLAMES
   flameSinusoidal: { partners: ['flameSpherical', 'flameSwirl', 'mandelbulb'], ops: ['smoothMorph', 'domainWarp'] },

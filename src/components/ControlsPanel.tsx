@@ -223,7 +223,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             ].map(grp => (
               <button
                 key={grp.id}
-                onClick={() => setSelectedGroup(grp.id)}
+                onClick={() => setSelectedGroup(grp.id as 'all' | 'golden' | 'primes' | 'tpms' | 'manifolds' | 'classic')}
                 className={`px-2 py-1 rounded-md text-[9px] transition ${
                   selectedGroup === grp.id 
                     ? 'bg-amber-400 text-neutral-950 font-bold' 

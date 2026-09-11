@@ -172,7 +172,7 @@ export const ALL_FRACTAL_TYPES: FractalType[] = [
   // HIGHER-DIMENSIONAL MANIFOLDS
   'kleinBottle',
   'projectivePlane',
-  'mobiusStrip',
+  'mobiusStrip3D',
   'torusKnot4D',
   // FRACTAL FLAMES
   'flameSinusoidal',
@@ -292,7 +292,7 @@ export const FRACTAL_NAMES: Record<FractalType, string> = {
   // HIGHER-DIMENSIONAL MANIFOLDS
   kleinBottle: 'Бутылка Клейна (неориентируемая)',
   projectivePlane: 'Проективная плоскость RP²',
-  mobiusStrip: 'Лента Мёбиуса 3D',
+  mobiusStrip3D: 'Лента Мёбиуса 3D',
   torusKnot4D: 'Торический узел 4D',
   // FRACTAL FLAMES
   flameSinusoidal: 'Пламя: Синусоидальное',
@@ -412,7 +412,7 @@ export const DEFAULT_ZOOMS: Record<FractalType, number> = {
   // HIGHER-DIMENSIONAL MANIFOLDS
   kleinBottle: 2.5,
   projectivePlane: 2.0,
-  mobiusStrip: 1.5,
+  mobiusStrip3D: 1.5,
   torusKnot4D: 3.0,
   // FRACTAL FLAMES
   flameSinusoidal: 2.5,
@@ -481,7 +481,7 @@ export function getFractalArchetype(type: FractalType): AestheticArchetype {
     // Manifolds
     case 'kleinBottle':
     case 'projectivePlane':
-    case 'mobiusStrip':
+    case 'mobiusStrip3D':
     case 'torusKnot4D':
     // Advanced IFS
     case 'ifs3DTree':

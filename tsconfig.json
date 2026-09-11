@@ -23,5 +23,6 @@
     "allowImportingTsExtensions": true,
     "types": ["@webgpu/types"],
     "noEmit": true
-  }
+  },
+  "exclude": ["archive", "node_modules", "dist"]
 }
