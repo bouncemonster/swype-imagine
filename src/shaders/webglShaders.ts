@@ -3602,12 +3602,11 @@ vec2 sceneSDF(vec3 p_world) {
     }
   }
 
-  // Boundary SDF: moderate distance to balance speed vs surface detection
-  // Original (r_bound - 2.8) caused overshoot; pure small value causes crawl
-  // Using scaled linear: fast enough but not too aggressive
+  // Boundary SDF: original formula for performance
+  // Transparent sphere fix: safety check in ray march loop (see below)
   float r_bound = length(p_eval);
   if (r_bound > 5.0) {
-    return vec2((r_bound - 4.5) / max(inv_scale, 0.0001), r_bound);
+    return vec2((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);
   }
 
   int ftypeA = int(u_fractal_type + 0.5);
@@ -4047,6 +4046,15 @@ void main() {
     // STEP SIZE: Adaptive based on distance to surface
     float absD = abs(d);
     float step_d = min(absD * adaptiveRelax, 0.5);
+    
+    // BOUNDARY SAFETY: When near r=5.0 boundary, cap step size to prevent overshoot
+    // This fixes transparent sphere without slowing down all rays
+    float pLen = length(p);
+    if (pLen > 4.0 && pLen < 6.0) {
+      // Near boundary: limit step to 0.3 to avoid jumping past surface
+      step_d = min(step_d, 0.3);
+    }
+    
     // IMPROVED: Smaller minimum step for extreme interior detail
     float minStep = max(cam_dist * 0.00005, 0.0001);
     step_d = max(step_d, minStep);

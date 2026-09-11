@@ -2641,10 +2641,11 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
     }
   }
 
-  // Boundary SDF: moderate distance to balance speed vs surface detection
+  // Boundary SDF: original formula for performance
+  // Transparent sphere fix: safety check in ray march loop
   let r_bound = length(p_eval);
   if (r_bound > 5.0) {
-    return vec2<f32>((r_bound - 4.5) / max(inv_scale, 0.0001), r_bound);
+    return vec2<f32>((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);
   }
 
   let ftypeA = i32(u.fractal_type + 0.5);
@@ -3015,8 +3016,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // abs(-2.0) * 0.95 = 1.9, jumping completely past the surface
     let absD = abs(d);
     var step_d = min(absD * relaxationFactor, 0.5);
+    
+    // BOUNDARY SAFETY: When near r=5.0 boundary, cap step size to prevent overshoot
+    let pLen = length(p);
+    if (pLen > 4.0 && pLen < 6.0) {
+      step_d = min(step_d, 0.3);
+    }
+    
     // IMPROVED: Smaller minimum step for extreme interior detail
-    // Was: max(cam_dist * 0.0001, 0.0005), now: max(cam_dist * 0.00005, 0.0001)
     let minStep = max(cam_dist * 0.00005, 0.0001);
     step_d = max(step_d, minStep);
     t = t + step_d;
