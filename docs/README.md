@@ -19,6 +19,7 @@
 - [FractalCanvas.md](FractalCanvas.md) - Canvas controls and interaction
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
+- [palettes.md](palettes.md) - 24 hand-crafted + 640 procedural palettes
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
