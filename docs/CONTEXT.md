@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 2.1.0  
+**Version**: 2.1.1  
 **Last Updated**: 2026-09-11  
-**Status**: Production Deployed — Dynamic Quality + Dead Code Cleanup
+**Status**: Production Deployed — Stability Hardened
 
 ---
 
@@ -402,6 +402,7 @@ Each component has dedicated doc in `docs/`:
 - v1.10.0: Adaptive quality system — mobile/desktop auto-detection, quality-aware ray marching
 - v2.0.0: **MAJOR** — Activated 345 dead fractal types (86→431 total). Types 86-430 now accessible from UI
 - v2.1.0: Removed 5 dead shader module files (-964 lines). Added FPS-based dynamic quality adjustment
+- v2.1.1: Stability hardened — share link parsing wrapped in try-catch
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
