@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, RefObject } from 'react';
-import { FractalParams, TelemetryData } from '../types/fractal';
+import { FractalParams, TelemetryData, RenderStyle, CameraMode } from '../types/fractal';
 import { WebGPUEngine } from '../engine/WebGPUEngine';
 import { WebGLEngine } from '../engine/WebGLEngine';
 
@@ -536,7 +536,7 @@ export function useRenderEngine(
         } else if (e.key >= '1' && e.key <= '7') {
           // Quick render mode switch (1-7)
           e.preventDefault();
-          const RENDER_STYLE_NAMES = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
+          const RENDER_STYLE_NAMES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
           const renderStyleIndex = parseInt(e.key) - 1;
           const renderStyleName = RENDER_STYLE_NAMES[renderStyleIndex] || 'solid';
           if (paramsRef.current) {
@@ -546,17 +546,6 @@ export function useRenderEngine(
             };
           }
           console.info(`[Controls] Render mode: ${renderStyleName} (${e.key} key)`);
-        } else if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
-          // Toggle fly-through camera (F or Russian А)
-          e.preventDefault();
-          if (paramsRef.current) {
-            const newMode = paramsRef.current.cameraMode === 'flyThrough' ? 'orbit' : 'flyThrough';
-            paramsRef.current = {
-              ...paramsRef.current,
-              cameraMode: newMode,
-            };
-            console.info(`[Controls] Camera mode: ${newMode} (F key)`);
-          }
         } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
           // Reset camera position (R or Russian К)
           e.preventDefault();
@@ -573,6 +562,19 @@ export function useRenderEngine(
             };
           }
           console.info('[Controls] Camera reset (R key)');
+        }
+      }
+
+      // F-key toggle works in ALL camera modes (was trapped inside !== 'flyThrough' guard)
+      if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
+        e.preventDefault();
+        if (paramsRef.current) {
+          const newMode: CameraMode = paramsRef.current.cameraMode === 'flyThrough' ? 'orbit' : 'flyThrough';
+          paramsRef.current = {
+            ...paramsRef.current,
+            cameraMode: newMode,
+          };
+          console.info(`[Controls] Camera mode: ${newMode} (F key)`);
         }
       }
     };
