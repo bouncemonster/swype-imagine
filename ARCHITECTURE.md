@@ -8,18 +8,18 @@ Real-time 3D fractal visualization engine with **431 fractal types**, **7 render
 - **Rendering**: WebGL2 (primary), WebGPU (optional — 104/431 types implemented)
 - **Shaders**: GLSL ES 3.00 (WebGL2), WGSL (WebGPU)
 - **Build**: Vite with esbuild, ~4s build time
-- **Bundle**: 1029 KB JS, 76 KB CSS
+- **Bundle**: 984 KB JS, 76 KB CSS
 
 ## Directory Structure
 ```
 src/
 ── shaders/
-│   ├── webglShaders.ts          # Main shader (187KB, 4672 lines) - ALL render modes embedded
+│   ├── webglShaders.ts          # Main shader (187KB, ~4580 lines) - ALL render modes embedded
 │   ├── webgpuShaders.ts         # WebGPU shader (140KB, 3546 lines)
 │   └── modules/
 │       ├── juliaVariations.ts   # 50 Julia set variations (36KB)
 │       ├── flameVariations.ts   # 50 Fractal Flame variations (29KB)
-│       ├── hybridVariations.ts  # 90 Hybrid fractal variations (67KB)
+│       ├── hybridVariations.ts  # 90 Hybrid fractals (5KB, compressed from 67KB/2670 lines)
 │       ├── ifsVariations.ts     # 50 IFS variations (27KB)
 │       └── lsystemVariations.ts # 50 L-System variations (30KB)
 ├── engine/
@@ -75,7 +75,7 @@ src/
 └── main.tsx                     # Entry point (407B)
 ```
 
-**Total**: 56 TypeScript/TSX files, ~660KB source code
+**Total**: 56 TypeScript/TSX files, ~600KB source code (compressed from ~660KB)
 
 ## Critical Architecture Decisions
 
