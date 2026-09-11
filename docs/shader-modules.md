@@ -1,9 +1,13 @@
 # Shader Modules
 
-**~220KB total | GLSL shader code for fractal rendering**
+**~220KB GLSL + 140KB WGSL | Shader code for fractal rendering**
 
 ## Overview
-Collection of GLSL shader modules containing fractal variations, rendering techniques, and post-processing effects. All modules export GLSL strings that are concatenated into the final shader.
+Collection of shader modules containing fractal variations, rendering techniques, and post-processing effects. Two parallel implementations:
+- **GLSL modules** (shaders/modules/): Used by WebGL2 renderer
+- **WGSL shader** (webgpuShaders.ts): Used by WebGPU renderer
+
+Both implement the same fractal types and rendering algorithms.
 
 ## Module Files
 
@@ -162,9 +166,9 @@ p += warpVector * strength;
 ```
 
 ## Critical Notes
-1. **GLSL only**: All modules export GLSL strings (no WGSL)
-2. **Concatenated**: All modules combined into single shader
-3. **~220KB total**: Large shader code
+1. **Two implementations**: GLSL (WebGL2) and WGSL (WebGPU) versions
+2. **Concatenated**: GLSL modules combined into single shader
+3. **~360KB total**: Large shader code (220KB GLSL + 140KB WGSL)
 4. **50+ variants per module**: Repetitive structure
 5. **Distance estimation**: Core technique for ray marching
 6. **Escape radius**: Typically 2.0, some variants use larger
@@ -174,7 +178,7 @@ p += warpVector * strength;
 10. **Performance**: All computation on GPU in parallel
 
 ## Dependencies
-- Pure GLSL code
-- No external imports
-- Used by webglShaders.ts
-- Concatenated in specific order
+- GLSL modules: Pure GLSL code, no external imports
+- WGSL shader: Single file (webgpuShaders.ts)
+- Used by WebGLEngine.ts and WebGPUEngine.ts
+- GLSL modules concatenated by webglShaders.ts

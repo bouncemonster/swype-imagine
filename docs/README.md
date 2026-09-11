@@ -43,7 +43,8 @@
 - [UserProblemLogger.md](UserProblemLogger.md) - IndexedDB error tracking
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [juliaVariations.md](juliaVariations.md) - 50 Mandelbulb/Julia GLSL variations
-- [shader-modules.md](shader-modules.md) - All shader modules overview (~220KB)
+- [shader-modules.md](shader-modules.md) - All shader modules overview (~360KB)
+- [webgpuShaders.md](webgpuShaders.md) - WGSL shaders for WebGPU (3538 lines)
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
 - [webglShaders.md](webglShaders.md) - Shader structure and uniforms
