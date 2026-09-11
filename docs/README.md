@@ -19,6 +19,7 @@
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
 - [webglShaders.md](webglShaders.md) - Shader structure and uniforms
+- [FractalCanvas.md](FractalCanvas.md) - Canvas controls and interaction
 
 ## Architecture
 
