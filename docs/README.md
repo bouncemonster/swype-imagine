@@ -27,6 +27,7 @@
 - [UserProfileModal.md](UserProfileModal.md) - User taste profile and settings
 - [ProjectManifestModal.md](ProjectManifestModal.md) - Welcome modal and project intro
 - [CosmicLoader.md](CosmicLoader.md) - Loading screen with fractal emblem
+- [FractalAtlasModal.md](FractalAtlasModal.md) - Scientific atlas with 100+ fractals
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
 - [UserPreferenceEngine.md](UserPreferenceEngine.md) - Interaction learning, adapted defaults
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
