@@ -3235,57 +3235,8 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   // JULIA VARIATIONS (141-190) - compressed from 50 lines to 1
   if (ftype >= 141 && ftype <= 190) return vec2(mapJuliaVariant(p, t, phi, iters, ftype - 140), 0.0);
   
-  // IFS VARIATIONS (191-240)
-  if (ftype == 191) return vec2(mapIFSVariant1(p, t, phi, iters), 0.0);
-  if (ftype == 192) return vec2(mapIFSVariant2(p, t, phi, iters), 0.0);
-  if (ftype == 193) return vec2(mapIFSVariant3(p, t, phi, iters), 0.0);
-  if (ftype == 194) return vec2(mapIFSVariant4(p, t, phi, iters), 0.0);
-  if (ftype == 195) return vec2(mapIFSVariant5(p, t, phi, iters), 0.0);
-  if (ftype == 196) return vec2(mapIFSVariant6(p, t, phi, iters), 0.0);
-  if (ftype == 197) return vec2(mapIFSVariant7(p, t, phi, iters), 0.0);
-  if (ftype == 198) return vec2(mapIFSVariant8(p, t, phi, iters), 0.0);
-  if (ftype == 199) return vec2(mapIFSVariant9(p, t, phi, iters), 0.0);
-  if (ftype == 200) return vec2(mapIFSVariant10(p, t, phi, iters), 0.0);
-  if (ftype == 201) return vec2(mapIFSVariant11(p, t, phi, iters), 0.0);
-  if (ftype == 202) return vec2(mapIFSVariant12(p, t, phi, iters), 0.0);
-  if (ftype == 203) return vec2(mapIFSVariant13(p, t, phi, iters), 0.0);
-  if (ftype == 204) return vec2(mapIFSVariant14(p, t, phi, iters), 0.0);
-  if (ftype == 205) return vec2(mapIFSVariant15(p, t, phi, iters), 0.0);
-  if (ftype == 206) return vec2(mapIFSVariant16(p, t, phi, iters), 0.0);
-  if (ftype == 207) return vec2(mapIFSVariant17(p, t, phi, iters), 0.0);
-  if (ftype == 208) return vec2(mapIFSVariant18(p, t, phi, iters), 0.0);
-  if (ftype == 209) return vec2(mapIFSVariant19(p, t, phi, iters), 0.0);
-  if (ftype == 210) return vec2(mapIFSVariant20(p, t, phi, iters), 0.0);
-  if (ftype == 211) return vec2(mapIFSVariant21(p, t, phi, iters), 0.0);
-  if (ftype == 212) return vec2(mapIFSVariant22(p, t, phi, iters), 0.0);
-  if (ftype == 213) return vec2(mapIFSVariant23(p, t, phi, iters), 0.0);
-  if (ftype == 214) return vec2(mapIFSVariant24(p, t, phi, iters), 0.0);
-  if (ftype == 215) return vec2(mapIFSVariant25(p, t, phi, iters), 0.0);
-  if (ftype == 216) return vec2(mapIFSVariant26(p, t, phi, iters), 0.0);
-  if (ftype == 217) return vec2(mapIFSVariant27(p, t, phi, iters), 0.0);
-  if (ftype == 218) return vec2(mapIFSVariant28(p, t, phi, iters), 0.0);
-  if (ftype == 219) return vec2(mapIFSVariant29(p, t, phi, iters), 0.0);
-  if (ftype == 220) return vec2(mapIFSVariant30(p, t, phi, iters), 0.0);
-  if (ftype == 221) return vec2(mapIFSVariant31(p, t, phi, iters), 0.0);
-  if (ftype == 222) return vec2(mapIFSVariant32(p, t, phi, iters), 0.0);
-  if (ftype == 223) return vec2(mapIFSVariant33(p, t, phi, iters), 0.0);
-  if (ftype == 224) return vec2(mapIFSVariant34(p, t, phi, iters), 0.0);
-  if (ftype == 225) return vec2(mapIFSVariant35(p, t, phi, iters), 0.0);
-  if (ftype == 226) return vec2(mapIFSVariant36(p, t, phi, iters), 0.0);
-  if (ftype == 227) return vec2(mapIFSVariant37(p, t, phi, iters), 0.0);
-  if (ftype == 228) return vec2(mapIFSVariant38(p, t, phi, iters), 0.0);
-  if (ftype == 229) return vec2(mapIFSVariant39(p, t, phi, iters), 0.0);
-  if (ftype == 230) return vec2(mapIFSVariant40(p, t, phi, iters), 0.0);
-  if (ftype == 231) return vec2(mapIFSVariant41(p, t, phi, iters), 0.0);
-  if (ftype == 232) return vec2(mapIFSVariant42(p, t, phi, iters), 0.0);
-  if (ftype == 233) return vec2(mapIFSVariant43(p, t, phi, iters), 0.0);
-  if (ftype == 234) return vec2(mapIFSVariant44(p, t, phi, iters), 0.0);
-  if (ftype == 235) return vec2(mapIFSVariant45(p, t, phi, iters), 0.0);
-  if (ftype == 236) return vec2(mapIFSVariant46(p, t, phi, iters), 0.0);
-  if (ftype == 237) return vec2(mapIFSVariant47(p, t, phi, iters), 0.0);
-  if (ftype == 238) return vec2(mapIFSVariant48(p, t, phi, iters), 0.0);
-  if (ftype == 239) return vec2(mapIFSVariant49(p, t, phi, iters), 0.0);
-  if (ftype == 240) return vec2(mapIFSVariant50(p, t, phi, iters), 0.0);
+  // IFS VARIATIONS (191-240) - compressed from 50 lines to 1
+  if (ftype >= 191 && ftype <= 240) return vec2(mapIFSVariant(p, t, phi, iters, ftype - 190), 0.0);
   
   // L-SYSTEM VARIATIONS (241-290)
   if (ftype == 241) return vec2(mapLSystemVariant1(p, t, phi, iters), 0.0);
