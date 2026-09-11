@@ -3,7 +3,7 @@ import { JULIA_VARIATIONS_GLSL } from './modules/juliaVariations';
 import { IFS_VARIATIONS_GLSL } from './modules/ifsVariations';
 import { LSYSTEM_VARIATIONS_GLSL } from './modules/lsystemVariations';
 import { FLAME_VARIATIONS_GLSL } from './modules/flameVariations';
-// import { HYBRID_VARIATIONS_GLSL } from './modules/hybridVariations'; // DISABLED: 70KB exceeds WebGL2 link limits
+import { HYBRID_VARIATIONS_GLSL } from './modules/hybridVariations';
 
 export const VERTEX_SHADER_SOURCE = `#version 300 es
 in vec2 a_position;
@@ -55,6 +55,8 @@ uniform float u_cam_mode;
 uniform vec3 u_cam_pos;
 uniform float u_slice_plane;
 uniform float u_slice_axis;
+uniform float u_stereo_mode; // 0=off, 1=side-by-side, 2=anaglyph
+uniform float u_stereo_eye; // 0=left, 1=right
 uniform float u_render_style;
 uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
@@ -2787,8 +2789,7 @@ ${LSYSTEM_VARIATIONS_GLSL}
 
 ${FLAME_VARIATIONS_GLSL}
 
-// HYBRID_VARIATIONS_GLSL disabled — exceeds WebGL2 shader link limits
-// Hybrid fractals (ftype 341-430) temporarily unavailable
+${HYBRID_VARIATIONS_GLSL}
 
 float map24Cell(vec3 p, float t, float phi, int iters) {
   float angle = t * 0.3;
@@ -3438,9 +3439,97 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   if (ftype == 339) return vec2(mapFlameVariant49(p, t, phi, iters), 0.0);
   if (ftype == 340) return vec2(mapFlameVariant50(p, t, phi, iters), 0.0);
   
-  // HYBRID VARIATIONS (341-430) — DISABLED: functions removed to fit WebGL2 link limits
-  // Hybrid fractals temporarily unavailable — fallback to phyllotaxis
-  if (ftype >= 341 && ftype <= 430) return mapPhyllotaxis(p, t, phi, iters);
+  // HYBRID VARIATIONS (341-430)
+  if (ftype == 341) return vec2(mapHybridVariant1(p, t, phi, iters), 0.0);
+  if (ftype == 342) return vec2(mapHybridVariant2(p, t, phi, iters), 0.0);
+  if (ftype == 343) return vec2(mapHybridVariant3(p, t, phi, iters), 0.0);
+  if (ftype == 344) return vec2(mapHybridVariant4(p, t, phi, iters), 0.0);
+  if (ftype == 345) return vec2(mapHybridVariant5(p, t, phi, iters), 0.0);
+  if (ftype == 346) return vec2(mapHybridVariant6(p, t, phi, iters), 0.0);
+  if (ftype == 347) return vec2(mapHybridVariant7(p, t, phi, iters), 0.0);
+  if (ftype == 348) return vec2(mapHybridVariant8(p, t, phi, iters), 0.0);
+  if (ftype == 349) return vec2(mapHybridVariant9(p, t, phi, iters), 0.0);
+  if (ftype == 350) return vec2(mapHybridVariant10(p, t, phi, iters), 0.0);
+  if (ftype == 351) return vec2(mapHybridVariant11(p, t, phi, iters), 0.0);
+  if (ftype == 352) return vec2(mapHybridVariant12(p, t, phi, iters), 0.0);
+  if (ftype == 353) return vec2(mapHybridVariant13(p, t, phi, iters), 0.0);
+  if (ftype == 354) return vec2(mapHybridVariant14(p, t, phi, iters), 0.0);
+  if (ftype == 355) return vec2(mapHybridVariant15(p, t, phi, iters), 0.0);
+  if (ftype == 356) return vec2(mapHybridVariant16(p, t, phi, iters), 0.0);
+  if (ftype == 357) return vec2(mapHybridVariant17(p, t, phi, iters), 0.0);
+  if (ftype == 358) return vec2(mapHybridVariant18(p, t, phi, iters), 0.0);
+  if (ftype == 359) return vec2(mapHybridVariant19(p, t, phi, iters), 0.0);
+  if (ftype == 360) return vec2(mapHybridVariant20(p, t, phi, iters), 0.0);
+  if (ftype == 361) return vec2(mapHybridVariant21(p, t, phi, iters), 0.0);
+  if (ftype == 362) return vec2(mapHybridVariant22(p, t, phi, iters), 0.0);
+  if (ftype == 363) return vec2(mapHybridVariant23(p, t, phi, iters), 0.0);
+  if (ftype == 364) return vec2(mapHybridVariant24(p, t, phi, iters), 0.0);
+  if (ftype == 365) return vec2(mapHybridVariant25(p, t, phi, iters), 0.0);
+  if (ftype == 366) return vec2(mapHybridVariant26(p, t, phi, iters), 0.0);
+  if (ftype == 367) return vec2(mapHybridVariant27(p, t, phi, iters), 0.0);
+  if (ftype == 368) return vec2(mapHybridVariant28(p, t, phi, iters), 0.0);
+  if (ftype == 369) return vec2(mapHybridVariant29(p, t, phi, iters), 0.0);
+  if (ftype == 370) return vec2(mapHybridVariant30(p, t, phi, iters), 0.0);
+  if (ftype == 371) return vec2(mapHybridVariant31(p, t, phi, iters), 0.0);
+  if (ftype == 372) return vec2(mapHybridVariant32(p, t, phi, iters), 0.0);
+  if (ftype == 373) return vec2(mapHybridVariant33(p, t, phi, iters), 0.0);
+  if (ftype == 374) return vec2(mapHybridVariant34(p, t, phi, iters), 0.0);
+  if (ftype == 375) return vec2(mapHybridVariant35(p, t, phi, iters), 0.0);
+  if (ftype == 376) return vec2(mapHybridVariant36(p, t, phi, iters), 0.0);
+  if (ftype == 377) return vec2(mapHybridVariant37(p, t, phi, iters), 0.0);
+  if (ftype == 378) return vec2(mapHybridVariant38(p, t, phi, iters), 0.0);
+  if (ftype == 379) return vec2(mapHybridVariant39(p, t, phi, iters), 0.0);
+  if (ftype == 380) return vec2(mapHybridVariant40(p, t, phi, iters), 0.0);
+  if (ftype == 381) return vec2(mapHybridVariant41(p, t, phi, iters), 0.0);
+  if (ftype == 382) return vec2(mapHybridVariant42(p, t, phi, iters), 0.0);
+  if (ftype == 383) return vec2(mapHybridVariant43(p, t, phi, iters), 0.0);
+  if (ftype == 384) return vec2(mapHybridVariant44(p, t, phi, iters), 0.0);
+  if (ftype == 385) return vec2(mapHybridVariant45(p, t, phi, iters), 0.0);
+  if (ftype == 386) return vec2(mapHybridVariant46(p, t, phi, iters), 0.0);
+  if (ftype == 387) return vec2(mapHybridVariant47(p, t, phi, iters), 0.0);
+  if (ftype == 388) return vec2(mapHybridVariant48(p, t, phi, iters), 0.0);
+  if (ftype == 389) return vec2(mapHybridVariant49(p, t, phi, iters), 0.0);
+  if (ftype == 390) return vec2(mapHybridVariant50(p, t, phi, iters), 0.0);
+  if (ftype == 391) return vec2(mapHybridVariant51(p, t, phi, iters), 0.0);
+  if (ftype == 392) return vec2(mapHybridVariant52(p, t, phi, iters), 0.0);
+  if (ftype == 393) return vec2(mapHybridVariant53(p, t, phi, iters), 0.0);
+  if (ftype == 394) return vec2(mapHybridVariant54(p, t, phi, iters), 0.0);
+  if (ftype == 395) return vec2(mapHybridVariant55(p, t, phi, iters), 0.0);
+  if (ftype == 396) return vec2(mapHybridVariant56(p, t, phi, iters), 0.0);
+  if (ftype == 397) return vec2(mapHybridVariant57(p, t, phi, iters), 0.0);
+  if (ftype == 398) return vec2(mapHybridVariant58(p, t, phi, iters), 0.0);
+  if (ftype == 399) return vec2(mapHybridVariant59(p, t, phi, iters), 0.0);
+  if (ftype == 400) return vec2(mapHybridVariant60(p, t, phi, iters), 0.0);
+  if (ftype == 401) return vec2(mapHybridVariant61(p, t, phi, iters), 0.0);
+  if (ftype == 402) return vec2(mapHybridVariant62(p, t, phi, iters), 0.0);
+  if (ftype == 403) return vec2(mapHybridVariant63(p, t, phi, iters), 0.0);
+  if (ftype == 404) return vec2(mapHybridVariant64(p, t, phi, iters), 0.0);
+  if (ftype == 405) return vec2(mapHybridVariant65(p, t, phi, iters), 0.0);
+  if (ftype == 406) return vec2(mapHybridVariant66(p, t, phi, iters), 0.0);
+  if (ftype == 407) return vec2(mapHybridVariant67(p, t, phi, iters), 0.0);
+  if (ftype == 408) return vec2(mapHybridVariant68(p, t, phi, iters), 0.0);
+  if (ftype == 409) return vec2(mapHybridVariant69(p, t, phi, iters), 0.0);
+  if (ftype == 410) return vec2(mapHybridVariant70(p, t, phi, iters), 0.0);
+  if (ftype == 411) return vec2(mapHybridVariant71(p, t, phi, iters), 0.0);
+  if (ftype == 412) return vec2(mapHybridVariant72(p, t, phi, iters), 0.0);
+  if (ftype == 413) return vec2(mapHybridVariant73(p, t, phi, iters), 0.0);
+  if (ftype == 414) return vec2(mapHybridVariant74(p, t, phi, iters), 0.0);
+  if (ftype == 415) return vec2(mapHybridVariant75(p, t, phi, iters), 0.0);
+  if (ftype == 416) return vec2(mapHybridVariant76(p, t, phi, iters), 0.0);
+  if (ftype == 417) return vec2(mapHybridVariant77(p, t, phi, iters), 0.0);
+  if (ftype == 418) return vec2(mapHybridVariant78(p, t, phi, iters), 0.0);
+  if (ftype == 419) return vec2(mapHybridVariant79(p, t, phi, iters), 0.0);
+  if (ftype == 420) return vec2(mapHybridVariant80(p, t, phi, iters), 0.0);
+  if (ftype == 421) return vec2(mapHybridVariant81(p, t, phi, iters), 0.0);
+  if (ftype == 422) return vec2(mapHybridVariant82(p, t, phi, iters), 0.0);
+  if (ftype == 423) return vec2(mapHybridVariant83(p, t, phi, iters), 0.0);
+  if (ftype == 424) return vec2(mapHybridVariant84(p, t, phi, iters), 0.0);
+  if (ftype == 425) return vec2(mapHybridVariant85(p, t, phi, iters), 0.0);
+  if (ftype == 426) return vec2(mapHybridVariant86(p, t, phi, iters), 0.0);
+  if (ftype == 427) return vec2(mapHybridVariant87(p, t, phi, iters), 0.0);
+  if (ftype == 428) return vec2(mapHybridVariant88(p, t, phi, iters), 0.0);
+  if (ftype == 429) return vec2(mapHybridVariant89(p, t, phi, iters), 0.0);
+  if (ftype == 430) return vec2(mapHybridVariant90(p, t, phi, iters), 0.0);
   
   return mapPhyllotaxis(p, t, phi, iters); // Default fallback
 }
@@ -3513,9 +3602,15 @@ vec2 sceneSDF(vec3 p_world) {
     }
   }
 
+  // Soft outer boundary — return SMALL distance to prevent ray overshoot
+  // This fixes the "transparent sphere" clipping: rays take small steps near boundary
+  // and can find the fractal surface instead of jumping past it
   float r_bound = length(p_eval);
-  if (r_bound > 8.0) { // Expanded from 5.0 to 8.0 — balance between visibility and performance
-    return vec2((r_bound - 3.5) / max(inv_scale, 0.0001), r_bound); // Soft boundary
+  if (r_bound > 5.0) {
+    float excess = r_bound - 5.0;
+    // Return small distance: 0.1 at boundary, growing slowly
+    // This keeps ray steps small near the edge so surface is not missed
+    return vec2((0.1 + excess * 0.2) / max(inv_scale, 0.0001), r_bound);
   }
 
   int ftypeA = int(u_fractal_type + 0.5);
@@ -3832,6 +3927,13 @@ void main() {
     // Mode 0: Outside-In Orbit & Mode 3: Kelvin Inversion
     ro = vec3(0.0, 0.0, -cam_dist);
     
+    // STEREO RENDERING: Add eye offset for side-by-side or anaglyph
+    if (u_stereo_mode > 0.5) {
+      float eyeSeparation = 0.065; // Average human IPD in world units
+      float eyeOffset = (u_stereo_eye > 0.5) ? eyeSeparation * 0.5 : -eyeSeparation * 0.5;
+      ro.x += eyeOffset;
+    }
+    
     ro = rotateVec(ro, u_cam_rot.y, u_cam_rot.x);
     vec3 lookTarget = vec3(0.0, 0.0, 0.0);
     vec3 ww = (lookTarget - ro) / max(length(lookTarget - ro), 1e-6);
@@ -3861,7 +3963,7 @@ void main() {
 
   // OPTIMIZATION 1: HIERARCHICAL SPACE LEAPING
   // Multi-level bounding volumes for maximum performance
-  float boundingRadius = 8.0; // Expanded from 6.0 — balance visibility vs performance
+  float boundingRadius = 6.0;
   float rayOriginDist = length(ro);
   
   // Level 1: Large bounding sphere (fast skip)
@@ -3871,15 +3973,15 @@ void main() {
   }
   
   // Level 2: Medium bounding sphere (refined skip)
-  float medRadius = 4.5; // Expanded from 3.5
+  float medRadius = 3.5;
   if (rayOriginDist > medRadius && rayOriginDist < boundingRadius) {
     float tmin = rayOriginDist - medRadius;
     if (tmin > t) t = tmin * 0.98;
   }
   
-  // Level 3: Tight bounding box (final approach) — EXPANDED from ±2.5 to ±4.0
-  vec3 bboxMin = vec3(-4.0);
-  vec3 bboxMax = vec3(4.0);
+  // Level 3: Tight bounding box (final approach)
+  vec3 bboxMin = vec3(-2.5);
+  vec3 bboxMax = vec3(2.5);
   vec3 invRd = 1.0 / rd;
   vec3 t0 = (bboxMin - ro) * invRd;
   vec3 t1 = (bboxMax - ro) * invRd;
@@ -3897,8 +3999,8 @@ void main() {
   int iterReduction = int(lodFactor * 4.0); // Reduced from 8 to 4 to preserve detail at distance
 
   // MASSIVE INCREASE: Adaptive step budget for extreme detail
-  // Close range: 480 steps, Medium: 384 steps, Far: 256 steps (was 640/480/320)
-  int maxSteps = (cam_dist < 1.0) ? 480 : (cam_dist < 3.0) ? 384 : 256;
+  // Close range: 512 steps, Medium: 384 steps, Far: 256 steps
+  int maxSteps = (cam_dist < 1.0) ? 512 : (cam_dist < 3.0) ? 384 : 256;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
   float hit_threshold = max(hitScale * 3.0, 0.002); // Declared here, used in loop + binary search
@@ -3963,10 +4065,10 @@ void main() {
 
     // EARLY TERMINATION: Only count misses when ray is going AWAY from surface
     // Don't count negative distances as "increasing" — they mean we're inside
-    // Threshold 24: balance between sparse fractals and performance
+    // INCREASED from 16 to 32 to handle sparse fractal regions
     if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
       missCount++;
-      if (missCount > 24) break;
+      if (missCount > 32) break;
     } else if (d < 0.0) {
       missCount = 0; // Inside fractal = definitely not missing
     } else {
@@ -4539,6 +4641,18 @@ void main() {
   // Subpixel anti-aliasing boost — sharpen edges via fwidth unsharp mask
   float edgeDetect = length(fwidth(col)) * 0.5;
   col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
+
+  // ANAGYPH STEREO: Apply red/cyan coloring for anaglyph glasses
+  if (u_stereo_mode > 1.5) {
+    if (u_stereo_eye > 0.5) {
+      // Right eye: cyan only
+      col.r = 0.0;
+    } else {
+      // Left eye: red only
+      col.g = 0.0;
+      col.b = 0.0;
+    }
+  }
 
   fragColor = vec4(col, 1.0);
 }
