@@ -171,7 +171,7 @@ float mapFlameVariant7(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -423,7 +423,7 @@ float mapFlameVariant17(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -675,7 +675,7 @@ float mapFlameVariant27(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -927,7 +927,7 @@ float mapFlameVariant37(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -1179,7 +1179,7 @@ float mapFlameVariant47(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);

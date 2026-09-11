@@ -2388,7 +2388,7 @@ fn mapAmazingBox(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     // Box fold
     z = clamp(z, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - z;
     // Spherical fold (Amazing Box variation)
-    let r2 = dot(z, z);
+    let r2 = max(dot(z, z), 0.0001); // Guard against division by zero
     let r = sqrt(r2);
     if (r < 0.5) {
       z = z * 4.0;
@@ -2425,7 +2425,7 @@ fn mapMandelbulbMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> v
     } else {
       // Mandelbox: box fold + sphere fold
       z = clamp(z, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - z;
-      let r2 = dot(z, z);
+      let r2 = max(dot(z, z), 0.0001); // Guard against division by zero
       if (r2 < 0.25) { z = z * 4.0; }
       else if (r2 < 1.0) { z = z / r2; }
       z = z * 2.0 + p;

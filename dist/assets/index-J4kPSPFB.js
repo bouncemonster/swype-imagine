@@ -2436,7 +2436,7 @@ fn mapAmazingBox(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     // Box fold
     z = clamp(z, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - z;
     // Spherical fold (Amazing Box variation)
-    let r2 = dot(z, z);
+    let r2 = max(dot(z, z), 0.0001); // Guard against division by zero
     let r = sqrt(r2);
     if (r < 0.5) {
       z = z * 4.0;
@@ -2473,7 +2473,7 @@ fn mapMandelbulbMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> v
     } else {
       // Mandelbox: box fold + sphere fold
       z = clamp(z, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - z;
-      let r2 = dot(z, z);
+      let r2 = max(dot(z, z), 0.0001); // Guard against division by zero
       if (r2 < 0.25) { z = z * 4.0; }
       else if (r2 < 1.0) { z = z / r2; }
       z = z * 2.0 + p;
@@ -7720,7 +7720,7 @@ float mapFlameVariant7(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -7972,7 +7972,7 @@ float mapFlameVariant17(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -8224,7 +8224,7 @@ float mapFlameVariant27(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -8476,7 +8476,7 @@ float mapFlameVariant37(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -8728,7 +8728,7 @@ float mapFlameVariant47(vec3 p, float t, float phi, int iters) {
     if (r > 2.0) break;
     
     // Spiral variation
-    float angle = spiral * log(r);
+    float angle = spiral * log(max(r, 0.0001)); // Guard against log(0)
     float c = cos(angle);
     float s = sin(angle);
     z.xy = mat2(c, -s, s, c) * z.xy / (r * r + 0.1);
@@ -11531,6 +11531,7 @@ uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
 uniform float u_palette_seed;
 uniform float u_palette_rotation;
+uniform float u_auto_rotate;
 
 const float PI = 3.141592653589793;
 const float TWO_PI = 6.283185307179586;
@@ -14343,11 +14344,11 @@ float mapFlameSinusoidal(vec3 p, float t, float phi, int iters) {
 
 float mapFlameSpherical(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float r2 = dot(z, z);
+  float r2 = max(dot(z, z), 0.0001); // Guard against division by zero
   for (int i = 0; i < 10; i++) {
     z = z / r2 * phi;
     z += 0.15 * p;
-    r2 = dot(z, z);
+    r2 = max(dot(z, z), 0.0001); // Guard against division by zero
   }
   return length(z) * pow(phi, -10.0) - 0.6;
 }
@@ -15465,6 +15466,7 @@ void main() {
   int maxSteps = (cam_dist < 1.0) ? 640 : (cam_dist < 3.0) ? 480 : 320;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
+  float hit_threshold = max(hitScale * 3.0, 0.002); // Declared here, used in loop + binary search
 
   // PHASE 4.31 FIX: Robust raymarching with bounded steps and sign tracking
   // Root cause of black/flat/broken fractals: when SDF returns large negative
@@ -15502,7 +15504,6 @@ void main() {
     }
 
     // HIT DETECTION: Check if we're at the surface
-    float hit_threshold = max(hitScale * 3.0, 0.002);
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
@@ -15653,7 +15654,7 @@ void main() {
     
     // Use base normal + micro detail for surface richness
     float ndotv = dot(base_n, rd);
-    vec3 n = ndotv > 0.0 ? -base_n : base;
+    vec3 n = ndotv > 0.0 ? -base_n : base_n;
     
     // MICRO NORMAL: Add fine surface detail from fractal geometry
     float microScale = clamp(cam_dist * 0.5, 0.5, 2.0);
@@ -15957,7 +15958,7 @@ void main() {
       qCol += u_accent_color * pow(fresnel, 2.0) * 1.2;
       qCol += u_primary_color * curvNorm * 0.35;
       qCol *= (0.6 + trapDetail * 0.4);
-      col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
+      col = qCol * (0.35 + 0.65 * ao) + sssColor * 1.2;
     } else if (u_render_style > 5.5) {
       // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       float beerDist = min(max(t - 0.5, 0.0), 20.0);

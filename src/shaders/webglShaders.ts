@@ -62,6 +62,7 @@ uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
 uniform float u_palette_seed;
 uniform float u_palette_rotation;
+uniform float u_auto_rotate;
 
 const float PI = 3.141592653589793;
 const float TWO_PI = 6.283185307179586;
@@ -2874,11 +2875,11 @@ float mapFlameSinusoidal(vec3 p, float t, float phi, int iters) {
 
 float mapFlameSpherical(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
-  float r2 = dot(z, z);
+  float r2 = max(dot(z, z), 0.0001); // Guard against division by zero
   for (int i = 0; i < 10; i++) {
     z = z / r2 * phi;
     z += 0.15 * p;
-    r2 = dot(z, z);
+    r2 = max(dot(z, z), 0.0001); // Guard against division by zero
   }
   return length(z) * pow(phi, -10.0) - 0.6;
 }
@@ -3996,6 +3997,7 @@ void main() {
   int maxSteps = (cam_dist < 1.0) ? 640 : (cam_dist < 3.0) ? 480 : 320;
   // Scale-aware hit threshold: tighter at close range for clean surface convergence
   float hitScale = max(cam_dist * 0.0003, 0.0001);
+  float hit_threshold = max(hitScale * 3.0, 0.002); // Declared here, used in loop + binary search
 
   // PHASE 4.31 FIX: Robust raymarching with bounded steps and sign tracking
   // Root cause of black/flat/broken fractals: when SDF returns large negative
@@ -4033,7 +4035,6 @@ void main() {
     }
 
     // HIT DETECTION: Check if we're at the surface
-    float hit_threshold = max(hitScale * 3.0, 0.002);
     if (abs(d) < hit_threshold) {
       hit = true;
       steps = i;
@@ -4184,7 +4185,7 @@ void main() {
     
     // Use base normal + micro detail for surface richness
     float ndotv = dot(base_n, rd);
-    vec3 n = ndotv > 0.0 ? -base_n : base;
+    vec3 n = ndotv > 0.0 ? -base_n : base_n;
     
     // MICRO NORMAL: Add fine surface detail from fractal geometry
     float microScale = clamp(cam_dist * 0.5, 0.5, 2.0);
@@ -4488,7 +4489,7 @@ void main() {
       qCol += u_accent_color * pow(fresnel, 2.0) * 1.2;
       qCol += u_primary_color * curvNorm * 0.35;
       qCol *= (0.6 + trapDetail * 0.4);
-      col = qCol * (0.35 + 0.65 * ao) + sssCol * 1.2;
+      col = qCol * (0.35 + 0.65 * ao) + sssColor * 1.2;
     } else if (u_render_style > 5.5) {
       // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       float beerDist = min(max(t - 0.5, 0.0), 20.0);
