@@ -5,7 +5,7 @@
  */
 import { FractalType, CompositeOp } from '../types/fractal';
 
-export const COMPATIBLE_HYBRIDS: Record<FractalType, { partners: FractalType[]; ops: CompositeOp[] }> = {
+export const COMPATIBLE_HYBRIDS: Partial<Record<FractalType, { partners: FractalType[]; ops: CompositeOp[] }>> = {
   phyllotaxis: {
     partners: ['apollonian', 'fibonacciSnowflake', 'pythagorasTree3D', 'primeSpiral'],
     ops: ['smoothUnion', 'smoothMorph', 'domainWarp'],

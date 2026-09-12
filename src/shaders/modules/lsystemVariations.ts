@@ -15,10 +15,10 @@ float mapLSystemBase(vec3 p, float t, float phi, int iters, float scale, int op,
   float r = 0.0;
   float ang = angle;
   
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 8.0) break; // Increased from 2.0 to handle scale up to 3.02, iterations from 16 to 32
     
     if (op == 0) { // Binary Tree
       if (z.x > 0.0) { z.x -= 1.0; z.xy = mat2(0.7,-0.7,0.7,0.7)*z.xy; }

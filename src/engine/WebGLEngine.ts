@@ -12,12 +12,6 @@ export class WebGLEngine extends FractalEngineBase {
   private vbo: WebGLBuffer | null = null;
   private uniformLocs: Record<string, WebGLUniformLocation | null> = {};
   
-  // Export data collection (lazy-allocated on first use)
-  private exportPositions: Float32Array | null = null;
-  private exportColors: Float32Array | null = null;
-  private exportNormals: Float32Array | null = null;
-  private exportCount = 0;
-
   // Pre-allocated uniform buffer to avoid per-frame allocation
   private packedUniforms = new Float32Array(48);
   private lastLoggedFractalType: string = '';
@@ -25,95 +19,6 @@ export class WebGLEngine extends FractalEngineBase {
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
     this.rendererInfo = 'WebGL2 Shader Pipeline';
-  }
-
-  /**
-   * Collect surface points for export by sampling SDF
-   */
-  public collectSurfacePoints(params: FractalParams, resolution: number = 64): void {
-    // Lazy-allocate export buffers on first use
-    if (!this.exportPositions) {
-      this.exportPositions = new Float32Array(100000 * 3);
-      this.exportColors = new Float32Array(100000 * 3);
-      this.exportNormals = new Float32Array(100000 * 3);
-    }
-    this.exportCount = 0;
-    const bounds = 2.5;
-    const step = (bounds * 2) / resolution;
-    
-    // Sample SDF on grid
-    for (let i = 0; i < resolution; i++) {
-      for (let j = 0; j < resolution; j++) {
-        for (let k = 0; k < resolution; k++) {
-          const x = -bounds + i * step;
-          const y = -bounds + j * step;
-          const z = -bounds + k * step;
-          
-          // Evaluate SDF (simplified - use current params)
-          const sdf = this.evaluateSDF(x, y, z, params);
-          
-          // If near surface, add to export
-          if (Math.abs(sdf) < 0.05 && this.exportCount < 100000) {
-            const idx = this.exportCount * 3;
-            this.exportPositions![idx] = x;
-            this.exportPositions![idx + 1] = y;
-            this.exportPositions![idx + 2] = z;
-            
-            // Compute normal via central differences
-            const eps = 0.01;
-            const nx = this.evaluateSDF(x + eps, y, z, params) - this.evaluateSDF(x - eps, y, z, params);
-            const ny = this.evaluateSDF(x, y + eps, z, params) - this.evaluateSDF(x, y - eps, z, params);
-            const nz = this.evaluateSDF(x, y, z + eps, params) - this.evaluateSDF(x, y, z - eps, params);
-            const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
-            const safeLen = len < 1e-6 ? 1e-6 : len;
-            
-            this.exportNormals![idx] = nx / safeLen;
-            this.exportNormals![idx + 1] = ny / safeLen;
-            this.exportNormals![idx + 2] = nz / safeLen;
-            
-            // Color based on position (simplified)
-            this.exportColors![idx] = 0.5 + x * 0.2;
-            this.exportColors![idx + 1] = 0.5 + y * 0.2;
-            this.exportColors![idx + 2] = 0.5 + z * 0.2;
-            
-            this.exportCount++;
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Simplified SDF evaluation for export (matches shader logic)
-   */
-  private evaluateSDF(x: number, y: number, z: number, params: FractalParams): number {
-    // Simplified Mandelbulb SDF for demo
-    const r = Math.sqrt(x * x + y * y + z * z);
-    const theta = Math.atan2(Math.sqrt(x * x + y * y), z);
-    const phi = Math.atan2(y, x);
-    const power = 8;
-    
-    let zr = Math.pow(r, power);
-    const zTheta = theta * power;
-    const zPhi = phi * power;
-    
-    const cx = zr * Math.sin(zTheta) * Math.cos(zPhi) + x;
-    const cy = zr * Math.sin(zTheta) * Math.sin(zPhi) + y;
-    const cz = zr * Math.cos(zTheta) + z;
-    
-    return Math.sqrt(cx * cx + cy * cy + cz * cz) - 1.5;
-  }
-
-  /**
-   * Get collected export data
-   */
-  public getExportData() {
-    return {
-      positions: this.exportPositions!.slice(0, this.exportCount * 3),
-      colors: this.exportColors!.slice(0, this.exportCount * 3),
-      normals: this.exportNormals!.slice(0, this.exportCount * 3),
-      count: this.exportCount
-    };
   }
 
   public init(): boolean {
@@ -135,8 +40,16 @@ export class WebGLEngine extends FractalEngineBase {
     }
 
     // Try webgl2 with minimal options first (most compatible)
-    console.info('[WebGL2] Attempt 1: getContext("webgl2") with no options...');
-    let gl = this.canvas.getContext('webgl2');
+    // When ?test=1 is in URL, use preserveDrawingBuffer for headless screenshot capture
+    const isTestMode = typeof window !== 'undefined' && window.location.search.includes('test=1');
+    const ctxOptions = isTestMode ? {
+      alpha: false,
+      antialias: false,
+      preserveDrawingBuffer: true,
+    } : undefined;
+    
+    console.info('[WebGL2] Attempt 1: getContext("webgl2")' + (isTestMode ? ' with preserveDrawingBuffer (test mode)' : ' with no options') + '...');
+    let gl: WebGL2RenderingContext | null = this.canvas.getContext('webgl2', ctxOptions as any) as WebGL2RenderingContext | null;
     console.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
 
     // Fallback: try with preserveDrawingBuffer for screenshots
@@ -147,7 +60,7 @@ export class WebGLEngine extends FractalEngineBase {
         antialias: false,
         powerPreference: 'high-performance',
         preserveDrawingBuffer: true,
-      });
+      }) as WebGL2RenderingContext | null;
       console.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
     }
 
@@ -158,7 +71,7 @@ export class WebGLEngine extends FractalEngineBase {
         alpha: false,
         antialias: false,
         powerPreference: 'high-performance',
-      });
+      }) as WebGL2RenderingContext | null;
       console.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
     }
 

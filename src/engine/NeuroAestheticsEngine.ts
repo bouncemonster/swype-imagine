@@ -1,6 +1,7 @@
 import { FractalSpecimen, FractalType, ColorPalette, CompositeOp, RenderStyle } from '../types/fractal';
 import { COLOR_PALETTES } from '../palettes';
 import { COMPATIBLE_HYBRIDS } from '../data/compatibleHybrids';
+import { hslToRgb } from '../utils/colorMath';
 export { COMPATIBLE_HYBRIDS };
 
 export const COMPOSITE_OP_NAMES: Record<CompositeOp, string> = {
@@ -38,27 +39,6 @@ export const ALL_COMPOSITE_OPS: CompositeOp[] = [
 
 const GOLDEN_RATIO = 1.61803398875;
 const GOLDEN_ANGLE = 137.507764; // degrees
-
-// Convert HSL to RGB [0..1]
-function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-  h = ((h % 360) + 360) % 360;
-  s = Math.max(0, Math.min(1, s));
-  l = Math.max(0, Math.min(1, l));
-
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = l - c / 2;
-  let r = 0, g = 0, b = 0;
-
-  if (h < 60) { r = c; g = x; b = 0; }
-  else if (h < 120) { r = x; g = c; b = 0; }
-  else if (h < 180) { r = 0; g = c; b = x; }
-  else if (h < 240) { r = 0; g = x; b = c; }
-  else if (h < 300) { r = x; g = 0; b = c; }
-  else { r = c; g = 0; b = x; }
-
-  return [r + m, g + m, b + m];
-}
 
 // Generate procedural golden harmonic palette
 export function generateGoldenPalette(baseHue: number, nameSuffix: string): ColorPalette {
@@ -196,7 +176,7 @@ export const ALL_FRACTAL_TYPES: FractalType[] = [
   'ifs3DKoch',
 ];
 
-export const FRACTAL_NAMES: Record<FractalType, string> = {
+export const FRACTAL_NAMES: Partial<Record<FractalType, string>> = {
   phyllotaxis: 'Филлотаксис Фибоначчи',
   mandelbulb: 'Золотой Мандельбульб 3D',
   quaternionJulia: 'Кватернион 4D Жюлиа',
@@ -316,7 +296,7 @@ export const FRACTAL_NAMES: Record<FractalType, string> = {
   ifs3DKoch: 'IFS 3D Кривая Коха',
 };
 
-export const DEFAULT_ZOOMS: Record<FractalType, number> = {
+export const DEFAULT_ZOOMS: Partial<Record<FractalType, number>> = {
   phyllotaxis: 3.2,
   mandelbulb: 2.8,
   quaternionJulia: 2.6,

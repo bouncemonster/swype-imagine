@@ -5,6 +5,61 @@ import { LSYSTEM_VARIATIONS_GLSL } from './modules/lsystemVariations';
 import { FLAME_VARIATIONS_GLSL } from './modules/flameVariations';
 import { HYBRID_VARIATIONS_GLSL } from './modules/hybridVariations';
 
+// Mandelbrot variant params: [pwrBase, pwrFreq, pwrAmp, pwrTrig, postMode, postFreq, postAmp]
+// pwrTrig: 0=sin, 1=cos; postMode: 0=z+=p, 1=z+=p*(1+sin*a), 2=z+=p*phi,
+//   3=z+=p;z*=1+sin*a, 4=z+=p*(1+cos*a), 5=z+=p*phi*0.5, 6=z+=p;z*=1+cos*a
+const _MB: [number, number, number, number, number, number, number][] = [
+  [2.0,0.1,0.5,0, 0,0,0],       // V1: z+=p
+  [2.0,0.15,0.4,1, 1,0.08,0.1], // V2: z+=p*(1+sin(t*.08)*.1)
+  [3.0,0.12,0.6,0, 0,0,0],      // V3: z+=p
+  [2.5,0.18,0.5,1, 2,0,0],      // V4: z+=p*phi
+  [2.0,0.2,0.7,0, 3,0.1,0.05],  // V5: z+=p; z*=1+sin(t*.1)*.05
+  [2.2,0.14,0.45,1, 4,0.12,0.08], // V6: z+=p*(1+cos(t*.12)*.08)
+  [2.8,0.16,0.55,0, 0,0,0],     // V7: z+=p
+  [2.0,0.22,0.65,1, 5,0,0],     // V8: z+=p*phi*0.5
+  [2.4,0.19,0.5,0, 6,0.15,0.06], // V9: z+=p; z*=1+cos(t*.15)*.06
+  [2.6,0.17,0.58,1, 1,0.13,0.09], // V10: z+=p*(1+sin(t*.13)*.09)
+];
+// GLSL ES 3.0 requires explicit float literals (2.0 not 2) — String(2.0) gives "2" which is int
+const _f = (n: number) => String(n).includes('.') ? String(n) : `${n}.0`;
+const _MB_POSTS = [
+  () => `z+=p;`,
+  (f: string, a: string) => `z+=p*(1.0+sin(t*${f})*${a});`,
+  () => `z+=p*phi;`,
+  (f: string, a: string) => `{z+=p;z*=1.0+sin(t*${f})*${a};}`,
+  (f: string, a: string) => `z+=p*(1.0+cos(t*${f})*${a});`,
+  () => `z+=p*phi*0.5;`,
+  (f: string, a: string) => `{z+=p;z*=1.0+cos(t*${f})*${a};}`,
+];
+let _mbGLSL = '';
+for (let vi = 0; vi < _MB.length; vi++) {
+  const [bp, pf, pa, pt, pm, sf, sa] = _MB[vi];
+  const pwrTrig = pt === 0 ? 'sin' : 'cos';
+  const postExpr = _MB_POSTS[pm](_f(sf), _f(sa));
+  _mbGLSL += `float mapMandelbrotVariant${vi + 1}(vec3 p,float t,float phi,int iters){\n` +
+    `  vec3 z=p;float dr=1.0;float r=0.0;
+` +
+    `  for(int i=0;i<32;i++){if(i>=iters)break;r=length(z);if(r>4.0)break;
+` +
+    `  float pw=${_f(bp)}+${pwrTrig}(t*${_f(pf)})*${_f(pa)};
+` +
+    `  float th=acos(clamp(z.z/max(r,0.001),-1.0,1.0));
+` +
+    `  float pa2=atan(z.y,z.x);float zr=pow(r,pw);
+` +
+    `  th*=pw;pa2*=pw;
+` +
+    `  z=zr*vec3(sin(th)*cos(pa2),sin(th)*sin(pa2),cos(th));
+` +
+    `  ${postExpr}
+` +
+    `  dr=pow(r,pw-1.0)*pw*dr+1.0;}
+` +
+    `  return 0.5*log(max(r,1.0001))*r/max(dr,0.0001);}
+`;
+}
+const MANDELBROT_VARIATIONS_GLSL = _mbGLSL;
+
 export const VERTEX_SHADER_SOURCE = `#version 300 es
 in vec2 a_position;
 out vec2 v_uv;
@@ -2250,11 +2305,11 @@ float mapMandelbulbPower4(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   float dr = 1.0;
   float r = 0.0;
-  int maxIter = int(clamp(float(iters), 6.0, 16.0));
-  for (int i = 0; i < 16; i++) {
+  int maxIter = int(clamp(float(iters), 6.0, 32.0));
+  for (int i = 0; i < 32; i++) {
     if (i >= maxIter) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 4.0) break; // Increased from 2.0 for power 4
     float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     dr = pow(r, 3.0) * 4.0 * dr + 1.0;
@@ -2272,11 +2327,11 @@ float mapMandelbulbPower12(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   float dr = 1.0;
   float r = 0.0;
-  int maxIter = int(clamp(float(iters), 6.0, 16.0));
-  for (int i = 0; i < 16; i++) {
+  int maxIter = int(clamp(float(iters), 6.0, 32.0));
+  for (int i = 0; i < 32; i++) {
     if (i >= maxIter) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 4.0) break; // Increased from 2.0 for power 12
     float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
     dr = pow(r, 11.0) * 12.0 * dr + 1.0;
@@ -2318,11 +2373,11 @@ float mapMultibrot3Advanced(vec3 p, float t, float phi, int iters) {
   vec3 z = p;
   float dr = 1.0;
   float r = 0.0;
-  int maxIter = int(clamp(float(iters), 8.0, 20.0));
-  for (int i = 0; i < 20; i++) {
+  int maxIter = int(clamp(float(iters), 8.0, 32.0));
+  for (int i = 0; i < 32; i++) {
     if (i >= maxIter) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 4.0) break; // Increased from 2.0 for multibrot power 3
     // Power 3 in spherical coordinates
     float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x);
@@ -2504,279 +2559,7 @@ float map600Cell(vec3 p, float t, float phi, int iters) {
   return length(projected) * pow(scale, -7.0);
 }
 
-// ============= MANDELBROT VARIATIONS (1-10) =============
-
-float mapMandelbrotVariant1(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.0 + sin(t * 0.1) * 0.5;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant2(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.0 + cos(t * 0.15) * 0.4;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p * (1.0 + sin(t * 0.08) * 0.1);
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant3(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 3.0 + sin(t * 0.12) * 0.6;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant4(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.5 + cos(t * 0.18) * 0.5;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p * phi;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant5(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.0 + sin(t * 0.2) * 0.7;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p;
-    z *= 1.0 + sin(t * 0.1) * 0.05;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant6(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.2 + cos(t * 0.14) * 0.45;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p * (1.0 + cos(t * 0.12) * 0.08);
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant7(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.8 + sin(t * 0.16) * 0.55;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant8(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.0 + cos(t * 0.22) * 0.65;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p * phi * 0.5;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant9(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.4 + sin(t * 0.19) * 0.5;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p;
-    z *= 1.0 + cos(t * 0.15) * 0.06;
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
-
-float mapMandelbrotVariant10(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float dr = 1.0;
-  float r = 0.0;
-  
-  for (int i = 0; i < 32; i++) {
-    if (i >= iters) break;
-    r = length(z);
-    if (r > 4.0) break;
-    
-    float power = 2.6 + cos(t * 0.17) * 0.58;
-    float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
-    float phiAngle = atan(z.y, z.x);
-    
-    float zr = pow(r, power);
-    theta *= power;
-    phiAngle *= power;
-    
-    z = zr * vec3(sin(theta) * cos(phiAngle), sin(theta) * sin(phiAngle), cos(theta));
-    z += p * (1.0 + sin(t * 0.13) * 0.09);
-    
-    dr = pow(r, power - 1.0) * power * dr + 1.0;
-  }
-  
-  return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
-}
+${MANDELBROT_VARIATIONS_GLSL}
 
 // ===================================================================
 // FRACTAL VARIATION MODULES (300 types total)
@@ -3986,7 +3769,8 @@ void main() {
     float w_accent = 0.5 + 0.5 * cos(TWO_PI * (phase + 2.0 / GOLDEN_RATIO));
 
     // IMPROVED material: richer color mixing with depth-based accent
-    vec3 mat_col = u_primary_color * w_primary + u_secondary_color * w_secondary;
+    // FIX: Use mix() instead of addition to prevent color overflow (>1.0 = white)
+    vec3 mat_col = mix(u_primary_color, u_secondary_color, w_secondary);
     mat_col = mix(mat_col, u_accent_color, w_accent * 0.35); // Slightly more accent
     // Depth-based color shift: distant surfaces get more accent (atmospheric perspective)
     float depthFade = clamp(t / 30.0, 0.0, 1.0);

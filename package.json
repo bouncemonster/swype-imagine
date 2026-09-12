@@ -9,7 +9,18 @@
     "deploy:cf": "vite build && wrangler pages deploy dist",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "npx tsx tests/fractal-autotest.ts",
+    "test:headless": "npx tsx tests/headless-fractal-test.ts",
+    "test:browser": "npx tsx tests/browser-fractal-test.ts",
+    "test:browser:headed": "npx tsx tests/browser-fractal-test.ts --headed",
+    "test:benchmark": "npx tsx tests/performance-benchmark.ts",
+    "test:quality": "npx tsx tests/code-quality-check.ts",
+    "test:mapper": "npx tsx tests/fractal-mapper-test.ts",
+    "test:shader-math": "npx tsx tests/shader-math-validation-test.ts",
+    "test:engine-parity": "npx tsx tests/cross-engine-parity-test.ts",
+    "test:unit": "npm run test:mapper && npm run test:shader-math && npm run test:engine-parity",
+    "test:all": "npm run test:unit && npm run test && npm run test:headless && npm run test:benchmark && npm run test:quality"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -23,6 +34,7 @@
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@webgpu/types": "^0.1.72",

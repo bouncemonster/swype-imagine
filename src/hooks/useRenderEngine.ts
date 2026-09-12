@@ -318,7 +318,12 @@ export function useRenderEngine(
   // Main render loop
   useEffect(() => {
     let isRunning = true;
+    let renderPaused = false;
     let lastRenderTimestamp = performance.now();
+
+    // Test harness pause/resume (headless browser screenshots)
+    (window as any).__pauseRender = () => { renderPaused = true; };
+    (window as any).__resumeRender = () => { renderPaused = false; lastRenderTimestamp = performance.now(); };
 
     const handleVisibilityChange = () => {
       isVisibleRef.current = !document.hidden;
@@ -330,6 +335,10 @@ export function useRenderEngine(
 
     const loop = (timestamp: number) => {
       if (!isRunning) return;
+      if (renderPaused) {
+        rafIdRef.current = requestAnimationFrame(loop);
+        return;
+      }
       if (contextLostRef.current) {
         rafIdRef.current = requestAnimationFrame(loop);
         return;

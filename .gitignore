@@ -5,3 +5,14 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Test results (screenshots, reports)
+tests/results/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Dist
+dist/
+.wrangler/

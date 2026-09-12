@@ -18,7 +18,7 @@ float mapHybridBase(vec3 p, float t, float phi, int iters, float power, int vtyp
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 4.0) break; // Increased from 2.0 for hybrid fractals
     
     // Apply modifiers based on variant type
     if (vtype == 1) { // IFS folding

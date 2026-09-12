@@ -11,25 +11,55 @@
 ### Core Components
 
 ```
-src/
+src/                                          # 51 TypeScript/TSX files, ~920KB
 ├── shaders/
-│   ├── webglShaders.ts    # GLSL ES 3.0 шейдеры (4624 lines)
-│   ├── webgpuShaders.ts   # WGSL шейдеры (3538 lines)
-│   └── modules/           # Модульная архитектура
-│       ├── juliaVariations.ts    # Julia Variations 1-50
-│       ├── ifsVariations.ts      # IFS Variations 1-50
-│       ├── lsystemVariations.ts  # L-System Variations 1-50
-│       ├── flameVariations.ts    # Flame Variations 1-50
-│       └── hybridVariations.ts   # Hybrid Variations 1-90
+│   ├── webglShaders.ts    # GLSL ES 3.0 шейдеры (163KB, 4388 lines, all 431 types)
+│   ├── webgpuShaders.ts   # WGSL шейдеры (137KB, 3546 lines, 104/431 types)
+│   └── modules/           # Модульная архитектура (649 lines total, 12x compression)
+│       ├── juliaVariations.ts    # Julia Variations 1-50 (111 lines)
+│       ├── ifsVariations.ts      # IFS Variations 1-50 (116 lines)
+│       ├── lsystemVariations.ts  # L-System Variations 1-50 (131 lines)
+│       ├── flameVariations.ts    # Flame Variations 1-50 (115 lines)
+│       └── hybridVariations.ts   # Hybrid Variations 1-90 (181 lines)
 ├── engine/
-│   ├── WebGLEngine.ts     # WebGL2 рендерер
-│   ├── WebGPUEngine.ts    # WebGPU рендерер
-│   └── fractalMappers.ts  # Маппинги типов (431 entry)
-├── components/
-│   ├── FractalCanvas.tsx  # Canvas компонент (244 lines)
-│   └── ControlsPanel.tsx  # UI контролы
-└── data/
-    └── canonicalFractals.ts  # Каталог 431 фракталов
+│   ├── WebGLEngine.ts     # WebGL2 рендерер (20KB, 470 lines)
+│   ├── WebGPUEngine.ts    # WebGPU рендерер (8.8KB, 236 lines)
+│   ├── FractalEngineBase.ts # Базовый класс (5.2KB, 153 lines)
+│   ├── fractalMappers.ts  # Маппинги типов (23KB, 578 lines, 473 mapped types)
+│   ├── NeuroAestheticsEngine.ts # AI эстетика (44KB, 1121 lines)
+│   ├── UserPreferenceEngine.ts  # Предпочтения (8.3KB, 251 lines)
+│   ├── RenderDiagnostics.ts     # Диагностика (6.8KB, 262 lines)
+│   ├── MathValidation.ts        # Валидация математики (6.9KB, 270 lines)
+│   └── UserProblemLogger.ts     # Логирование проблем (7.1KB, 239 lines)
+├── components/            # 12 React components (~190KB)
+│   ├── FractalCanvas.tsx  # Canvas компонент (10KB, 263 lines)
+│   ├── ControlsPanel.tsx  # UI контролы (44KB, 876 lines)
+│   └── ...                # 10 more components
+├── data/
+│   ├── canonicalFractals.ts  # Каталог 431 фракталов (1.4KB)
+│   ├── fractalCatalogTypes.ts # 10 FractalCategoryKey (4.1KB)
+│   ├── compatibleHybrids.ts   # Матрица гибридов (16KB)
+│   ├── fractalArchitectures.ts # Архитектуры (7.7KB)
+│   ├── fractalFactory.ts      # Фабрика (2.4KB)
+│   └── categories/            # 10 категорий (10 category files)
+├── types/
+│   └── fractal.ts         # 431 FractalType union (33KB, 576 lines)
+├── hooks/
+│   └── useRenderEngine.ts # Render lifecycle (28KB, 683 lines)
+├── audio/
+│   └── goldenAudio.ts     # φ-tuned audio (22KB, 551 lines)
+├── palettes.ts            # 26+ color palettes (7.8KB)
+├── palettesProcedural.ts  # Procedural palettes (4.0KB)
+├── App.tsx                # Main component (28KB, 657 lines)
+└── main.tsx               # Entry point (407B)
+
+tests/                                        # 13 test files, ~3480 lines
+├── fractal-mapper-test.ts       # 521 assertions
+├── shader-math-validation-test.ts # 113 assertions
+├── cross-engine-parity-test.ts  # 79 assertions
+├── fractal-autotest.ts          # 822 assertions
+├── browser-harness.ts           # Playwright harness
+└── ...                          # 8 more test files
 ```
 
 ### Rendering Pipeline
@@ -357,7 +387,18 @@ npx tsx tests/fractal-autotest.ts
 
 ### Testing
 
-**Autotest Framework:** 822 tests across 10 validation suites
+**Unit Tests (713 assertions):**
+
+```bash
+npm run test:unit
+```
+
+**Coverage:**
+- **fractal-mapper-test.ts** (521 assertions): Index mapping completeness, alias mappings, render style mapping, composite op mapping, camera mode mapping, index uniqueness, index bounds
+- **shader-math-validation-test.ts** (113 assertions): MathValidation logic, GLSL division-by-zero guards, NaN/Infinity protection, color mixing correctness, shader module parameter ranges, GLSL anti-patterns, SDF distance estimate properties, ray marching safety, uniform buffer consistency, mathematical constants accuracy
+- **cross-engine-parity-test.ts** (79 assertions): Base class contract, uniform packing parity, shader index computation, draw call parity, uniform validation, documented feature gaps, fallback mechanism, quality level parity, performance measurement, WebGL init fallback chain, WebGPU init safety
+
+**Integration Tests (822 assertions):**
 
 ```bash
 npx tsx tests/fractal-autotest.ts
@@ -369,6 +410,19 @@ npx tsx tests/fractal-autotest.ts
 - 7 render styles
 - 5 audio families
 - 33 share-link parameters
+
+**Browser Tests (Playwright):**
+
+```bash
+npm run test:browser       # Headless Chromium
+npm run test:browser:headed # With visible browser
+```
+
+**Full Suite:**
+
+```bash
+npm run test:all           # unit + integration + headless + benchmark + quality
+```
 
 ---
 
@@ -432,7 +486,15 @@ npx tsx tests/fractal-autotest.ts
 
 ## 📝 Changelog
 
-### Phase 5.0 (Current) - September 2026
+### Phase 5.1 (Current) - September 2026
+- ✅ TypeScript strict mode: 0 errors (fixed 97+ pre-existing errors)
+- ✅ Unit test suite: 713 assertions (mapper, shader-math, engine-parity)
+- ✅ Fixed WebGLEngine.ts RenderingContext type narrowing (35 errors)
+- ✅ Fixed data category FractalCategoryKey/FractalType mismatches (55 errors)
+- ✅ Fixed Record<FractalType> incompleteness (7 errors)
+- ✅ Updated all documentation to reflect current state
+
+### Phase 5.0 - September 2026
 - ✅ Added 300 new fractal types (Julia, IFS, L-System, Flame, Hybrid variations)
 - ✅ Total fractals: 431 (was 131)
 - ✅ Modular shader architecture implemented

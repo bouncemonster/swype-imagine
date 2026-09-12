@@ -17,7 +17,7 @@ float mapFlameBase(vec3 p, float t, float phi, int iters, float scale, int op, f
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 8.0) break; // Increased from 2.0 to handle scale up to 2.42
     
     if (op == 0) { // Sinusoidal
       z = vec3(sin(z.x)*cos(z.y), sin(z.x)*sin(z.y), cos(z.z));

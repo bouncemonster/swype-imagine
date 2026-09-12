@@ -1,6 +1,5 @@
 import React, { useRef, useCallback, useEffect } from 'react';
 import { FractalParams, TelemetryData } from '../types/fractal';
-import { userPrefEngine } from '../engine/UserPreferenceEngine';
 import { useRenderEngine } from '../hooks/useRenderEngine';
 import { userProblemLogger } from '../engine/UserProblemLogger';
 
@@ -106,7 +105,6 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         ...prev,
         zoom: Math.max(0.01, Math.min(100.0, prev.zoom * zoomFactor)),
       }));
-      userPrefEngine.recordInteraction('zoom', Math.log(zoomFactor) * 10);
     };
     canvas.addEventListener('wheel', wheelHandler, { passive: false, capture: true });
 
@@ -210,7 +208,6 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       rotY: Math.max(-1.5, Math.min(1.5, prev.rotY + rotDeltaY)),
     }));
 
-    userPrefEngine.recordInteraction('rotate', Math.hypot(dx, dy) / dt);
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {

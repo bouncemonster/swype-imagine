@@ -15,7 +15,7 @@ float mapIFSBase(vec3 p, float t, float phi, int iters, float scale, int fold, f
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 8.0) break; // Increased from 2.0 to handle scale up to 3.14
     
     if (fold == 0) { // Kaleidoscopic
       z = abs(z);

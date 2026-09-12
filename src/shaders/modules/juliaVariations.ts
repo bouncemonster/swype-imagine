@@ -18,7 +18,7 @@ float mapJuliaBase(vec3 p, float t, float phi, int iters, float power, int vtype
   for (int i = 0; i < 32; i++) {
     if (i >= iters) break;
     r = length(z);
-    if (r > 2.0) break;
+    if (r > 4.0) break; // Increased from 2.0 to handle power up to 17.4
     
     float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
     float phiAngle = atan(z.y, z.x) + (vtype == 4 ? rot : 0.0);

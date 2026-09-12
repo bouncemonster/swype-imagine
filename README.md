@@ -16,6 +16,8 @@
 - **Интерактивность**: Вращение, zoom, морфинг в реальном времени
 - **Keyboard shortcuts**: 1-7 (режимы), F (камера), R (сброс), I (инерция), S (стоп)
 - **Аудио**: φ-tuned ambient audio engine (Web Audio API)
+- **Type Safety**: 0 ошибок TypeScript, строгая типизация всех 431 типов
+- **Тестирование**: 713 unit tests + 822 integration tests + browser tests
 
 ## 📦 Установка и запуск
 
@@ -31,6 +33,13 @@ npm run build
 
 # Deploy to Cloudflare Pages
 npm run deploy:cf
+
+# Запуск тестов
+npm run test:unit      # Unit tests (713 assertions)
+npm run test           # Integration tests (822 assertions)
+npm run test:browser   # Playwright browser tests
+npm run test:all       # Full test suite
+npm run lint           # TypeScript type check
 ```
 
 ## 🏗️ Архитектура
@@ -47,56 +56,58 @@ src/
 │       ├── flameVariations.ts    # Flame Variations 1-50 (114 lines, 11x compression)
 │       └── hybridVariations.ts   # Hybrid Variations 1-90 (180 lines, 15x compression)
 ├── engine/
-│   ├── WebGLEngine.ts        # WebGL2 рендерер (18KB)
-│   ├── WebGPUEngine.ts       # WebGPU рендерер (8.8KB)
-│   ├── FractalEngineBase.ts  # Базовый класс (4.7KB)
-│   ├── fractalMappers.ts     # Маппинги типов (19KB)
-│   ├── NeuroAestheticsEngine.ts # AI эстетика (56KB)
-│   ├── UserPreferenceEngine.ts  # Пользовательские предпочтения (8.3KB)
-│   ├── RenderDiagnostics.ts     # Диагностика (6.8KB)
-│   ├── MathValidation.ts        # Валидация математики (6.5KB)
-│   └── UserProblemLogger.ts     # Логирование проблем (7.1KB)
-── components/
-│   ├── FractalCanvas.tsx     # GPU canvas + interaction (9.9KB)
-│   ├── ControlsPanel.tsx     # UI контролы (52KB)
-│   ├── TelemetryHUD.tsx      # FPS/draw-call overlay (7.6KB)
-│   ├── FractalInfoHUD.tsx    # Информация о фрактале (17KB)
-│   ├── FractalScrollFeed.tsx # Горизонтальный браузер (12KB)
-│   ├── FractalAtlasModal.tsx # Модальное окно атласа (33KB)
-│   ├── FractalProbeHUD.tsx   # Probe overlay (5.5KB)
-│   ├── ExplanationModal.tsx  # Модальное окно объяснений (16KB)
-│   ├── UserProfileModal.tsx  # Профиль пользователя (18KB)
-│   ├── ProjectManifestModal.tsx # Манифест проекта (8.5KB)
-│   ├── CosmicLoader.tsx      # Анимация загрузки (6.8KB)
-│   └── DebugOverlay.tsx      # Debug overlay (6.6KB)
+│   ├── WebGLEngine.ts        # WebGL2 рендерер (20KB, 470 lines)
+│   ├── WebGPUEngine.ts       # WebGPU рендерер (8.8KB, 236 lines)
+│   ├── FractalEngineBase.ts  # Базовый класс (5.2KB, 153 lines)
+│   ├── fractalMappers.ts     # Маппинги типов (23KB, 578 lines, 473 mapped types)
+│   ├── NeuroAestheticsEngine.ts # AI эстетика (44KB, 1121 lines)
+│   ├── UserPreferenceEngine.ts  # Пользовательские предпочтения (8.3KB, 251 lines)
+│   ├── RenderDiagnostics.ts     # Диагностика (6.8KB, 262 lines)
+│   ├── MathValidation.ts        # Валидация математики (6.9KB, 270 lines)
+│   └── UserProblemLogger.ts     # Логирование проблем (7.1KB, 239 lines)
+├── components/
+│   ├── FractalCanvas.tsx     # GPU canvas + interaction (10KB, 263 lines)
+│   ├── ControlsPanel.tsx     # UI контролы (44KB, 876 lines)
+│   ├── TelemetryHUD.tsx      # FPS/draw-call overlay (7.6KB, 171 lines)
+│   ├── FractalInfoHUD.tsx    # Информация о фрактале (17KB, 389 lines)
+│   ├── FractalScrollFeed.tsx # Горизонтальный браузер (12KB, 281 lines)
+│   ├── FractalAtlasModal.tsx # Модальное окно атласа (33KB, 574 lines)
+│   ├── FractalProbeHUD.tsx   # Probe overlay (5.5KB, 128 lines)
+│   ├── ExplanationModal.tsx  # Модальное окно объяснений (16KB, 207 lines)
+│   ├── UserProfileModal.tsx  # Профиль пользователя (18KB, 363 lines)
+│   ├── ProjectManifestModal.tsx # Манифест проекта (8.5KB, 176 lines)
+│   ├── CosmicLoader.tsx      # Анимация загрузки (6.8KB, 174 lines)
+│   └── DebugOverlay.tsx      # Debug overlay (6.6KB, 158 lines)
 ├── hooks/
-│   └── useRenderEngine.ts    # Render engine lifecycle (25KB)
+│   └── useRenderEngine.ts    # Render engine lifecycle (28KB, 683 lines)
 ├── data/
-│   ├── canonicalFractals.ts  # Каталог фракталов (1.4KB)
-│   ├── fractalCatalogTypes.ts # Типы каталога (3.4KB)
-│   ├── fractalFactory.ts     # Фабрика фракталов (2.2KB)
+│   ├── canonicalFractals.ts  # Каталог фракталов (1.4KB, 31 lines)
+│   ├── fractalCatalogTypes.ts # Типы каталога (4.1KB, 115 lines)
+│   ├── fractalFactory.ts     # Фабрика фракталов (2.4KB, 86 lines)
+│   ├── compatibleHybrids.ts  # Матрица совместимости гибридов (16KB, 250 lines)
+│   ├── fractalArchitectures.ts # Данные архитектуры (7.7KB, 194 lines)
 │   └── categories/           # 10 категорий фракталов
-│       ├── geometricCurves.ts       # Геометрические кривые (16KB)
-│       ├── constructiveFractals.ts  # Конструктивные фракталы (8.7KB)
-│       ├── algebraicFractals.ts     # Алгебраические фракталы (12KB)
-│       ├── multidimensionalFractals.ts # Многомерные (3.9KB)
-│       ├── ifsFractals.ts           # IFS фракталы (6.8KB)
-│       ├── stochasticFractals.ts    # Стохастические (4.2KB)
-│       ├── physicalFractals.ts      # Физические (6.5KB)
-│       ├── expandedRealFractals.ts  # Расширенные реальные (8.2KB)
-│       ├── visuallyDistinctFractals.ts # Визуально различные (6.7KB)
-│       ── mandalas3D.ts            # 3D Мандалы (13KB)
+│       ├── geometricCurves.ts       # Геометрические кривые (16KB, 298 lines)
+│       ├── constructiveFractals.ts  # Конструктивные фракталы (8.6KB, 182 lines)
+│       ├── algebraicFractals.ts     # Алгебраические фракталы (12KB, 210 lines)
+│       ├── multidimensionalFractals.ts # Многомерные (3.9KB, 96 lines)
+│       ├── ifsFractals.ts           # IFS фракталы (6.8KB, 152 lines)
+│       ├── stochasticFractals.ts    # Стохастические (4.2KB, 113 lines)
+│       ├── physicalFractals.ts      # Физические (6.5KB, 152 lines)
+│       ├── expandedRealFractals.ts  # Расширенные реальные (8.1KB, 250 lines)
+│       ├── visuallyDistinctFractals.ts # Визуально различные (6.7KB, 162 lines)
+│       └── mandalas3D.ts            # 3D Мандалы (13KB, 313 lines)
 ├── audio/
 │   └── goldenAudio.ts        # φ-tuned ambient audio (22KB)
 ├── types/
-│   └── fractal.ts            # TypeScript интерфейсы (13KB)
-├── palettes.ts               # Цветовые палитры (7.8KB)
-├── palettesProcedural.ts     # Процедурные палитры (4.0KB)
-├── App.tsx                   # Главный компонент (27KB)
-└── main.tsx                  # Точка входа (407B)
+│   └── fractal.ts            # TypeScript интерфейсы (33KB, 576 lines)
+├── palettes.ts               # Цветовые палитры (7.8KB, 213 lines)
+├── palettesProcedural.ts     # Процедурные палитры (4.0KB, 114 lines)
+├── App.tsx                   # Главный компонент (28KB, 657 lines)
+└── main.tsx                  # Точка входа (407B, 12 lines)
 ```
 
-**Total**: 51 TypeScript/TSX files, ~847KB source code
+**Total**: 64 TypeScript/TSX files (51 src + 13 tests), ~1052KB source code
 
 ## 🎨 Типы фракталов (431 total)
 
@@ -124,11 +135,23 @@ src/
 
 ## 🛠️ Технологии
 
-- **Frontend**: React 19 + TypeScript 5.8 + Vite 6.4
+- **Frontend**: React 19 + TypeScript 5.8 + Vite 6.2
 - **Styling**: Tailwind CSS v4
 - **Rendering**: GLSL ES 3.0 (WebGL2) / WGSL (WebGPU)
 - **Deploy**: Cloudflare Pages via Wrangler
 - **Build**: Bun/npm
+- **Testing**: Playwright + custom test harness, 713 unit + 822 integration assertions
+- **Type Safety**: 0 TypeScript errors, strict mode
+
+## 🧪 Тестирование
+
+| Suite | Assertions | Description |
+|-------|------------|-------------|
+| **fractal-mapper-test** | 521 | Index mapping completeness, aliases, render styles, composite ops, camera modes |
+| **shader-math-validation-test** | 113 | Division-by-zero guards, NaN protection, color mixing, SDF properties, uniform consistency |
+| **cross-engine-parity-test** | 79 | WebGL/WebGPU uniform packing, draw calls, fallback, quality levels |
+| **fractal-autotest** | 822 | SDF functions, palettes, render styles, audio, share links |
+| **Browser tests** | Visual | Playwright + Chromium visual regression |
 
 ##  License
 

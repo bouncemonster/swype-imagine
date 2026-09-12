@@ -1,7 +1,7 @@
 # Rendering System Documentation
 
 ## Overview
-The rendering system uses WebGL2 with GLSL ES 3.00 shaders. All 7 render modes, post-processing effects, and advanced lighting are embedded in `src/shaders/webglShaders.ts` (4672 lines).
+The rendering system uses WebGL2 with GLSL ES 3.00 shaders. All 7 render modes, post-processing effects, and advanced lighting are embedded in `src/shaders/webglShaders.ts` (4388 lines, 163KB). The WebGPU backend mirrors this in `src/shaders/webgpuShaders.ts` (3546 lines, 137KB) covering 104/431 types.
 
 ## Render Modes (7 Total)
 
@@ -302,6 +302,7 @@ for (int j = 0; j < 20; j++) {
 - KHR_parallel_shader_compile (optional)
 - 32+ extensions supported
 - 1024+ uniform components
+- WebGPU (optional): async pipeline, 52-float uniform buffer (WGSL alignment padding)
 
 ---
 
@@ -355,6 +356,7 @@ float fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5);
 - Engine init: `[DIAG] Engine ready: WebGL2 | ...`
 - Health check: Every 30s with FPS, fractal type, render style
 - Render diagnostics: Invalid uniforms, out-of-range values
+- MathValidation: Runtime checks for NaN, Infinity, negative distances
 
 ### Telemetry
 - FPS (current, average, 1% low)
@@ -362,6 +364,8 @@ float fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5);
 - Resolution
 - Backend (WebGL2/WebGPU)
 - Adapter name
+- Draw call count
+- Uniform buffer state
 
 ---
 
@@ -398,6 +402,10 @@ float fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5);
 ### Black screen
 **Cause**: Shader compilation error or ray march miss
 **Fix**: Check console for shader errors, verify SDF returns valid distances
+
+### TypeScript errors after code changes
+**Cause**: Strict type checking on FractalType union (431 values), FractalCategoryKey (10 values)
+**Fix**: Use `Partial<Record<FractalType, T>>` for incomplete Records; ensure category keys match `FractalCategoryKey` type
 
 ### Low FPS
 **Cause**: Too many SDF calls or high resolution
