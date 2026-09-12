@@ -3241,57 +3241,8 @@ vec2 evalSingleFractal(int ftype, vec3 p, float t, float phi, int iters) {
   // L-SYSTEM VARIATIONS (241-290) - compressed from 50 lines to 1
   if (ftype >= 241 && ftype <= 290) return vec2(mapLSystemVariant(p, t, phi, iters, ftype - 240), 0.0);
   
-  // FLAME VARIATIONS (291-340)
-  if (ftype == 291) return vec2(mapFlameVariant1(p, t, phi, iters), 0.0);
-  if (ftype == 292) return vec2(mapFlameVariant2(p, t, phi, iters), 0.0);
-  if (ftype == 293) return vec2(mapFlameVariant3(p, t, phi, iters), 0.0);
-  if (ftype == 294) return vec2(mapFlameVariant4(p, t, phi, iters), 0.0);
-  if (ftype == 295) return vec2(mapFlameVariant5(p, t, phi, iters), 0.0);
-  if (ftype == 296) return vec2(mapFlameVariant6(p, t, phi, iters), 0.0);
-  if (ftype == 297) return vec2(mapFlameVariant7(p, t, phi, iters), 0.0);
-  if (ftype == 298) return vec2(mapFlameVariant8(p, t, phi, iters), 0.0);
-  if (ftype == 299) return vec2(mapFlameVariant9(p, t, phi, iters), 0.0);
-  if (ftype == 300) return vec2(mapFlameVariant10(p, t, phi, iters), 0.0);
-  if (ftype == 301) return vec2(mapFlameVariant11(p, t, phi, iters), 0.0);
-  if (ftype == 302) return vec2(mapFlameVariant12(p, t, phi, iters), 0.0);
-  if (ftype == 303) return vec2(mapFlameVariant13(p, t, phi, iters), 0.0);
-  if (ftype == 304) return vec2(mapFlameVariant14(p, t, phi, iters), 0.0);
-  if (ftype == 305) return vec2(mapFlameVariant15(p, t, phi, iters), 0.0);
-  if (ftype == 306) return vec2(mapFlameVariant16(p, t, phi, iters), 0.0);
-  if (ftype == 307) return vec2(mapFlameVariant17(p, t, phi, iters), 0.0);
-  if (ftype == 308) return vec2(mapFlameVariant18(p, t, phi, iters), 0.0);
-  if (ftype == 309) return vec2(mapFlameVariant19(p, t, phi, iters), 0.0);
-  if (ftype == 310) return vec2(mapFlameVariant20(p, t, phi, iters), 0.0);
-  if (ftype == 311) return vec2(mapFlameVariant21(p, t, phi, iters), 0.0);
-  if (ftype == 312) return vec2(mapFlameVariant22(p, t, phi, iters), 0.0);
-  if (ftype == 313) return vec2(mapFlameVariant23(p, t, phi, iters), 0.0);
-  if (ftype == 314) return vec2(mapFlameVariant24(p, t, phi, iters), 0.0);
-  if (ftype == 315) return vec2(mapFlameVariant25(p, t, phi, iters), 0.0);
-  if (ftype == 316) return vec2(mapFlameVariant26(p, t, phi, iters), 0.0);
-  if (ftype == 317) return vec2(mapFlameVariant27(p, t, phi, iters), 0.0);
-  if (ftype == 318) return vec2(mapFlameVariant28(p, t, phi, iters), 0.0);
-  if (ftype == 319) return vec2(mapFlameVariant29(p, t, phi, iters), 0.0);
-  if (ftype == 320) return vec2(mapFlameVariant30(p, t, phi, iters), 0.0);
-  if (ftype == 321) return vec2(mapFlameVariant31(p, t, phi, iters), 0.0);
-  if (ftype == 322) return vec2(mapFlameVariant32(p, t, phi, iters), 0.0);
-  if (ftype == 323) return vec2(mapFlameVariant33(p, t, phi, iters), 0.0);
-  if (ftype == 324) return vec2(mapFlameVariant34(p, t, phi, iters), 0.0);
-  if (ftype == 325) return vec2(mapFlameVariant35(p, t, phi, iters), 0.0);
-  if (ftype == 326) return vec2(mapFlameVariant36(p, t, phi, iters), 0.0);
-  if (ftype == 327) return vec2(mapFlameVariant37(p, t, phi, iters), 0.0);
-  if (ftype == 328) return vec2(mapFlameVariant38(p, t, phi, iters), 0.0);
-  if (ftype == 329) return vec2(mapFlameVariant39(p, t, phi, iters), 0.0);
-  if (ftype == 330) return vec2(mapFlameVariant40(p, t, phi, iters), 0.0);
-  if (ftype == 331) return vec2(mapFlameVariant41(p, t, phi, iters), 0.0);
-  if (ftype == 332) return vec2(mapFlameVariant42(p, t, phi, iters), 0.0);
-  if (ftype == 333) return vec2(mapFlameVariant43(p, t, phi, iters), 0.0);
-  if (ftype == 334) return vec2(mapFlameVariant44(p, t, phi, iters), 0.0);
-  if (ftype == 335) return vec2(mapFlameVariant45(p, t, phi, iters), 0.0);
-  if (ftype == 336) return vec2(mapFlameVariant46(p, t, phi, iters), 0.0);
-  if (ftype == 337) return vec2(mapFlameVariant47(p, t, phi, iters), 0.0);
-  if (ftype == 338) return vec2(mapFlameVariant48(p, t, phi, iters), 0.0);
-  if (ftype == 339) return vec2(mapFlameVariant49(p, t, phi, iters), 0.0);
-  if (ftype == 340) return vec2(mapFlameVariant50(p, t, phi, iters), 0.0);
+  // FLAME VARIATIONS (291-340) - compressed from 50 lines to 1
+  if (ftype >= 291 && ftype <= 340) return vec2(mapFlameVariant(p, t, phi, iters, ftype - 290), 0.0);
   
   // HYBRID VARIATIONS (341-430) - compressed from 90 lines to 1
   if (ftype >= 341 && ftype <= 430) return vec2(mapHybridVariant(p, t, phi, iters, ftype - 340), 0.0);
