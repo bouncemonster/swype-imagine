@@ -10,8 +10,8 @@
 | [WebGLEngine.ts](../src/engine/WebGLEngine.ts) | 445 | 18KB | WebGL2 renderer |
 | [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | 236 | 8.8KB | WebGPU renderer |
 | [useRenderEngine.ts](../src/hooks/useRenderEngine.ts) | 636 | 25KB | React hook, lifecycle, render loop |
-| [webglShaders.ts](../src/shaders/webglShaders.ts) | 4654 | 187KB | GLSL shaders, 86 SDFs, 7 modes |
-| [webgpuShaders.ts](../src/shaders/webgpuShaders.ts) | 3538 | 140KB | WGSL shaders |
+| [webglShaders.ts](../src/shaders/webglShaders.ts) | 4386 | 163KB | GLSL shaders, 431 SDFs, 7 modes |
+| [webgpuShaders.ts](../src/shaders/webgpuShaders.ts) | 3545 | 137KB | WGSL shaders |
 
 ## Detailed Analysis
 
@@ -43,7 +43,7 @@
 - [UserProblemLogger.md](UserProblemLogger.md) - IndexedDB error tracking
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [juliaVariations.md](juliaVariations.md) - 50 Mandelbulb/Julia GLSL variations
-- [shader-modules.md](shader-modules.md) - All shader modules overview (~360KB)
+- [shader-modules.md](shader-modules.md) - All shader modules overview (38KB, 649 lines, kkrieger-compressed)
 - [webgpuShaders.md](webgpuShaders.md) - WGSL shaders for WebGPU (3538 lines)
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
@@ -73,15 +73,14 @@
 
 ## Key Numbers
 
-- **86** fractal types (actively used)
-- **431** fractal types (total mapped)
+- **431** fractal types (all active, all rendered)
 - **110+** canonical fractals in catalog
 - **7** render modes
 - **8** composite operations
 - **4** camera modes
 - **48** uniform buffer floats (192 bytes)
-- **54** TypeScript source files
-- **43** documentation files
-- **~650KB** source code
+- **51** TypeScript source files
+- **44** documentation files
+- **~847KB** source code
 - **~200KB** documentation
-- **327KB** shader code (GLSL + WGSL)
+- **300KB** shader code (GLSL + WGSL)

@@ -38,15 +38,14 @@ npm run deploy:cf
 ```
 src/
 ├── shaders/
-│   ├── webglShaders.ts       # GLSL ES 3.0 шейдеры (187KB, 4655 lines)
-│   ├── webgpuShaders.ts      # WGSL шейдеры (140KB, 3538 lines)
-│   └── modules/              # Модульная архитектура
-│       ├── juliaVariations.ts    # Julia Variations 1-50
-│       ├── ifsVariations.ts      # IFS Variations 1-50
-│       ├── lsystemVariations.ts  # L-System Variations 1-50
-│       ├── flameVariations.ts    # Flame Variations 1-50
-│       ├── hybridVariations.ts   # Hybrid Variations 1-90
-│       ├── sdfOperations.ts      # SDF операции
+│   ├── webglShaders.ts       # GLSL ES 3.0 шейдеры (163KB, 4386 lines)
+│   ├── webgpuShaders.ts      # WGSL шейдеры (137KB, 3545 lines)
+│   └── modules/              # kkrieger-сжатые модули (649 lines total)
+│       ├── juliaVariations.ts    # Julia Variations 1-50 (110 lines, 12x compression)
+│       ├── ifsVariations.ts      # IFS Variations 1-50 (115 lines, 11x compression)
+│       ├── lsystemVariations.ts  # L-System Variations 1-50 (130 lines, 11x compression)
+│       ├── flameVariations.ts    # Flame Variations 1-50 (114 lines, 11x compression)
+│       └── hybridVariations.ts   # Hybrid Variations 1-90 (180 lines, 15x compression)
 ├── engine/
 │   ├── WebGLEngine.ts        # WebGL2 рендерер (18KB)
 │   ├── WebGPUEngine.ts       # WebGPU рендерер (8.8KB)
@@ -97,18 +96,20 @@ src/
 └── main.tsx                  # Точка входа (407B)
 ```
 
-**Total**: 54 TypeScript/TSX files, ~650KB source code
+**Total**: 51 TypeScript/TSX files, ~847KB source code
 
-## 🎨 Типы фракталов (86 total)
+## 🎨 Типы фракталов (431 total)
 
 | Категория | Количество | Диапазон | Примеры |
-|-----------|------------|----------|---------|
+|-----------|------------|----------|--------|
 | **Classic Fractals** | 13 | 0-12 | Mandelbulb, Mandelbox, Menger, Sierpinski |
+| **Classic Variations** | 50 | 13-140 | Mandelbrot powers, Julia variations |
 | **Julia Variations** | 50 | 141-190 | Julia Set, Quaternion Julia |
 | **IFS Variations** | 50 | 191-240 | Kaleidoscopic IFS, Dragon Curve |
 | **L-System Variations** | 50 | 241-290 | Recursive branching, Lindenmayer |
 | **Flame Variations** | 50 | 291-340 | Sinusoidal, Spherical, Swirl |
 | **Hybrid Variations** | 90 | 341-430 | Mandelbrot-Julia, IFS-Flame |
+| **Total** | **431** | | All rendered with mathematical precision |
 
 ## ⚡ Производительность
 

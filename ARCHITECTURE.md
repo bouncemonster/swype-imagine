@@ -14,8 +14,8 @@ Real-time 3D fractal visualization engine with **431 fractal types**, **7 render
 ```
 src/
 ── shaders/
-│   ├── webglShaders.ts          # Main shader (187KB, ~4580 lines) - ALL render modes embedded
-│   ├── webgpuShaders.ts         # WebGPU shader (140KB, 3546 lines)
+│   ├── webglShaders.ts          # Main shader (163KB, 4386 lines) - ALL 431 types, 7 render modes
+│   ├── webgpuShaders.ts         # WebGPU shader (137KB, 3545 lines) - 104/431 types
 │   └── modules/
 │       ├── juliaVariations.ts   # 50 Julia variations (4KB, compressed from 36KB/1353 lines)
 │       ├── flameVariations.ts   # 50 Fractal Flame variations (4KB, compressed from 29KB/1270 lines)
@@ -75,14 +75,28 @@ src/
 └── main.tsx                     # Entry point (407B)
 ```
 
-**Total**: 56 TypeScript/TSX files, ~480KB source code (compressed from ~660KB, -27%)
+**Total**: 51 TypeScript/TSX files, ~847KB source code
 
 ## Critical Architecture Decisions
 
-### 1. Shader Code Duplication (RESOLVED)
-**PROBLEM**: `renderModes.ts`, `advancedRendering.ts`, `postProcessing.ts` were UNUSED DUPLICATES.
+### 1. kkrieger-Style Shader Compression (v2.3.0)
+**PHILOSOPHY**: Exchange memory for computation — store only mathematical instructions, not pre-baked assets.
 
-**RESOLUTION**: All 5 duplicate module files were deleted. All rendering code lives in `webglShaders.ts` (4672 lines).
+**RESULT**: 5 shader variation modules compressed from 7,934 lines → 649 lines (12x compression).
+All mathematical formulas, parameters, and visual quality preserved.
+
+| Module | Before | After | Compression | Math Preserved |
+|--------|--------|-------|-------------|---------------|
+| hybridVariations.ts | 2670 lines (67KB) | 180 lines (12KB) | 15x | 8 fold types |
+| juliaVariations.ts | 1353 lines (36KB) | 110 lines (6KB) | 12x | 5 set types |
+| ifsVariations.ts | 1227 lines (27KB) | 115 lines (6KB) | 11x | 8 IFS types |
+| lsystemVariations.ts | 1414 lines (30KB) | 130 lines (7KB) | 11x | 11 L-System types |
+| flameVariations.ts | 1270 lines (29KB) | 114 lines (6KB) | 11x | 11 Flame types |
+| **Total modules** | **7934 lines (189KB)** | **649 lines (38KB)** | **12x** | **All 290 variants** |
+
+**Method**: Parameterized base functions + lookup tables. Each module has one base function handling N operation types, with a dispatch function mapping variant index → parameters.
+
+**Dispatch compression** in webglShaders.ts: 290 individual `if (ftype == N)` lines → 5 range checks (`if (ftype >= A && ftype <= B)`).
 
 ### 2. Uniform Buffer Layout
 48-float uniform buffer packed in `FractalEngineBase.ts`:
@@ -154,7 +168,7 @@ main.tsx
           → FractalEngineBase.ts
             → fractalMappers.ts
           → webglShaders.ts / webgpuShaders.ts
-            → modules/*.ts (5 variation modules)
+            → modules/*.ts (5 compressed variation modules, 649 lines total)
     → ControlsPanel.tsx
     → TelemetryHUD.tsx
     → FractalInfoHUD.tsx
@@ -179,11 +193,11 @@ data/canonicalFractals.ts
 
 ## Performance Characteristics
 - **Build time**: ~4s
-- **Bundle size**: 1029 KB JS, 76 KB CSS
+- **Bundle size**: 873 KB JS (222 KB gzipped), 76 KB CSS
 - **FPS target**: 60 (configurable up to 240)
 - **SDF calls per pixel**: ~170-270 (with all effects)
 - **Shader compilation**: Parallel (KHR_parallel_shader_compile)
-- **Source code**: ~650KB TypeScript
+- **Source code**: ~847KB TypeScript (51 files)
 
 ## Known Issues
 1. **Passive event listener warnings**: Fixed with `touchAction: 'none'`

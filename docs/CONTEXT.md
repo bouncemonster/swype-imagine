@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 2.2.0  
-**Last Updated**: 2026-09-11  
-**Status**: Production Deployed — Code Polished & Type-Safe
+**Version**: 2.3.0  
+**Last Updated**: 2026-09-12  
+**Status**: Production Deployed — kkrieger-Compressed & Math-Verified
 
 ---
 
@@ -16,12 +16,13 @@ Real-time 3D fractal visualization engine showcasing mathematical beauty through
 
 ### Code Metrics
 ```
-Source Files:     56 TypeScript/TSX
+Source Files:     51 TypeScript/TSX
 Documentation:    44 markdown files (219KB)
-Shader Code:      327KB (GLSL + WGSL)
+Shader Code:      300KB (GLSL + WGSL)
+Shader Modules:   38KB (649 lines, kkrieger-compressed from 189KB/7934 lines)
 Total Lines:      ~25,000 (code + docs)
 Components:       12 UI components
-Fractal Types:    431 active (86 classic + 345 expansion)
+Fractal Types:    431 active (all rendered)
 Render Modes:     7
 Color Palettes:   664
 ```
@@ -100,9 +101,9 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 - `src/engine/fractalMappers.ts` - Type mappings
 
 ### Shaders (Must Know)
-- `src/shaders/webglShaders.ts` - GLSL shader (4672 lines, ALL 431 types)
-- `src/shaders/webgpuShaders.ts` - WGSL shader (3546 lines, 104/431 types)
-- `src/shaders/modules/` - Modular shader components (5 variation modules)
+- `src/shaders/webglShaders.ts` - GLSL shader (4386 lines, ALL 431 types)
+- `src/shaders/webgpuShaders.ts` - WGSL shader (3545 lines, 104/431 types)
+- `src/shaders/modules/` - 5 kkrieger-compressed variation modules (649 lines, 38KB)
 
 ### Components (Must Know)
 - `src/App.tsx` - Root component (~657 lines)
@@ -385,7 +386,7 @@ Each component has dedicated doc in `docs/`:
 ### Technical Achievements
 - 48-float uniform buffer optimization (52 floats for WGSL with alignment)
 - Dual GPU backend (WebGPU + WebGL2)
-- 327KB shader code (431 fractal types, WebGL has all 431, WebGPU has 104)
+- 300KB shader code (431 fractal types, WebGL has all 431, WebGPU has 104)
 - 664 color palettes (24 + 640 procedural)
 - 5D archetype space for personalization
 - Real-time ray marching at 60+ FPS
@@ -402,7 +403,7 @@ Each component has dedicated doc in `docs/`:
 - v2.0.0: **MAJOR** — Activated 345 dead fractal types (86→431 total). Types 86-430 now accessible from UI
 - v2.1.0: Removed 5 dead shader module files (-964 lines). Added FPS-based dynamic quality adjustment
 - v2.1.1: Stability hardened — share link parsing wrapped in try-catch
-- v2.2.0: Code polishing — added headless testing suite, fixed 10 'as any' casts, added SliceAxis/AudioTuning types
+- v2.3.0: **kkrieger compression** — 5 shader modules compressed 7934→649 lines (12x). Bundle 1046→873 KB. All math formulas preserved. Philosophy: exchange memory for computation.
 
 ### Design Philosophy
 - **Mathematical beauty** - Scientific accuracy
@@ -480,7 +481,7 @@ Each component has dedicated doc in `docs/`:
 ### Known Limitations
 - Safari iOS: No WebGPU support
 - Mobile: Limited by device capabilities
-- Shader size: 327KB (large but necessary)
+- Shader size: 300KB (large but necessary for 431 fractal types)
 - No offline mode yet (planned)
 
 ### Future Considerations
