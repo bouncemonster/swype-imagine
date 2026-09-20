@@ -1,0 +1,421 @@
+﻿/**
+ * Shader Manager v3 - True minimal shader compilation
+ * 
+ * Parses the monolithic FRAGMENT_SHADER_SOURCE string and generates
+ * a minimal shader per fractal that ONLY includes the needed function.
+ * 
+ * Key: sceneSDF calls the fractal function DIRECTLY (not through evalSingleFractal),
+ * so the GLSL linker does not need any other map functions.
+ * 
+ * Shader size per fractal: ~900 lines (vs 4171 monolithic)
+ */
+
+import { FRAGMENT_SHADER_SOURCE } from '../shaders/webglShaders';
+
+export interface CompilationProgress {
+  fractalIndex: number;
+  fractalName: string;
+  stage: 'parsing' | 'compiling' | 'linking' | 'complete';
+  progress: number;
+}
+
+export type ProgressCallback = (progress: CompilationProgress) => void;
+
+interface CachedShader {
+  program: WebGLProgram;
+  lastUsed: number;
+}
+
+interface ShaderSections {
+  header: string;
+  footer: string;
+  funcNames: string[];
+  cachedLines: string[]; // Cache split lines to avoid re-splitting 4000+ line string
+  headerEnd: number; // line index where the first map* function begins (header = [0, headerEnd))
+  sceneSDFStart: number; // line index where vec2 sceneSDF( begins (body helpers live in [headerEnd, sceneSDFStart))
+}
+
+export class ShaderManager {
+  private gl: WebGL2RenderingContext;
+  private compiledShaders: Map<number, CachedShader> = new Map();
+  private maxCacheSize = 8; // Increased from 5 to reduce recompilation during auto-explore
+  private onProgress?: ProgressCallback;
+  private sections: ShaderSections | null = null;
+  // name -> full source for every function defined in the body region [headerEnd, sceneSDFStart).
+  // Used to pull in helper functions (project4Dto3D, mapJuliaBase, mapIFSBase, mapHybridBase,
+  // mapHybridVariant, ...) that a fractal's map function references but which do NOT live in the
+  // header. Without this the spliced minimal shader compiles to "no matching overloaded function".
+  private funcIndex: Map<string, string> | null = null;
+  // KHR_parallel_shader_compile lets us POLL compile/link completion instead of
+  // blocking the main thread on COMPILE_STATUS. Without it, getShaderParameter()
+  // stalls the whole browser (frozen loader animation, dead input) during the
+  // ~0.5-2s driver compile of a 900-line raymarching shader.
+  private static readonly COMPLETION_STATUS_KHR = 0x91B1;
+  private parallelCompile = false;
+
+  constructor(gl: WebGL2RenderingContext, onProgress?: ProgressCallback) {
+    this.gl = gl;
+    this.onProgress = onProgress;
+    this.parallelCompile = !!gl.getExtension('KHR_parallel_shader_compile');
+    if (!this.parallelCompile) {
+      console.warn('[ShaderManager] KHR_parallel_shader_compile unavailable — compile checks will block once per shader');
+    }
+  }
+
+  /**
+   * Yield-friendly wait until the GPU driver reports compile/link done.
+   * Polls COMPLETION_STATUS_KHR with setTimeout so the main thread keeps running
+   * (rAF alive, input processed, loading spinner animating) instead of blocking.
+   * A single gl.flush() at each call site kicks driver-side work; we must NOT
+   * flush per-spin (flush() is a synchronous GPU-process IPC round-trip).
+   *
+   * The budget must EXCEED the worst real link time (ANGLE/D3D11 defers the
+   * expensive driver compile to LINK time — up to ~11s for heavy raymarch
+   * shaders). If we gave up early we'd fall through to the synchronous
+   * COMPILE_STATUS/LINK_STATUS read, which is exactly what froze the browser.
+   * Polling until completion flips keeps the wait non-blocking; the final status
+   * read then returns instantly.
+   */
+  private async waitUntilCompiled(poll: () => boolean, label: string): Promise<void> {
+    if (!this.parallelCompile) {
+      await new Promise<void>(resolve => setTimeout(resolve, 0));
+      return;
+    }
+    const budget = label === 'link' ? 3200 : 800;
+    for (let spins = 0; spins < budget; spins++) {
+      if (poll()) return;
+      await new Promise<void>(resolve => setTimeout(resolve, 5));
+    }
+  }
+
+  private parseSections(): ShaderSections {
+    if (this.sections) return this.sections;
+    // Split the monolithic shader ONCE and cache the result
+    const allLines = FRAGMENT_SHADER_SOURCE.split('\n');
+    let headerEnd = -1;
+    let sceneSDFStart = -1;
+    let sceneSDFEnd = -1;
+    const funcNames: string[] = [];
+    for (let i = 0; i < allLines.length; i++) {
+      const trimmed = allLines[i].trim();
+      if (headerEnd === -1 && (trimmed.startsWith('vec2 map') || trimmed.startsWith('float map'))) {
+        headerEnd = i;
+      }
+      const funcMatch = trimmed.match(/^(?:vec2|float)\s+(map\w+)\(/);
+      if (funcMatch) funcNames.push(funcMatch[1]);
+      if (trimmed.startsWith('vec2 sceneSDF(')) sceneSDFStart = i;
+      if (sceneSDFStart >= 0 && sceneSDFEnd === -1 && trimmed === '}') {
+        for (let j = i + 1; j < Math.min(i + 5, allLines.length); j++) {
+          const next = allLines[j].trim();
+          if (next === '') continue;
+          if (next.startsWith('vec3 calcNormal') || next.startsWith('void main')) {
+            sceneSDFEnd = i;
+          }
+          break;
+        }
+      }
+    }
+    const header = allLines.slice(0, headerEnd).join('\n');
+    const footer = allLines.slice(sceneSDFEnd + 1).join('\n');
+    this.sections = { header, footer, funcNames, cachedLines: allLines, headerEnd, sceneSDFStart };
+    console.info('[ShaderManager] Parsed:', funcNames.length, 'functions, header=' + headerEnd + ' lines, footer=' + (allLines.length - sceneSDFEnd - 1) + ' lines');
+    return this.sections;
+  }
+
+  private extractFractalFunction(fractalIndex: number): { code: string; name: string; returnType: string; takesIters: boolean } {
+    // Reuse cached lines from parseSections instead of re-splitting the 4000+ line string
+    const sections = this.parseSections();
+    const lines = sections.cachedLines;
+    let funcIndex = 0;
+    let funcStart = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed.startsWith('vec2 map') || trimmed.startsWith('float map')) {
+        if (funcIndex === fractalIndex) { funcStart = i; break; }
+        funcIndex++;
+      }
+    }
+    if (funcStart === -1) return { code: '', name: 'mapPhyllotaxis', returnType: 'vec2', takesIters: true };
+    const sigMatch = lines[funcStart].trim().match(/^(vec2|float)\s+(map\w+)\(/);
+    const returnType = sigMatch ? sigMatch[1] : 'vec2';
+    const funcName = sigMatch ? sigMatch[2] : 'mapPhyllotaxis';
+    // Detect if function takes 'iters' parameter (some functions like mapSpiralTunnel, mapGyroid don't)
+    const takesIters = /int\s+iters/.test(lines[funcStart]);
+    let braceCount = 0;
+    let funcEnd = funcStart;
+    for (let i = funcStart; i < lines.length; i++) {
+      for (const ch of lines[i]) {
+        if (ch === '{') braceCount++;
+        if (ch === '}') braceCount--;
+      }
+      if (braceCount === 0 && i > funcStart) { funcEnd = i; break; }
+    }
+    return { code: lines.slice(funcStart, funcEnd + 1).join('\n'), name: funcName, returnType, takesIters };
+  }
+
+  private generateMinimalSceneSDF(funcName: string, returnType: string, takesIters: boolean): string {
+    const callArgs = takesIters
+      ? funcName + '(p_eval, t, phi, iters)'
+      : funcName + '(p_eval, t, phi)';
+    const returnExpr = returnType === 'float'
+      ? 'vec2(' + callArgs + ', 0.0)'
+      : callArgs;
+    return 'vec2 sceneSDF(vec3 p_world) {\n' +
+      '  vec3 p_eval = p_world;\n' +
+      '  float inv_scale = 1.0;\n' +
+      '  if (u_cam_mode > 2.5 && u_cam_mode < 3.5) {\n' +
+      '    float R = u_phi_val;\n' +
+      '    float r2 = dot(p_eval, p_eval);\n' +
+      '    if (r2 > 0.0001) { inv_scale = (R * R) / r2; p_eval = p_eval * inv_scale; }\n' +
+      '  }\n' +
+      '  float r_bound = length(p_eval);\n' +
+      '  if (r_bound > 5.0) return vec2((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);\n' +
+      '  int iters = int(clamp(u_iterations, 6.0, 64.0));\n' +
+      '  float t = u_time * u_morph_speed;\n' +
+      '  float phi = u_phi_val;\n' +
+      '  float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5;\n' +
+      '  float breathSecondary = sin(u_time * 0.8 * phi + 1.0) * 0.5 + 0.5;\n' +
+      '  float breathTertiary = sin(u_time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5;\n' +
+      '  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06;\n' +
+      '  float breathWeight = 1.0 - exp(-r_bound * 0.8);\n' +
+      '  p_eval *= 1.0 + breathAmount * breathWeight;\n' +
+      '  float precessAngle = u_time * 0.06;\n' +
+      '  float precessY = u_time * 0.037;\n' +
+      '  float cp = cos(precessAngle), sp = sin(precessAngle);\n' +
+      '  float cq = cos(precessY), sq = sin(precessY);\n' +
+      '  p_eval = vec3(p_eval.x * cp + p_eval.z * sp, p_eval.y * cq - p_eval.x * sq * 0.3, -p_eval.x * sp + p_eval.z * cp);\n' +
+      '  vec2 resA = ' + returnExpr + ';\n' +
+      '  float current_d = resA.x;\n' +
+      '  float current_trap = resA.y;\n' +
+      '  if (u_interior_cut > 0.05) {\n' +
+      '    float shellThick = 0.015 + u_interior_cut * 0.04;\n' +
+      '    float shellD = abs(current_d) - shellThick;\n' +
+      '    current_d = mix(current_d, shellD, clamp(u_interior_cut * 1.4, 0.0, 0.9));\n' +
+      '  }\n' +
+      '  if (u_slice_plane > 0.01) {\n' +
+      '    float sliceOffset = (0.5 - u_slice_plane) * 3.5;\n' +
+      '    vec3 planeNorm = normalize(vec3(0.0, 0.85065, 0.52573));\n' +
+      '    if (u_slice_axis > 0.5 && u_slice_axis < 1.5) planeNorm = vec3(1.0, 0.0, 0.0);\n' +
+      '    else if (u_slice_axis > 1.5 && u_slice_axis < 2.5) planeNorm = vec3(0.0, 1.0, 0.0);\n' +
+      '    else if (u_slice_axis > 2.5) planeNorm = vec3(0.0, 0.0, 1.0);\n' +
+      '    float planeDist = dot(p_eval, planeNorm) - sliceOffset;\n' +
+      '    current_d = max(current_d, planeDist);\n' +
+      '  }\n' +
+      '  if (u_cam_mode > 2.5 && u_cam_mode < 3.5) current_d = current_d / max(inv_scale, 0.0001);\n' +
+      '  return vec2(current_d, current_trap);\n' +
+      '}';
+  }
+
+  private buildMinimalFragmentShader(fractalIndex: number): string {
+    const sections = this.parseSections();
+    const fractal = this.extractFractalFunction(fractalIndex);
+    if (!fractal.code) {
+      console.warn('[ShaderManager] Could not extract fractal ' + fractalIndex + ', using full shader');
+      return FRAGMENT_SHADER_SOURCE;
+    }
+    // The engine feeds the catalog ordinal (0-430) in as the Nth-map-function index, but the
+    // monolithic shader only has ~151 map* functions plus shared *Base/*Variant dispatch helpers
+    // interleaved. When the ordinal resolves to one of those helpers (rather than a self-contained
+    // per-type function), the minimal splice cannot represent it (call signatures don't match).
+    // Return the full monolithic shader directly — it selects the correct fractal at runtime via
+    // evalSingleFractal(u_fractal_type), so the fractal renders right without a doomed compile.
+    // Deliberate deferral of full ordinal alignment: a catalog->(fn,args) map would let these
+    // ~11 variant families use the fast minimal splice, but it adds a second source of truth that
+    // must track fractalMappers.ts / evalSingleFractal (drift reintroduces compile errors, and
+    // guarding needs full 431 sweeps). The payoff is a one-time lazy-compile saving already
+    // covered by the LRU cache (8) + KHR_parallel non-blocking poll + post-swap warmup, so it is
+    // not user-perceptible. Revisit only if minimal-shader compile time becomes a measured issue.
+    if (/(?:Base|Variant)$/.test(fractal.name)) {
+      return FRAGMENT_SHADER_SOURCE;
+    }
+    // Pull in any body-region helper functions the fractal's map function transitively calls
+    // (e.g. project4Dto3D for 4D polytopes, mapJuliaBase/mapIFSBase/mapHybridBase for variants).
+    // These are not part of the header, so without this the spliced shader fails to compile.
+    const helpers = this.resolveHelperSources(fractal.name, fractal.code);
+    const helperBlock = helpers.length ? helpers.join('\n') + '\n' : '';
+    const minimalSceneSDF = this.generateMinimalSceneSDF(fractal.name, fractal.returnType, fractal.takesIters);
+    const assembled = sections.header + '\n' + helperBlock + fractal.code + '\n\n' + minimalSceneSDF + '\n' + sections.footer;
+    if (helpers.length) {
+      console.info('[ShaderManager] Fractal ' + fractalIndex + ' (' + fractal.name + '): included ' + helpers.length + ' helper function(s)');
+    }
+    console.info('[ShaderManager] Built minimal shader for fractal ' + fractalIndex + ' (' + fractal.name + '): ' + assembled.split('\n').length + ' lines (vs ' + sections.cachedLines.length + ' full)');
+    return assembled;
+  }
+
+  /**
+   * Index every function defined in the body region [headerEnd, sceneSDFStart) by name.
+   * This includes the map* entry points and the shared helper/base functions they call.
+   * GLSL builtins (sin, mix, length, ...) are NOT included, so they are never pulled in.
+   */
+  private buildFuncIndex(): Map<string, string> {
+    if (this.funcIndex) return this.funcIndex;
+    const sections = this.parseSections();
+    const lines = sections.cachedLines;
+    const index = new Map<string, string>();
+    const defRe = /^\s*(?:vec2|vec3|vec4|ivec2|ivec3|mat2|mat3|mat4|float|int|bool|void)\s+(\w+)\s*\(/;
+    for (let i = sections.headerEnd; i < sections.sceneSDFStart; i++) {
+      const m = lines[i].match(defRe);
+      if (!m) continue;
+      const name = m[1];
+      if (index.has(name)) continue; // keep first definition (no true overloads in this shader)
+      // Brace-match the full function body, same strategy as extractFractalFunction.
+      let braceCount = 0;
+      let started = false;
+      let end = i;
+      for (let j = i; j < sections.sceneSDFStart; j++) {
+        for (const ch of lines[j]) {
+          if (ch === '{') { braceCount++; started = true; }
+          if (ch === '}') braceCount--;
+        }
+        if (started && braceCount === 0) { end = j; break; }
+      }
+      index.set(name, lines.slice(i, end + 1).join('\n'));
+    }
+    this.funcIndex = index;
+    return index;
+  }
+
+  /** Identifier names that appear call-like (`foo(`) in a GLSL source fragment. */
+  private calledNames(src: string): Set<string> {
+    const out = new Set<string>();
+    const re = /\b([A-Za-z_]\w*)\s*\(/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src))) out.add(m[1]);
+    return out;
+  }
+
+  /**
+   * Transitive closure of helper functions referenced by `entryCode`, ordered so that
+   * callees appear before callers (post-order DFS). `entryName` itself is excluded because
+   * its source is appended separately by buildMinimalFragmentShader.
+   */
+  private resolveHelperSources(entryName: string, entryCode: string): string[] {
+    const index = this.buildFuncIndex();
+    const ordered: string[] = [];
+    const visited = new Set<string>([entryName]);
+    const visit = (name: string) => {
+      if (visited.has(name)) return;
+      const code = index.get(name);
+      if (!code) return;
+      visited.add(name);
+      for (const dep of this.calledNames(code)) visit(dep);
+      ordered.push(code);
+    };
+    for (const dep of this.calledNames(entryCode)) visit(dep);
+    return ordered;
+  }
+
+
+  async getShaderForFractal(fractalIndex: number, vertexShaderSource: string): Promise<WebGLProgram> {
+    const cached = this.compiledShaders.get(fractalIndex);
+    if (cached) { cached.lastUsed = Date.now(); return cached.program; }
+    
+    // Yield to browser BEFORE heavy parsing — prevents main thread freeze on launch
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    
+    // Guard: GL context may have been lost during the yield
+    if (!this.gl) {
+      throw new Error('GL context lost during async yield');
+    }
+    
+    this.reportProgress(fractalIndex, 'parsing', 10);
+    const fragmentSource = this.buildMinimalFragmentShader(fractalIndex);
+    
+    // Yield to browser BETWEEN parsing and compilation — lets UI events through
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+    
+    // Guard: GL context may have been lost during the yield (engine destroyed, context reset)
+    if (!this.gl) {
+      throw new Error('GL context lost during async yield');
+    }
+    
+    this.reportProgress(fractalIndex, 'compiling', 40);
+    const program = await this.compileShaderProgram(vertexShaderSource, fragmentSource);
+    this.reportProgress(fractalIndex, 'linking', 80);
+    this.cacheShader(fractalIndex, program);
+    this.reportProgress(fractalIndex, 'complete', 100);
+    return program;
+  }
+
+  private async compileShaderProgram(vertexSource: string, fragmentSource: string): Promise<WebGLProgram> {
+    const vertexShader = await this.compileShaderStage(this.gl.VERTEX_SHADER, vertexSource);
+    let fragmentShader: WebGLShader;
+    try {
+      fragmentShader = await this.compileShaderStage(this.gl.FRAGMENT_SHADER, fragmentSource);
+    } catch (e) {
+      // Clean up vertex shader if fragment compilation fails — prevents GPU resource leak
+      this.gl.deleteShader(vertexShader);
+      throw e;
+    }
+    const program = this.gl.createProgram()!;
+    this.gl.attachShader(program, vertexShader);
+    this.gl.attachShader(program, fragmentShader);
+    this.gl.linkProgram(program);
+    this.gl.flush(); // same kickoff rationale as compileShader above
+    // Non-blocking wait for link completion (same rationale as compile polling)
+    await this.waitUntilCompiled(() =>
+      !!this.gl.getProgramParameter(program, ShaderManager.COMPLETION_STATUS_KHR), 'link');
+    // Always delete shader objects after linking (they're attached to the program now)
+    this.gl.deleteShader(vertexShader);
+    this.gl.deleteShader(fragmentShader);
+    if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+      const error = this.gl.getProgramInfoLog(program);
+      this.gl.deleteProgram(program);
+      throw new Error('Shader link error: ' + error);
+    }
+    return program;
+  }
+
+  private async compileShaderStage(type: number, source: string): Promise<WebGLShader> {
+    const shader = this.gl.createShader(type)!;
+    this.gl.shaderSource(shader, source);
+    this.gl.compileShader(shader);
+    // Kick the compile command to the GPU process immediately so parallel
+    // compilation starts while the main thread is still free.
+    this.gl.flush();
+    // Poll completion status BEFORE reading COMPILE_STATUS — reading COMPILE_STATUS
+    // first would block the main thread until the driver finishes compiling.
+    await this.waitUntilCompiled(() =>
+      !!this.gl.getShaderParameter(shader, ShaderManager.COMPLETION_STATUS_KHR), this.gl.VERTEX_SHADER === type ? 'vert' : 'frag');
+    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+      const error = this.gl.getShaderInfoLog(shader);
+      this.gl.deleteShader(shader);
+      throw new Error('Shader compile error: ' + error);
+    }
+    return shader;
+  }
+
+  private cacheShader(fractalIndex: number, program: WebGLProgram): void {
+    if (this.compiledShaders.size >= this.maxCacheSize) {
+      let oldestKey = -1;
+      let oldestTime = Infinity;
+      for (const [key, cached] of this.compiledShaders) {
+        if (cached.lastUsed < oldestTime) { oldestTime = cached.lastUsed; oldestKey = key; }
+      }
+      if (oldestKey >= 0) {
+        this.gl.deleteProgram(this.compiledShaders.get(oldestKey)!.program);
+        this.compiledShaders.delete(oldestKey);
+      }
+    }
+    this.compiledShaders.set(fractalIndex, { program, lastUsed: Date.now() });
+  }
+
+  private reportProgress(fractalIndex: number, stage: CompilationProgress['stage'], progress: number): void {
+    if (this.onProgress) {
+      this.onProgress({ fractalIndex, fractalName: 'Fractal ' + fractalIndex, stage, progress });
+    }
+  }
+
+  clearCache(exceptFractalIndex?: number): void {
+    for (const [key, cached] of this.compiledShaders) {
+      if (key !== exceptFractalIndex) {
+        this.gl.deleteProgram(cached.program);
+        this.compiledShaders.delete(key);
+      }
+    }
+  }
+
+  getCacheStats(): { size: number; maxSize: number; indices: number[] } {
+    return { size: this.compiledShaders.size, maxSize: this.maxCacheSize, indices: Array.from(this.compiledShaders.keys()) };
+  }
+}

@@ -271,12 +271,14 @@ fn mapIcosahedron(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in;
   var scale: f32 = 1.0;
   var trap: f32 = 1e10;
-  let count = clamp(iters, 4, 16);
+  let count = clamp(iters, 4, 8); // thin-IFS fix: 16 folds → scale ~1100 → sub-pixel dust
   
   let n1 = normalize(vec3<f32>(1.0, phi, 0.0));
   let n2 = normalize(vec3<f32>(0.0, 1.0, phi));
   let n3 = normalize(vec3<f32>(phi, 0.0, 1.0));
 
+  // Coral DE: union of sphere-traps over ALL generations, not just the last.
+  var dmin: f32 = 1e10;
   for (var i: i32 = 0; i < 16; i = i + 1) {
     if (i >= count) { break; }
     p = abs(p);
@@ -294,9 +296,9 @@ fn mapIcosahedron(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     p = p * factor - vec3<f32>(phi - 1.0, 0.5, 0.2);
     scale = scale * factor;
     trap = min(trap, length(p));
+    dmin = min(dmin, (length(p) - 1.3) / scale);
   }
-  let d = (length(p) - 0.45) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(dmin, trap);
 }
 
 // 7. Menger Sponge
@@ -697,7 +699,8 @@ fn mapDragonCurveIFS(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
   p = vec3<f32>(rot1.x, p.y, rot1.y);
   var scale: f32 = 1.0;
   var trap: f32 = 1e10;
-  let count = clamp(iters, 4, 12);
+  let count = clamp(iters, 4, 9); // thin-IFS fix: see mapIcosahedron
+  var dmin: f32 = 1e10; // coral DE: union over all generations
   for (var i: i32 = 0; i < 12; i = i + 1) {
     if (i >= count) { break; }
     if (p.x + p.y < 0.0) { let t1 = p.x; p.x = -p.y; p.y = -t1; }
@@ -710,9 +713,9 @@ fn mapDragonCurveIFS(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
     p = p * factor - vec3<f32>(0.6, 0.2, 0.1);
     scale = scale * factor;
     trap = min(trap, length(p));
+    dmin = min(dmin, (length(p) - 0.8) / scale);
   }
-  let d = (length(p) - 0.38) / max(scale, 0.0001);
-  return vec2<f32>(d, trap);
+  return vec2<f32>(dmin, trap);
 }
 
 // 26. 3D Branching Pythagorean Tree IFS
@@ -722,7 +725,7 @@ fn mapPythagorasTree3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
   p = vec3<f32>(rot1.x, p.y, rot1.y);
   var scale: f32 = 1.0;
   var trap: f32 = 1e10;
-  var d_tree = length(p - vec3<f32>(0.0, clamp(p.y, -1.0, 0.0), 0.0)) - 0.15;
+  var d_tree = length(p - vec3<f32>(0.0, clamp(p.y, -1.0, 0.0), 0.0)) - 0.3; // thicker trunk (was 0.15 → dust)
   let count = clamp(iters, 3, 9);
   for (var i: i32 = 0; i < 9; i = i + 1) {
     if (i >= count) { break; }
@@ -735,7 +738,7 @@ fn mapPythagorasTree3D(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f3
     let factor = 1.0 / (phi * 0.72);
     p = p * factor;
     scale = scale * factor;
-    let branch = (length(p - vec3<f32>(0.0, clamp(p.y, 0.0, 0.65), 0.0)) - 0.12) / scale;
+    let branch = (length(p - vec3<f32>(0.0, clamp(p.y, 0.0, 0.65), 0.0)) - 0.25) / scale;
     d_tree = min(d_tree, branch);
     trap = min(trap, length(p));
   }
@@ -784,15 +787,19 @@ fn mapNewtonBasins(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     if (i >= count) { break; }
     let z2 = vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
     let z3 = vec2<f32>(z2.x * z.x - z2.y * z.y, z2.x * z.y + z2.y * z.x);
-    let num = vec2<f32>(2.0 * z3.x - 1.0, 2.0 * z3.y);
+    // Newton step for f(z)=z³−1: z' = (2z³+1)/(3z²). The −1 was a real math bug
+    // (z³+1's iteration) — roots weren't fixed points, basin trap never fired.
+    let num = vec2<f32>(2.0 * z3.x + 1.0, 2.0 * z3.y);
     let den = 3.0 * z2;
     let denom = dot(den, den);
     if (denom < 0.00001) { break; }
     z = vec2<f32>(dot(num, den), num.y * den.x - num.x * den.y) / denom;
     trap = min(trap, length(z - vec2<f32>(1.0, 0.0)));
   }
-  let basinIso = length(z - vec2<f32>(1.0, 0.0)) - 0.6;
-  let d_3d = sqrt(basinIso * basinIso + p.z * p.z * 0.3) - 0.2;
+  // Solid basin-1 slab: trap = min |z_i − root1| over the orbit is small exactly
+  // inside the basin-1 catchment (mirrors the WebGL fix; old form → razor dust).
+  let d_basin = trap - 0.06;
+  let d_3d = max(d_basin, abs(p.z) - 0.8); // extruded along z into a thick slab
   let bound = length(p_in) - 2.8;
   return vec2<f32>(max(d_3d, bound * 0.4), trap);
 }
@@ -833,20 +840,23 @@ fn mapLorenzAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   let sigma = 10.0; let rho = 28.0; let beta = 8.0 / 3.0;
   var minDist: f32 = 1e10;
     var maxDensity: f32 = 0.0;
-  for (var s: i32 = 0; s < 4; s = s + 1) {
-    var q = vec3<f32>(0.1 + f32(s) * 0.1, 0.0, 25.0 - f32(s) * 5.0);
-    for (var i: i32 = 0; i < 80; i = i + 1) {
+  // Orbit trace: butterfly needs t≈3+ time units; 4×80×0.008 = 0.64t drew a single
+  // worm strand. 2 seeds × 160 × dt0.02 = 3.2t each at identical loop cost.
+  for (var s: i32 = 0; s < 2; s = s + 1) {
+    var q = vec3<f32>(0.1 + f32(s) * 1.3, 0.02 * f32(s - 1), 8.0);
+    for (var i: i32 = 0; i < 160; i = i + 1) {
       let dx = sigma * (q.y - q.x);
       let dy = q.x * (rho - q.z) - q.y;
       let dz = q.x * q.y - beta * q.z;
-      q = q + vec3<f32>(dx, dy, dz) * 0.008;
-      let scaled = q * 0.25;
+      q = q + vec3<f32>(dx, dy, dz) * 0.02;
+      // Recenter + fit: wings span ±20 → 0.1 scale keeps the object inside r=2.5 bound
+      let scaled = (q - vec3<f32>(0.0, 0.0, 12.5)) * 0.1;
       let dist = length(p - scaled);
       minDist = min(minDist, dist);
             maxDensity = max(maxDensity, exp(-dist * 4.0));
     }
   }
-  let tubeR = 0.02 + maxDensity * 0.01;
+  let tubeR = 0.09 + maxDensity * 0.04; // bridge orbit-sample gaps (0.02 → beads/dust)
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
   return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
@@ -876,10 +886,15 @@ fn mapAntoineNecklace(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32
   let count = clamp(iters, 2, 5);
   for (var i: i32 = 0; i < 5; i = i + 1) {
     if (i >= count) { break; }
-    let rMajor = 0.8 / scale;
-    let rMinor = 0.22 / scale;
+    // Classic Antoine setup: constant LOCAL radii each generation (the ×2.4 frame
+    // transform shrinks them in world units). Dividing by scale here made sub-tori
+    // vanish inside the parent tube (0.8/scale² < rMinor → buried, invisible).
+    let rMajor: f32 = 0.8;
+    let rMinor: f32 = 0.22;
     let q = length(p.xz) - rMajor;
-    let torusD = length(vec2<f32>(q, p.y)) - rMinor;
+    // DE must be converted to world units: each generation's frame expands ×2.4^i,
+    // so raw local distances are inflated and the raymarcher skips the linked sub-tori.
+    let torusD = (length(vec2<f32>(q, p.y)) - rMinor) / scale;
     d = min(d, torusD);
     trap = min(trap, abs(q));
     let ang = atan2(p.z, p.x);
@@ -902,7 +917,7 @@ fn mapDLACluster(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.5;
   let r0 = rot2D(p.xz, t * 0.06);
   p = vec3<f32>(r0.x, p.y, r0.y);
-  var d = length(p) - 0.06;
+  var d = length(p) - 0.2; // seed particle (radii enlarged: 0.04-range was sub-pixel dust)
   var trap: f32 = 0.0;
   for (var i: i32 = 0; i < 8; i = i + 1) {
     if (i >= iters) { break; }
@@ -911,7 +926,7 @@ fn mapDLACluster(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     let h = fi * 0.18 - 0.6;
     let rad = 0.4 * pow(0.72, fi);
     let center = vec3<f32>(cos(ang) * rad, h, sin(ang) * rad);
-    let branch = length(p - center) - 0.04 * pow(0.75, fi);
+    let branch = length(p - center) - 0.22 * pow(0.8, fi);
     d = min(d, branch);
     trap += exp(-5.0 * length(p - center));
     for (var j: i32 = 0; j < 3; j = j + 1) {
@@ -919,7 +934,7 @@ fn mapDLACluster(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
       let subAng = ang + (fj - 1.0) * 0.8;
       let subRad = rad * 0.5;
       let subCenter = center + vec3<f32>(cos(subAng) * subRad, 0.06, sin(subAng) * subRad);
-      let subBranch = length(p - subCenter) - 0.02 * pow(0.75, fi);
+      let subBranch = length(p - subCenter) - 0.08 * pow(0.8, fi);
       d = min(d, subBranch);
     }
   }
@@ -969,7 +984,7 @@ fn mapCliffordAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f
       maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.02 + maxDensity * 0.01;
+  let tubeR = 0.07 + maxDensity * 0.04; // scattered point-cloud orbit — radius must overlap neighbours
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
   return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.3);
@@ -1064,7 +1079,7 @@ fn mapHenonAttractor(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32>
             maxDensity = max(maxDensity, exp(-dist * 3.5));
     }
   }
-  let tubeR = 0.02 + maxDensity * 0.01;
+  let tubeR = 0.06 + maxDensity * 0.03; // flat attractor, 0.02 tube was sub-pixel → dust
   let d = minDist - tubeR;
   let bound = length(p_in) - 2.5;
   return vec2<f32>(max(d, bound * 0.6), maxDensity * 0.25);
@@ -2458,6 +2473,487 @@ fn mapMengerMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<
   return vec2<f32>(minDist * 0.4, 0.0);
 }
 
+// === EXPANSION: 4D Polytopes, Manifolds, Fractal Flames, Advanced IFS ===
+
+// 104: Tesseract (4D Hypercube) — Stereographic projection of 4D cube to 3D
+fn mapTesseract(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  // 4D rotation in XW and YZ planes
+  let angle1 = t * 0.3;
+  let angle2 = t * 0.2;
+  let c1 = cos(angle1); let s1 = sin(angle1);
+  let c2 = cos(angle2); let s2 = sin(angle2);
+  // Start with 4D point (p, 1.0) and rotate in 4D
+  var w4 = vec4<f32>(p, 1.5);
+  // XW rotation
+  w4 = vec4<f32>(w4.x * c1 - w4.w * s1, w4.y, w4.z, w4.x * s1 + w4.w * c1);
+  // YZ rotation
+  w4 = vec4<f32>(w4.x, w4.y * c2 - w4.z * s2, w4.y * s2 + w4.z * c2, w4.w);
+  // Stereographic projection from 4D to 3D
+  let projScale = 2.0 / (2.0 - w4.w);
+  let p3 = vec3<f32>(w4.x, w4.y, w4.z) * projScale;
+  // Distance to cube edges in 3D projection
+  let d = abs(p3) - vec3<f32>(1.0);
+  let cubeDist = length(max(d, vec3<f32>(0.0))) + min(max(d.x, max(d.y, d.z)), 0.0);
+  // Add wireframe edges of the projected tesseract
+  let edgeDist = abs(length(p3) - 1.2) * 0.5;
+  return vec2<f32>(min(cubeDist, edgeDist) * 0.6, length(p3));
+}
+
+// 105: 120-Cell (4D Dodecahedron) — Based on golden ratio geometry
+fn map120Cell(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let angle = t * 0.25;
+  let c = cos(angle); let s = sin(angle);
+  var q = vec3<f32>(p.x * c - p.z * s, p.y, p.x * s + p.z * c);
+  // Icosahedral symmetry via golden ratio
+  let invPhi = 1.0 / phi;
+  var d = 1e10;
+  // Apply icosahedral rotations
+  for (var i: i32 = 0; i < 6; i = i + 1) {
+    let p1 = abs(q);
+    // Golden ratio fold
+    if (p1.x < p1.y) { let tmp = p1.x; let t2 = p1.y; q = vec3<f32>(t2, p1.x, p1.z); }
+    let r = length(q);
+    d = min(d, r - phi);
+    // Rotate by golden angle
+    q = vec3<f32>(q.x * 0.5 + q.z * 0.866, q.y, -q.x * 0.866 + q.z * 0.5) * invPhi;
+  }
+  return vec2<f32>(d * 0.3, length(p));
+}
+
+// 106: 600-Cell (4D Icosahedron) — Dual of 120-cell
+fn map600Cell(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let angle = t * 0.2;
+  let c = cos(angle); let s = sin(angle);
+  var q = vec3<f32>(p.x * c + p.y * s, -p.x * s + p.y * c, p.z);
+  // Tetrahedral symmetry with golden ratio scaling
+  var d = length(q) - 1.0;
+  for (var i: i32 = 0; i < 4; i = i + 1) {
+    q = abs(q);
+    if (q.x < q.y) { let tmp = q.x; q = vec3<f32>(q.y, tmp, q.z); }
+    if (q.x < q.z) { let tmp = q.x; q = vec3<f32>(q.z, q.y, tmp); }
+    q = q * phi - vec3<f32>(phi - 1.0);
+    d = max(d, -(length(q) - 0.5) / pow(phi, f32(i + 1)));
+  }
+  return vec2<f32>(d * 0.4, length(p));
+}
+
+// 107: 24-Cell (Self-Dual Polytope) — 24 octahedral cells
+fn map24Cell(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let angle = t * 0.3;
+  let c = cos(angle); let s = sin(angle);
+  var q = vec3<f32>(p.x * c - p.z * s, p.y, p.x * s + p.z * c);
+  // Octahedral symmetry
+  q = abs(q);
+  var d = (q.x + q.y + q.z - 1.5) * 0.577;
+  // Recursive octahedral folding
+  for (var i: i32 = 0; i < 3; i = i + 1) {
+    q = abs(q);
+    if (q.x < q.y) { let tmp = q.x; q = vec3<f32>(q.y, tmp, q.z); }
+    if (q.y < q.z) { let tmp = q.y; q = vec3<f32>(q.x, q.z, tmp); }
+    q = q * 2.0 - vec3<f32>(1.0);
+    d = max(d, -(length(q) - 0.8) * 0.5);
+  }
+  return vec2<f32>(d * 0.5, length(p));
+}
+
+// 108: 5-Cell (4D Tetrahedron) — Simplest regular polytope
+fn map5Cell(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  let angle = t * 0.35;
+  let c = cos(angle); let s = sin(angle);
+  var q = vec3<f32>(p.x * c - p.y * s, p.x * s + p.y * c, p.z);
+  // Tetrahedral SDF
+  let m = length(q);
+  var d = m - 1.0;
+  // Tetrahedral face planes
+  let tetScale = 1.0 / sqrt(3.0);
+  let f1 = dot(q, normalize(vec3<f32>(1.0, 1.0, 1.0))) - tetScale;
+  let f2 = dot(q, normalize(vec3<f32>(1.0, -1.0, -1.0))) - tetScale;
+  let f3 = dot(q, normalize(vec3<f32>(-1.0, 1.0, -1.0))) - tetScale;
+  let f4 = dot(q, normalize(vec3<f32>(-1.0, -1.0, 1.0))) - tetScale;
+  d = max(d, max(max(f1, f2), max(f3, f4)));
+  return vec2<f32>(d * 0.6, m);
+}
+
+// 109: Klein Bottle — Non-orientable surface immersion in 3D
+fn mapKleinBottle(p: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  // Figure-8 Klein bottle immersion
+  let a = 2.5;
+  let u = atan2(p.z, p.x) + t * 0.2;
+  let v = atan2(p.y, length(p.xz) - a);
+  let cu = cos(u); let su = sin(u);
+  let cv = cos(v); let sv = sin(v);
+  let cv2 = cos(v * 0.5); let sv2 = sin(v * 0.5);
+  // Klein bottle parametric surface
+  let r = a + cv2 * su - sv2 * sin(2.0 * u);
+  let surfX = r * cv;
+  let surfY = sv2 * su + cv2 * sin(2.0 * u);
+  let surfZ = r * sv;
+  let surfPt = vec3<f32>(surfX, surfY, surfZ);
+  let d = length(p - surfPt) * 0.35;
+  return vec2<f32>(d, length(p));
+}
+
+// 110: Projective Plane RP² — Boy's surface immersion
+fn mapProjectivePlane(p: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  let angle = t * 0.15;
+  let c = cos(angle); let s = sin(angle);
+  let q = vec3<f32>(p.x * c - p.z * s, p.y, p.x * s + p.z * c);
+  // Boy's surface approximation via implicit equation
+  let r = length(q);
+  let r2 = r * r;
+  // Implicit surface: (x²+y²+z²)³ - 4(x²y²+y²z²+z²x²) = 0 (scaled)
+  let f = r2 * r2 * r2 - 4.0 * (q.x*q.x*q.y*q.y + q.y*q.y*q.z*q.z + q.z*q.z*q.x*q.x);
+  let grad = 6.0 * r2 * r2 * r; // approximate gradient magnitude
+  let d = abs(f) / max(grad, 0.001) * 0.3;
+  return vec2<f32>(d, r);
+}
+
+// 111: Möbius Strip 3D — Non-orientable band with half-twist
+fn mapMobiusStrip3D(p: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  let u = atan2(p.z, p.x) + t * 0.1;
+  let halfW = 0.5; // half-width of strip
+  let R = 1.5; // major radius
+  let cu = cos(u); let su = sin(u);
+  let cu2 = cos(u * 0.5); let su2 = sin(u * 0.5);
+  // Point on center circle
+  let cx = R * cu;
+  let cz = R * su;
+  // Direction from center: twisted normal
+  let nx = cu2 * cu;
+  let ny = su2;
+  let nz = cu2 * su;
+  // Project p onto the strip plane
+  let dx = p.x - cx;
+  let dy = p.y;
+  let dz = p.z - cz;
+  let radialDist = abs(dx * cu + dz * su); // along strip width
+  let normalDist = abs(dx * (-su) + dz * cu); // perpendicular to circle
+  let vertDist = abs(dy - ny * (radialDist - halfW));
+  let d = sqrt(radialDist * radialDist + vertDist * vertDist) - halfW;
+  d = max(d, normalDist - 0.15);
+  return vec2<f32>(d * 0.7, length(p));
+}
+
+// 112: Torus Knot 4D — (p,q) torus knot with golden winding
+fn mapTorusKnot4D(p: vec3<f32>, t: f32, phi: f32) -> vec2<f32> {
+  let pk = 3.0; // winding number p
+  let qk = 5.0; // winding number q (golden)
+  let R = 1.5; // major radius
+  let r = 0.35; // tube radius
+  // Sample knot curve and find min distance
+  var minD = 1e10;
+  let steps = 24;
+  for (var i: i32 = 0; i < 24; i = i + 1) {
+    if (i >= steps) { break; }
+    let u = f32(i) / f32(steps) * 6.28318;
+    let cu = cos(u); let su = sin(u);
+    let cpuq = cos(qk * u / pk);
+    let spuq = sin(qk * u / pk);
+    let kr = R + 0.5 * cpuq;
+    let knotPt = vec3<f32>(kr * cu, 0.5 * spuq, kr * su);
+    let d = length(p - knotPt);
+    minD = min(minD, d);
+  }
+  return vec2<f32>((minD - r) * 0.7, length(p));
+}
+
+// 113: Flame Sinusoidal — Classic fractal flame variation
+fn mapFlameSinusoidal(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.8;
+  var trap = 1e10;
+  let maxIt = i32(clamp(f32(iters), 6.0, 20.0));
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Sinusoidal variation: x' = sin(x), y' = sin(y)
+    z = vec3<f32>(sin(z.x), sin(z.y), z.z * 0.9);
+    // Rotate and scale
+    let angle = phi * 0.5 + t * 0.1;
+    let c = cos(angle); let s = sin(angle);
+    z = vec3<f32>(z.x * c - z.y * s, z.x * s + z.y * c, z.z) * 0.85;
+    trap = min(trap, length(z));
+  }
+  let d = length(z) - 0.1;
+  return vec2<f32>(d * 0.5, trap);
+}
+
+// 114: Flame Spherical — Spherical fractal flame variation
+fn mapFlameSpherical(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.7;
+  var trap = 1e10;
+  let maxIt = i32(clamp(f32(iters), 6.0, 20.0));
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Spherical variation: x' = x/(x²+y²+1), y' = y/(x²+y²+1)
+    let r2 = dot(z.xy, z.xy) + 1.0;
+    z = vec3<f32>(z.x / r2, z.y / r2, z.z * 0.95);
+    let angle = t * 0.15;
+    let c = cos(angle); let s = sin(angle);
+    z = vec3<f32>(z.x * c - z.z * s, z.y, z.x * s + z.z * c) * 0.9;
+    trap = min(trap, length(z));
+  }
+  let d = length(z) - 0.15;
+  return vec2<f32>(d * 0.5, trap);
+}
+
+// 115: Flame Swirl — Swirl fractal flame variation
+fn mapFlameSwirl(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.7;
+  var trap = 1e10;
+  let maxIt = i32(clamp(f32(iters), 6.0, 20.0));
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Swirl variation: rotation amount depends on distance from origin
+    let r2 = dot(z.xy, z.xy);
+    let swirlAngle = r2 * phi + t * 0.2;
+    let c = cos(swirlAngle); let s = sin(swirlAngle);
+    z = vec3<f32>(z.x * c - z.y * s, z.x * s + z.y * c, z.z * 0.95);
+    z = z * 0.85;
+    trap = min(trap, length(z));
+  }
+  let d = length(z) - 0.12;
+  return vec2<f32>(d * 0.5, trap);
+}
+
+// 116: Flame Horseshoe — Horseshoe fractal flame
+fn mapFlameHorseshoe(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.6;
+  var trap = 1e10;
+  let maxIt = i32(clamp(f32(iters), 6.0, 20.0));
+  for (var i: i32 = 0; i < 20; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Horseshoe: x' = (x²-y²)/r, y' = 2xy/r
+    let r = length(z.xy) + 0.001;
+    z = vec3<f32>((z.x*z.x - z.y*z.y)/r, 2.0*z.x*z.y/r, z.z * 0.9) * 0.7;
+    let angle = t * 0.1 + phi;
+    let c = cos(angle); let s = sin(angle);
+    z = vec3<f32>(z.x * c - z.y * s, z.x * s + z.y * c, z.z);
+    trap = min(trap, length(z));
+  }
+  let d = length(z) - 0.1;
+  return vec2<f32>(d * 0.5, trap);
+}
+
+// 117-125: Additional flame variations (use parametric variation of core flame IFS)
+fn mapFlameButterfly(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.65;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r = length(z.xy) + 0.001;
+    let theta = atan2(z.y, z.x) * 2.0 + t * 0.15;
+    z = vec3<f32>(cos(theta) * r * 0.7, sin(theta) * r * 0.7, z.z * 0.92);
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.1) * 0.5, trap);
+}
+
+fn mapFlameHeart(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.6;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r2 = dot(z.xy, z.xy) + 0.001;
+    z = vec3<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y, z.z * 0.9) / r2 * 0.5;
+    z = vec3<f32>(z.x + sin(t * 0.2) * 0.3, z.y + cos(t * 0.15) * 0.3, z.z);
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.15) * 0.5, trap);
+}
+
+fn mapFlameSpiral(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.65;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r = length(z.xy);
+    let theta = atan2(z.y, z.x) + 0.5 / (r + 0.1) + t * 0.1;
+    z = vec3<f32>(cos(theta), sin(theta), z.z * 0.93) * r * 0.8;
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.1) * 0.5, trap);
+}
+
+fn mapFlameHyperbolic(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.6;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r2 = dot(z.xy, z.xy) + 0.001;
+    z = vec3<f32>(z.x / r2, z.y / r2, z.z * 0.92) * 0.6;
+    let angle = t * 0.12;
+    let c = cos(angle); let s = sin(angle);
+    z = vec3<f32>(z.x * c - z.y * s, z.x * s + z.y * c, z.z);
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.12) * 0.5, trap);
+}
+
+fn mapFlameDiamond(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.65;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r = length(z.xy) + 0.001;
+    let theta = atan2(z.y, z.x);
+    z = vec3<f32>(sin(theta) * r, cos(theta) * r, z.z * 0.93) * 0.8;
+    z = abs(z) * 0.9 - vec3<f32>(0.1, 0.1, 0.0);
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.1) * 0.5, trap);
+}
+
+fn mapFlameWaves(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.7;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    z = vec3<f32>(z.x + sin(z.y * phi) * 0.3, z.y + cos(z.x * phi) * 0.3, z.z * 0.93) * 0.85;
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.15) * 0.5, trap);
+}
+
+fn mapFlamePopcorn(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.7;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let tx = z.x + 0.3 * sin(tan(z.y * phi));
+    let ty = z.y + 0.3 * sin(tan(z.x * phi));
+    z = vec3<f32>(tx, ty, z.z * 0.93) * 0.8;
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.12) * 0.5, trap);
+}
+
+fn mapFlameRings(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.65;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r = length(z.xy) + 0.001;
+    let theta = atan2(z.y, z.x);
+    let newR = phi / (r + 0.1) + t * 0.1;
+    z = vec3<f32>(cos(theta + newR) * r, sin(theta + newR) * r, z.z * 0.92) * 0.75;
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.1) * 0.5, trap);
+}
+
+fn mapFlameFan(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.65;
+  var trap = 1e10;
+  for (var i: i32 = 0; i < 16; i = i + 1) {
+    if (i >= i32(clamp(f32(iters), 6.0, 16.0))) { break; }
+    let r2 = dot(z.xy, z.xy) + 0.001;
+    let theta = atan2(z.y, z.x) + 0.5 * phi;
+    z = vec3<f32>(cos(theta) / sqrt(r2), sin(theta) / sqrt(r2), z.z * 0.93) * 0.6;
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.1) * 0.5, trap);
+}
+
+// 126-130: Advanced IFS — 3D Iterated Function Systems
+fn mapIfs3DTree(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p;
+  var scale: f32 = 1.0;
+  var trap = 1e10;
+  let maxIt = i32(clamp(f32(iters), 4.0, 12.0));
+  for (var i: i32 = 0; i < 12; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Branching tree IFS: choose closest of 3 transforms
+    let p1 = z - vec3<f32>(0.0, 1.0, 0.0);
+    let p2 = z * phi - vec3<f32>(0.5, -0.3, 0.0);
+    let p3 = z * phi - vec3<f32>(-0.5, -0.3, 0.0);
+    let d1 = dot(p1, p1); let d2 = dot(p2, p2); let d3 = dot(p3, p3);
+    if (d1 <= d2 && d1 <= d3) { z = p1 * 0.5; }
+    else if (d2 <= d3) { z = p2 * 0.5; }
+    else { z = p3 * 0.5; }
+    scale *= 0.5;
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.1) * scale, trap);
+}
+
+fn mapIfs3DFern(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p * 0.5;
+  var scale: f32 = 1.0;
+  var trap = 1e10;
+  let maxIt = i32(clamp(f32(iters), 4.0, 12.0));
+  // Barnsley fern coefficients extended to 3D
+  for (var i: i32 = 0; i < 12; i = i + 1) {
+    if (i >= maxIt) { break; }
+    let selector = fract(sin(f32(i) * 12.9898 + t * 0.01) * 43758.5453);
+    if (selector < 0.01) {
+      z = vec3<f32>(0.0, 0.16 * z.y, 0.0);
+      scale *= 0.16;
+    } else if (selector < 0.86) {
+      z = vec3<f32>(0.85 * z.x + 0.04 * z.y, -0.04 * z.x + 0.85 * z.y + 1.6, z.z * 0.85) * 0.5;
+      scale *= 0.85;
+    } else if (selector < 0.93) {
+      z = vec3<f32>(0.2 * z.x - 0.26 * z.y, 0.23 * z.x + 0.22 * z.y + 1.6, z.z * 0.3) * 0.5;
+      scale *= 0.3;
+    } else {
+      z = vec3<f32>(-0.15 * z.x + 0.28 * z.y, 0.26 * z.x + 0.24 * z.y + 0.44, z.z * 0.3) * 0.5;
+      scale *= 0.3;
+    }
+    trap = min(trap, length(z));
+  }
+  return vec2<f32>((length(z) - 0.05) / max(scale, 0.001), trap);
+}
+
+fn mapIfs3DSierpinski(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p;
+  var scale: f32 = 1.0;
+  let maxIt = i32(clamp(f32(iters), 4.0, 14.0));
+  for (var i: i32 = 0; i < 14; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Sierpinski tetrahedron IFS
+    if (z.x + z.y + z.z < 0.0) { z = -z; }
+    if (z.x + z.y - z.z < 0.0) { z = vec3<f32>(-z.x, -z.y, z.z); }
+    if (z.x - z.y + z.z < 0.0) { z = vec3<f32>(-z.x, z.y, -z.z); }
+    if (-z.x + z.y + z.z < 0.0) { z = vec3<f32>(z.x, -z.y, -z.z); }
+    z = z * 2.0 - vec3<f32>(1.0);
+    scale *= 0.5;
+  }
+  return vec2<f32>(length(z) * scale, length(p));
+}
+
+fn mapIfs3DCantor(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p;
+  var scale: f32 = 1.0;
+  let maxIt = i32(clamp(f32(iters), 4.0, 12.0));
+  for (var i: i32 = 0; i < 12; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // 3D Cantor dust: keep corners, remove middle thirds
+    z = abs(z);
+    if (z.x < z.y) { let tmp = z.x; z = vec3<f32>(z.y, tmp, z.z); }
+    if (z.y < z.z) { let tmp = z.y; z = vec3<f32>(z.x, z.z, tmp); }
+    z = z * 3.0 - vec3<f32>(2.0, 2.0, 0.0);
+    scale /= 3.0;
+  }
+  return vec2<f32>(length(max(abs(z) - vec3<f32>(0.5), vec3<f32>(0.0))) * scale, length(p));
+}
+
+fn mapIfs3DKoch(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  var z = p;
+  var scale: f32 = 1.0;
+  let maxIt = i32(clamp(f32(iters), 4.0, 10.0));
+  // Koch curve extended to 3D via tetrahedral symmetry
+  let KochAngle = 1.0471975; // pi/3
+  let cK = cos(KochAngle); let sK = sin(KochAngle);
+  for (var i: i32 = 0; i < 10; i = i + 1) {
+    if (i >= maxIt) { break; }
+    // Fold along Koch crease
+    if (z.x < 0.0) { z.x = -z.x; }
+    z = z - vec3<f32>(1.0, 0.0, 0.0);
+    z = vec3<f32>(z.x * cK - z.y * sK, z.x * sK + z.y * cK, z.z);
+    z = z * 3.0;
+    scale /= 3.0;
+  }
+  return vec2<f32>(length(z) * scale, length(p));
+}
+
 // Master Single Primitive Dispatcher (86 Architectures)
 fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   if (ftype == 0) { return mapPhyllotaxis(p, t, phi, iters); }
@@ -2566,6 +3062,37 @@ fn evalSingleFractal(ftype: i32, p: vec3<f32>, t: f32, phi: f32, iters: i32) -> 
   if (ftype == 101) { return vec2<f32>(mapAmazingBox(p, t, phi, iters), 0.0); }
   if (ftype == 102) { return vec2<f32>(mapMandelbulbMandelboxHybrid(p, t, phi, iters), 0.0); }
   if (ftype == 103) { return vec2<f32>(mapMengerMandelboxHybrid(p, t, phi, iters), 0.0); }
+  // 4D POLYTOPES (104-108)
+  if (ftype == 104) { return mapTesseract(p, t, phi, iters); }
+  if (ftype == 105) { return map120Cell(p, t, phi, iters); }
+  if (ftype == 106) { return map600Cell(p, t, phi, iters); }
+  if (ftype == 107) { return map24Cell(p, t, phi, iters); }
+  if (ftype == 108) { return map5Cell(p, t, phi, iters); }
+  // HIGHER-DIMENSIONAL MANIFOLDS (109-112)
+  if (ftype == 109) { return mapKleinBottle(p, t, phi); }
+  if (ftype == 110) { return mapProjectivePlane(p, t, phi); }
+  if (ftype == 111) { return mapMobiusStrip3D(p, t, phi); }
+  if (ftype == 112) { return mapTorusKnot4D(p, t, phi); }
+  // FRACTAL FLAMES (113-125)
+  if (ftype == 113) { return mapFlameSinusoidal(p, t, phi, iters); }
+  if (ftype == 114) { return mapFlameSpherical(p, t, phi, iters); }
+  if (ftype == 115) { return mapFlameSwirl(p, t, phi, iters); }
+  if (ftype == 116) { return mapFlameHorseshoe(p, t, phi, iters); }
+  if (ftype == 117) { return mapFlameButterfly(p, t, phi, iters); }
+  if (ftype == 118) { return mapFlameHeart(p, t, phi, iters); }
+  if (ftype == 119) { return mapFlameSpiral(p, t, phi, iters); }
+  if (ftype == 120) { return mapFlameHyperbolic(p, t, phi, iters); }
+  if (ftype == 121) { return mapFlameDiamond(p, t, phi, iters); }
+  if (ftype == 122) { return mapFlameWaves(p, t, phi, iters); }
+  if (ftype == 123) { return mapFlamePopcorn(p, t, phi, iters); }
+  if (ftype == 124) { return mapFlameRings(p, t, phi, iters); }
+  if (ftype == 125) { return mapFlameFan(p, t, phi, iters); }
+  // ADVANCED IFS (126-130)
+  if (ftype == 126) { return mapIfs3DTree(p, t, phi, iters); }
+  if (ftype == 127) { return mapIfs3DFern(p, t, phi, iters); }
+  if (ftype == 128) { return mapIfs3DSierpinski(p, t, phi, iters); }
+  if (ftype == 129) { return mapIfs3DCantor(p, t, phi, iters); }
+  if (ftype == 130) { return mapIfs3DKoch(p, t, phi, iters); }
   return mapPhyllotaxis(p, t, phi, iters); // Default fallback
 }
 
@@ -2843,9 +3370,6 @@ fn calcNormal(p: vec3<f32>, eps: f32) -> vec3<f32> {
   }
   return vec3<f32>(0.0, 1.0, 0.0);
 }
-
-// calcSoftShadow removed - was dead code (not used since Phase 4.15)
-// Kept for reference but commented out to save shader compilation time
 
 fn calcAO(p: vec3<f32>, n: vec3<f32>, t: f32) -> f32 {
   let aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive: scale down at close range

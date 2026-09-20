@@ -110,8 +110,6 @@ uniform float u_cam_mode;
 uniform vec3 u_cam_pos;
 uniform float u_slice_plane;
 uniform float u_slice_axis;
-uniform float u_stereo_mode; // 0=off, 1=side-by-side, 2=anaglyph
-uniform float u_stereo_eye; // 0=left, 1=right
 uniform float u_render_style;
 uniform float u_headlamp_power;
 uniform float u_volumetric_fog;
@@ -312,12 +310,18 @@ vec2 mapIcosahedron(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in;
   float scale = 1.0;
   float trap = 1e10;
-  int count = clamp(iters, 4, 16);
-  
+  // Thin-IFS fix: divergent folds scale ~1.52^count, so world tube thickness
+  // = radius / scale. 16 iters → scale ~1100 → sub-pixel dust (black render).
+  // Fewer folds + larger radius keeps the object visible at default framing.
+  int count = clamp(iters, 4, 8);
+
   vec3 n1 = normalize(vec3(1.0, phi, 0.0));
   vec3 n2 = normalize(vec3(0.0, 1.0, phi));
   vec3 n3 = normalize(vec3(phi, 0.0, 1.0));
 
+  // Coral DE: union of sphere-traps over ALL generations, not just the last.
+  // Last-generation-only DE collapses to a sub-pixel ball (r / scale^N).
+  float dmin = 1e10;
   for (int i = 0; i < 16; i++) {
     if (i >= count) break;
     p = abs(p);
@@ -333,10 +337,9 @@ vec2 mapIcosahedron(vec3 p_in, float t, float phi, int iters) {
     p = p * factor - vec3(phi - 1.0, 0.5, 0.2);
     scale *= factor;
     trap = min(trap, length(p));
+    dmin = min(dmin, (length(p) - 1.3) / scale);
   }
-  // FIX: Ensure positive distance estimate
-  float d = (length(p) - 0.45) / max(scale, 0.0001);
-  return vec2(d, trap);
+  return vec2(dmin, trap);
 }
 
 // 7. Menger Sponge
@@ -713,7 +716,8 @@ vec2 mapDragonCurveIFS(vec3 p_in, float t, float phi, int iters) {
   p.xz = rot2D(t * 0.07) * p.xz;
   float scale = 1.0;
   float trap = 1e10;
-  int count = clamp(iters, 4, 12);
+  int count = clamp(iters, 4, 9); // thin-IFS fix: see mapIcosahedron
+  float dmin = 1e10; // coral DE: union over all generations (see mapIcosahedron)
   for (int i = 0; i < 12; i++) {
     if (i >= count) break;
     if (p.x + p.y < 0.0) p.xy = -p.yx;
@@ -724,10 +728,9 @@ vec2 mapDragonCurveIFS(vec3 p_in, float t, float phi, int iters) {
     p = p * factor - vec3(0.6, 0.2, 0.1);
     scale *= factor;
     trap = min(trap, length(p));
+    dmin = min(dmin, (length(p) - 0.8) / scale);
   }
-  float d = (length(p) - 0.38) / max(scale, 0.0001);
-  // FIX: Ensure positive distance estimate
-  return vec2(d, trap);
+  return vec2(dmin, trap);
 }
 
 // 26. 3D Branching Pythagorean Tree IFS
@@ -736,7 +739,7 @@ vec2 mapPythagorasTree3D(vec3 p_in, float t, float phi, int iters) {
   p.xz = rot2D(t * 0.06) * p.xz;
   float scale = 1.0;
   float trap = 1e10;
-  float d_tree = length(p - vec3(0.0, clamp(p.y, -1.0, 0.0), 0.0)) - 0.15;
+  float d_tree = length(p - vec3(0.0, clamp(p.y, -1.0, 0.0), 0.0)) - 0.3; // thicker trunk (was 0.15 → dust)
   int count = clamp(iters, 3, 9);
   for (int i = 0; i < 9; i++) {
     if (i >= count) break;
@@ -747,7 +750,7 @@ vec2 mapPythagorasTree3D(vec3 p_in, float t, float phi, int iters) {
     float factor = 1.0 / (phi * 0.72);
     p *= factor;
     scale *= factor;
-    float branch = (length(p - vec3(0.0, clamp(p.y, 0.0, 0.65), 0.0)) - 0.12) / scale;
+    float branch = (length(p - vec3(0.0, clamp(p.y, 0.0, 0.65), 0.0)) - 0.25) / scale;
     d_tree = min(d_tree, branch);
     trap = min(trap, length(p));
   }
@@ -794,15 +797,23 @@ vec2 mapNewtonBasins(vec3 p_in, float t, float phi, int iters) {
     if (i >= count) break;
     vec2 z2 = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
     vec2 z3 = vec2(z2.x * z.x - z2.y * z.y, z2.x * z.y + z2.y * z.x);
-    vec2 num = vec2(2.0 * z3.x - 1.0, 2.0 * z3.y);
+    // Newton step for f(z)=z³−1: z' = z − (z³−1)/(3z²) = (2z³+1)/(3z²).
+    // The −1 here was a real math bug (that's z³+1's iteration): roots were not
+    // fixed points, orbits wandered, and the basin trap almost never triggered.
+    vec2 num = vec2(2.0 * z3.x + 1.0, 2.0 * z3.y);
     vec2 den = 3.0 * z2;
     float denom = dot(den, den);
     if (denom < 0.00001) break;
     z = vec2(dot(num, den), num.y * den.x - num.x * den.y) / denom;
     trap = min(trap, length(z - vec2(1.0, 0.0)));
   }
-  float basinIso = length(z - vec2(1.0, 0.0)) - 0.6;
-  float d_3d = sqrt(basinIso * basinIso + p.z * p.z * 0.3) - 0.2;
+  // FIX: Render the whole basin-1 region as a solid extruded slab.
+  // trap = min over the Newton orbit of |z_i − root1|: small exactly for points
+  // whose orbit passes near root 1 (i.e. the entire basin-1 catchment), so
+  // trap−r is the classic basin-boundary solid. Earlier forms produced a
+  // razor-thin ring (dust) or never hit inside basin 1 at all.
+  float d_basin = trap - 0.06;
+  float d_3d = max(d_basin, abs(p.z) - 0.8); // extruded along z into a thick slab
   float bound = length(p_in) - 2.8;
   // FIX: Ensure positive distance estimate
   return vec2(max(d_3d, bound * 0.4), trap);
@@ -843,14 +854,19 @@ vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
   float sigma = 10.0, rho = 28.0, beta = 8.0 / 3.0;
   float minDist = 1e10;
   float maxDensity = 0.0;
-  for (int s = 0; s < 4; s++) {
-    vec3 q = vec3(0.1 + float(s) * 0.1, 0.0, 25.0 - float(s) * 5.0);
-    for (int i = 0; i < 80; i++) {
+  // Orbit trace: a recognizable butterfly needs t ≈ 3+ time units (several wing
+  // loops). 4 seeds × 80 × dt0.008 = 0.64t each drew only a single worm strand;
+  // 2 seeds × 160 × dt0.02 = 3.2t each at identical loop cost.
+  for (int s = 0; s < 2; s++) {
+    vec3 q = vec3(0.1 + float(s) * 1.3, 0.02 * float(s - 1), 8.0);
+    for (int i = 0; i < 160; i++) {
       float dx = sigma * (q.y - q.x);
       float dy = q.x * (rho - q.z) - q.y;
       float dz = q.x * q.y - beta * q.z;
-      q += vec3(dx, dy, dz) * 0.008;
-      vec3 scaled = q * 0.25;
+      q += vec3(dx, dy, dz) * 0.02;
+      // Recenter + fit: Lorenz wings span ±20 in x/y — at 0.25 scale the object
+      // (±5) overflowed the r=2.5 bounding sphere and half was clipped away.
+      vec3 scaled = (q - vec3(0.0, 0.0, 12.5)) * 0.1;
       float dist = length(p - scaled);
       minDist = min(minDist, dist);
       maxDensity = max(maxDensity, exp(-dist * 4.0));
@@ -858,7 +874,9 @@ vec2 mapLorenzAttractor(vec3 p_in, float t, float phi, int iters) {
   }
   // PHASE 4.32 FIX: Proper SDF using minimum distance to orbit points
   // Density-based approach created smooth blobs — replaced with tube SDF
-  float tubeR = 0.02 + maxDensity * 0.01; // Tube radius modulated by orbit density
+  // Tube radius must bridge the gap between consecutive orbit samples
+  // (step ≈ 0.02–0.05 scaled units); 0.02 left rays slipping between beads.
+  float tubeR = 0.09 + maxDensity * 0.04;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
   return vec2(max(d, bound * 0.6), maxDensity * 0.25);
@@ -886,10 +904,15 @@ vec2 mapAntoineNecklace(vec3 p_in, float t, float phi, int iters) {
   int count = clamp(iters, 2, 5);
   for (int i = 0; i < 5; i++) {
     if (i >= count) break;
-    float rMajor = 0.8 / scale;
-    float rMinor = 0.22 / scale;
+    // Classic Antoine setup: constant LOCAL radii each generation (the ×2.4 frame
+    // transform shrinks them in world units). Dividing by scale here made sub-tori
+    // vanish inside the parent tube (0.8/scale² < rMinor → buried, invisible).
+    float rMajor = 0.8;
+    float rMinor = 0.22;
     float q = length(p.xz) - rMajor;
-    float torusD = length(vec2(q, p.y)) - rMinor;
+    // DE must be converted to world units: each generation's frame expands ×2.4^i,
+    // so raw local distances are inflated and the raymarcher skips the linked sub-tori.
+    float torusD = (length(vec2(q, p.y)) - rMinor) / scale;
     d = min(d, torusD);
     trap = min(trap, abs(q));
     float ang = atan(p.z, p.x);
@@ -911,7 +934,8 @@ vec2 mapDLACluster(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xz = rot2D(t * 0.06) * p.xz;
   // Branching tree structure with deterministic pseudo-random directions
-  float d = length(p) - 0.06; // seed particle
+  // Particle radii enlarged ~2.5×: 0.04-range spheres were sub-pixel dust at default framing
+  float d = length(p) - 0.2; // seed particle
   float trap = 0.0;
   float sc = 1.0;
   for (int i = 0; i < 8; i++) {
@@ -922,7 +946,7 @@ vec2 mapDLACluster(vec3 p_in, float t, float phi, int iters) {
     float h = fi * 0.18 - 0.6;
     float rad = 0.4 * pow(0.72, fi);
     vec3 center = vec3(cos(ang) * rad, h, sin(ang) * rad);
-    float branch = length(p - center) - 0.04 * pow(0.75, fi);
+    float branch = length(p - center) - 0.22 * pow(0.8, fi);
     d = min(d, branch);
     trap += exp(-5.0 * length(p - center));
     // Sub-branches
@@ -931,7 +955,7 @@ vec2 mapDLACluster(vec3 p_in, float t, float phi, int iters) {
       float subAng = ang + (fj - 1.0) * 0.8;
       float subRad = rad * 0.5;
       vec3 subCenter = center + vec3(cos(subAng) * subRad, 0.06, sin(subAng) * subRad);
-      float subBranch = length(p - subCenter) - 0.02 * pow(0.75, fi);
+      float subBranch = length(p - subCenter) - 0.08 * pow(0.8, fi);
       d = min(d, subBranch);
     }
     sc *= 0.72;
@@ -981,7 +1005,8 @@ vec2 mapCliffordAttractor(vec3 p, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: min-dist SDF with density-modulated tube radius
-  float tubeR = 0.02 + maxDensity * 0.01;
+  // Clifford orbits are scattered point clouds — radius must overlap neighbours
+  float tubeR = 0.07 + maxDensity * 0.04;
   float d = minDist - tubeR;
   float bound = length(p) - 2.5;
   return vec2(max(d, bound * 0.6), max(maxDensity * 0.3, 0.001));
@@ -1075,7 +1100,8 @@ vec2 mapHenonAttractor(vec3 p_in, float t, float phi, int iters) {
     }
   }
   // PHASE 4.32: Proper SDF — min distance to orbit points with density-modulated tube radius
-  float tubeR = 0.02 + maxDensity * 0.01;
+  // Hénon is nearly flat and its 60-point orbit leaves gaps; 0.02 tube → dust.
+  float tubeR = 0.06 + maxDensity * 0.03;
   float d = minDist - tubeR;
   float bound = length(p_in) - 2.5;
   return vec2(max(d, bound * 0.6), maxDensity * 0.25);
@@ -3422,13 +3448,6 @@ void main() {
     // Mode 0: Outside-In Orbit & Mode 3: Kelvin Inversion
     ro = vec3(0.0, 0.0, -cam_dist);
     
-    // STEREO RENDERING: Add eye offset for side-by-side or anaglyph
-    if (u_stereo_mode > 0.5) {
-      float eyeSeparation = 0.065; // Average human IPD in world units
-      float eyeOffset = (u_stereo_eye > 0.5) ? eyeSeparation * 0.5 : -eyeSeparation * 0.5;
-      ro.x += eyeOffset;
-    }
-    
     ro = rotateVec(ro, u_cam_rot.y, u_cam_rot.x);
     vec3 lookTarget = vec3(0.0, 0.0, 0.0);
     vec3 ww = (lookTarget - ro) / max(length(lookTarget - ro), 1e-6);
@@ -3817,16 +3836,16 @@ void main() {
     vec3 sssColor = vec3(1.0, 0.4, 0.2) * sss * 0.4;
     float sssBackLight = max(dot(-n, sssLightDir), 0.0) * sss;
 
-    vec3 diffuse = mat_col * (diff1 * 0.85 + diff2 * 0.25) * ao;
+    vec3 diffuse = mat_col * (diff1 * 1.0 + diff2 * 0.35) * ao;
     // Material-tinted specular for colored highlights
     vec3 specColor = mix(vec3(1.0, 0.97, 0.92), mat_col, 0.15);
-    vec3 specular = specColor * (spec1 * 1.3 + spec2 * 0.7) * ao;
-    // Stronger rim at grazing angles, color-shifted
-    vec3 rim = u_accent_color * fresnel * 0.8 * (0.3 + 0.7 * ao);
+    vec3 specular = specColor * (spec1 * 1.6 + spec2 * 0.8) * ao;
+    // Stronger rim at grazing angles, color-shifted — boosted for 3D edge definition
+    vec3 rim = u_accent_color * fresnel * 1.2 * (0.4 + 0.6 * ao);
 
-    // FULL PBR Lighting: ambient + diffuse + specular + rim + SSS + bounce + reflection
-    col = ambient * 0.6 + diffuse * 1.5 + specular * 1.2 + rim * 1.3 + sssColor * sssBackLight + bounceCol * 1.8 + reflCol * 0.8;
-    col *= (0.4 + 0.6 * ao); // AO contrast
+    // FULL PBR Lighting: reduced ambient, stronger directional for 3D depth
+    col = ambient * 0.35 + diffuse * 2.0 + specular * 1.5 + rim * 1.6 + sssColor * sssBackLight + bounceCol * 1.2 + reflCol * 0.6;
+    col *= (0.55 + 0.45 * ao); // Softer AO contrast — preserves shadow detail
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u_headlamp_power > 0.01) {
@@ -4070,6 +4089,15 @@ void main() {
     col += godRayColor;
   }
 
+  // AUTO-EXPOSURE: Smooth brightness compression before ACES tone mapping
+  // Prevents overexposure for fractals with intense lighting (mandelbox, kleinian, etc.)
+  // Uses per-channel Reinhard-style compression to preserve color ratios
+  float preMax = max(col.r, max(col.g, col.b));
+  float exposureTarget = 1.8;
+  if (preMax > exposureTarget) {
+    col *= exposureTarget / preMax;
+  }
+
   col = acesToneMap(col);
 
   // BLOOM SIMULATION: Brightness-based glow for light sources and specular highlights
@@ -4143,25 +4171,22 @@ void main() {
   float ditherVal = fract(sin(dot(v_uv * u_resolution, vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
   col = col + (ditherVal - 0.5) * (1.0 / 128.0);
 
-  float vigStrength = smoothstep(0.12, 1.0, cam_dist);
-  float vignette = 1.0 - smoothstep(0.9, 1.8, bg_rad) * vigStrength * 0.5;
+  // DEPTH FOG: Always-on exponential fog for 3D depth perception
+  // Distant surfaces fade to dark, creating atmospheric depth cues
+  float safeT = (isnan(t) || isinf(t)) ? 0.0 : t;
+  float depthFogDensity = 0.025;
+  float depthFog = 1.0 - exp(-safeT * depthFogDensity);
+  depthFog = clamp(depthFog, 0.0, 0.7); // Cap at 70% to preserve distant detail
+  col = mix(col, col * 0.15, depthFog); // Fade distant surfaces toward dark
+
+  // ENHANCED VIGNETTE: Stronger radial darkening for 3D depth framing
+  float vigStrength = smoothstep(0.08, 1.0, cam_dist);
+  float vignette = 1.0 - smoothstep(0.85, 1.6, bg_rad) * vigStrength * 0.7;
   col *= vignette;
 
   // Subpixel anti-aliasing boost — sharpen edges via fwidth unsharp mask
   float edgeDetect = length(fwidth(col)) * 0.5;
   col = mix(col, col * (1.0 + edgeDetect * 2.0), 0.12);
-
-  // ANAGYPH STEREO: Apply red/cyan coloring for anaglyph glasses
-  if (u_stereo_mode > 1.5) {
-    if (u_stereo_eye > 0.5) {
-      // Right eye: cyan only
-      col.r = 0.0;
-    } else {
-      // Left eye: red only
-      col.g = 0.0;
-      col.b = 0.0;
-    }
-  }
 
   fragColor = vec4(col, 1.0);
 }

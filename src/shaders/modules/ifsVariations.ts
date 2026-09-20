@@ -27,9 +27,11 @@ float mapIFSBase(vec3 p, float t, float phi, int iters, float scale, int fold, f
       if (z.x + z.z < 0.53) z.xz = -z.zx;
       if (z.y + z.z < 0.54) z.yz = -z.zy;
     } else if (fold == 2) { // Menger
-      if (abs(z.x) < abs(z.y)) z.xy = z.yx;
-      if (abs(z.x) < abs(z.z)) z.xz = z.zx;
-      if (abs(z.y) < abs(z.z)) z.yz = z.zy;
+      z = abs(z); // fold into positive octant (root-cause fix: without abs, signed coords diverge past r>8 at iter 0-1 -> empty SDF)
+      if (z.x < z.y) z.xy = z.yx;
+      if (z.x < z.z) z.xz = z.zx;
+      if (z.y < z.z) z.yz = z.zy;
+      z = max(z, vec3(0.25)) - vec3(0.25); // carve the Menger central cross
     } else if (fold == 3) { // Dragon
       z = abs(z);
       float c = cos(angle), s = sin(angle);

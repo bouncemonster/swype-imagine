@@ -3,7 +3,6 @@ import { FractalParams } from '../types/fractal';
 import { WGSL_SHADER } from '../shaders/webgpuShaders';
 import { FractalEngineBase } from './FractalEngineBase';
 import { renderDiagnostics } from './RenderDiagnostics';
-import { validateScalar, measurePerformance } from './MathValidation';
 import { userProblemLogger } from './UserProblemLogger';
 
 export class WebGPUEngine extends FractalEngineBase {
@@ -167,58 +166,62 @@ export class WebGPUEngine extends FractalEngineBase {
     const width = this.canvas.width;
     const height = this.canvas.height;
     if (width === 0 || height === 0) return;
+    // Safety: cap texture size to prevent GPU OOM on high-DPR displays
+    if (width > 4096 || height > 4096) return;
 
-    // Measure render performance
-    const { duration: renderTime } = measurePerformance(() => {
-      // Pack uniforms using shared base method
-      const palette = this.resolvePalette(params);
-      const indices = this.computeIndices(params);
-      this.packUniforms(this.uniformValues, timeSec, params, palette, indices);
+    // Pack uniforms and write to GPU uniform buffer
+    const palette = this.resolvePalette(params);
+    const indices = this.computeIndices(params);
+    this.packUniforms(this.uniformValues, timeSec, params, palette, indices);
 
-      // Validate uniform values
-      if (!validateScalar(this.uniformValues[2], 'u_time', undefined, [0, 1000])) {
-        renderDiagnostics.log('error', 'render', 'Invalid time value', { time: this.uniformValues[2] });
-      }
-      if (!validateScalar(this.uniformValues[6], 'u_zoom', undefined, [0.01, 100])) {
-        renderDiagnostics.log('warn', 'render', 'Zoom out of range', { zoom: this.uniformValues[6] });
-      }
-
-      // Write to GPU uniform buffer
+    // Command encoder — wrapped in try/catch to survive surface/device transient errors
+    try {
+      // Re-check isDestroyed after packUniforms (device.lost may have fired during pack)
+      if (this.isDestroyed) return;
       this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
-
-      // Command encoder — wrapped in try/catch to survive surface/device transient errors
+      const commandEncoder = this.device.createCommandEncoder();
+      // getCurrentTexture can throw if canvas was resized to 0 or context was reconfigured
+      let textureView: GPUTextureView;
       try {
-        const commandEncoder = this.device.createCommandEncoder();
-        const textureView = this.context.getCurrentTexture().createView();
-
-        const renderPass = commandEncoder.beginRenderPass({
-          colorAttachments: [
-            {
-              view: textureView,
-              clearValue: { r: 0.01, g: 0.01, b: 0.02, a: 1.0 },
-              loadOp: 'clear',
-              storeOp: 'store',
-            },
-          ],
-        });
-
-        renderPass.setPipeline(this.pipeline);
-        renderPass.setBindGroup(0, this.bindGroup);
-        renderPass.draw(3, 1, 0, 0);
-        renderPass.end();
-
-        this.device.queue.submit([commandEncoder.finish()]);
-      } catch (e) {
-        // Surface texture acquisition failed (device lost, context reconfigured, etc.)
-        // Silently skip this frame — the device.lost handler will set isDestroyed
-        renderDiagnostics.log('warn', 'render', 'WebGPU render frame skipped', { error: (e as Error).message });
-        console.debug('WebGPU render frame skipped:', (e as Error).message);
+        const currentTexture = this.context.getCurrentTexture();
+        // Safety: check texture hasn't been destroyed due to resize race
+        if (!currentTexture || currentTexture.width === 0 || currentTexture.height === 0) {
+          return;
+        }
+        textureView = currentTexture.createView();
+      } catch (textureErr) {
+        // Surface texture not available (resize in progress, etc.) — skip frame
+        console.debug('WebGPU surface texture unavailable:', (textureErr as Error).message);
+        return;
       }
-    }, 'WebGPU render');
+
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: textureView,
+            clearValue: { r: 0.01, g: 0.01, b: 0.02, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+
+      renderPass.setPipeline(this.pipeline);
+      renderPass.setBindGroup(0, this.bindGroup);
+      renderPass.draw(3, 1, 0, 0);
+      renderPass.end();
+
+      this.device.queue.submit([commandEncoder.finish()]);
+    } catch (e) {
+      // Surface texture acquisition failed (device lost, context reconfigured, etc.)
+      // Silently skip this frame — the device.lost handler will set isDestroyed
+      renderDiagnostics.log('warn', 'render', 'WebGPU render frame skipped', { error: (e as Error).message });
+      console.debug('WebGPU render frame skipped:', (e as Error).message);
+    }
 
     // Update diagnostics
-    renderDiagnostics.updateFrameStats(128, 0.001, 20.0); // Approximate values
-    renderDiagnostics.trackGPUContext(false, renderTime);
+    renderDiagnostics.updateFrameStats(128, 0.001, 20.0);
+    renderDiagnostics.trackGPUContext(false, 0);
   }
 
   public destroy() {

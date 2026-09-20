@@ -39,9 +39,14 @@ float mapLSystemBase(vec3 p, float t, float phi, int iters, float scale, int op,
       if (z.x + z.z < -0.13) z.xz = -z.zx;
       z = abs(z) - threshold;
     } else if (op == 5) { // Hilbert
-      vec3 a = mod(floor(z * 4.0), 2.0);
-      z = abs(z - 0.5) * 2.0;
-      z.xy = mat2(0.707,-0.707,0.707,0.707)*z.xy;
+      // Root-cause fix: prior body had dead-code "vec3 a" (never used) plus an
+      // abs(z-0.5)*2.0 doubling with offset=0, so no orbit stayed bounded -> empty
+      // SDF. Use a bounded octant fold with an internal translation instead.
+      z = abs(z);
+      if (z.x < z.y) z.xy = z.yx;
+      if (z.x < z.z) z.xz = z.zx;
+      if (z.y < z.z) z.yz = z.zy;
+      z -= 0.5;
     } else if (op == 6) { // Barnsley
       if (z.x < 0.0) { z.x = -z.x; z.xy = mat2(0.74,-0.23,0.23,0.74)*z.xy; }
       else { z.x = -z.x; z.xy = mat2(0.74,0.23,-0.23,0.74)*z.xy; }
