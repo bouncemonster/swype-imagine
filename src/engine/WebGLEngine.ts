@@ -362,11 +362,16 @@ export class WebGLEngine extends FractalEngineBase {
     this.warmupFramesLeft = 24; // ~0.4s at 60fps
   }
 
-  public render(timeSec: number, params: FractalParams) {
+  /**
+   * Renders one frame. Returns true ONLY when gl.drawArrays actually executed —
+   * callers use this to distinguish a real on-screen frame from a silent skip
+   * (lazy shader compile in progress / swap guard / oversized canvas).
+   */
+  public render(timeSec: number, params: FractalParams): boolean {
     const gl = this.gl;
     if (!gl || !this.vao || !this.program) {
       // Skip render silently — context or shader not ready yet (lazy compilation in progress)
-      return;
+      return false;
     }
 
     // Guard: don't re-enter render during shader swap
@@ -378,11 +383,11 @@ export class WebGLEngine extends FractalEngineBase {
         this.isSwappingShader = false;
         this.swapFrameCount = 0;
       }
-      return;
+      return false;
     }
 
     // Safety: cap canvas size to prevent GPU OOM on extreme DPR
-    if (this.canvas.width > 4096 || this.canvas.height > 4096) return;
+    if (this.canvas.width > 4096 || this.canvas.height > 4096) return false;
 
     // LOG FRACTAL TYPE only when it changes (not every frame)
     const indices = this.computeIndices(params);
@@ -494,6 +499,7 @@ export class WebGLEngine extends FractalEngineBase {
     // Update diagnostics with real values
     renderDiagnostics.updateFrameStats(128, 0.001, 20.0);
     renderDiagnostics.trackGPUContext(false, 0);
+    return true;
   }
 
   public destroy() {

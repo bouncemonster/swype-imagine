@@ -62,7 +62,10 @@ async function runOne(label: string, ctxOpts: any) {
   const progressSeen: number[] = [];
   let loaderGoneAt = 0;
   let maxTarget = 0;
-  const deadline = Date.now() + 20000;
+  // Headless ANGLE compiles measure ~16s for the first frame on this machine;
+  // with the 30s force-dismiss bound the detach can land ~17-18s, so the
+  // sampling window must stay well above that (40s) to avoid a false timeout.
+  const deadline = Date.now() + 40000;
   while (Date.now() < deadline) {
     const s = await page.evaluate(() => {
       const loader = document.getElementById('cosmic-loader-overlay');
@@ -91,6 +94,28 @@ async function runOne(label: string, ctxOpts: any) {
     await page.waitForTimeout(25);
   }
 
+  // AUTHORITATIVE pixel check at the exact moment the loader detaches. The
+  // console-log "first frame" signal is self-referential (it is the same event
+  // that triggers dismissal), so only canvas content can catch a FALSE first-frame
+  // (loader dismissing while nothing was actually drawn). Requires ?test=1 →
+  // preserveDrawingBuffer for drawImage to read back live WebGL pixels.
+  const fillAtDetach = await page.evaluate(() => {
+    const c = document.querySelector('canvas') as HTMLCanvasElement | null;
+    if (!c || !c.width || !c.height) return -1;
+    const tmp = document.createElement('canvas');
+    tmp.width = 64; tmp.height = 36;
+    const ctx = tmp.getContext('2d');
+    if (!ctx) return -1;
+    ctx.drawImage(c, 0, 0, 64, 36);
+    const d = ctx.getImageData(0, 0, 64, 36).data;
+    let nb = 0;
+    for (let i = 0; i < 64 * 36; i++) {
+      const lum = 0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2];
+      if (lum > 16) nb++;
+    }
+    return nb / (64 * 36);
+  });
+
   await page.waitForTimeout(1500);
   const hb = await page.evaluate(() => (window as any).__hb);
   const shm = await page.evaluate(() => (window as any).__shm);
@@ -106,6 +131,7 @@ async function runOne(label: string, ctxOpts: any) {
   console.log(`  canvas=${canvasDims} rafTicks=${hb.rafCount}`);
   console.log(`  in-page: first-frame@${Math.round(firstFrameT)}ms, loader detached@${Math.round(goneT)}ms`);
   console.log(`  rAF gap: init(one-time device floor)=${Math.round(hb.rafMaxGap)}ms, post-first-frame(responsiveness)=${Math.round(hb.postInitMaxGap)}ms`);
+  console.log(`  canvas non-black fill at loader-detach: ${fillAtDetach >= 0 ? (fillAtDetach * 100).toFixed(1) + '%' : 'unreadable'}`);
 
   const fails: string[] = [];
   if (!progressSeen.length) fails.push('loader progress never observed');
@@ -122,6 +148,11 @@ async function runOne(label: string, ctxOpts: any) {
     if (goneT < firstFrameT) fails.push(`loader detached BEFORE first frame rendered (${Math.round(goneT)}ms < ${Math.round(firstFrameT)}ms)`);
     if (goneT - firstFrameT > 3000) fails.push(`loader lingered ${Math.round(goneT - firstFrameT)}ms after first frame (not synced to fade)`);
   }
+  // Pixel truth: the loader must never detach over a black canvas. This is the
+  // check that catches a first-frame signal firing on a silently-skipped render
+  // (program still lazily compiling) — the log-based checks above cannot see it.
+  if (fillAtDetach < 0) fails.push('canvas not readable at loader-detach (no 2d readback)');
+  else if (fillAtDetach <= 0.005) fails.push(`loader detached with BLACK canvas (fill ${(fillAtDetach * 100).toFixed(1)}%) — first-frame signal was false`);
   // The bar target must climb through the REAL compile stages (>=40 = the
   // 'compiling' stage). It legitimately stays there during the heavy link (the
   // physical device-init floor) and only jumps to 100% on the first frame — which
@@ -132,6 +163,7 @@ async function runOne(label: string, ctxOpts: any) {
   // runs heavy 25ms DOM sampling that competes with the compile, so it is not the
   // authoritative responsiveness metric and is not failed on.
   if (hb.rafCount < 5) fails.push('heartbeat nearly dead — page not animating');
+  await browser.close(); // without this, node never exits after main() completes
   return fails;
 }
 

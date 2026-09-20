@@ -80,7 +80,7 @@ CosmicLoader   → progress bar width + stageIndex-derived phase text
 useEffect(() => {
   const forceDismissTimer = setTimeout(() => {
     if (!isReady) {
-      console.warn('[CosmicLoader] Force-dismissing after 15s — engine failed to initialize');
+      console.warn('[CosmicLoader] Force-dismissing after 30s — engine failed to initialize');
       setFadingOut(true);
       const hideTimer = setTimeout(() => {
         setHidden(true);
@@ -88,11 +88,11 @@ useEffect(() => {
       }, 700);
       return () => clearTimeout(hideTimer);
     }
-  }, 15000);
+  }, 30000);
   return () => clearTimeout(forceDismissTimer);
 }, [isReady, onFinished]);
 ```
-**Safety mechanism**: Force-dismisses after 15 seconds if engine never becomes ready. Prevents infinite hang on GPU initialization failure.
+**Safety mechanism**: Force-dismisses after 30 seconds if engine never becomes ready. Prevents infinite hang on GPU initialization failure. Raised from the old 15 s bound because slow/headless ANGLE compiles measurably exceed it (first frame ≈16 s), and the 15 s timer raced the genuine first frame, detaching over a black canvas — caught by the pixel readback check in `tests/loader-sync-test.ts`.
 
 ## Normal Dismiss (lines 50-63)
 ```typescript

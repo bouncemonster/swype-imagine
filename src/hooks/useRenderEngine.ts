@@ -284,7 +284,8 @@ export function useRenderEngine(
         // animation is therefore synced to real device init time on every device.
         setLoadProgress(0.12);
         glEngine.onCompileProgress = (_stage, pct) => {
-          setLoadProgress(0.12 + (pct / 100) * 0.8);
+          // Monotonic: real compile stages only ever push the bar forward, never rewind.
+          setLoadProgress((prev) => Math.max(prev, 0.12 + (pct / 100) * 0.8));
         };
         
         // ADAPTIVE QUALITY: Set quality level based on device
@@ -516,22 +517,29 @@ export function useRenderEngine(
               setIsCompiling(true);
             }
 
+            let drewFrame = false;
             if (webgpuEngineRef.current) {
-              webgpuEngineRef.current.render(simTime, effectiveParams);
+              drewFrame = webgpuEngineRef.current.render(simTime, effectiveParams);
             } else if (webglEngineRef.current) {
-              webglEngineRef.current.render(simTime, effectiveParams);
+              drewFrame = webglEngineRef.current.render(simTime, effectiveParams);
             }
             consecutiveRenderErrors = 0; // Reset on successful render
 
             // Hide loading overlay after first successful render OR after swap completes
             if (!firstRenderDoneRef.current) {
-              firstRenderDoneRef.current = true;
-              setIsCompiling(false);
-              // First pixels are genuinely on screen → loading is truly done. This
-              // is the signal that syncs the loader lifetime to real device init.
-              console.info('[useRenderEngine] First frame rendered — device init complete, dismissing loader');
-              setLoadProgress(1);
-              onEngineReadyRef.current?.();
+              // render() returns false on silent skips (program/pipeline still lazily
+              // compiling). Only a REAL drawn frame — actual pixels on the canvas —
+              // may dismiss the loader; otherwise the fade would expose a black canvas
+              // on slow GPUs where compile outlives the 500+700ms dismiss.
+              if (drewFrame) {
+                firstRenderDoneRef.current = true;
+                setIsCompiling(false);
+                // First pixels are genuinely on screen → loading is truly done. This
+                // is the signal that syncs the loader lifetime to real device init.
+                console.info('[useRenderEngine] First frame rendered — device init complete, dismissing loader');
+                setLoadProgress(1);
+                onEngineReadyRef.current?.();
+              }
             } else if (!isSwapping) {
               // Swap completed — hide overlay
               setIsCompiling(false);

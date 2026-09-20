@@ -158,26 +158,32 @@ export class WebGPUEngine extends FractalEngineBase {
     }
   }
 
-  public render(timeSec: number, params: FractalParams) {
+  /**
+   * Renders one frame. Returns true ONLY when a command buffer with a draw was
+   * actually submitted — callers use this to distinguish a real on-screen frame
+   * from a silent skip (pipeline not ready / surface texture unavailable).
+   */
+  public render(timeSec: number, params: FractalParams): boolean {
     if (this.isDestroyed || !this.device || !this.context || !this.pipeline || !this.uniformBuffer || !this.bindGroup) {
-      return;
+      return false;
     }
 
     const width = this.canvas.width;
     const height = this.canvas.height;
-    if (width === 0 || height === 0) return;
+    if (width === 0 || height === 0) return false;
     // Safety: cap texture size to prevent GPU OOM on high-DPR displays
-    if (width > 4096 || height > 4096) return;
+    if (width > 4096 || height > 4096) return false;
 
     // Pack uniforms and write to GPU uniform buffer
     const palette = this.resolvePalette(params);
     const indices = this.computeIndices(params);
     this.packUniforms(this.uniformValues, timeSec, params, palette, indices);
 
+    let drew = false;
     // Command encoder — wrapped in try/catch to survive surface/device transient errors
     try {
       // Re-check isDestroyed after packUniforms (device.lost may have fired during pack)
-      if (this.isDestroyed) return;
+      if (this.isDestroyed) return false;
       this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformValues);
       const commandEncoder = this.device.createCommandEncoder();
       // getCurrentTexture can throw if canvas was resized to 0 or context was reconfigured
@@ -186,13 +192,13 @@ export class WebGPUEngine extends FractalEngineBase {
         const currentTexture = this.context.getCurrentTexture();
         // Safety: check texture hasn't been destroyed due to resize race
         if (!currentTexture || currentTexture.width === 0 || currentTexture.height === 0) {
-          return;
+          return false;
         }
         textureView = currentTexture.createView();
       } catch (textureErr) {
         // Surface texture not available (resize in progress, etc.) — skip frame
         console.debug('WebGPU surface texture unavailable:', (textureErr as Error).message);
-        return;
+        return false;
       }
 
       const renderPass = commandEncoder.beginRenderPass({
@@ -212,6 +218,7 @@ export class WebGPUEngine extends FractalEngineBase {
       renderPass.end();
 
       this.device.queue.submit([commandEncoder.finish()]);
+      drew = true;
     } catch (e) {
       // Surface texture acquisition failed (device lost, context reconfigured, etc.)
       // Silently skip this frame — the device.lost handler will set isDestroyed
@@ -222,6 +229,7 @@ export class WebGPUEngine extends FractalEngineBase {
     // Update diagnostics
     renderDiagnostics.updateFrameStats(128, 0.001, 20.0);
     renderDiagnostics.trackGPUContext(false, 0);
+    return drew;
   }
 
   public destroy() {
