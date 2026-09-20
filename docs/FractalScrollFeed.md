@@ -1,6 +1,6 @@
 # FractalScrollFeed.tsx
 
-**270 lines | Neuro-feed ribbon for fractal specimens**
+**281 lines | Neuro-feed ribbon for fractal specimens**
 
 ## Purpose
 Left-side floating ribbon showing history of generated fractal specimens (neuro-feed). Allows navigation through previously generated fractals and quick render style switching.

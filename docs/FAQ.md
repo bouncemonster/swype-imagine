@@ -3,12 +3,12 @@
 ## General
 
 ### Q: What is this project?
-**A:** Golden Ratio WebGPU Fractal Engine is a high-performance real-time 3D fractal visualization application using WebGPU (with WebGL2 fallback). It renders 100+ mathematical fractals using ray marching and signed distance functions (SDFs).
+**A:** Golden Ratio WebGPU Fractal Engine is a high-performance real-time 3D fractal visualization application using WebGPU (with WebGL2 fallback). It exposes 431 fractal types (145 canonical catalog entries) using ray marching and signed distance functions (SDFs).
 
 ### Q: What makes this different from other fractal viewers?
 **A:** 
 - **WebGPU-first**: Uses modern GPU API for better performance
-- **100+ fractals**: Largest collection of canonical fractals
+- **431 types / 145 canonical**: Largest collection of canonical fractals
 - **Neuro-aesthetics**: AI-driven recommendations based on user preferences
 - **Scientific focus**: Mathematical formulas, dimensions, descriptions
 - **Real-time morphing**: Smooth transitions between fractal types
@@ -107,8 +107,8 @@ npm run preview
 ### Q: How many fractal types are there?
 **A:** 
 - **431 types** active in type system and WebGL shader
-- **104/431** implemented in WebGPU shader (rest fall back to phyllotaxis)
-- **10 category files** in data/categories/
+- **131/431** implemented in WebGPU shader (rest fall back to phyllotaxis)
+- **11 category files** in data/categories/
 - **50 Julia variations** in shader modules
 - **90 hybrid variations** in shader modules
 
@@ -133,7 +133,7 @@ npm run preview
 - **Domain Warp**: Distort space
 
 ### Q: What is the fractal atlas?
-**A:** FractalAtlasModal shows all 110+ canonical fractals with:
+**A:** FractalAtlasModal shows all 145 canonical fractals with:
 - Scientific names
 - Mathematical formulas
 - Hausdorff dimensions
@@ -182,7 +182,7 @@ npm run dev
 
 ### Q: What's the tech stack?
 **A:**
-- **Framework**: React 18 + TypeScript
+- **Framework**: React 19 + TypeScript
 - **Build**: Vite
 - **Styling**: Tailwind CSS v4
 - **Graphics**: WebGPU + WebGL2
@@ -191,11 +191,11 @@ npm run dev
 
 ### Q: How are shaders organized?
 **A:** See [shader-modules.md](shader-modules.md):
-- `webglShaders.ts`: Main GLSL shader (187KB)
-- `webgpuShaders.ts`: Main WGSL shader (140KB)
+- `webglShaders.ts`: Main GLSL shader (161KB)
+- `webgpuShaders.ts`: Main WGSL shader (158KB)
 - `modules/`: Reusable shader components
-  - `juliaVariations.ts`: 50 Mandelbulb variants
-  - `hybridVariations.ts`: 50 hybrid combinations
+  - `juliaVariations.ts`: 50 Julia variants (ftype 141-190)
+  - `hybridVariations.ts`: 90 hybrid combinations (ftype 341-430)
   - `flameVariations.ts`: IFS flame fractals
   - etc.
 
@@ -203,9 +203,9 @@ npm run dev
 **A:** See [TUTORIALS.md](TUTORIALS.md#how-to-add-a-new-fractal-type) for step-by-step guide.
 
 ### Q: Why is the shader so large?
-**A:** 187KB GLSL + 140KB WGSL = 327KB total because:
+**A:** 161KB GLSL + 158KB WGSL = 319KB total because:
 - 50 Julia variations
-- 50 hybrid variations
+- 90 hybrid variations
 - 431 fractal types
 - 7 render modes
 - Post-processing effects
@@ -277,7 +277,7 @@ Used in architecture, biology, materials science.
 
 ### Q: What's coming next?
 **A:**
-- [ ] More fractal types (200+)
+- [x] More fractal types — 431 now implemented (145 canonical)
 - [ ] VR support (WebXR)
 - [ ] Fractal animation editor
 - [ ] Export to video/GIF

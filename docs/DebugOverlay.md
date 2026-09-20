@@ -1,6 +1,6 @@
 # DebugOverlay.tsx
 
-**155 lines | Render diagnostics and performance monitoring overlay**
+**158 lines | Render diagnostics and performance monitoring overlay**
 
 ## Purpose
 Developer debug panel showing real-time render diagnostics, math validation, GPU health, and performance metrics. Updates 10 times per second.
@@ -116,7 +116,7 @@ Overall health check from `renderDiagnostics.isHealthy()`.
 
 **Buttons**:
 1. **Reset Stats**: Calls `renderDiagnostics.reset()`
-2. **Export**: Calls `renderDiagnostics.exportReport()` and logs to console
+2. **Export**: Calls `renderDiagnostics.exportReport()`, logs to console, and fires `alert('Diagnostics report exported to console')` (DebugOverlay.tsx:140)
 
 ### Quick Status Bar (lines 150-154)
 ```
@@ -132,7 +132,7 @@ Always visible count of error and warning logs.
 5. **Color coding**: FPS and health status color-coded
 6. **Math validation**: Tracks NaN/Infinity in SDF calculations
 7. **GPU health**: Monitors context loss and shader compile time
-8. **Export**: Sends report to console (not file)
+8. **Export**: Sends report to console (not file) and confirms via `alert()` at DebugOverlay.tsx:140
 9. **Developer tool**: Not shown to end users by default
 10. **Monospace font**: All values in `font-mono`
 

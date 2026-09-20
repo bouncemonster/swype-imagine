@@ -1,8 +1,8 @@
 # Color Palettes
 
-## palettes.ts (213 lines)
+## palettes.ts (212 lines)
 
-**24 hand-crafted color palettes**
+**26 hand-crafted color palettes**
 
 ### Palette Structure
 ```typescript
@@ -16,7 +16,7 @@
 }
 ```
 
-### Palette List (24 total)
+### Palette List (26 total)
 | ID | Name | Primary Color |
 |----|------|---------------|
 | gold-obsidian | 24K Pure Gold & Obsidian | Gold [1.0, 0.82, 0.28] |
@@ -54,16 +54,16 @@
 
 ---
 
-## palettesProcedural.ts (113 lines)
+## palettesProcedural.ts (89 lines)
 
-**640+ procedurally generated palettes**
+**640 procedurally generated palettes**
 
 ### Generation Strategy
-- **70 themes** (Cosmic, Nebula, Stellar, etc.)
-- **8 variations per theme** = 560 palettes
+- **80 themes** (Cosmic, Nebula, Stellar, etc.)
+- **8 variations per theme** = 640 palettes
 - **Golden angle** (137.508°) for harmonic hue distribution
 
-### Theme Categories (70 themes)
+### Theme Categories (80 themes)
 - **Space**: Cosmic, Nebula, Stellar, Galactic, Astral, Quantum, Plasma, Photon, Neutron, Proton
 - **Crystal**: Crystal, Prism, Spectrum, Rainbow, Iridescent
 - **Ocean**: Ocean, Abyss, Coral, Reef, Tidal
@@ -97,7 +97,7 @@
 ```typescript
 // In App.tsx:
 const ALL_COLOR_PALETTES = [...COLOR_PALETTES, ...PROCEDURAL_PALETTES];
-// Total: 24 + 640 = 664 palettes
+// Total: 26 + 640 = 666 palettes
 ```
 
 ### Critical Notes

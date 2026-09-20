@@ -1,6 +1,6 @@
 # RenderDiagnostics.ts
 
-**257 lines | Rendering pipeline diagnostics**
+**261 lines | Rendering pipeline diagnostics**
 
 ## Purpose
 Advanced logging and validation for fractal rendering pipeline. Tracks performance, math errors, GPU health.

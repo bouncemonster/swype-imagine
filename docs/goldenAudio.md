@@ -1,6 +1,6 @@
 # goldenAudio.ts
 
-**469 lines | Sacred geometry harmonic acoustic engine**
+**556 lines | Sacred geometry harmonic acoustic engine**
 
 ## Purpose
 Generates mathematically-coupled audio drones based on fractal geometry, tuned to 432 Hz sacred frequency.
@@ -67,14 +67,14 @@ Initializes AudioContext and creates signal chain:
 4. GlobalFilter - lowpass at 750 Hz
 5. Calls `rebuildVoicesForGeometry()`
 
-### `rebuildVoicesForGeometry(typeA, typeB)` (lines 232-355)
+### `rebuildVoicesForGeometry(typeA, typeB)` (lines 238-361)
 Creates 5-6 oscillators based on fractal family:
 - **5 voices** from primary fractal family
 - **1 hybrid voice** if hybridType differs (blend-dependent volume)
 - Cross-fades old voices over 350ms to eliminate clicks
 - Binaural beat: ±0.618 Hz for brainwave entrainment
 
-### `getChordFrequenciesForFamily(family, tuning, fractalType)` (lines 155-229)
+### `getChordFrequenciesForFamily(family, tuning, fractalType)` (lines 161-235)
 Returns frequency ratios for each family:
 - **Base**: 108 Hz (432/4 sacred fundamental)
 - **Microtonal offset**: Golden angle (137.5°) per fractal index, ±25 cents
@@ -84,18 +84,33 @@ Returns frequency ratios for each family:
 - **primes**: Riemann zeta zeros (1.1413, 1.2102, 1.2501)
 - **attractors**: 0.5, 1.0, 1.382, 1.618, φ×1.5×0.5
 
-### `updateParams(params)` (lines 358-418)
+### `updateParams(params)` (lines 364-424)
 Real-time modulation coupled to fractal parameters:
 - **Zoom**: Filter cutoff 260-980 Hz, cavity freq 54-240 Hz
 - **Phi**: Microtonal detuning ±80 cents from 1.618034
 - **Rotation**: Stereo panning ±0.4 from rotX
 - **Hybrid blend**: Hybrid voice volume 0-0.22
 
-### `playSpecimenTransitionChord()` (lines 421-466)
+### `playSpecimenTransitionChord()` (lines 427-472)
 4-note bell chord on specimen change:
 - 216 Hz (root), 270 Hz (major 3rd), 324 Hz (5th), 432 Hz (golden)
 - Staggered attack (50ms per note)
 - 2.8s exponential decay
+
+### `setVolume(volume)` (lines 474-479)
+Clamps to [0, 1]; ramps masterGain via `setTargetAtTime(volume * 0.16, ..., 0.08)`.
+Getters: `getVolume()` (lines 481-483), `setTuning(mode)` (lines 485-491, rebuilds voices when running), `getTuning()` (lines 493-495).
+
+### `stop()` (lines 497-539)
+Exponential ramp to 0.0001 over 300ms, then deferred cleanup after 350ms: stops/disconnects all voices and filters, closes AudioContext, nulls nodes. Pending cleanup from a previous stop() is cancelled on restart.
+
+### `toggle()` (lines 541-549)
+If running → `stop()`, returns false; otherwise → `start(currentVolume, tuningMode)`, returns true. `getActive()` (lines 551-553) exposes the running flag.
+
+### Singleton export (line 556)
+```typescript
+export const goldenAudio = new GoldenAudioEngine();
+```
 
 ## Critical Notes
 1. **Base frequency**: 108 Hz = 432/4 (sacred tuning)

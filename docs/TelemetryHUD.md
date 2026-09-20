@@ -1,6 +1,6 @@
 # TelemetryHUD.tsx
 
-**161 lines | Real-time performance telemetry display**
+**170 lines | Real-time performance telemetry display**
 
 ## Purpose
 Top-left HUD showing FPS, frame time, frame pacing graph, and GPU specs. Desktop only (hidden on mobile).
@@ -160,5 +160,5 @@ Rolling window: Keeps last 40 frame times for sparkline graph.
 
 ## Dependencies
 - `TelemetryData` from types
-- `lucide-react` icons (5 icons: Activity, Cpu, Zap, Gauge, Sparkles)
+- `lucide-react` icons (1 icon: Sparkles)
 - No engine dependencies (receives data via props)

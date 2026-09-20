@@ -1,7 +1,22 @@
 # Rendering System Documentation
 
 ## Overview
-The rendering system uses WebGL2 with GLSL ES 3.00 shaders. All 7 render modes, post-processing effects, and advanced lighting are embedded in `src/shaders/webglShaders.ts` (4388 lines, 163KB). The WebGPU backend mirrors this in `src/shaders/webgpuShaders.ts` (3546 lines, 137KB) covering 104/431 types.
+The rendering system uses WebGL2 with GLSL ES 3.00 shaders. Both backends are full-screen **fragment-shader ray-marching pipelines** (no compute shaders anywhere).
+
+### Actual shader pipeline (v2.4.0)
+There are no separate HEADER/module source files: `src/shaders/webglShaders.ts` exports one monolithic GLSL template string, and `ShaderManager` assembles small shaders from it at runtime.
+
+| Stage | Where | What happens |
+|-------|-------|--------------|
+| Monolithic source | `webglShaders.ts` — `FRAGMENT_SHADER_SOURCE` (L74-4193, 4195 lines / 161KB total) | uniforms, all `map*` functions, `evalSingleFractal`, `sceneSDF`, lighting, `main()` |
+| Lazy minimal assembly | `src/engine/ShaderManager.ts` (327 lines) | parses the monolithic string and builds ~900-line per-fractal shader: header + ONE fractal function + generated minimal `sceneSDF` + footer |
+| Non-blocking compile wait | `ShaderManager` + `KHR_parallel_shader_compile` | polls compile/link completion (budget: link 3200 spins, stage 800) with a single `gl.flush()` per wait — never flushes inside the spin loop |
+| Progress reporting | `WebGLEngine.onCompileProgress` | parsing 10% → compiling 40% → linking 80% → complete 100%, surfaced as `loadProgress` in `useRenderEngine` and consumed by `CosmicLoader` (loader dismisses on the first rendered frame) |
+| Warmup | `WebGLEngine.beginWarmup()` | 24 frames (~0.4 s at 60 fps) at quality 0 after each shader swap, then restores pre-swap quality |
+| Fallback | `WebGLEngine.ts:292-355` | if the minimal shader fails to compile/link, the full monolithic shader is compiled instead |
+| LRU cache | `ShaderManager` | max 8 compiled programs |
+
+The WebGPU backend mirrors the same fragment-pipeline design in `src/shaders/webgpuShaders.ts` (4069 lines, 158KB): it implements indices 0-130 (131/431 types); indices 131-430 fall back to phyllotaxis. WebGL2 renders all 431 types.
 
 ## Render Modes (7 Total)
 
@@ -13,13 +28,13 @@ The rendering system uses WebGL2 with GLSL ES 3.00 shaders. All 7 render modes, 
 - Environment reflections (1 sample)
 - Bounce light (indirect illumination)
 - Subsurface scattering (3 samples)
-- Soft shadows (16 steps)
+- Soft shadows (16 steps — GLSL only; removed in the WGSL pipeline)
 - Micro normal detail (15% blend)
 
-**Lighting equation**:
+**Lighting equation** (`webglShaders.ts:3847`):
 ```glsl
-col = ambient * 0.6 + diffuse * 1.5 + specular * 1.2 + rim * 1.3 
-    + sssColor * sssBackLight + bounceCol * 1.8 + reflCol * 0.8;
+col = ambient * 0.35 + diffuse * 2.0 + specular * 1.5 + rim * 1.6 
+    + sssColor * sssBackLight + bounceCol * 1.2 + reflCol * 0.6;
 ```
 
 **Visual**: Golden/olive 3D forms with realistic lighting
@@ -202,10 +217,11 @@ col = (col * (a * col + b)) / (col * (c * col + d) + e);
 
 ## Lighting System
 
-### Soft Shadows
+### Soft Shadows (GLSL only)
 - 16-step ray march
 - Penumbra factor: `12.0 * d / t`
 - Max distance: 8.0 units
+- WGSL equivalent: removed — `sh1 = sh2 = 1.0`, shading relies on AO only
 
 ### Subsurface Scattering
 - 3 samples along light direction
@@ -259,17 +275,18 @@ n = e1 * SDF(p+e1) + e2 * SDF(p+e2) + e3 * SDF(p+e3) + e4 * SDF(p+e4);
 ## Ray Marching
 
 ### Parameters
-- **Max steps**: 640 (close), 480 (medium), 320 (far)
+- **Max steps**: GLSL 256 (close) / 192 (medium) / 128 (far) × `qualityMult` (0.5 + quality_level × 0.25) → 64-256; WGSL 512 / 384 / 256
 - **Max distance**: 2048/1536/1024 based on camera distance
-- **Hit threshold**: `max(cam_dist * 0.0003, 0.0001)`
-- **Binary search**: 20 iterations for surface refinement
+- **Bounding radius**: 6.0 (both backends)
+- **Hit threshold**: `max(max(cam_dist * 0.0003, 0.0001) * 3.0, 0.002)`
+- **Binary search**: 20 iterations for surface refinement (sign-aware)
 
 ### Optimizations
 1. **Hierarchical space leaping**: 3-level bounding volumes
 2. **LOD system**: Reduce iterations at far distance
 3. **Adaptive step size**: Larger when far, smaller when close
 4. **Sign tracking**: Record surface crossings for stability
-5. **Early termination**: Miss count > 16 breaks loop
+5. **Early termination**: miss count > `16 + quality_level * 8` breaks loop
 
 ### Binary Search
 ```glsl
@@ -289,8 +306,8 @@ for (int j = 0; j < 20; j++) {
 - Ray marching: ~100-200 (average case)
 - Normal estimation: 4 (tetrahedral)
 - Micro normal: 4
-- Soft shadows: 16 * 2 lights = 32
-- AO: 7 + 4 = 11
+- Soft shadows: 16 * 2 lights = 32 (GLSL; WGSL skips them)
+- AO: 7 + 4 = 11 (GLSL; WGSL 5 + 3 = 8)
 - SSS: 3
 - Environment reflection: 1
 - Bounce light: 1
@@ -302,7 +319,7 @@ for (int j = 0; j < 20; j++) {
 - KHR_parallel_shader_compile (optional)
 - 32+ extensions supported
 - 1024+ uniform components
-- WebGPU (optional): async pipeline, 52-float uniform buffer (WGSL alignment padding)
+- WebGPU (optional): async pipeline, 52-float / 208-byte uniform buffer (indices 48-51 are the struct alignment tail)
 
 ---
 
@@ -317,15 +334,17 @@ for (int j = 0; j < 20; j++) {
 ### Harmonic Cosine Palette Engine
 ```glsl
 float phase = fract(
-  normalPhase * 0.45 +
-  normalPhase2 * 0.30 +
-  normalPhase3 * 0.15 +
-  hashNoise * 0.15 +
-  trapSmooth * 0.25 +
-  curvNorm * 0.20 +
-  position * 0.04 +
-  time * 0.03 +
-  seedAnim * 0.01 + 0.37
+  normalPhase * 0.45 +       // Normal X — primary variation
+  normalPhase2 * 0.30 +      // Normal Y
+  normalPhase3 * 0.15 +      // Normal Z
+  hashNoise * 0.15 +         // Reduced noise
+  hashNoise2 * 0.10 +        // Secondary hash
+  hashNoise3 * 0.05 +        // Tertiary hash
+  trapSmooth * 0.25 +        // Orbit trap detail
+  curvNorm * 0.20 +          // Curvature variation
+  p.y * 0.04 + p.x * 0.02 + p.z * 0.02 +  // Position
+  length(p - ro) * 0.015 +   // Distance-based
+  u_time * 0.03 + seedAnim * 0.01 + 0.37   // Animation + offset
 );
 float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
 float w_secondary = 0.5 + 0.5 * cos(TWO_PI * (phase + 1.0/GOLDEN_RATIO));
@@ -356,7 +375,7 @@ float fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5);
 - Engine init: `[DIAG] Engine ready: WebGL2 | ...`
 - Health check: Every 30s with FPS, fractal type, render style
 - Render diagnostics: Invalid uniforms, out-of-range values
-- MathValidation: Runtime checks for NaN, Infinity, negative distances
+- MathValidation: defined but not used in render paths (removed for anti-freeze; validation runs at init only)
 
 ### Telemetry
 - FPS (current, average, 1% low)

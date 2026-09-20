@@ -58,12 +58,12 @@ Uniform buffer size mismatch
 
 **Diagnostic Steps:**
 
-1. **Open TelemetryHUD** (press 'T')
+1. **Open TelemetryHUD** (enable **Engineer mode** via the "Инж" toggle in the controls panel)
    - Check current FPS
    - Check frame time
    - Look for spikes
 
-2. **Open DebugOverlay** (press 'D')
+2. **Open DebugOverlay** (press 'F3')
    - Check GPU health
    - Check math validation
    - Look for NaN/Infinity
@@ -372,14 +372,14 @@ localStorage.setItem('fractalParams', JSON.stringify(params));
 
 ## Diagnostic Tools
 
-### 1. DebugOverlay (press 'D')
+### 1. DebugOverlay (press 'F3')
 - FPS counter
 - Frame time
 - GPU health
 - Math validation
 - Shader compile time
 
-### 2. TelemetryHUD (press 'T')
+### 2. TelemetryHUD (Engineer mode — "Инж" toggle)
 - Real-time FPS
 - Frame time graph
 - Performance history

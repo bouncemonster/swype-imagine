@@ -1,18 +1,18 @@
 # types/fractal.ts
 
-**584 lines | Core TypeScript interfaces**
+**576 lines | Core TypeScript interfaces**
 
 ## Type Definitions
 
-### FractalType (lines 1-431)
+### FractalType (lines 1-444)
 **431 fractal types** (phyllotaxis through hybridVariant90)
 
 Each type has:
 - Numeric index (0-430)
 - Description comment with mathematical context
 
-### RenderStyle (lines 89-98)
-**7 render modes** + 2 aliases:
+### RenderStyle (lines 446-455)
+**9 members / 7 unique indices** (topo/sonar/lidar share index 2):
 | Value | Index | Description |
 |-------|-------|-------------|
 | solid | 0 | PBR with AO, soft shadows, SSS |
@@ -23,7 +23,7 @@ Each type has:
 | quantum | 5 | Wave interference + magnetic fields |
 | gemstone | 6 | Beer-Lambert + caustics |
 
-### CompositeOp (lines 100-108)
+### CompositeOp (lines 457-465)
 **8 composite operations**:
 | Value | Index | Description |
 |-------|-------|-------------|
@@ -36,7 +36,7 @@ Each type has:
 | fractalLattice | 6 | TPMS/Gyroid cellular lattice |
 | goldenSpiralFold | 7 | Logarithmic spiral entanglement |
 
-### CameraMode (lines 110-114)
+### CameraMode (lines 467-471)
 **4 camera modes**:
 | Value | Description |
 |-------|-------------|
@@ -47,7 +47,7 @@ Each type has:
 
 ## Interfaces
 
-### ColorPalette (lines 116-123)
+### ColorPalette (lines 477-484)
 ```typescript
 {
   id: string;
@@ -59,8 +59,8 @@ Each type has:
 }
 ```
 
-### FractalParams (lines 125-171)
-**48+ rendering parameters** packed into uniform buffer:
+### FractalParams (lines 486-532)
+**43 fields** (interface; the "48" often quoted elsewhere is the uniform-buffer float count, a different thing):
 - **Type**: type, hybridType, tertiaryType, compositeOp
 - **Blend**: hybridBlend, tertiaryBlend, smoothK, warpStrength
 - **Geometry**: octaveLayers, boxFold, sphereFold, interiorCut
@@ -72,7 +72,7 @@ Each type has:
 - **Audio**: enableAudio, audioVolume, audioTuning ('phi432' | 'fibonacci' | 'zenChimes')
 - **UI**: macroMode, probeActive, feedScrollMode
 
-### TelemetryData (lines 173-184)
+### TelemetryData (lines 534-545)
 ```typescript
 {
   fps: number;
@@ -88,7 +88,7 @@ Each type has:
 }
 ```
 
-### FractalSpecimen (lines 187-214)
+### FractalSpecimen (lines 548-575)
 **Genetic genome** for Neuro-Aesthetic Feed:
 - **Identity**: id, seed, generation, name
 - **Type**: type, hybridType, tertiaryType, compositeOp
@@ -98,8 +98,8 @@ Each type has:
 - **Engagement**: affinityScore (0-100), dwellTimeSeconds, zoomInteractions, orbitInteractions
 
 ## Critical Notes
-1. **FractalType** has 86 types, but fractalMappers.ts maps 431 total (including variations)
-2. **RenderStyle** has aliases: sonar/lidar → topo (same index 2)
+1. **FractalType** has 431 members (indices 0-430); fractalMappers.ts maps all of them (plus aliases)
+2. **RenderStyle** has aliases: sonar/lidar → topo (same index 2); fractalMappers additionally maps pbr → 0, topography → 2, plasma → 5, crystal → 6
 3. **FractalParams** is the main interface shared across all components
 4. **FractalSpecimen** is the genetic genome for breeding/evolution
 5. **TelemetryData** is dispatched every 250ms from useRenderEngine

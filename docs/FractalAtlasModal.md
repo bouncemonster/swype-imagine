@@ -1,9 +1,9 @@
 # FractalAtlasModal.tsx
 
-**538 lines | Scientific atlas of canonical fractals with search and categories**
+**574 lines | Scientific atlas of canonical fractals with search and categories**
 
 ## Purpose
-Comprehensive atlas showing all 100+ canonical fractals with scientific descriptions, formulas, and the ability to apply presets. Includes search, category filtering, and detailed information panels.
+Comprehensive atlas showing all 145 canonical fractals with scientific descriptions, formulas, and the ability to apply presets. Includes search, category filtering, and detailed information panels.
 
 ## Props Interface (lines 30-34)
 ```typescript
@@ -58,7 +58,7 @@ const handleApply = (fractal: CanonicalFractal) => {
   }, 450);
 };
 ```
-Applies fractal preset, shows checkmark for 450ms, then closes modal.
+Applies fractal preset, shows checkmark for 450ms (atlas apply-delay, unrelated to the CosmicLoader progress pipeline), then closes modal.
 
 ## Category Icons (lines 75-85)
 ```typescript
@@ -78,7 +78,7 @@ const getCategoryIcon = (catKey: FractalCategoryKey) => {
 ## Critical Notes
 1. **3 tabs**: catalog, manifest, technologies
 2. **Search**: Full-text search across all fractal fields
-3. **Category filter**: 7 categories + "all"
+3. **Category filter**: 10 FRACTAL_CATEGORIES keys (fractalCatalogTypes.ts:3-13) + "all"; note: the 19 temporal_manifolds catalog items carry existing category keys and are only grouped/reachable as a distinct set under "all"
 4. **Apply preset**: Loads fractal parameters into engine
 5. **Visual feedback**: Checkmark shown for 450ms after apply
 6. **Responsive**: Mobile-first design

@@ -2,10 +2,10 @@
 
 ## Structure
 
-### fractalCatalogTypes.ts (96 lines)
+### fractalCatalogTypes.ts (114 lines)
 Defines types and categories for canonical fractals.
 
-#### FractalCategoryKey (8 categories)
+#### FractalCategoryKey (10 categories)
 | Key | Title | Description |
 |-----|-------|-------------|
 | geometric_curves | Геометрические кривые | L-системы, пространственно-заполняющие кривые |
@@ -16,6 +16,10 @@ Defines types and categories for canonical fractals.
 | stochastic | Стохастические | DLA-кластеры, перколяция, шумы |
 | topological_physical | Физические | Бабочка Хофштадтера, множества Кантора |
 | expanded_real | Расширенный каталог | Странные аттракторы, TPMS |
+| visually_distinct | Визуально уникальные | Стили рендеринга на классических фракталах |
+| mandalas_3d | 3D Мандалы | Сферические симметрии, узлы, мозаики Пенроуза |
+
+> **Note:** `temporal_manifolds` is **not** a `FractalCategoryKey` (there are exactly 10 keys). The `temporalManifolds.ts` entries reuse existing keys, so they are only grouped as "temporal manifolds" under the `all` filter.
 
 #### CanonicalFractal Interface
 ```typescript
@@ -37,18 +41,23 @@ Defines types and categories for canonical fractals.
     warpStrength?: number;
     boxFold?: number;
     sphereFold?: number;
-    octaves?: number;
+    octaveLayers?: number;
     zoom?: number;
     phiMultiplier?: number;
     rotX?: number;
     rotY?: number;
     iterations?: number;
     paletteSeed?: number;
+    smoothK?: number;
+    glowIntensity?: number;
+    morphSpeed?: number;
+    interiorCut?: number;
+    renderStyle?: RenderStyle;
   };
 }
 ```
 
-### fractalFactory.ts (83 lines)
+### fractalFactory.ts (85 lines)
 Unified builder for canonical fractals.
 
 #### FractalBuilder Interface
@@ -67,7 +76,7 @@ Factory function that creates CanonicalFractal with defaults:
 - iterations: 32
 
 ### canonicalFractals.ts (31 lines)
-Composes catalog from 10 modular category files:
+Composes catalog from 11 modular category files:
 ```typescript
 export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
   ...GEOMETRIC_CURVES,           // geometricCurves.ts
@@ -80,25 +89,29 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
   ...EXPANDED_REAL_FRACTALS,     // expandedRealFractals.ts
   ...VISUALLY_DISTINCT_FRACTALS, // visuallyDistinctFractals.ts
   ...MANDALAS_3D,                // mandalas3D.ts
+  ...TEMPORAL_MANIFOLDS,         // temporalManifolds.ts
 ];
 ```
 
-## Category Files (10 total)
+## Category Files (11 total)
 
 | File | Category | Count | Examples |
 |------|----------|-------|----------|
-| geometricCurves.ts | geometric_curves | ~15 | Koch, Lévy, Dragon, Hilbert |
-| constructiveFractals.ts | constructive | ~10 | Sierpinski, Menger, Cantor |
-| algebraicFractals.ts | algebraic_complex | ~10 | Julia, Mandelbrot, Newton |
-| multidimensionalFractals.ts | multidimensional | ~10 | Mandelbulb, Quaternion |
-| ifsFractals.ts | ifs_attractors | ~15 | Lorenz, Hénon, Clifford |
-| stochasticFractals.ts | stochastic | ~8 | DLA, Perlin, Brownian |
-| physicalFractals.ts | topological_physical | ~8 | Hofstadter, Hopf, Klein |
-| expandedRealFractals.ts | expanded_real | ~20 | Rössler, Duffing, TPMS |
-| visuallyDistinctFractals.ts | expanded_real | ~10 | Unique visual patterns |
-| mandalas3D.ts | expanded_real | ~5 | 3D mandala patterns |
+| geometricCurves.ts | geometric_curves | 20 | Koch, Lévy, Dragon, Hilbert |
+| constructiveFractals.ts | constructive | 12 | Sierpinski, Menger, Cantor |
+| algebraicFractals.ts | algebraic_complex | 14 | Julia, Mandelbrot, Newton |
+| multidimensionalFractals.ts | multidimensional | 6 | Mandelbulb, Quaternion |
+| ifsFractals.ts | ifs_attractors | 10 | Lorenz, Hénon, Clifford |
+| stochasticFractals.ts | stochastic | 7 | DLA, Perlin, Brownian |
+| physicalFractals.ts | topological_physical | 10 | Hofstadter, Hopf, Klein |
+| expandedRealFractals.ts | expanded_real | 17 | Rössler, Duffing, TPMS |
+| visuallyDistinctFractals.ts | visually_distinct | 10 | Unique visual patterns |
+| mandalas3D.ts | mandalas_3d | 20 | 3D mandala patterns |
+| temporalManifolds.ts | *(no dedicated key; spans existing keys)* | 19 | Tesseract, Klein bottle, 4D polytopes |
 
-**Total: ~110 canonical fractals**
+**Total: 145 canonical fractals**
+
+> Per-file `createFractal()` counts verified against source. Note that `temporalManifolds.ts` items reuse existing `FractalCategoryKey` values, so key-based totals differ from file-based totals.
 
 ## Usage
 
@@ -128,7 +141,7 @@ setParams(prev => ({
 ```
 
 ## Critical Notes
-1. **431 FractalTypes** in types/fractal.ts, organized across **10 category files** in the catalog
+1. **431 FractalTypes** in types/fractal.ts, organized across **11 category files** in the catalog (all category data validated, 0 type mismatches remaining)
 2. Multiple canonical fractals can map to same FractalType with different presets
 3. `enginePreset` contains optimized parameters for each fractal
 4. `phiPiRelation` explains golden ratio / pi mathematical connections

@@ -4,6 +4,14 @@
 **Auditor**: AI Agent  
 **Status**: All Critical Bugs Fixed, Remaining Issues Documented
 
+> **⚠️ Historical snapshot (2026-09-11)** — this audit predates the current shader architecture.
+> Since then: `ShaderManager` v3 replaced the monolithic/dynamic-import shader pipeline with
+> per-fractal source-splicing; the compile path is now non-blocking via
+> `KHR_parallel_shader_compile`; `UserPreferenceEngine` was removed; and `CosmicLoader` is
+> progress-driven. Line numbers and code excerpts below refer to that date and may no longer
+> match. For current architecture read **ARCHITECTURE.md**, **RENDERING_SYSTEM.md** and
+> **docs/WebGLEngine.md** — not this file.
+
 ---
 
 ## Executive Summary

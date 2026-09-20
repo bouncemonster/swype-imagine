@@ -1,5 +1,65 @@
 # Development Log - Golden Ratio Fractal Engine
 
+> **⚠️ Current architecture (read first)**: this log is chronological, newest entries at the
+> top of each section — but later sessions superseded earlier plans. The CURRENT shader path is
+> **ShaderManager v3 source-splicing** (session Sept 14 below): parses `FRAGMENT_SHADER_SOURCE`
+> directly and builds a minimal per-fractal shader (~1000 lines) with a **static** module graph.
+> The Sept 13 "lazy loading via dynamic `import()` / fractalsA/B/C.ts / Promise.all" design was
+> **removed the next day** (see "Removed Files" in the Sept 14 entry) — treat it as historical.
+> Shader compile is now non-blocking via `KHR_parallel_shader_compile` (poll `COMPLETION_STATUS`
+> before `LINK_STATUS`, single `gl.flush()` per call); the loader (CosmicLoader) is driven by real
+> compile-stage progress and dismisses on the first rendered frame, not a timer.
+
+## Session: September 13, 2026
+
+### Lazy Shader Compilation Implementation (v2.4.0) — FINAL
+
+#### Problem
+Browser crashes when opening the deployed site due to memory exhaustion during GLSL compilation of the monolithic 4000+ line fragment shader.
+
+#### Solution
+Implemented **modular shader architecture** with **true lazy loading** via dynamic `import()`:
+
+**Shader Modular Architecture (FINAL)**:
+```
+FRAGMENT_SHADER = HEADER + FRACTALS_A + FRACTALS_B + FRACTALS_C + MANDELBROT_VARIATIONS + FRACTALS_PART2 + FOOTER
+```
+
+| Component | Lines | Size | Purpose |
+|-----------|-------|------|---------|
+| FRAGMENT_SHADER_HEADER | 72 | ~3KB | Uniforms, constants, helpers |
+| fractalsA.ts | 818 | ~28KB | Fractal functions 0-34 |
+| fractalsB.ts | 759 | ~26KB | Fractal functions 35-69 |
+| fractalsC.ts | 846 | ~29KB | Fractal functions 70-106 |
+| fractalsPart2.ts | 304 | 9KB | Fractal functions 104-130 + Mandelbrot placeholder |
+| FRAGMENT_SHADER_FOOTER | 1290 | ~52KB | evalSingleFractal, sceneSDF, main() |
+| MANDELBROT_VARIATIONS_GLSL | ~60 | ~3KB | Generated at runtime |
+
+**Key Features**:
+1. **True Lazy Loading**: Fractal modules loaded via dynamic `import()` — not static imports
+2. **Parallel Loading**: All 4 fractal modules loaded simultaneously via `Promise.all()`
+3. **Async Shader Assembly**: `buildFragmentShader()` is async and returns `Promise<string>`
+4. **Code Splitting**: Vite creates separate chunks for each module (4 chunks)
+5. **Runtime Mandelbrot Generation**: Mandelbrot variants generated at runtime and inserted
+6. **LRU Caching**: Max 5 compiled shader programs in memory
+7. **Progress Callbacks**: UI feedback during compilation
+8. **Fallback Mechanism**: If module loading fails, falls back to full FRAGMENT_SHADER_SOURCE
+
+**Results**:
+- Build: ✅ Successful (3.37s)
+- Deploy: ✅ Successful to Cloudflare Pages (https://master.golden-ratio-fractal-engine.pages.dev)
+- Initial Load: ~1362 lines (HEADER+FOOTER) vs ~4145 lines monolithic
+- Code Splitting: ✅ Vite created 4 separate chunks for fractal modules
+- Bundle: Main ~800KB, fractalsA ~28KB, fractalsB ~26KB, fractalsC ~29KB, fractalsPart2 ~9KB
+- Total fractal modules: ~92KB (4 chunks)
+- Fallback: ✅ Full shader fallback if module loading fails
+
+**NOT COMPLETED**:
+- WebGPU backend not updated for modular architecture (requires WGSL modules, covers only 104/140 types)
+- Browser testing of all 140 fractals (requires manual verification)
+
+---
+
 ## Session: September 12, 2026 (continued)
 
 ### Shader Math Corrections & Visual Validation
@@ -76,11 +136,11 @@
 - **DEVELOPMENT_LOG.md**: Added this session entry
 
 #### 2. Current Project State (Verified)
-- **TypeScript errors**: 0 (strict mode)
-- **Build**: 873.31 KB JS (221.77 KB gzipped), 76.12 KB CSS, 3.66s
-- **Unit tests**: 713 passed (521 mapper + 113 shader-math + 79 engine-parity)
+- **TypeScript errors**: 0 (tsconfig `strict` is NOT enabled — no `strict` key)
+- **Build**: ~873 KB JS (222 KB gzipped), ~76 KB CSS (varies per build)
+- **Unit tests**: 715 passed (521 mapper + 113 shader-math + 81 engine-parity)
 - **Integration tests**: 822 assertions
-- **Total source files**: 64 (51 src + 13 tests)
+- **Total source files**: 73 (54 src + 19 tests)
 - **Total source size**: ~1052KB
 
 ---
@@ -388,6 +448,35 @@ d89269f - feat: Enhanced PBR rendering - soft shadows, SSS, environment reflecti
 - screenshot_debug.png, screenshot_final.png, screenshot_help.png
 
 ---
+
+## Session: September 14, 2026
+
+### ShaderManager v3 - True Minimal Shader Compilation
+
+**Problem**: Browser crashes (GL_OUT_OF_MEMORY) persisted because:
+1. fractalsPart2.ts had unescaped template literal (ReferenceError)
+2. WebGLEngine.ts used undefined gl variable (ReferenceError: program)
+3. Even modular shader assembled full FOOTER with sceneSDF calling ALL 140 map functions
+
+**Root Cause Analysis**: sceneSDF() calls evalSingleFractal(ftypeA/B/C,...) which has 140 branches referencing all map* functions. The GLSL linker requires ALL referenced functions, even in unreachable branches.
+
+**Solution - ShaderManager v3**:
+- Parses FRAGMENT_SHADER_SOURCE string directly (no module files)
+- Generates minimal shader per fractal: header + ONE function + minimal_sceneSDF + footer
+- minimal_sceneSDF calls the fractal function DIRECTLY (no evalSingleFractal)
+- GLSL linker only needs that one map* function
+- Shader size: ~900 lines vs 4171 (78% reduction)
+
+**Files Changed**:
+| File | Change |
+|------|--------|
+| src/engine/ShaderManager.ts | Complete rewrite (v3, ~230 lines) |
+| src/engine/WebGLEngine.ts | Fixed gl reference bugs |
+| ARCHITECTURE.md | Updated with v3 architecture |
+
+**Removed Files**: fractalsA.ts, fractalsB.ts, fractalsC.ts, fractalsPart2.ts, split-footer scripts
+
+**Result**: Build 4.15s, deployed to https://master.golden-ratio-fractal-engine.pages.dev
 
 ## Summary
 

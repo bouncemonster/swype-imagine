@@ -1,6 +1,6 @@
 # vite.config.ts
 
-**14 lines | Vite build configuration**
+**16 lines | Vite build configuration**
 
 ## Purpose
 Vite bundler configuration for React + Tailwind CSS application.
@@ -11,6 +11,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -50,10 +51,10 @@ server: {
 ```
 vite build → dist/
 ├── index.html
-├── assets/
-│   ├── index-[hash].js
-│   ├── index-[hash].css
-│   └── vendor-[hash].js
+└── assets/
+    ├── index-[hash].js
+    ├── index-[hash].css
+    └── aistudio/.gitignore
 ```
 
 ## Dependencies

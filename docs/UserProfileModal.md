@@ -1,6 +1,6 @@
 # UserProfileModal.tsx
 
-**342 lines | User taste profile, liked fractals, and settings**
+**362 lines | User taste profile, liked fractals, and settings**
 
 ## Purpose
 Modal displaying user's neuro-aesthetic taste profile, liked fractals playlist, audio tuning settings, and engineer mode toggle.
@@ -197,4 +197,4 @@ Opens ProjectManifestModal
 - `TasteProfile`, `AestheticArchetype`, `ARCHETYPE_LABELS` from NeuroAestheticsEngine
 - `FractalSpecimen` from types
 - `AudioTuning` from types/fractal.ts
-- `lucide-react` icons (14 icons)
+- `lucide-react` icons (9 icons: User, Sparkles, Wrench, Volume2, X, Heart, Play, Trash2, BarChart3)

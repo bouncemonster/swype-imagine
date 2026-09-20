@@ -1,6 +1,6 @@
 # Project Context - Always In Context
 
-**Version**: 2.3.0  
+**Version**: 2.4.0  
 **Last Updated**: 2026-09-12  
 **Status**: Production Deployed — kkrieger-Compressed & Math-Verified
 
@@ -16,15 +16,15 @@ Real-time 3D fractal visualization engine showcasing mathematical beauty through
 
 ### Code Metrics
 ```
-Source Files:     51 TypeScript/TSX
+Source Files:     54 TypeScript/TSX
 Documentation:    44 markdown files (219KB)
-Shader Code:      300KB (GLSL + WGSL)
+Shader Code:      358KB (GLSL + WGSL + modules)
 Shader Modules:   38KB (649 lines, kkrieger-compressed from 189KB/7934 lines)
 Total Lines:      ~25,000 (code + docs)
 Components:       12 UI components
-Fractal Types:    431 active (all rendered)
+Fractal Types:    431 active (WebGL: all 431; WGSL: 131/431)
 Render Modes:     7
-Color Palettes:   664
+Color Palettes:   666
 ```
 
 ### Performance Targets
@@ -101,22 +101,22 @@ Approximates distance to fractal surface: `DE = 0.5 * log(r) * r / dr`
 - `src/engine/fractalMappers.ts` - Type mappings
 
 ### Shaders (Must Know)
-- `src/shaders/webglShaders.ts` - GLSL shader (4386 lines, ALL 431 types)
-- `src/shaders/webgpuShaders.ts` - WGSL shader (3545 lines, 104/431 types)
+- `src/shaders/webglShaders.ts` - GLSL shader (4195 lines, ALL 431 types)
+- `src/shaders/webgpuShaders.ts` - WGSL shader (4069 lines, 131/431 types)
 - `src/shaders/modules/` - 5 kkrieger-compressed variation modules (649 lines, 38KB)
 
 ### Components (Must Know)
-- `src/App.tsx` - Root component (~657 lines)
+- `src/App.tsx` - Root component (~717 lines)
 - `src/components/ControlsPanel.tsx` - Main controls (~876 lines, architectures data extracted)
 - `src/components/FractalCanvas.tsx` - Canvas (~260 lines)
-- `src/hooks/useRenderEngine.ts` - Engine hook (~620 lines)
+- `src/hooks/useRenderEngine.ts` - Engine hook (~782 lines)
 
 ### Data (Must Know)
-- `src/data/canonicalFractals.ts` - 431 fractals across 10 categories
+- `src/data/canonicalFractals.ts` - 145 canonical fractals composed from 11 category files (10 category keys)
 - `src/data/compatibleHybrids.ts` - Hybrid breeding compatibility matrix (249 lines)
 - `src/data/fractalArchitectures.ts` - Architecture tab data (193 lines)
 - `src/types/fractal.ts` - Core types (576 lines)
-- `src/palettes.ts` - 24 palettes
+- `src/palettes.ts` - 26 hand-crafted palettes
 - `src/palettesProcedural.ts` - 640 palettes
 
 ---
@@ -312,7 +312,7 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: auto-rotation now pauses during interaction (drag/zoom), resumes after 3s idle
 - ✅ Fixed: inertia decay is now frame-rate independent (was 35x faster at 144fps vs 60fps)
 - ✅ Fixed: ray-marching bounding box expanded ±2.5 → ±5.0 (fractals were clipped at edges)
-- ✅ Fixed: bounding sphere expanded 6.0 → 10.0 (larger fractal structures now visible)
+- ✅ Fixed: bounding sphere expanded 6.0 → 10.0 (larger fractal structures now visible) — **correction: final `boundingRadius` in both GLSL/WGSL shaders is 6.0**
 - ✅ Fixed: early termination missCount 16 → 32 (sparse fractal regions no longer prematurely terminated)
 - ✅ Fixed: LOD iteration reduction 8 → 4 (preserves detail at distance)
 - ✅ Fixed: shader compilation errors — hit_threshold scope, base→base_n typo, sssCol→sssColor typo, u_auto_rotate uniform
@@ -324,13 +324,13 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: MEDIUM COMPATIBLE_HYBRIDS added 27 missing fractal type entries
 - ✅ Fixed: CRITICAL transparent sphere clipping — r_bound 5.0→12.0 in both GLSL/WGSL
 - ⚠️ Remaining: TypeScript strict mode not enabled
-- ⚠️ Remaining: ~140 data type mismatches in category files (handled by alias mappings at runtime)
+- ✅ Resolved: category data validated, 0 type mismatches remaining
 - ️ Remaining: fractalFactory.ts non-standard import paths
 - ⚠️ Remaining: No git remote configured (push not possible)
 - 📊 Shader functions fixed: 600+ across 7 files
 
 ### Short-term
-- Add more fractal types (target: 200+)
+- Add more fractal types (431 implemented — target reached)
 - Improve shader performance
 - Enhance mobile UX
 - Add more tutorials
@@ -376,7 +376,7 @@ Each component has dedicated doc in `docs/`:
 
 ### What Makes This Project Special
 1. **WebGPU-first** - Modern GPU API for best performance
-2. **100+ fractals** - Largest canonical fractal collection
+2. **431 fractal types / 145 canonical** - Largest canonical fractal collection
 3. **Neuro-aesthetics** - AI-driven personalization
 4. **Scientific focus** - Mathematical formulas and dimensions
 5. **Real-time morphing** - Smooth transitions
@@ -386,8 +386,8 @@ Each component has dedicated doc in `docs/`:
 ### Technical Achievements
 - 48-float uniform buffer optimization (52 floats for WGSL with alignment)
 - Dual GPU backend (WebGPU + WebGL2)
-- 300KB shader code (431 fractal types, WebGL has all 431, WebGPU has 104)
-- 664 color palettes (24 + 640 procedural)
+- 358KB shader code (431 fractal types, WebGL has all 431, WebGPU has 131)
+- 666 color palettes (26 + 640 procedural)
 - 5D archetype space for personalization
 - Real-time ray marching at 60+ FPS
 - Post-audit: zero per-frame allocations, all bugs documented
@@ -481,7 +481,7 @@ Each component has dedicated doc in `docs/`:
 ### Known Limitations
 - Safari iOS: No WebGPU support
 - Mobile: Limited by device capabilities
-- Shader size: 300KB (large but necessary for 431 fractal types)
+- Shader size: 358KB (large but necessary for 431 fractal types)
 - No offline mode yet (planned)
 
 ### Future Considerations

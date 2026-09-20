@@ -1,13 +1,13 @@
 # NeuroAestheticsEngine.ts
 
-**1224 lines | 56KB | Neuro-aesthetic recommendation engine**
+**1113 lines | 43.6KB | Neuro-aesthetic recommendation engine**
 
 ## Purpose
 Generates evolved fractal specimens based on user taste profile, tracks engagement, manages history.
 
 ## Key Concepts
 
-### TasteProfile (lines 650-659)
+### TasteProfile (lines 419-428)
 ```typescript
 {
   typeAffinities: Record<FractalType, number>,  // 0.2 - 4.5
@@ -22,7 +22,7 @@ Generates evolved fractal specimens based on user taste profile, tracks engageme
 ```
 Stored in `localStorage` as `golden_ratio_taste_profile_v2`.
 
-### AestheticArchetypes (lines 663-732)
+### AestheticArchetypes (`getFractalArchetype` / archetype map)
 5 archetypes classify fractal types:
 - **geometry** - phyllotaxis, apollonian, spirals
 - **complex** - mandelbulb, julia, menger
@@ -36,14 +36,14 @@ Imported from separate data file to reduce NeuroAestheticsEngine.ts monolith siz
 
 ## Key Methods
 
-### `breedNextSpecimen(forceType?)` (lines 910-1129)
-1. **Type selection**: EXPLORATION_MODE shows all 431 types sequentially first
+### `breedNextSpecimen(forceType?)`
+1. **Type selection**: EXPLORATION_MODE shows all 113 ALL_FRACTAL_TYPES sequentially first
 2. **Palette evolution**: Golden angle stepping (137.5°) with 50% mutation chance
 3. **Hybrid breeding**: 80% chance, 60% random partner, 40% compatibility matrix
 4. **Tertiary layer**: 50% chance to add 3rd fractal
 5. **Genetic parameters**: boxFold, sphereFold, smoothK, warpStrength, octaveLayers
 
-### `registerEngagement(dwell, zoom, orbit, specimen)` (lines 1133-1190)
+### `registerEngagement(dwell, zoom, orbit, specimen)`
 Calculates affinity score (0-100):
 - Base: 25%
 - Dwell time: +35% over 90 seconds
@@ -55,16 +55,16 @@ Updates taste profile when `dwellTime > 10s && affinityScore > 50`:
 - Hue learning: RGB → hue conversion, 3% blend
 - Preferred morphSpeed, glow, iterations: 1% blend
 
-### `boostAffinity(specimen)` (lines 1193-1201)
+### `boostAffinity(specimen)`
 Manual favorite: sets affinity to 95%, type affinity +0.35.
 
-### `getHybridRecommendations(count)` (lines 860-907)
+### `getHybridRecommendations(count)`
 Returns top-N hybrid combinations based on:
 - User affinity for both types
 - Archetype synergy multiplier
 - Novelty bonus (unseen combinations)
 
-### `suggestRenderStyle(specimenType)` (lines 1271-1297)
+### `suggestRenderStyle(specimenType)`
 Archetype-based render style recommendation:
 - geometry → solid, gemstone, topo
 - complex → hologram, quantum, iridescent
@@ -74,13 +74,13 @@ Archetype-based render style recommendation:
 
 ## Constants
 
-### `ALL_FRACTAL_TYPES` (lines 290-408)
+### `ALL_FRACTAL_TYPES`
 86 fractal types + 4D polytopes (5) + manifolds (4) + flames (13) + IFS (5) = **113 total**
 
-### `FRACTAL_NAMES` (lines 410-528)
+### `FRACTAL_NAMES`
 Russian display names for all fractal types.
 
-### `DEFAULT_ZOOMS` (lines 530-648)
+### `DEFAULT_ZOOMS`
 Optimal zoom level per fractal type (1.5 - 3.5 range).
 
 ## Critical Notes

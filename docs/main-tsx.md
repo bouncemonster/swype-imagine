@@ -1,9 +1,9 @@
 # main.tsx
 
-**10 lines | Application entry point**
+**19 lines | Application entry point**
 
 ## Purpose
-React application bootstrap - renders the root App component into the DOM.
+React application bootstrap - renders the root App component into the DOM and guards against unhandled promise rejections.
 
 ## Code Structure
 ```typescript
@@ -12,11 +12,21 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
+// Catch unhandled Promise rejections to prevent silent failures and browser error reports
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[unhandledrejection]', event.reason);
+  // Prevent the rejection from propagating to the browser's error handler
+  event.preventDefault();
+});
+
 const rootElement = document.getElementById('root');
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(<App />);
 }
 ```
+
+## Unhandled Rejection Handler (lines 9-13)
+Logs the rejection reason via `console.error('[unhandledrejection]', ...)` and calls `event.preventDefault()` so async GPU/init rejections don't propagate to the browser's error UI as red overlays.
 
 ## Critical Notes
 1. **No StrictMode**: React.StrictMode was removed because it double-invokes effects in development mode
@@ -24,6 +34,7 @@ if (rootElement) {
 3. **Single render**: Only one App instance is created
 4. **CSS import**: Global styles loaded before App renders
 5. **Null check**: Safe guard against missing root element
+6. **Rejection guard**: `unhandledrejection` listener prevents silent failures and browser error reports
 
 ## Why StrictMode Was Removed
 ```typescript

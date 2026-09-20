@@ -47,14 +47,18 @@ float mapYourNewType(vec3 p, float t, float phi, int iters) {
 ```
 
 ### Step 3: Add to Fractal Mapper
-Update `src/engine/fractalMappers.ts`:
+Update `src/engine/fractalMappers.ts` — the string→index mapping is a `switch` inside `getFractalIndex()` (there is no `FRACTAL_TYPE_MAP` object), so add a `case`:
 ```typescript
-export const FRACTAL_TYPE_MAP: Record<FractalType, number> = {
-  mandelbulb: 0,
-  julia: 1,
-  burningShip: 2,
-  yourNewType: 3,  // Add here
-};
+export function getFractalIndex(type?: string): number {
+  switch (type) {
+    case 'phyllotaxis': return 0;
+    case 'mandelbulb': return 1;
+    case 'quaternionJulia': return 2;
+    // ...
+    case 'yourNewType': return 431;  // Add here (next free index)
+    default: return 0;               // unknown types fall back to phyllotaxis
+  }
+}
 ```
 
 ### Step 4: Add to Shader Switch
@@ -379,9 +383,9 @@ https://your-project.pages.dev
 **Symptoms**: FPS < 30, laggy interaction
 
 **Debug Steps**:
-1. Open TelemetryHUD (press 'T')
+1. Open the Engineer/debug telemetry panel (`TelemetryHUD` renders in engineer mode)
 2. Check frame time
-3. Open DebugOverlay (press 'D')
+3. Open DebugOverlay (press 'F3')
 4. Look for:
    - High iteration count (> 64)
    - Large resolution

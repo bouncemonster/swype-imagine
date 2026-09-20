@@ -7,17 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **CRITICAL: browser freeze on load and per-fractal switch eliminated** — the whole multi-second stall was a synchronous `getProgramParameter(program, LINK_STATUS)` read while ANGLE/D3D11 deferred the real driver compile to link time. Now `KHR_parallel_shader_compile` `COMPLETION_STATUS_KHR` is polled in a yielding `setTimeout` loop (budget > worst-case link) BEFORE reading status, with a single `gl.flush()` per call site (never per-spin). Per-switch main-thread gap dropped from 10–25 s to ~83–127 ms (verified via `tests/responsiveness-probe.ts`).
+- **Loading animation synced to real device init** — `CosmicLoader` no longer runs a fake 450 ms `setInterval`; the progress bar and phase text are driven by real `ShaderManager` compile-stage callbacks surfaced through `WebGLEngine.onCompileProgress` → `useRenderEngine.loadProgress`, and `onEngineReady` fires only on the first actually-rendered frame. Verified desktop + mobile via `tests/loader-sync-test.ts`.
+- **WebGL minimal-shader compile failures for 16 fractal types eliminated** — `ShaderManager.buildMinimalFragmentShader` now (1) transitively pulls in body-region helpers a fractal function calls (e.g. `project4Dto3D` for the 4D polytopes tesseract/120Cell/600Cell), and (2) returns the full monolithic shader when the catalog ordinal resolves to a shared `*Base`/`*Variant` dispatch helper instead of a self-contained function (flames/ifs3D at indices 117–126). Full 431-type Playwright sweep: render errors 16 → 0, valid 388 → 401 (rest are sparse-at-default-params, not defects). Verified via `tests/visual-snapshot-sweep.ts` + `tests/visual-snapshot-analyze.ts`.
+- **Root error boundary + GPU-init failure surfaced** — `FractalErrorBoundary` moved to wrap `<App/>` at the `main.tsx` root (was only wrapping `<main>` inside App, so App-body throws white-screened); `useRenderEngine` gained an `initFailed` flag driving a "3D rendering unavailable" overlay in `FractalCanvas` instead of a silent black canvas.
+- **Two genuine shader-math bugs repaired (11 previously-black variant renders recovered)** — `mapIFSBase` `fold==2` (Menger) never applied `z = abs(z)` before its magnitude-sort, so signed coordinates diverged past the `r>8` escape at iteration 0-1 and returned an empty SDF; `mapLSystemBase` `op==5` (Hilbert) had dead code (`vec3 a` unused) plus an `abs(z-0.5)*2.0` doubling with `offset=0` that kept no orbit bounded. Both folds rewritten as bounded octant folds modelled on their working neighbours. Fixes are contained to the 6 `ifsVariant` (Menger) + 5 `lsystemVariant` (Hilbert) types, which were all black before; they now render at 10-28% fill, framed at the default camera.
+- **Per-fractal camera framing for index >= 42** — `FRACTAL_CAM_ADJUST` only covered indices 0-41, so everything above defaulted to `zoomScale 1.0` and rendered thin attractors/curves as sub-1% specks. Added `FRACTAL_CAM_ADJUST_OVERRIDES` (keyed by fractal index) for the affected types. Full sweep now **418/431 valid, 0 errors**; the remaining 13 are documented in `visual-snapshot-analyze.ts` as *intentional sparse* (correct dispatch + clean compile, but 2D maps / high-power thin shells that are genuinely near-measure-zero in a 3D distance field).
+
+### Removed
+- `src/engine/UserPreferenceEngine.ts` (251 lines) — recorded interactions to localStorage but no output was ever consumed; 3 call sites removed from `FractalCanvas.tsx`.
+- Duplicated documentation-drift pass: deleted `docs/UserPreferenceEngine.md`, corrected stale fractal-type counts (431) and palette count (26) across docs, flagged dated historical logs.
+
 ### Added
-- Planned: VR support (WebXR)
-- Planned: Fractal animation editor
-- Planned: Export to video/GIF
-- Planned: Collaborative sharing features
-- Planned: Mobile app (PWA)
-- Planned: Audio-reactive mode
+- `KHR_parallel_shader_compile` support in `WebGLEngine.pollCompletion` and `ShaderManager.waitUntilCompiled` (link budget raised so the non-blocking poll, not a blocking read, ends the wait).
+- Post-swap warmup: 24 low-quality frames after each shader change so driver ramp-up can't spike frame times.
+- Full visual regression harness: `tests/visual-snapshot-sweep.ts` (renders all 431 types in the live site via Playwright with stable loader-detach + non-black waits, one `fractal-NNN-{slug}.png` each) and `tests/visual-snapshot-analyze.ts` (dependency-free zlib PNG pixel-diff vs `tests/baseline/`, writes `tests/results/visual-snapshot-report.md`).
+
+### Planned
+- VR support (WebXR)
+- Fractal animation editor
+- Export to video/GIF
+- Collaborative sharing features
+- Mobile app (PWA)
+- Audio-reactive mode
+
+## [2.4.0] - 2026-09-14
 
 ### Changed
-- Ongoing: Performance optimizations for mobile devices
-- Ongoing: Additional fractal types (target: 200+)
+- **ShaderManager v3 — true minimal shader compilation**: parses `FRAGMENT_SHADER_SOURCE` directly and splices a per-fractal shader (header + ONE `map*` function + minimal `sceneSDF` + footer, ~1000 lines) instead of assembling the full 4195-line monolith, avoiding `GL_OUT_OF_MEMORY` crashes. LRU cache raised to 8 programs.
+- Replaced the Sept-13 dynamic-`import()` module-split experiment (fractalsA/B/C.ts) with a static, single-source approach; those module files and the split-footer build script were removed.
 
 ## [1.9.0] - 2026-09-11
 

@@ -1,6 +1,6 @@
 # ProjectManifestModal.tsx
 
-**161 lines | Project introduction and welcome modal**
+**175 lines | Project introduction and welcome modal**
 
 ## Purpose
 Welcome modal introducing the project to new users. Shows on first visit and explains core features, gesture controls, and provides entry points to the atlas.
@@ -162,6 +162,6 @@ shadow-[0_0_60px_rgba(245,158,11,0.15)]
 ```
 
 ## Dependencies
-- `lucide-react` icons (7 icons: Sparkles, Compass, Music, BookOpen, ChevronRight, X, Layers, MousePointer)
+- `lucide-react` icons (8 icons: Sparkles, Compass, Music, BookOpen, ChevronRight, X, Layers, MousePointer)
 - No engine dependencies (pure UI)
 - Uses localStorage for persistence

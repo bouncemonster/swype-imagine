@@ -1,6 +1,6 @@
 # FractalProbeHUD.tsx
 
-**115 lines | Topological probe telemetry overlay**
+**127 lines | Topological probe telemetry overlay**
 
 ## Purpose
 Scientific measurement overlay showing distance to SDF surface, camera position, and topological data. Activated when `params.probeActive` is true.
@@ -137,5 +137,5 @@ Converts slicePlane [0,1] to world coordinates [-1.75, 1.75].
 
 ## Dependencies
 - `FractalParams` from types
-- `lucide-react` icons (5 icons: Crosshair, Compass, Layers, ShieldCheck, Activity)
+- `lucide-react` icons (2 icons: Crosshair, Activity)
 - No engine dependencies

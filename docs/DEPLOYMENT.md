@@ -41,13 +41,13 @@ Open http://localhost:3000
 ### Development Server Options
 ```bash
 # Default: localhost:3000
+# The dev script is fixed to `vite --port=3000 --host=0.0.0.0` (port & host are NOT read from env)
 npm run dev
 
-# Custom port
-PORT=8080 npm run dev
+# Custom port: the dev script hard-codes the port, so run Vite directly
+npx vite --port=8080
 
-# Network access (mobile testing)
-npm run dev -- --host 0.0.0.0
+# Network access is already enabled by the dev script (--host=0.0.0.0)
 ```
 
 ---
@@ -65,12 +65,12 @@ bun run build
 ```
 dist/
 ├── index.html
-├── assets/
-│   ├── index-[hash].js      (~200KB gzipped)
-│   ├── index-[hash].css     (~20KB gzipped)
-│   └── vendor-[hash].js     (~100KB gzipped)
-└── favicon.ico
+└── assets/
+    ├── index-[hash].js
+    ├── index-[hash].css
+    └── aistudio/.gitignore
 ```
+> Reality check: there is **no `vendor-*.js`** chunk (Vite is not configured to split chunks) and **no `favicon.ico`** (index.html has no favicon link).
 
 ### Preview Build Locally
 ```bash
@@ -131,6 +131,9 @@ npm run build
 
 # Deploy
 wrangler pages deploy dist
+
+# Or the project's one-shot script (vite build && wrangler pages deploy dist)
+npm run deploy:cf
 ```
 
 ### Custom Domain
@@ -144,23 +147,18 @@ wrangler pages deploy dist
    ```
 
 ### Cloudflare Configuration
-`wrangler.toml`:
+`wrangler.toml` (this project's file is exactly 3 lines — there is no `[headers]` block):
 ```toml
 name = "golden-ratio-fractal-engine"
 compatibility_date = "2025-01-01"
 pages_build_output_dir = "dist"
-
-# Optional: Custom headers
-[headers]
-[headers.values]
-X-Frame-Options = "DENY"
-X-Content-Type-Options = "nosniff"
-Referrer-Policy = "strict-origin-when-cross-origin"
 ```
 
 ---
 
 ## Deploy to Vercel
+
+> ⚠️ НЕ НАСТРОЕНО в этом проекте / reference only — this repo has no `vercel.json` and is deployed via **Cloudflare Pages** only. The steps and config below are generic, not project settings.
 
 ### Option A: Git Integration
 
@@ -212,6 +210,8 @@ vercel --prod
 ---
 
 ## Deploy to Netlify
+
+> ⚠️ НЕ НАСТРОЕНО в этом проекте / reference only — this repo has no `netlify.toml`. Kept as generic guidance only.
 
 ### Option A: Git Integration
 
@@ -267,6 +267,8 @@ netlify deploy --prod --dir=dist
 ---
 
 ## Docker Deployment
+
+> ⚠️ НЕ НАСТРОЕНО в этом проекте / reference only — this repo has no `Dockerfile` or `nginx.conf`. Kept as generic guidance only.
 
 ### Dockerfile
 ```dockerfile
@@ -386,6 +388,8 @@ serve dist -l 8080
 
 ## CI/CD Pipeline
 
+> ⚠️ НЕ НАСТРОЕНО в этом проекте / reference only — this repo has no `.github/` or `.gitlab-ci.yml`. Kept as generic guidance only.
+
 ### GitHub Actions
 
 `.github/workflows/deploy.yml`:
@@ -454,6 +458,8 @@ deploy:
 ---
 
 ## Environment Variables
+
+> ⚠️ НЕ НАСТРОЕНО в этом проекте / reference only — `.env.example` defines `GEMINI_API_KEY` and `APP_URL` (injected by AI Studio), but `src/` reads **no** `import.meta.env` at all, so env config is effectively unused. The `VITE_*` examples below are illustrative and not wired up.
 
 ### Development
 `.env.development`:

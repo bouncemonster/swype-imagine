@@ -27,20 +27,18 @@ graph TB
     end
     
     subgraph "Data Layer"
-        O[fractal-catalog] --> P[110+ fractals]
-        Q[palettes] --> R[24 + 640 colors]
+        O[fractal-catalog] --> P[145 fractals]
+        Q[palettes] --> R[26 + 640 = 666 colors]
         S[types/fractal.ts] --> T[Type definitions]
     end
     
     subgraph "Intelligence"
         U[NeuroAestheticsEngine] --> V[User preferences]
-        W[UserPreferenceEngine] --> X[Learning patterns]
     end
     
     A --> O
     A --> Q
     U --> A
-    W --> A
 ```
 
 ## Component Hierarchy
@@ -168,30 +166,32 @@ graph TD
 
 ```mermaid
 graph TB
-    A[canonicalFractals.ts] --> B[10 category files]
+    A[canonicalFractals.ts] --> B[11 category files]
     B --> C[geometricCurves]
     B --> D[constructive]
     B --> E[algebraic]
     B --> F[multidimensional]
     B --> G[ifs]
     B --> H[stochastic]
-    I --> J[physical]
+    B --> I[physical]
     B --> K[expandedReal]
     B --> L[visuallyDistinct]
     B --> M[mandalas3D]
+    B --> Y[temporalManifolds]
     
-    C --> N[~15 fractals]
-    D --> O[~10 fractals]
-    E --> P[~10 fractals]
-    F --> Q[~10 fractals]
-    G --> R[~15 fractals]
-    H --> S[~8 fractals]
-    I --> T[~8 fractals]
-    K --> U[~20 fractals]
-    L --> V[~10 fractals]
-    M --> W[~5 fractals]
+    C --> N[20 fractals]
+    D --> O[12 fractals]
+    E --> P[14 fractals]
+    F --> Q[6 fractals]
+    G --> R[10 fractals]
+    H --> S[7 fractals]
+    I --> T[10 fractals]
+    K --> U[17 fractals]
+    L --> V[10 fractals]
+    M --> W[20 fractals]
+    Y --> Z[19 fractals]
     
-    N --> X[Total: ~110 fractals]
+    N --> X[Total: 145 fractals]
     O --> X
     P --> X
     Q --> X
@@ -201,6 +201,7 @@ graph TB
     U --> X
     V --> X
     W --> X
+    Z --> X
 ```
 
 ## Neuro-Aesthetics Engine
@@ -316,9 +317,12 @@ graph TB
 │  [43]    palette_seed: f32              │
 ├─────────────────────────────────────────┤
 │  [44]    palette_rotation: f32          │
-│  [45-47] pad5: vec3<f32>                │
+│  [45]    auto_rotate: f32               │
+│  [46]    quality_level: f32             │
+│  [47]    pad: f32                       │
 └─────────────────────────────────────────┘
-Total: 48 floats (192 bytes)
+Total: 48 floats (192 bytes) — WebGL/GLSL
+(WebGPU/WGSL struct pads to 52 floats / 208 bytes; indices [48-51] are alignment padding)
 ```
 
 ## File Dependencies
@@ -357,6 +361,5 @@ graph TD
     
     subgraph "Intelligence"
         C --> Q[NeuroAesthetics]
-        C --> R[UserPreference]
     end
 ```

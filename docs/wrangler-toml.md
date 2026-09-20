@@ -45,8 +45,8 @@ npm run build  # or bun run build
 # Deploy to Cloudflare Pages
 wrangler pages deploy dist
 
-# Or via npm script (if configured)
-npm run deploy
+# Or via npm script
+npm run deploy:cf
 ```
 
 ## Critical Notes

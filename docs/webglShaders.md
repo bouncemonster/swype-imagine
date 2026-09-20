@@ -1,37 +1,41 @@
 # webglShaders.ts
 
-**4357 lines | 187KB | GLSL ES 3.0 shaders**
+**4195 lines | 161KB | GLSL ES 3.0 shaders**
 
 ## Purpose
-Complete WebGL2 shader pipeline: vertex shader, fragment shader, 86 SDF functions, 7 render modes, post-processing.
+Complete WebGL2 shader pipeline: vertex shader, fragment shader, 131 inline SDF map functions + 5 parameterized variant families, 7 render modes, post-processing. All 431 fractal type indices (0-430) dispatch through this fragment shader.
 
 ## Structure
 ```
-1. Vertex Shader (lines 8-17)
-   - Simple quad passthrough
+1. Vertex Shader (lines 63-71, VERTEX_SHADER_SOURCE)
+   - Simple fullscreen-triangle passthrough
    
-2. Fragment Shader (lines 19-4654)
-   - 32 uniforms (lines 25-64)
+2. Fragment Shader (lines 74-4193, FRAGMENT_SHADER_SOURCE)
+   - 34 uniforms (lines 80-119)
    - Constants (PI, TWO_PI, GOLDEN_RATIO, GOLDEN_ANGLE)
    - Helper functions (rot2D, rotateVec)
-   - 86 SDF map* functions
-   - sceneSDF() - composite evaluation
+   - 131 inline map* functions (fractal indices 0-130)
+   - Embedded variation modules (indices 131-430, via ${...} interpolation)
+   - evalSingleFractal() - dispatch for ALL 431 indices (lines 2893-3060)
+   - sceneSDF() - composite evaluation (line 3115)
    - Lighting (soft shadows, SSS, AO, reflections)
    - 7 render modes (solid, xray, topo, hologram, iridescent, quantum, gemstone)
    - Post-processing (ACES, bloom, DOF, motion blur, god rays, vignette)
-   - main() - entry point
+   - main() - entry point (line 3396)
 ```
 
 ## Key Sections
 | Lines | Content |
 |-------|---------|
-| 8-17 | Vertex shader |
-| 19-64 | Uniforms (32 total) |
-| 66-87 | Constants + helpers |
-| 89-2000 | SDF functions (86 map* functions) |
-| 2000-3000 | sceneSDF() + lighting |
-| 3000-4000 | Render modes |
-| 4000-4654 | Post-processing + main() |
+| 63-71 | Vertex shader |
+| 74-119 | Fragment preamble: precision + 34 uniforms |
+| 120-2587 | Constants, helpers, inline SDF functions (part 1) |
+| 2588-2602 | Variation module GLSL interpolated (julia/ifs/lsystem/flame/hybrid) |
+| 2604-2892 | More inline SDF functions (visually-distinct sets) |
+| 2893-3060 | evalSingleFractal() dispatch (ftype 0-140 explicit, 141-430 range rules) |
+| 3115-3350 | sceneSDF() + composite ops |
+| 3352-3395 | Soft shadows / lighting helpers |
+| 3396-4193 | main(): raymarch, render modes, post-processing |
 
 ## Uniform Buffer Layout
 48 floats packed in `FractalEngineBase.packUniforms()`:
@@ -47,7 +51,10 @@ Complete WebGL2 shader pipeline: vertex shader, fragment shader, 86 SDF function
 - [35] slice_plane, [36] headlamp, [37] fog
 - [38] slice_axis, [39] render_style
 - [40-42] ambient_color, [43] palette_seed
-- [44] palette_rotation, [45-47] padding
+- [44] palette_rotation, [45] auto_rotate, [46] quality_level, [47] reserved
+
+## Fractal Dispatch (evalSingleFractal, lines 2893-3060)
+All 431 type indices dispatch here: explicit `ftype == 0…140` branches for Mandelbrot variants (131-140), then compressed range rules (:3045-3057) — Julia 141-190, IFS 191-240, L-System 241-290, Flame 291-340, Hybrid 341-430 — each delegating to the module lookup functions. Unmapped indices fall through to `mapPhyllotaxis`.
 
 ## Render Modes (u_render_style)
 0: solid - PBR with AO, soft shadows, SSS
@@ -59,11 +66,11 @@ Complete WebGL2 shader pipeline: vertex shader, fragment shader, 86 SDF function
 6: gemstone - Beer-Lambert + caustics
 
 ## Dependencies
-- `modules/juliaVariations.ts` - 50 Julia variants
-- `modules/ifsVariations.ts` - 50 IFS variants
-- `modules/lsystemVariations.ts` - 50 L-System variants
-- `modules/flameVariations.ts` - 50 Flame variants
-- `modules/hybridVariations.ts` - 90 Hybrid variants
+- `modules/juliaVariations.ts` - 50 Julia variants (ftype 141-190)
+- `modules/ifsVariations.ts` - 50 IFS variants (ftype 191-240)
+- `modules/lsystemVariations.ts` - 50 L-System variants (ftype 241-290)
+- `modules/flameVariations.ts` - 50 Flame variants (ftype 291-340)
+- `modules/hybridVariations.ts` - 90 Hybrid variants (ftype 341-430)
 
 ## Notes
 - All 7 render modes embedded (no external modules needed)

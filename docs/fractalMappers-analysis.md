@@ -2,7 +2,7 @@
 
 ## Overview
 **File:** `src/engine/fractalMappers.ts`  
-**Size:** 505 lines, 19KB  
+**Size:** 577 lines, 23KB  
 **Purpose:** Maps string fractal types to numeric indices for shader uniform buffer
 
 ---
@@ -32,7 +32,7 @@
 
 **Default behavior:** Unknown types return 0 (phyllotaxis)
 
-**Fallback mappings (lines 90-108):**
+**Backward-compat alias cases (near the end of `getFractalIndex`, ~lines 137-156):**
 - 'burningShip' → 27 (burningShip3D)
 - 'chenAttractor' → 73 (rosslerAttractor)
 - 'mandala' → 0 (phyllotaxis)
@@ -129,7 +129,7 @@
 - **Render:** 0 (solid) - standard PBR, no special effects
 
 ### Fallback mappings purpose
-Lines 90-108 contain aliases for old type names that were used before standardization. This prevents black screens when loading saved presets with old type names.
+The alias `case`s near the end of `getFractalIndex` map old type names that were used before standardization. This prevents black screens when loading saved presets with old type names.
 
 ---
 
@@ -147,7 +147,7 @@ Lines 90-108 contain aliases for old type names that were used before standardiz
 
 ## Known Issues
 
-1. **Type mismatch:** types/fractal.ts has 86 types, but this file maps 431
+1. **Historical note (resolved):** this file was written when `types/fractal.ts` had 86 types; the union now has 431 members and the mappings cover them
 2. **Silent fallback:** Unknown types return 0 without warning
 3. **Duplicate indices:** Some fallback mappings point to same index (e.g., 'chenAttractor' and 'rosslerAttractor' both → 73)
 
@@ -155,7 +155,7 @@ Lines 90-108 contain aliases for old type names that were used before standardiz
 
 ## Testing Recommendations
 
-1. Test all 86 types from types/fractal.ts return correct indices
+1. Test all 431 types from types/fractal.ts return correct indices
 2. Test fallback mappings return expected indices
 3. Test unknown strings return 0 (not crash)
 4. Test render style aliases ('topo', 'sonar', 'lidar' all → 2)

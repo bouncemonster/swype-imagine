@@ -45,25 +45,32 @@
 ### Directory Structure
 ```
 src/
-├── components/     # React components
-├── engine/         # Rendering engines
+├── components/     # React components (12 files)
+├── engine/         # Rendering engines (9 files)
 ├── shaders/        # Shader code
-│   ├── modules/    # Reusable shader components
+│   ├── modules/    # 5 variation modules + index.ts (julia/ifs/lsystem/flame/hybrid)
 │   ├── webglShaders.ts
 │   └── webgpuShaders.ts
 ├── data/           # Data layer
-│   ├── categories/ # Fractal categories
+│   ├── categories/ # Fractal categories (11 category files + index.ts, 145 entries)
 │   ├── canonicalFractals.ts
-│   ├── fractalFactory.ts
-│   └── fractalCatalogTypes.ts
-├── hooks/          # React hooks
-├── types/          # TypeScript types
-├── audio/          # Audio engine
+│   ├── compatibleHybrids.ts
+│   ├── fractalArchitectures.ts
+│   ├── fractalCatalogTypes.ts
+│   └── fractalFactory.ts
+├── hooks/          # React hooks (useRenderEngine.ts)
+├── types/          # TypeScript types (fractal.ts)
+├── utils/          # Utility functions (colorMath.ts)
+├── audio/          # Audio engine (goldenAudio.ts)
 ├── App.tsx         # Root component
 ├── main.tsx        # Entry point
-└── index.css       # Global styles
+├── index.css       # Global styles
+├── palettes.ts     # Color palette definitions
+└── palettesProcedural.ts  # Procedural palette generation
 
+scripts/            # Build & diagnostic scripts
 docs/               # Documentation (44 files)
+tests/              # 19 TypeScript test files + PNG baselines
 ```
 
 ### File Naming
@@ -157,7 +164,7 @@ perf: optimize ray marching loop
 ### GPU
 - **Minimize uniforms**: Pack into 48-float buffer
 - **Avoid branching**: Use math instead of if/else
-- **Loop bounds**: Always bounded (max 32 iterations)
+- **Loop bounds**: Always bounded (fractal iterations clamped 6-64; ray steps 64-256 GLSL / up to 512 WGSL)
 - **Precision**: Use `f32` not `f64`
 - **Textures**: Minimize texture lookups
 
@@ -181,11 +188,15 @@ perf: optimize ray marching loop
 - **GPUs**: Integrated, dedicated, mobile
 - **Scenarios**: All fractal types, render modes, camera modes
 
-### Automated Testing (Future)
-- **Unit tests**: Utilities, mappers
-- **Component tests**: React components
-- **E2E tests**: Critical user flows
-- **Performance tests**: FPS benchmarks
+### Automated Testing (implemented — 19 TypeScript files in `tests/`)
+- **Unit** (`npm run test:unit`): `fractal-mapper-test.ts` (521 assertions), `shader-math-validation-test.ts` (113), `cross-engine-parity-test.ts` (79)
+- **Integration** (`npm run test`): `fractal-autotest.ts` (822 assertions — all 431 types, palettes, render styles, audio, share links)
+- **Browser** (`npm run test:browser` / `test:browser:headed`): `browser-harness.ts`, `browser-fractal-test.ts`, `advanced-fractal-test.ts`, `external-browser-test.ts`
+- **Headless smoke** (`npm run test:headless`): `headless-fractal-test.ts`, `browser-smoke-test.ts`
+- **Performance/stability** (`npm run test:benchmark`): `performance-benchmark.ts`, `continuous-render-test.ts`, `stress-test-cycle.ts`, `responsiveness-probe.ts`, `loader-sync-test.ts`
+- **Visual regression**: `render-style-test.ts`, `visual-step-test.ts`, `palette-diagnostic.ts` (baselines stored under `tests/`)
+- **Code quality** (`npm run test:quality`): `code-quality-check.ts`
+- **Full suite**: `npm run test:all` (unit + integration + headless + benchmark + quality)
 
 ## Error Handling
 
@@ -257,10 +268,11 @@ try {
 - **Double tap**: Reset
 
 ### Performance
-- **Lower iterations**: 32 → 16
-- **Lower resolution**: 1.0 → 0.5
+- **Lower iterations**: 16 desktop → 12 mobile (App.tsx)
+- **Lower resolution**: DPR capped at 1.0, max canvas dimension 1280 on mobile
 - **Limit FPS**: 60 → 30
 - **Enable DRS**: Dynamic resolution scaling
+- **Quality level**: 0 on mobile (1 on desktop/embedded)
 
 ### Safari iOS
 - **No WebGPU**: Use WebGL2

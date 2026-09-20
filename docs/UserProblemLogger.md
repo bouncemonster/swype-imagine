@@ -1,6 +1,6 @@
 # UserProblemLogger.ts
 
-**206 lines | Client-side error tracking with IndexedDB**
+**239 lines | Client-side error tracking with IndexedDB**
 
 ## Purpose
 Persistent storage of errors, warnings, and user interactions using IndexedDB.

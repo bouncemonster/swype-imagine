@@ -1,6 +1,6 @@
 # ExplanationModal.tsx
 
-**196 lines | Scientific explanation and mathematical justification**
+**206 lines | Scientific explanation and mathematical justification**
 
 ## Purpose
 Educational modal explaining the mathematical foundations of the project: golden ratio, prime numbers, quasicrystals, SDF algebra, WebGPU rendering, and neuro-aesthetics.
@@ -164,5 +164,5 @@ Amber button to close modal.
 ```
 
 ## Dependencies
-- `lucide-react` icons (7 icons: X, Sparkles, Activity, Compass, Cpu, Brain, Layers, BookOpen)
+- `lucide-react` icons (7 icons: X, Sparkles, Activity, Compass, Brain, Layers, BookOpen)
 - No engine dependencies (pure UI)

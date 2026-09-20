@@ -4,14 +4,14 @@
 
 | File | Lines | Size | Purpose |
 |------|-------|------|---------|
-| [FractalEngineBase.ts](../src/engine/FractalEngineBase.ts) | 147 | 4.7KB | Base class, uniform packing (48 floats) |
-| [fractalMappers.ts](../src/engine/fractalMappers.ts) | 505 | 19KB | String→index mappings (431 types) |
-| [types/fractal.ts](../src/types/fractal.ts) | 215 | 13KB | TypeScript interfaces |
-| [WebGLEngine.ts](../src/engine/WebGLEngine.ts) | 445 | 18KB | WebGL2 renderer |
-| [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | 236 | 8.8KB | WebGPU renderer |
-| [useRenderEngine.ts](../src/hooks/useRenderEngine.ts) | 636 | 25KB | React hook, lifecycle, render loop |
-| [webglShaders.ts](../src/shaders/webglShaders.ts) | 4386 | 163KB | GLSL shaders, 431 SDFs, 7 modes |
-| [webgpuShaders.ts](../src/shaders/webgpuShaders.ts) | 3545 | 137KB | WGSL shaders |
+| [FractalEngineBase.ts](../src/engine/FractalEngineBase.ts) | 221 | 9.7KB | Base class, uniform packing (48 floats) |
+| [fractalMappers.ts](../src/engine/fractalMappers.ts) | 577 | 23KB | String→index mappings (473 names) |
+| [types/fractal.ts](../src/types/fractal.ts) | 576 | 32KB | TypeScript interfaces |
+| [WebGLEngine.ts](../src/engine/WebGLEngine.ts) | 523 | 23KB | WebGL2 renderer |
+| [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | 239 | 8.7KB | WebGPU renderer |
+| [useRenderEngine.ts](../src/hooks/useRenderEngine.ts) | 782 | 34KB | React hook, lifecycle, render loop |
+| [webglShaders.ts](../src/shaders/webglShaders.ts) | 4195 | 161KB | GLSL shaders, 431 SDFs, 7 modes |
+| [webgpuShaders.ts](../src/shaders/webgpuShaders.ts) | 4070 | 159KB | WGSL shaders |
 
 ## Detailed Analysis
 
@@ -28,13 +28,12 @@
 - [ExplanationModal.md](ExplanationModal.md) - Scientific explanation modal
 - [UserProfileModal.md](UserProfileModal.md) - User taste profile and settings
 - [ProjectManifestModal.md](ProjectManifestModal.md) - Welcome modal and project intro
-- [CosmicLoader.md](CosmicLoader.md) - Loading screen with fractal emblem
-- [FractalAtlasModal.md](FractalAtlasModal.md) - Scientific atlas with 100+ fractals
+- [CosmicLoader.md](CosmicLoader.md) - Loading screen driven by real GPU load progress
+- [FractalAtlasModal.md](FractalAtlasModal.md) - Scientific atlas with 145 fractals
 - [NeuroAestheticsEngine.md](NeuroAestheticsEngine.md) - Taste profile, breeding, archetypes
-- [UserPreferenceEngine.md](UserPreferenceEngine.md) - Interaction learning, adapted defaults
 - [types-fractal.md](types-fractal.md) - Core TypeScript interfaces
-- [palettes.md](palettes.md) - 24 hand-crafted + 640 procedural palettes
-- [fractal-catalog.md](fractal-catalog.md) - 110+ canonical fractals, 8 categories
+- [palettes.md](palettes.md) - 26 hand-crafted + 640 procedural = 666 palettes
+- [fractal-catalog.md](fractal-catalog.md) - 145 entries, 10 category keys / 11 files
 - [goldenAudio.md](goldenAudio.md) - 432 Hz sacred geometry audio engine
 - [FractalEngineBase.md](FractalEngineBase.md) - Base class, 48-float uniform layout
 - [WebGPUEngine.md](WebGPUEngine.md) - WebGPU renderer details
@@ -44,7 +43,7 @@
 - [fractalMappers-analysis.md](fractalMappers-analysis.md) - Complete type mappings
 - [juliaVariations.md](juliaVariations.md) - 50 Mandelbulb/Julia GLSL variations
 - [shader-modules.md](shader-modules.md) - All shader modules overview (38KB, 649 lines, kkrieger-compressed)
-- [webgpuShaders.md](webgpuShaders.md) - WGSL shaders for WebGPU (3538 lines)
+- [webgpuShaders.md](webgpuShaders.md) - WGSL shaders for WebGPU (4069 lines)
 - [WebGLEngine.md](WebGLEngine.md) - WebGL2 renderer details
 - [useRenderEngine.md](useRenderEngine.md) - Hook lifecycle and shortcuts
 - [webglShaders.md](webglShaders.md) - Shader structure and uniforms
@@ -74,12 +73,12 @@
 ## Key Numbers
 
 - **431** fractal types (all active, all rendered)
-- **110+** canonical fractals in catalog
+- **145** canonical fractals in catalog (10 category keys)
 - **7** render modes
 - **8** composite operations
 - **4** camera modes
 - **48** uniform buffer floats (192 bytes)
-- **51** TypeScript source files
+- **54** TypeScript source files
 - **44** documentation files
 - **~847KB** source code
 - **~200KB** documentation

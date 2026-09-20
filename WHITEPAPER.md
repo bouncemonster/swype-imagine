@@ -4,7 +4,7 @@
 
 **Golden Ratio WebGPU Fractal Engine** — это первый в мире open-source real-time фрактальный движок с **431 уникальным типом фракталов**, использующий современные технологии WebGL2/WebGPU для рендеринга в браузере. Проект демонстрирует возможности веб-технологий для сложных математических визуализаций, ранее доступных только в десктопных приложениях.
 
-**Ключевое достижение**: 431 тип фракталов в реальном времени в браузере с производительностью 60 FPS на современном hardware. 0 ошибок TypeScript, 713 автоматических тестов.
+**Ключевое достижение**: 431 тип фракталов в реальном времени в браузере с производительностью 60 FPS на современном hardware. 0 ошибок TypeScript (strict mode пока не включён), 715 unit-assertions (521 mapper + 113 shader-math + 81 engine-parity).
 
 ---
 
@@ -25,7 +25,7 @@
 ### Уникальность Проекта
 
 - **431 тип фракталов** — больше чем любой другой web-based движок
-- **Двойной бэкенд** — WebGL2 + WebGPU с автоматическим fallback
+- **Двойной бэкенд** — WebGL2 (основной, 431 тип) + WebGPU (опциональный, 131/431) с fallback на WebGL2
 - **Модульная архитектура** — легкое расширение через shader modules
 - **φ-based система** — golden ratio в основе палитр и геометрии
 - **Real-time интерактивность** — вращение, zoom, морфинг без задержек
@@ -178,15 +178,15 @@
 - 4.3x больше чем Mandelbulb 3D (~100 типов)
 - 2.2x больше чем Kalles Fraktaler (~200 типов)
 - Покрывает все основные категории: Classic, Mandelbrot, Julia, IFS, L-System, Flame, Hybrid
-- 10 категорий: Geometric Curves, Constructive, Algebraic, Multidimensional, IFS, Stochastic, Physical, Expanded Real, Visually Distinct, 3D Mandalas
+- 11 category files (10 FractalCategoryKey): Geometric Curves, Constructive, Algebraic, Multidimensional, IFS, Stochastic, Physical, Expanded Real, Visually Distinct, 3D Mandalas, Temporal Manifolds
 
 ### 2. **Технологическое Лидерство**
-- **WebGPU support** — один из первых фрактальных движков с WebGPU
-- **Dual backend** — WebGL2 fallback для старых браузеров
-- **Modular shader architecture** — 5 сжатых модулей (12x компрессия, 7934→649 строк)
+- **WebGPU support** — один из первых фрактальных движков с WebGPU (опциональный бэкенд: 131/431 типов, остальные — phyllotaxis fallback)
+- **Dual backend** — WebGL2 основной (все 431 типов), WebGPU опциональный
+- **Lazy shader assembly** — ShaderManager собирает минимальный шейдер на фрактал (~900 строк вместо 4171-строчного монолита) + 5 сжатых variation-модулей (12x компрессия, 7934→649 строк)
 - **Adaptive rendering** — LOD, space leaping, early termination
-- **Type safety** — 0 ошибок TypeScript, строгая типизация всех 431 fractal types
-- **Testing** — 713 unit tests (mapper, shader math, engine parity)
+- **Type safety** — 0 ошибок TypeScript (strict mode пока не включён), типизация всех 431 fractal types
+- **Testing** — 715 unit-assertions (521 mapper + 113 shader math + 81 engine parity) + 822 integration assertions
 
 ### 3. **Доступность**
 - **Web-based** — работает в любом браузере
@@ -196,7 +196,7 @@
 
 ### 4. **Производительность**
 - **60 FPS** на современном hardware
-- **640 raymarch steps** — максимальная детализация
+- **256 raymarch steps** (GLSL, close view) × quality-множитель 0.5-1.0; WGSL до 512
 - **64 iterations** — глубокая проработка фракталов
 - **Adaptive optimizations** — автоматическая подстройка под hardware
 
@@ -290,7 +290,7 @@
 **Golden Ratio WebGPU Fractal Engine** — это не просто еще один фрактальный просмотрщик. Это **state-of-the-art** решение, которое:
 
 1. **Демократизирует** фрактальную графику (доступно всем через web)
-2. **Инновацирует** (WebGPU, modular shader architecture, 431 тип, 713 теста)
+2. **Инновацирует** (WebGPU, lazy shader assembly, 431 тип, 715 assertions)
 3. **Вдохновляет** (красота математики через визуализацию)
 4. **Объединяет** (open-source community, contribution)
 

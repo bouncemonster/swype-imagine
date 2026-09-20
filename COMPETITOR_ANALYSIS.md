@@ -6,7 +6,7 @@
 
 #### **1. Деплой и Доступность**
 - ✅ Сайт загружается: https://master.golden-ratio-fractal-engine.pages.dev
-- ✅ JavaScript bundle: `index-CZNRmgas.js` (905KB)
+- ✅ JavaScript bundle: основной production-чанк ~880 KB (точное имя `index-<hash>.js` меняется при каждой сборке — не сверять по хэшу)
 - ✅ HTML корректный, meta tags присутствуют
 - ✅ Title: "Golden Ratio WebGPU Fractal Engine"
 
@@ -34,7 +34,7 @@
 - ✅ String → Index mapping работает
 
 #### **5. Параметры Рендеринга**
-- ✅ MaxSteps: 640/480/320 (увеличены)
+- ✅ MaxSteps: 256/192/128 × qualityMult по дистанции камеры (webglShaders.ts:3521)
 - ✅ Iterations: 64 (увеличены)
 - ✅ Zoom range: 0.01-100.0 (увеличен)
 - ✅ Rotation braking: реализована
@@ -263,7 +263,7 @@
 5. **Modern UI** — React 19, Tailwind CSS
 6. **Технологии** — WebGL2 + WebGPU dual backend
 7. **Type Safety** — 0 ошибок TypeScript, строгая типизация
-8. **Тестирование** — 713 unit + 822 integration assertions, Playwright browser tests
+8. **Тестирование** — 715 unit + 822 integration assertions, Playwright browser tests
 9. **Shader compression** — 12x компрессия модулей (7934→649 строк)
 
 ### **Слабые Стороны:**
@@ -271,7 +271,7 @@
 2. **VR Support** — отсутствует
 3. **Сообщество** — маленькое (~100 vs 1M+ у Shadertoy)
 4. **Custom Shaders** — нет возможности добавлять свои шейдеры
-5. **WebGPU coverage** — только 104/431 типов в WGSL (WebGL имеет все 431)
+5. **WebGPU coverage** — только 131/431 типов в WGSL (WebGL имеет все 431)
 
 ### **Возможности:**
 1. Добавить deep zoom (perturbation-based)
@@ -304,7 +304,7 @@
 - 4.3x больше чем Mandelbulb 3D (~100 типов)
 - 2.2x больше чем Kalles Fraktaler (~200 типов)
 - Лучше чем Shadertoy для фракталов (специализация)
-- 713 автоматических тестов (гарантия корректности)
+- 715 автоматических тестов (гарантия корректности)
 - 0 ошибок TypeScript (надёжность кода)
 
 **Что нужно улучшить:**
@@ -312,9 +312,9 @@
 2. VR support (WebXR)
 3. Построение сообщества
 4. Custom shader editor
-5. WebGPU покрытие (104/431 → 431/431)
+5. WebGPU покрытие (131/431 → 431/431)
 
-**Итог**: Golden Ratio Fractal Engine — это **state-of-the-art** web-based фрактальный движок с самым большим каталогом (431 тип), полной интерактивностью, 0 ошибок TypeScript и 713 автоматическими тестами. Проект имеет все шансы стать стандартом для фрактальных визуализаций в вебе.
+**Итог**: Golden Ratio Fractal Engine — это **state-of-the-art** web-based фрактальный движок с самым большим каталогом (431 тип), полной интерактивностью, 0 ошибок TypeScript и 715 автоматическими тестами. Проект имеет все шансы стать стандартом для фрактальных визуализаций в вебе.
 
 ---
 

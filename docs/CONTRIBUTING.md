@@ -108,11 +108,8 @@ Screenshots, mockups, or examples.
 
 2. **Test your changes**
    ```bash
-   # Run linter
+   # Type-check the project (the `lint` script runs `tsc --noEmit`)
    npm run lint
-   
-   # Run type check
-   npm run type-check
    
    # Build for production
    npm run build
@@ -240,7 +237,7 @@ Performance improvements are always welcome!
 - Use TypeScript for all new code
 - Follow existing naming conventions
 - Add JSDoc comments for public APIs
-- Use strict mode
+- Write strict-mode-compatible code (note: the project's `tsconfig.json` does not currently enable `strict`)
 
 ### React
 - Functional components with hooks
@@ -270,11 +267,14 @@ Performance improvements are always welcome!
 
 ### Automated Testing
 ```bash
-# Run tests (when implemented)
+# Run the automated fractal test suite
 npm test
 
-# Run E2E tests
-npm run test:e2e
+# Run browser (E2E) tests
+npm run test:browser
+
+# Run everything (unit + visual + headless + benchmark + quality)
+npm run test:all
 ```
 
 ## Documentation

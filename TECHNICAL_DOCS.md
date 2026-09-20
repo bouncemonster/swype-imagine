@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-**431 уникальный 3D фрактал** с современным рендерингом на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением.
+**431 тип фракталов** (141 core + 290 вариантов) с современным рендерингом на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением. **v2.4.0**: Модульная шейдерная архитектура с lazy compilation.
 
 ---
 
@@ -11,79 +11,86 @@
 ### Core Components
 
 ```
-src/                                          # 51 TypeScript/TSX files, ~920KB
+src/                                          # 54 TypeScript/TSX files, ~935KB
 ├── shaders/
-│   ├── webglShaders.ts    # GLSL ES 3.0 шейдеры (163KB, 4388 lines, all 431 types)
-│   ├── webgpuShaders.ts   # WGSL шейдеры (137KB, 3546 lines, 104/431 types)
-│   └── modules/           # Модульная архитектура (649 lines total, 12x compression)
-│       ├── juliaVariations.ts    # Julia Variations 1-50 (111 lines)
-│       ├── ifsVariations.ts      # IFS Variations 1-50 (116 lines)
-│       ├── lsystemVariations.ts  # L-System Variations 1-50 (131 lines)
-│       ├── flameVariations.ts    # Flame Variations 1-50 (115 lines)
-│       └── hybridVariations.ts   # Hybrid Variations 1-90 (181 lines)
+│   ├── webglShaders.ts    # GLSL ES 3.0 шейдеры (161KB, 4195 lines)
+│   │   ├── VERTEX_SHADER_SOURCE (L63) + алиас GLSL_VERTEX_SHADER
+│   │   ├── FRAGMENT_SHADER_SOURCE (L74-4193) — монолитный исходник: uniforms, map* функции, evalSingleFractal, sceneSDF, main()
+│   │   └── GLSL_FRAGMENT_SHADER (алиас)
+│   ├── webgpuShaders.ts   # WGSL шейдеры (158KB, 4069 lines, 131/431 types: 0-130, остальные → phyllotaxis fallback)
+│   └── modules/           # 5 модулей вариаций + index.ts
+│       ├── juliaVariations.ts  # Julia вариации 141-190 (110 lines, 6.3KB)
+│       ├── ifsVariations.ts    # IFS вариации 191-240 (115 lines, 6.3KB)
+│       ├── lsystemVariations.ts # L-System вариации 241-290 (130 lines, 7.1KB)
+│       ├── flameVariations.ts  # Flame вариации 291-340 (114 lines, 6.2KB)
+│       ├── hybridVariations.ts # Hybrid вариации 341-430 (180 lines, 12KB)
+│       └── index.ts            # Ре-экспорт variation-блоков (18 lines)
 ├── engine/
-│   ├── WebGLEngine.ts     # WebGL2 рендерер (20KB, 470 lines)
-│   ├── WebGPUEngine.ts    # WebGPU рендерер (8.8KB, 236 lines)
-│   ├── FractalEngineBase.ts # Базовый класс (5.2KB, 153 lines)
-│   ├── fractalMappers.ts  # Маппинги типов (23KB, 578 lines, 473 mapped types)
-│   ├── NeuroAestheticsEngine.ts # AI эстетика (44KB, 1121 lines)
-│   ├── UserPreferenceEngine.ts  # Предпочтения (8.3KB, 251 lines)
-│   ├── RenderDiagnostics.ts     # Диагностика (6.8KB, 262 lines)
-│   ├── MathValidation.ts        # Валидация математики (6.9KB, 270 lines)
-│   └── UserProblemLogger.ts     # Логирование проблем (7.1KB, 239 lines)
-├── components/            # 12 React components (~190KB)
-│   ├── FractalCanvas.tsx  # Canvas компонент (10KB, 263 lines)
-│   ├── ControlsPanel.tsx  # UI контролы (44KB, 876 lines)
-│   └── ...                # 10 more components
+│   ├── WebGLEngine.ts     # WebGL2 рендерер (23KB, 523 lines)
+│   ├── WebGPUEngine.ts    # WebGPU рендерер (8.7KB, 238 lines)
+│   ├── ShaderManager.ts   # Lazy минимальная сборка шейдера + LRU cache 8 (15KB, 327 lines) ⭐ v2.4.0
+│   ├── FractalEngineBase.ts # Базовый класс, packUniforms (9.6KB, 220 lines)
+│   ├── fractalMappers.ts  # Маппинги типов (22KB, 577 lines, 451 имя → 431 индекс)
+│   ├── NeuroAestheticsEngine.ts # AI эстетика (44KB, 1112 lines)
+│   ├── RenderDiagnostics.ts     # Диагностика (6.7KB, 261 lines)
+│   ├── MathValidation.ts        # Валидация математики (1.5KB, 58 lines; вне render-путей)
+│   └── UserProblemLogger.ts     # Логирование проблем (6.9KB, 238 lines)
+├── components/            # 12 React components (~199KB)
+│   ├── FractalCanvas.tsx  # Canvas компонент (10.5KB, 269 lines)
+│   ├── ControlsPanel.tsx  # UI контролы (43KB, 873 lines)
+│   └── ...                # 11 more components
 ├── data/
-│   ├── canonicalFractals.ts  # Каталог 431 фракталов (1.4KB)
+│   ├── canonicalFractals.ts  # Каталог: 145 записей (1.4KB)
 │   ├── fractalCatalogTypes.ts # 10 FractalCategoryKey (4.1KB)
 │   ├── compatibleHybrids.ts   # Матрица гибридов (16KB)
 │   ├── fractalArchitectures.ts # Архитектуры (7.7KB)
 │   ├── fractalFactory.ts      # Фабрика (2.4KB)
-│   └── categories/            # 10 категорий (10 category files)
+│   └── categories/            # 11 category files (10 FractalCategoryKey, 145 записей)
 ├── types/
 │   └── fractal.ts         # 431 FractalType union (33KB, 576 lines)
 ├── hooks/
-│   └── useRenderEngine.ts # Render lifecycle (28KB, 683 lines)
+│   └── useRenderEngine.ts # Render lifecycle + loadProgress (33KB, 781 lines)
 ├── audio/
-│   └── goldenAudio.ts     # φ-tuned audio (22KB, 551 lines)
-├── palettes.ts            # 26+ color palettes (7.8KB)
-├── palettesProcedural.ts  # Procedural palettes (4.0KB)
-├── App.tsx                # Main component (28KB, 657 lines)
-└── main.tsx               # Entry point (407B)
+│   └── goldenAudio.ts     # φ-tuned audio (22KB, 556 lines)
+├── palettes.ts            # 26 ручных палитр (7.6KB)
+├── palettesProcedural.ts  # 640 процедурных палитр (80 тем × 8) (3.3KB)
+├── App.tsx                # Main component (30KB, 717 lines)
+└── main.tsx               # Entry point (725B, 18 lines)
 
-tests/                                        # 13 test files, ~3480 lines
+tests/                                        # 19 test files, ~5480 lines
 ├── fractal-mapper-test.ts       # 521 assertions
 ├── shader-math-validation-test.ts # 113 assertions
 ├── cross-engine-parity-test.ts  # 79 assertions
 ├── fractal-autotest.ts          # 822 assertions
+├── loader-sync-test.ts          # Синхронизация лоадера с реальным прогрессом
+├── responsiveness-probe.ts      # Замер input-latency
 ├── browser-harness.ts           # Playwright harness
-└── ...                          # 8 more test files
+└── ...                          # 12 more test files
 ```
 
 ### Rendering Pipeline
 
 ```
-1. Ray Generation (вершинный шейдер)
+1. Ray Generation (фрагментный шейдер; вершинный шейдер — только fullscreen-треугольник)
    ↓
 2. Ray Marching (фрагментный шейдер)
-   - Space Leaping (bounding sphere)
+   - Space Leaping (bounding sphere, радиус 6.0)
    - Adaptive Step Size (4-tier)
-   - Early Ray Termination
-   - Max 640 steps (close), 480 (medium), 320 (far)
+   - Early Ray Termination (missThreshold)
+   - Max steps GLSL: 256 (close) / 192 (medium) / 128 (far) × qualityMult (0.5 + quality_level × 0.25) → 64-256
+   - Max steps WGSL: 512 / 384 / 256
    ↓
 3. Surface Detection
-   - Hit threshold: cam_dist * 0.0003 + 0.0001
-   - Refinement pass (16 iterations)
+   - Hit threshold: max(max(cam_dist * 0.0003, 0.0001) * 3.0, 0.002)
+   - Sign-aware binary search (20 iterations)
    - Near-miss fallback
    ↓
 4. Normal Calculation (tetrahedron method)
    - Scale-adaptive epsilon
    ↓
 5. Lighting & Shading
-   - Ambient Occlusion (8 probes)
-   - Diffuse (2 dynamic lights)
+   - Ambient Occlusion (GLSL: 7 samples + IQ 4 distances; WGSL: 5 + 3)
+   - Diffuse (2 dynamic lights; soft shadows 16 steps — только в GLSL)
    - Specular (Blinn-Phong)
    - Rim lighting (Fresnel)
    - Subsurface Scattering (3 samples)
@@ -96,9 +103,25 @@ tests/                                        # 13 test files, ~3480 lines
    - Vignette
 ```
 
+Оба бэкенда — полноэкранные fragment-конвейеры (compute-шейдеров нет).
+
+### Loading Progress Pipeline (v2.4.0)
+
+```
+ShaderManager stages (parsing 10% → compiling 40% → linking 80% → complete 100%)
+  ↓ WebGLEngine.onCompileProgress
+useRenderEngine.loadProgress (0.12 на создании контекста → 0.12-0.92 от стадий компиляции)
+  ↓ первая отрисованная рамка
+loadProgress = 1.0 + onEngineReady() → CosmicLoader скрывается
+```
+
+- `CosmicLoader` полностью progress-driven (никакого фиксированного таймера на 450 мс); DOM id `cosmic-loader-overlay` / `cosmic-loader-progress`, force-dismiss через 15 с, после isReady — задержка 500 мс затем fade 700 мс
+- Холодная инициализация устройства ~600 мс (D3D11), тёплые переключения ~100 мс; `KHR_parallel_shader_compile` — неблокирующий опрос (budget link 3200 / stage 800, один `gl.flush()`, никогда внутри цикла)
+- Проверено `tests/loader-sync-test.ts` и `tests/responsiveness-probe.ts`
+
 ---
 
-## 🎨 Fractal Types (431 Total)
+## 🎨 Fractal Types (431 Total: 141 core + 290 вариантов)
 
 ### Categories
 
@@ -130,10 +153,10 @@ tests/                                        # 13 test files, ~3480 lines
 ### 1. Space Leaping (Bounding Sphere)
 
 **Проблема:** Лучи начинают маршировать из пустого пространства  
-**Решение:** Проверка bounding sphere (радиус 4.0) перед raymarching
+**Решение:** Проверка bounding sphere (радиус 6.0) перед raymarching
 
 ```glsl
-float boundingRadius = 4.0;
+float boundingRadius = 6.0;
 float rayOriginDist = length(ro);
 if (rayOriginDist > boundingRadius) {
   float tmin = rayOriginDist - boundingRadius;
@@ -150,20 +173,22 @@ if (rayOriginDist > boundingRadius) {
 
 ```glsl
 float lodFactor = clamp(cam_dist / 10.0, 0.0, 1.0);
-int iterReduction = int(lodFactor * 8.0);
+int iterReduction = int(lodFactor * 4.0);
 ```
 
-**Эффект:** До 8 меньших итераций на дальних дистанциях
+**Эффект:** До 4 меньших итераций на дальних дистанциях
 
 ### 3. Early Ray Termination
 
 **Проблема:** Лучи, которые явно промахиваются, продолжают маршировать  
-**Решение:** Отслеживание lastD и missCount, остановка после 8 шагов
+**Решение:** Отслеживание lastD и missCount, остановка после missThreshold шагов
 
 ```glsl
-if (d > lastD * 1.5 && d > 0.5) {
+// Low quality: 16 misses, Medium: 24, High: 32
+int missThreshold = int(16.0 + u_quality_level * 8.0);
+if (i > 0 && d > 0.0 && lastD > 0.0 && d > lastD * 1.5 && d > 1.0) {
   missCount++;
-  if (missCount > 8) break;
+  if (missCount > missThreshold) break;
 }
 ```
 
@@ -208,15 +233,18 @@ float minStep = max(cam_dist * 0.00005, 0.0001);
 
 ### Conceptual Design
 
-**Принцип:** Только фрактал отбрасывает тени на себя (через AO)  
-**Реализация:** Убраны soft shadows от динамических источников
+**Принцип:** Внешние объекты (камера, примитивы) теней на фрактал не отбрасывают  
+**Реализация:** Soft shadows убраны только из WGSL-конвейера; в GLSL (WebGL2) они считаются по-прежнему — `calcSoftShadow()` (16 шагов) на каждый из двух динамических огней
+
+```wgsl
+// webgpuShaders.ts:3702 — soft shadows отсутствуют
+let sh1: f32 = 1.0; // No soft shadows — pure AO-based shading
+```
 
 ```glsl
-// Нет soft shadows от динамических огней
-float sh1 = 1.0;
-float sh2 = 1.0;
-
-// Только AO для self-shadowing
+// webglShaders.ts:3735-3736 — self-shadowing по SDF самого фрактала
+float shadow1 = calcSoftShadow(p, light1); // 16 steps
+float shadow2 = calcSoftShadow(p, light2); // 16 steps
 float ao = calcAO(p, n, t);
 ```
 
@@ -224,33 +252,37 @@ float ao = calcAO(p, n, t);
 
 | Component | Weight | Purpose |
 |-----------|--------|---------|
-| **Ambient** | 0.6x | Base illumination |
-| **Diffuse** | 1.2x | Main lighting (2 lights) |
-| **Bounce** | 1.5x | Secondary reflections |
-| **Specular** | 1.0x | Highlights (Blinn-Phong) |
-| **Rim** | 1.3x | Edge definition (Fresnel) |
-| **SSS** | 1.5x | Subsurface scattering |
+| **Ambient** | 0.35x | Base illumination |
+| **Diffuse** | 2.0x | Main lighting (2 lights, ×soft shadow в GLSL) |
+| **Bounce** | 1.2x | Secondary reflections |
+| **Specular** | 1.5x | Highlights (Blinn-Phong) |
+| **Rim** | 1.6x | Edge definition (Fresnel) |
+| **SSS** | × sssBackLight | Subsurface scattering |
+| **Environment reflection** | 0.6x | Fresnel-weighted (0.25 base × fresnel) |
+
+Итоговая композиция (`webglShaders.ts:3847`): `col = ambient * 0.35 + diffuse * 2.0 + specular * 1.5 + rim * 1.6 + sssColor * sssBackLight + bounceCol * 1.2 + reflCol * 0.6;`
 
 ### Ambient Occlusion
 
-**Метод:** 8 probes + 3 additional samples  
+**Метод:** GLSL — 7 samples + IQ 4 distances (всего 11 вызовов SDF); WGSL — 5 + 3  
 **Цель:** Self-shadowing в складках и углублениях
 
 ```glsl
 float calcAO(vec3 p, vec3 n, float t) {
+  float aoScale = clamp(t * 3.0, 0.3, 1.0); // Distance-adaptive
   float occ = 0.0;
   float sca = 1.0;
-  for (int i = 0; i < 5; i++) {
-    float aoDist = 0.01 + 0.02 * float(i);
-    float ao = sceneSDF(p + n * aoDist).x;
-    occ += (aoDist - ao) * sca;
-    sca *= 0.85;
+  for (int i = 0; i < 7; i++) {            // 7 samples (was 5)
+    float h = (0.01 + 0.11 * float(i * i) / 36.0) * aoScale;
+    float d = sceneSDF(p + h * n).x;
+    occ += (h - d) * sca;
+    sca *= 0.72;
   }
-  // Additional probes for accuracy
-  for (int i = 0; i < 3; i++) {
-    // ...
-  }
-  return clamp(1.0 - 4.0 * occ, 0.0, 1.0);
+  occ = clamp(occ, 0.0, 2.5);
+  // IQ multi-distance AO: 4 distances (was 3)
+  // ao1 0.003 ×0.20, ao2 0.02 ×0.35, ao3 0.08 ×0.30, ao4 0.18 ×0.15
+  float multiAO = ao1 * 0.20 + ao2 * 0.35 + ao3 * 0.30 + ao4 * 0.15;
+  return clamp(multiAO * (1.0 - 0.85 * occ), 0.12, 1.0);
 }
 ```
 
@@ -264,13 +296,15 @@ float calcAO(vec3 p, vec3 n, float t) {
 
 ```glsl
 float phase = fract(
-  trapSmooth * 0.8 + 
-  curvNorm * 1.2 + 
-  p.y * 0.5 + 
-  p.x * 0.3 + 
-  length(p - ro) * 0.15 + 
-  u_time * 0.04 + 
-  seedAnim * 0.01
+  normalPhase * 0.45 +      // Normal X — primary variation
+  normalPhase2 * 0.30 +     // Normal Y
+  normalPhase3 * 0.15 +     // Normal Z
+  hashNoise * 0.15 + hashNoise2 * 0.10 + hashNoise3 * 0.05 +
+  trapSmooth * 0.25 +
+  curvNorm * 0.20 +
+  p.y * 0.04 + p.x * 0.02 + p.z * 0.02 +
+  length(p - ro) * 0.015 +
+  u_time * 0.03 + seedAnim * 0.01 + 0.37
 );
 
 float w_primary = 0.5 + 0.5 * cos(TWO_PI * phase);
@@ -339,16 +373,16 @@ z = vec3(
 
 | Metric | Value |
 |--------|-------|
-| **Total Fractals** | 431 |
+| **Total Fractals** | 431 (141 core + 290 variants) |
 | **Render Styles** | 7 |
-| **Palettes** | 26 × 101 seeds |
-| **Max Raymarch Steps** | 640 (close), 480 (medium), 320 (far) |
-| **Max Iterations** | 64 (adaptive per type) |
+| **Palettes** | 666 (26 ручных + 640 процедурных) × 101 seeds |
+| **Max Raymarch Steps** | GLSL 256/192/128 × qualityMult (64-256); WGSL 512/384/256 |
+| **Max Iterations** | 64 (clamp 6-64, adaptive per type) |
 | **Zoom Range** | 0.01 - 100.0 |
-| **AO Probes** | 8 + 3 |
-| **Shadow Steps** | 0 (removed) |
+| **AO Probes** | GLSL 7 + 4 (WGSL 5 + 3) |
+| **Shadow Steps** | GLSL 16 × 2 lights; WGSL 0 (removed) |
 | **Normal Epsilon** | Scale-adaptive |
-| **Hit Threshold** | cam_dist * 0.0003 + 0.0001 |
+| **Hit Threshold** | max(max(cam_dist * 0.0003, 0.0001) * 3.0, 0.002) |
 
 ### Optimization Impact
 
@@ -358,7 +392,7 @@ z = vec3(
 | LOD System | 15-25% | Minimal at distance |
 | Early Termination | 30-50% | None |
 | Adaptive Step | 10-20% | Improved accuracy |
-| Shadow Removal | 25-35% | Cleaner lighting |
+| Shadow Removal (только WGSL) | 25-35% | Cleaner lighting |
 
 **Total Expected Speedup:** 30-50%
 
@@ -387,7 +421,7 @@ npx tsx tests/fractal-autotest.ts
 
 ### Testing
 
-**Unit Tests (713 assertions):**
+**Unit Tests (715 assertions):**
 
 ```bash
 npm run test:unit
@@ -405,7 +439,7 @@ npx tsx tests/fractal-autotest.ts
 ```
 
 **Coverage:**
-- 431 SDF functions
+- 431 fractal types (уникальные индексы 0-430)
 - 26 palettes × 101 seeds
 - 7 render styles
 - 5 audio families
@@ -451,7 +485,7 @@ npm run test:all           # unit + integration + headless + benchmark + quality
 - ✅ Running Derivative (implemented)
 - ✅ Hybrid Folding (implemented)
 - ✅ Nonlinear IFS (implemented)
-- ✅ Modular Shader Architecture (implemented)
+- ✅ Lazy minimal shader assembly (ShaderManager, v2.4.0)
 
 ### Future Research
 
@@ -487,8 +521,8 @@ npm run test:all           # unit + integration + headless + benchmark + quality
 ## 📝 Changelog
 
 ### Phase 5.1 (Current) - September 2026
-- ✅ TypeScript strict mode: 0 errors (fixed 97+ pre-existing errors)
-- ✅ Unit test suite: 713 assertions (mapper, shader-math, engine-parity)
+- ✅ 0 TypeScript errors (strict mode пока не включён в tsconfig.json)
+- ✅ Unit test suite: 715 assertions (mapper, shader-math, engine-parity)
 - ✅ Fixed WebGLEngine.ts RenderingContext type narrowing (35 errors)
 - ✅ Fixed data category FractalCategoryKey/FractalType mismatches (55 errors)
 - ✅ Fixed Record<FractalType> incompleteness (7 errors)
@@ -496,16 +530,16 @@ npm run test:all           # unit + integration + headless + benchmark + quality
 
 ### Phase 5.0 - September 2026
 - ✅ Added 300 new fractal types (Julia, IFS, L-System, Flame, Hybrid variations)
-- ✅ Total fractals: 431 (was 131)
-- ✅ Modular shader architecture implemented
-- ✅ Increased max raymarch steps: 640/480/320 (was 512/384/256)
+- ✅ Total fractals: 431 (141 core + 290 variants) — сокращения не было
+- ✅ Lazy minimal per-fractal shader assembly (ShaderManager, v2.4.0)
+- ✅ Max raymarch steps: GLSL 256/192/128 × qualityMult, WGSL 512/384/256
 - ✅ Increased max iterations: 64 (was 48)
 - ✅ Increased zoom range: 0.01-100.0 (was 0.05-32.0)
 - ✅ Fixed rotation braking logic
 - ✅ Updated documentation
 
 ### Phase 4.15
-- ✅ Removed soft shadows from dynamic lights
+- ✅ Removed soft shadows from dynamic lights (актуально для WGSL; в GLSL calcSoftShadow 16 шагов вернулся)
 - ✅ Camera/objects no longer cast shadows on fractal
 - ✅ Only self-shadowing through AO
 

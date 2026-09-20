@@ -1,40 +1,40 @@
 # Golden Ratio WebGPU Fractal Engine - Architecture
 
 ## Project Overview
-Real-time 3D fractal visualization engine with **431 fractal types**, **7 render modes**, and advanced PBR lighting.
+Real-time 3D fractal visualization engine with **431 fractal types** (141 core + 290 variants), **7 render modes**, and advanced PBR lighting. **v2.4.0**: Modular shader architecture with lazy compilation.
 
 ## Tech Stack
-- **Runtime**: TypeScript 5.8, React 19, Vite 6.4
-- **Rendering**: WebGL2 (primary), WebGPU (optional — 104/431 types implemented)
+- **Runtime**: TypeScript 5.8, React 19, Vite ^6.2.3
+- **Rendering**: WebGL2 (primary, all 431 types), WebGPU (optional — 131/431 types implemented, 131-430 fall back to phyllotaxis)
 - **Shaders**: GLSL ES 3.00 (WebGL2), WGSL (WebGPU)
 - **Build**: Vite with esbuild, ~4s build time
 - **Bundle**: 873 KB JS, 76 KB CSS
 
 ## Directory Structure
 ```
-src/                                          # 51 TypeScript/TSX files, ~920KB source
+src/                                          # 54 TypeScript/TSX files, ~935KB source
 ├── shaders/
-│   ├── webglShaders.ts          # Main shader (163KB, 4388 lines) - ALL 431 types, 7 render modes
-│   ├── webgpuShaders.ts         # WebGPU shader (137KB, 3546 lines) - 104/431 types
+│   ├── webglShaders.ts          # Main shader (161KB, 4195 lines) - ALL 431 types, 7 render modes
+│   ├── webgpuShaders.ts         # WebGPU shader (158KB, 4069 lines) - 131/431 types
 │   └── modules/
-│       ├── juliaVariations.ts   # 50 Julia variations (6.4KB, 111 lines, 12x compression)
-│       ├── flameVariations.ts   # 50 Fractal Flame variations (6.3KB, 115 lines, 11x compression)
-│       ├── hybridVariations.ts  # 90 Hybrid fractals (12KB, 181 lines, 15x compression)
-│       ├── ifsVariations.ts     # 50 IFS variations (6.4KB, 116 lines, 11x compression)
-│       └── lsystemVariations.ts # 50 L-System variations (7.2KB, 131 lines, 11x compression)
+│       ├── juliaVariations.ts   # 50 Julia variations (6.3KB, 110 lines, 12x compression)
+│       ├── flameVariations.ts   # 50 Fractal Flame variations (6.2KB, 114 lines, 11x compression)
+│       ├── hybridVariations.ts  # 90 Hybrid fractals (12KB, 180 lines, 15x compression)
+│       ├── ifsVariations.ts     # 50 IFS variations (6.3KB, 115 lines, 11x compression)
+│       └── lsystemVariations.ts # 50 L-System variations (7.1KB, 130 lines, 11x compression)
 ├── engine/
-│   ├── FractalEngineBase.ts     # Base class, uniform packing (5.2KB, 153 lines)
-│   ├── WebGLEngine.ts           # WebGL2 renderer (20KB, 470 lines)
-│   ├── WebGPUEngine.ts          # WebGPU renderer (8.8KB, 236 lines)
-│   ├── fractalMappers.ts        # Type/index mappings (23KB, 578 lines, 473 mapped types)
-│   ├── NeuroAestheticsEngine.ts # AI aesthetics scoring (44KB, 1121 lines)
-│   ├── UserPreferenceEngine.ts  # User learning (8.3KB, 251 lines)
-│   ├── UserProblemLogger.ts     # Error logging (7.1KB, 239 lines)
-│   ├── RenderDiagnostics.ts     # Diagnostics (6.8KB, 262 lines)
-│   └── MathValidation.ts        # Math validation (6.9KB, 270 lines)
+│   ├── FractalEngineBase.ts     # Base class, uniform packing (9.6KB, 220 lines)
+│   ├── WebGLEngine.ts           # WebGL2 renderer (23KB, 523 lines)
+│   ├── WebGPUEngine.ts          # WebGPU renderer (8.7KB, 238 lines)
+│   ├── ShaderManager.ts         # Lazy minimal shader assembly + LRU cache (15KB, 327 lines)
+│   ├── fractalMappers.ts        # Type/index mappings (22KB, 577 lines, 451 names → 431 indices)
+│   ├── NeuroAestheticsEngine.ts # AI aesthetics scoring (44KB, 1112 lines)
+│   ├── UserProblemLogger.ts     # Error logging (6.9KB, 238 lines)
+│   ├── RenderDiagnostics.ts     # Diagnostics (6.7KB, 261 lines)
+│   └── MathValidation.ts        # Math validation (1.5KB, 58 lines; not used in render paths)
 ├── components/
-│   ├── FractalCanvas.tsx        # Main canvas, camera controls (10KB, 263 lines)
-│   ├── ControlsPanel.tsx        # UI controls (44KB, 876 lines)
+│   ├── FractalCanvas.tsx        # Main canvas, camera controls (10KB, 269 lines)
+│   ├── ControlsPanel.tsx        # UI controls (43KB, 873 lines)
 │   ├── TelemetryHUD.tsx         # FPS/stats display (7.6KB, 171 lines)
 │   ├── FractalInfoHUD.tsx       # Fractal info overlay (17KB, 389 lines)
 │   ├── FractalProbeHUD.tsx      # Probe overlay (5.5KB, 128 lines)
@@ -43,17 +43,17 @@ src/                                          # 51 TypeScript/TSX files, ~920KB 
 │   ├── ExplanationModal.tsx     # Explanation modal (16KB, 207 lines)
 │   ├── UserProfileModal.tsx     # User profile modal (18KB, 363 lines)
 │   ├── ProjectManifestModal.tsx # Manifest modal (8.5KB, 176 lines)
-│   ├── CosmicLoader.tsx         # Loading animation (6.8KB, 174 lines)
+│   ├── CosmicLoader.tsx         # Progress-driven loading overlay (6.9KB, 180 lines)
 │   └── DebugOverlay.tsx         # Debug overlay (6.6KB, 158 lines)
 ├── hooks/
-│   └── useRenderEngine.ts       # Main render loop, keyboard shortcuts (28KB, 683 lines)
+│   └── useRenderEngine.ts       # Main render loop, keyboard shortcuts, loadProgress (33KB, 781 lines)
 ├── data/
 │   ├── canonicalFractals.ts     # Fractal catalog (1.4KB, 31 lines)
 │   ├── fractalCatalogTypes.ts   # Catalog types (4.1KB, 115 lines)
 │   ├── fractalFactory.ts        # Factory function (2.4KB, 86 lines)
 │   ├── compatibleHybrids.ts     # Hybrid breeding matrix (16KB, 250 lines)
 │   ├── fractalArchitectures.ts  # Architecture tab data (7.7KB, 194 lines)
-│   └── categories/              # 10 fractal categories
+│   └── categories/              # 11 category files (10 FractalCategoryKey, 145 catalog entries)
 │       ├── geometricCurves.ts   # Geometric curves (16KB, 298 lines)
 │       ├── constructiveFractals.ts  # Constructive fractals (8.6KB, 182 lines)
 │       ├── algebraicFractals.ts     # Algebraic fractals (12KB, 210 lines)
@@ -64,33 +64,40 @@ src/                                          # 51 TypeScript/TSX files, ~920KB 
 │       ├── expandedRealFractals.ts    # Expanded real fractals (8.1KB, 250 lines)
 │       ├── visuallyDistinctFractals.ts # Visually distinct (6.7KB, 162 lines)
 │       ├── mandalas3D.ts              # 3D Mandalas (13KB, 313 lines)
+│       ├── temporalManifolds.ts       # Temporal manifolds (12KB, 307 lines, 19 entries)
 │       └── index.ts                   # Category exports (690B, 16 lines)
 ├── audio/
-│   └── goldenAudio.ts           # φ-tuned ambient audio (22KB, 551 lines)
+│   └── goldenAudio.ts           # φ-tuned ambient audio (22KB, 556 lines)
 ├── types/
 │   └── fractal.ts               # TypeScript interfaces (33KB, 576 lines)
-├── palettes.ts                  # Color palettes (7.8KB, 213 lines)
-├── palettesProcedural.ts        # Procedural palettes (4.0KB, 114 lines)
-├── App.tsx                      # Main app component (28KB, 657 lines)
-└── main.tsx                     # Entry point (407B, 12 lines)
+├── palettes.ts                  # Color palettes — 26 hand-crafted (7.6KB, 212 lines)
+├── palettesProcedural.ts        # Procedural palettes — 640 (80 themes × 8) (3.3KB, 89 lines)
+├── App.tsx                      # Main app component (30KB, 717 lines)
+└── main.tsx                     # Entry point (725B, 18 lines)
 
-tests/                                        # 13 test files, ~3480 lines
+tests/                                        # 19 test files, ~5480 lines
 ├── fractal-autotest.ts          # 822-assertion integration test (421 lines)
 ├── fractal-mapper-test.ts       # Mapper completeness (521 assertions, 260 lines)
 ├── shader-math-validation-test.ts # GLSL math safety (113 assertions, 578 lines)
-├── cross-engine-parity-test.ts  # WebGL/WebGPU parity (79 assertions, 301 lines)
+├── cross-engine-parity-test.ts  # WebGL/WebGPU parity (79 assertions, 307 lines)
 ├── browser-harness.ts           # Playwright browser test harness (764 lines)
 ├── browser-fractal-test.ts      # Browser integration test (230 lines)
+├── external-browser-test.ts     # External-browser rendering test (269 lines)
 ├── advanced-fractal-test.ts     # Advanced fractal browser test (376 lines)
 ├── headless-fractal-test.ts     # Headless smoke test (140 lines)
 ├── browser-smoke-test.ts        # Quick smoke test (63 lines)
 ├── render-style-test.ts         # Render style visual test (74 lines)
+├── visual-step-test.ts          # Per-fractal visual step regression (285 lines)
+├── stress-test-cycle.ts         # Long-run stress cycle (416 lines)
+├── continuous-render-test.ts    # Sustained render stability (376 lines)
+├── loader-sync-test.ts          # Loader/progress sync check (154 lines)
+├── responsiveness-probe.ts      # Input-latency probe (121 lines)
 ├── performance-benchmark.ts     # Performance benchmark (256 lines)
 ├── code-quality-check.ts        # Code quality validation (353 lines)
 └── palette-diagnostic.ts        # Palette diagnostic (57 lines)
 ```
 
-**Total**: 64 TypeScript/TSX files (51 src + 13 tests), ~1052KB source code
+**Total**: 73 TypeScript/TSX files (54 src + 19 tests), ~935KB src source code
 
 ## Critical Architecture Decisions
 
@@ -142,9 +149,51 @@ All mathematical formulas, parameters, and visual quality preserved.
 - **[39]: render style index** ← KEY FOR MODE SWITCHING
 - [40-42]: ambient color (vec3)
 - [43]: palette seed
-- [44-47]: padding
+- [44]: palette rotation flag
+- [45]: auto-rotate flag (drives shader motion blur)
+- [46]: quality level (0=low/mobile, 1=medium, 2=high)
+- [47]: unused (0.0)
 
-### 3. Render Style Index Mapping
+Not padding: indices 44-46 carry live data. WebGPU sends the same 48 values in a 52-float / 208-byte WGSL struct (indices 48-51 are the struct's `pad5` alignment tail).
+
+### 3. Lazy Shader Compilation System (v3.0)
+**PROBLEM**: The monolithic 4171-line fragment shader caused browser crashes (GL_OUT_OF_MEMORY) during GLSL compilation.
+
+**ROOT CAUSE**: sceneSDF() calls evalSingleFractal() which references every map* function (all 431 dispatched types). Even modular approaches that kept the full sceneSDF failed because the GLSL linker required all map functions.
+
+**SOLUTION**: ShaderManager parses FRAGMENT_SHADER_SOURCE as a string and generates a minimal shader per fractal (~900 lines vs 4171):
+
+```
+MINIMAL_SHADER = header + ONE_fractal_function + generated minimal_sceneSDF + footer
+```
+
+**Key innovation**: minimal_sceneSDF calls the fractal function DIRECTLY (not through evalSingleFractal), so the GLSL linker only needs that one map* function.
+
+| Component | Lines | Purpose |
+|-----------|-------|---------|
+| ShaderManager | 327 | Parse FRAGMENT_SHADER_SOURCE, generate minimal shaders |
+| Header (parsed) | ~73 | #version, uniforms, constants, helpers |
+| One fractal function | ~20-80 | The specific map* function needed |
+| Minimal sceneSDF (generated) | ~45 | Direct call to fractal function |
+| Footer (parsed) | ~770 | calcNormal, calcAO, acesToneMap, main() |
+| **Total per fractal** | **~900** | vs 4171 monolithic (78% reduction) |
+
+**How it works**:
+1. parseSections() splits FRAGMENT_SHADER_SOURCE into header/footer (cached)
+2. extractFractalFunction() finds the specific map* function by index
+3. generateMinimalSceneSDF() creates sceneSDF with direct function call
+4. Assembled shader is compiled and cached (LRU, max 8 programs)
+5. No dynamic imports, no module files; on compile/link error WebGLEngine falls back to the monolithic shader (WebGLEngine.ts:292-355)
+
+**Benefits**:
+- 78% smaller shaders: ~900 lines vs 4171 per compilation
+- No GL_OUT_OF_MEMORY: Small shaders compile instantly
+- No module files: Everything parsed from single source string
+- Monolithic fallback: last-resort full shader keeps the canvas alive when a minimal build fails
+- LRU caching: Max 8 compiled programs in memory
+- Progress feedback: compile stages feed the loading overlay (see "Loading Progress Pipeline")
+
+### 4. Render Style Index Mapping
 ```typescript
 // In fractalMappers.ts
 'solid' → 0
@@ -158,19 +207,32 @@ All mathematical formulas, parameters, and visual quality preserved.
 
 **CRITICAL**: Keyboard shortcuts must pass STRING names, not numbers!
 
-### 4. Camera System
+### 5. Camera System
 Four modes:
 - **Orbit** (0): External view, rotate around fractal
 - **Fly-Through** (1): First-person exploration inside fractal
 - **Golden Spiral Dive** (2): Automatic spiral into core
 - **Kelvin Invert** (3): Inside-Out Kelvin Inversion (spherical conformal inversion)
 
-### 5. Ray Marching
-- Adaptive steps: 640 (close), 480 (medium), 320 (far)
+### 6. Ray Marching
+- Adaptive steps (GLSL): 256 (close) / 192 (medium) / 128 (far) × qualityMult (0.5 + quality_level × 0.25) → 64-256 steps
+- Adaptive steps (WGSL): 512 (close) / 384 (medium) / 256 (far)
 - Max distance: 2048 (close), 1536 (medium), 1024 (far)
+- Bounding radius for space leaping: 6.0 (both backends)
 - Hit threshold: scale-adaptive
 - Binary search refinement: 20 iterations
 - Sign tracking for stability
+
+### 7. Loading Progress Pipeline
+Real progress values only — no fixed timers:
+1. `ShaderManager` reports stages while assembling each minimal shader: parsing 10% → compiling 40% → linking 80% → complete 100%
+2. `WebGLEngine` re-publishes them through `onCompileProgress(stage, percent)`
+3. `useRenderEngine` maps them into `loadProgress`: 0.12 at context acquisition, 0.12-0.92 from compile stages, 1.0 on the FIRST RENDERED FRAME
+4. `onEngineReady` fires only on that first rendered frame, so `CosmicLoader` (DOM ids `cosmic-loader-overlay` / `cosmic-loader-progress`) is dismissed by real output: 500 ms delay then 700 ms fade, with a 15 s force-dismiss safety net
+5. Timing floor: one-time cold device init ~600 ms (ANGLE/D3D11), warm engine switches ~100 ms
+6. Blocking is avoided via `KHR_parallel_shader_compile` polling with a single `gl.flush()` per wait (budgets: link 3200, stage 800 spins)
+
+Verified by `tests/loader-sync-test.ts` and `tests/responsiveness-probe.ts`.
 
 ## Module Dependency Graph
 
@@ -201,7 +263,7 @@ main.tsx
     → palettesProcedural.ts
 
 data/canonicalFractals.ts
-  → categories/*.ts (10 category files)
+  → categories/*.ts (11 category files, 145 entries)
     → fractalCatalogTypes.ts
     → fractalFactory.ts
 ```
@@ -212,15 +274,15 @@ data/canonicalFractals.ts
 - **FPS target**: 60 (configurable up to 240)
 - **SDF calls per pixel**: ~170-270 (with all effects)
 - **Shader compilation**: Parallel (KHR_parallel_shader_compile)
-- **Source code**: ~1052KB TypeScript (64 files: 51 src + 13 tests)
-- **TypeScript errors**: 0 (strict mode)
-- **Unit tests**: 713 assertions (521 mapper + 113 shader-math + 79 engine-parity)
+- **Source code**: ~935KB TypeScript in src/ (73 ts/tsx files total: 54 src + 19 tests)
+- **TypeScript errors**: 0 (strict mode not yet enabled)
+- **Unit tests**: 715 assertions (521 mapper + 113 shader-math + 81 engine-parity)
 
 ## Known Issues
 1. **Passive event listener warnings**: Fixed with `touchAction: 'none'`
 2. **Render mode switching**: Fixed to use string names
 3. **WebGPU crashes in embedded browsers**: Defaults to WebGL2
-4. **WebGPU shader coverage**: Only 104/431 fractal types implemented in WGSL — types 104-430 fall back to phyllotaxis on WebGPU (WebGL has all 431)
+4. **WebGPU shader coverage**: Only 131/431 fractal types implemented in WGSL — types 131-430 fall back to phyllotaxis on WebGPU (WebGL has all 431)
 5. **WebGL RenderingContext type narrowing**: Fixed with explicit `as WebGL2RenderingContext | null` casts
 6. **Data category type mismatches**: Fixed all `FractalCategoryKey` and `FractalType` string values to match type definitions
 7. **Record<FractalType> incompleteness**: Changed to `Partial<Record<FractalType, T>>` for Records covering only canonical entries (~110 of 431)
@@ -229,7 +291,7 @@ data/canonicalFractals.ts
 - **Browser**: Chrome 152+, Edge (Chromium)
 - **GPU**: WebGL2 required, WebGPU optional
 - **OS**: Windows 10/11, macOS, Linux
-- **Mobile**: Supported with reduced DPR (1.5 max)
+- **Mobile**: Supported with reduced DPR (1.0 max, quality level 0)
 
 ## Build Commands
 ```bash
@@ -238,7 +300,7 @@ npm run build        # Production build (dist/)
 npm run preview      # Preview production build
 npm run deploy:cf    # Deploy to Cloudflare Pages
 npm run lint         # TypeScript type check (tsc --noEmit)
-npm run test:unit    # Unit tests (713 assertions: mapper + shader-math + engine-parity)
+npm run test:unit    # Unit tests (715 assertions: mapper + shader-math + engine-parity)
 npm run test         # Integration tests (822 assertions)
 npm run test:browser # Playwright browser tests
 npm run test:all     # Full test suite (unit + integration + headless + benchmark + quality)

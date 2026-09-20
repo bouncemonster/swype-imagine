@@ -1,9 +1,9 @@
 # webgpuShaders.ts
 
-**3288 lines | WGSL shaders for WebGPU renderer**
+**4069 lines | 158KB | WGSL shaders for WebGPU renderer**
 
 ## Purpose
-Complete WGSL shader implementation for WebGPU fractal rendering. Mirrors webglShaders.ts functionality but uses WebGPU Shading Language (WGSL) syntax.
+Complete WGSL shader implementation for WebGPU fractal rendering. Same rendering techniques as webglShaders.ts but in WebGPU Shading Language (WGSL) syntax; implements a subset of the fractal types (see Critical Notes).
 
 ## Export
 ```typescript
@@ -11,7 +11,7 @@ export const WGSL_SHADER: string
 ```
 Single WGSL shader string containing all rendering code.
 
-## Uniform Buffer Structure (lines 2-48)
+## Uniform Buffer Structure (lines 2-50)
 ```wgsl
 struct Uniforms {
   resolution: vec2<f32>,      // [0-1] Screen dimensions
@@ -58,12 +58,14 @@ struct Uniforms {
   palette_seed: f32,          // [43] Palette random seed
 
   palette_rotation: f32,      // [44] Palette rotation angle
-  pad5: vec3<f32>,            // [45-47] Padding (alignment)
+  auto_rotate: f32,           // [45] Auto-rotation flag (shader motion blur)
+  quality_level: f32,         // [46] 0=low (mobile), 1=medium, 2=high
+  pad5: f32,                  // [47] Alignment pad
 };
 ```
-**Total: 48 floats** (matches WebGL uniform buffer)
+**48 data floats packed into a 52-float / 208-byte buffer** — WGSL vec3 members force 16-byte alignment, so the struct (and `WebGPUEngine.uniformValues = new Float32Array(52)`) is padded to 208 bytes; indices 48-51 are alignment padding.
 
-## Vertex Shader (lines 57-70)
+## Vertex Shader (lines 59-72)
 ```wgsl
 @vertex
 fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
@@ -80,7 +82,7 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
 - **No vertex buffer**: Uses vertex_index to generate positions
 - **UV coordinates**: Passed to fragment shader
 
-## Constants (lines 72-75)
+## Constants (lines 74-77)
 ```wgsl
 const PI: f32 = 3.141592653589793;
 const TWO_PI: f32 = 6.283185307179586;
@@ -90,7 +92,7 @@ const GOLDEN_ANGLE: f32 = 2.399963229728653; // 137.507764°
 
 ## Helper Functions
 
-### Rotation (lines 77-93)
+### Rotation (lines 79-95)
 ```wgsl
 fn rot2D(p: vec2<f32>, a: f32) -> vec2<f32>
 fn rotateVec(p: vec3<f32>, pitch: f32, yaw: f32) -> vec3<f32>
@@ -103,7 +105,7 @@ Each fractal type has a `mapXxx()` function returning `vec2<f32>(distance, orbit
 - `mapJuliaSet()` - Julia sets
 - `mapBurningShip()` - Burning Ship fractal
 - `mapTricorn()` - Tricorn (Mandelbar)
-- And 80+ more...
+- Dispatch covers `ftype == 0…130`; anything else returns `mapPhyllotaxis` (:3096)
 
 ## Key Differences from WebGL (webglShaders.ts)
 
@@ -119,17 +121,19 @@ Each fractal type has a `mapXxx()` function returning `vec2<f32>(distance, orbit
 
 ## Critical Notes
 1. **WGSL syntax**: WebGPU Shading Language, not GLSL
-2. **48 uniforms**: Same layout as WebGL for consistency
+2. **Uniform struct**: same 48 packed values as WebGL, but 52 floats / 208 bytes on the GPU side (vec3 alignment padding)
 3. **Full-screen triangle**: More efficient than quad (3 verts vs 4)
 4. **No vertex buffers**: Generated from vertex_index
-5. **Mirrors WebGL**: Same fractal types, same math
-6. **Type annotations**: WGSL requires explicit types (`vec3<f32>`)
-7. **Binding model**: `@group(0) @binding(0)` for uniforms
-8. **Entry points**: `@vertex` and `@fragment` decorators
-9. **No dynamic shader compilation**: Single monolithic shader
-10. **Performance**: WebGPU generally faster than WebGL2
+5. **Implements 131/431 fractal types** (indices 0-130); indices 131-430 fall back to `mapPhyllotaxis` (webgpuShaders.ts:3096) — the WebGL shader dispatches all 431
+6. **Divergent raymarch tuning vs GLSL**: outside-boundary check uses `r_bound > 12.0` (:3176) vs 5.0 in GLSL; step budget `maxSteps` = 256/384/512 by camera distance (:3501) vs GLSL's 256/192/128 × qualityMult
+7. **No soft shadows in WGSL**: dynamic lights use `sh = 1.0` (pure AO-based shading, :3698-3718); GLSL retains `calcSoftShadow`
+8. **Type annotations**: WGSL requires explicit types (`vec3<f32>`)
+9. **Binding model**: `@group(0) @binding(0)` for uniforms
+10. **Entry points**: `@vertex` and `@fragment` decorators
+11. **No dynamic shader compilation**: Single monolithic shader
+12. **Performance**: WebGPU generally faster than WebGL2
 
 ## Related Files
 - `WebGPUEngine.ts` - WebGPU renderer using this shader
-- `webglShaders.ts` - GLSL version (187KB)
+- `webglShaders.ts` - GLSL version (161KB)
 - `shader-modules.md` - GLSL shader modules overview
