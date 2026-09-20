@@ -1,0 +1,32 @@
+---
+description: Agent Shield core protections — shell safety, encoding, process management
+alwaysApply: true
+---
+
+# Agent Shield Rules
+
+## Shell Safety
+- **pwsh 7** (Store version) is the default. NEVER use PowerShell 5.1 (`powershell.exe`).
+- Write scripts to files, never inline cross-shell one-liners.
+- `python -c` works (pass-through wrapper), but for multi-line Python use `py-run $code` or script files.
+- `bash -c` works (pass-through wrapper), but for complex bash use `.sh` script files.
+- NEVER nest single quotes in inline PowerShell.
+
+## Encoding
+- UTF-8 is set automatically by `agent-init.ps1` (Console, OutputEncoding, PYTHONIOENCODING, chcp 65001).
+- Do NOT use registry ACP fix — it crashes Electron apps.
+
+## Process Management
+- Run `mem-optimize` before heavy operations to kill memory wastes and set priorities.
+- Run `ports` before starting servers to check for conflicts.
+- Kill what you spawn — clean up processes after use.
+- Qoder/node = AboveNormal priority. explorer/Telegram/chrome = BelowNormal.
+
+## SSH
+- `ControlMaster no` — Windows OpenSSH does NOT support Unix domain sockets.
+- Mac SSH: `ssh mac` (root). Non-interactive needs `bash -l -c` for PATH.
+- Use `ssh-run -Host <ip> -Command <cmd>` to avoid escaping issues.
+
+## Command Deny List
+Never execute directly: `rm`, `mv`, `sudo`, `wget`, `curl`, `chown`.
+Use PowerShell equivalents or agent-safe wrappers.

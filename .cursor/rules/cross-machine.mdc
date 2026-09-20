@@ -1,0 +1,28 @@
+---
+description: Cross-machine workflow rules for PC (Windows) and Mac operations
+alwaysApply: true
+---
+
+# Cross-Machine Rules
+
+## Machine Detection
+- **PC**: Windows 22H2, pwsh 7.6.6, Docker 29.8.0 (WSL2), IP 192.168.31.254
+- **Mac**: macOS 15.7.3, zsh, IP 192.168.31.208 (ssh mac)
+
+## PC-Specific
+- Shell: pwsh 7 (Microsoft Store) — startup ~1588ms, Appx module unavailable.
+- Agent functions: `mem-report`, `mem-optimize`, `env-check`, `ports`, `sysinfo`, `py-run`, `ssh-run`.
+- Docker/WSL2: memory=12GB, autoMemoryReclaim=dropCache. See `agent-docs/DOCKER-STABILITY.md`.
+- Zombie auto-kill: chrome-headless-shell, steamwebhelper, msrdc, dllhost, vmmem (>1GB).
+
+## Mac-Specific
+- Shell: zsh. Root .zshrc has agent vars. User .zshrc has IDE-mode (CI=true, NO_COLOR).
+- SSH non-interactive uses `sh -c` → empty PATH. Always use `bash -l -c 'command'`.
+- Python 3.14.3, Node v22.16.0, Git 2.52.0 (all Homebrew).
+
+## Portable Workflow
+1. Read AGENTS.md for universal principles.
+2. Check machine-specific docs for available tools.
+3. Use shell priority from AGENTS.md.
+4. Write script files, never inline cross-shell commands.
+5. Verify with actual output, not intermediate reports.

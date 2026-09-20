@@ -1,0 +1,31 @@
+---
+description: When working with PowerShell scripts or commands, enforce safe patterns
+globs: *.ps1,*.psm1
+---
+
+# PowerShell Safety Rules
+
+## Version
+- ALWAYS use pwsh 7 (PowerShell 7.6.6, Microsoft Store).
+- NEVER use Windows PowerShell 5.1 (`powershell.exe`) — mangles `$_`, breaks JSON argv.
+
+## Script Patterns
+- For >1 line, write to `.ps1` file and execute with `pwsh -File script.ps1`.
+- Never inline `{ ... }` scriptblocks in `-Command` parameters.
+- Never nest single quotes in inline strings.
+
+## Non-Interactive Safety
+- `agent-init.ps1` loads functions in non-interactive shells (early return pattern).
+- PSReadLine and Terminal-Icons hang in non-interactive mode — the profile handles this.
+- Detection: `[Console]::IsInputRedirected -or [Console]::IsOutputRedirected`.
+
+## Encoding
+- UTF-8 is set by `agent-init.ps1`. No additional encoding setup needed.
+- For file output: `$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'` (already set).
+
+## Common Pitfalls
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `ParserError` with `$_` | PS 5.1 parsing | Use pwsh 7 or script file |
+| Profile hangs | PSReadLine in non-interactive | Early return pattern (already in profile) |
+| `Get-AppxPackage` fails | Store version restriction | Use MSI version or skip Appx |
