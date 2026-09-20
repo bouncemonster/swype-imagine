@@ -224,7 +224,7 @@ for (const call of acosCalls) {
 assert(acosClamped === acosCalls.length, `All acos inputs clamped: ${acosClamped}/${acosCalls.length}`);
 
 // Check log() inputs are guarded against zero/negative
-const logCalls = shaderSource.match(/log\(([^)]+)\)/g) || [];
+const logCalls: string[] = shaderSource.match(/log\(([^)]+)\)/g) || [];
 console.log(`  log() calls: ${logCalls.length}`);
 // Note: some log() calls are in comments (// dim = log(8)/log(3))
 const logCodeCalls = logCalls.filter(c => !c.includes('8') && !c.includes('3')); // filter comment references

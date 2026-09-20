@@ -373,7 +373,10 @@ assert(glsl.includes('acesToneMap'), 'GLSL: ACES tone mapping');
 assert(glsl.includes('sceneSDF'), 'GLSL: scene SDF evaluation');
 assert(glsl.includes('evalSingleFractal'), 'GLSL: fractal dispatch');
 assert(wgsl.includes('calcNormal'), 'WGSL: normal calculation');
-assert(wgsl.includes('calcSoftShadow'), 'WGSL: soft shadows');
+// WGSL intentionally drops dynamic-light soft shadows in favor of pure AO self-shadowing
+// (see webgpuShaders.ts "CONCEPTUAL FIX: Remove soft shadows from dynamic lights").
+// WebGL (GLSL) keeps calcSoftShadow; assert its absence in WGSL to lock the deliberate design.
+assert(!wgsl.includes('calcSoftShadow'), 'WGSL: soft shadows intentionally removed (AO-only shading)');
 assert(wgsl.includes('calcAO'), 'WGSL: ambient occlusion');
 assert(wgsl.includes('acesToneMap'), 'WGSL: ACES tone mapping');
 assert(wgsl.includes('sceneSDF'), 'WGSL: scene SDF evaluation');
@@ -381,7 +384,7 @@ assert(wgsl.includes('evalSingleFractal'), 'WGSL: fractal dispatch');
 
 console.log(`  ✓ GLSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
 console.log(`  ✓ WGSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
-console.log(`  ✓ Both: normals, soft shadows, AO, ACES tonemap, SDF dispatch`);
+console.log(`  ✓ Both: normals, AO, ACES tonemap, SDF dispatch (GLSL keeps dynamic soft shadows; WGSL is AO-only)`);
 
 // ============================================
 // 11. ADAPTIVE QUALITY SYSTEM

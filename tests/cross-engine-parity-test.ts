@@ -6,7 +6,8 @@
  * 2. Both use identical 48-float uniform packing
  * 3. Both draw the same full-screen triangle (3 vertices)
  * 4. Both use same shader index computation (via base class)
- * 5. Documented gaps (WebGL-only surface export, WebGPU-only async features)
+ * 5. Documented gaps (WebGPU-only async features) + anti-freeze contract
+ *    (non-blocking compile polling; no per-frame validation/timing in render paths)
  * 
  * Usage: npx tsx tests/cross-engine-parity-test.ts
  */
@@ -48,6 +49,9 @@ const webgpuSource = readFileSync(
 );
 const hookSource = readFileSync(
   resolve(projectRoot, 'src/hooks/useRenderEngine.ts'), 'utf-8'
+);
+const shaderManagerSource = readFileSync(
+  resolve(projectRoot, 'src/engine/ShaderManager.ts'), 'utf-8'
 );
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -145,16 +149,16 @@ assert(webgpuSource.includes("'triangle-list'"), 'WebGPU uses triangle-list topo
 
 console.log('\n━━━ Test 5: Uniform Validation ━━━');
 
-// Both engines validate time and zoom values
-assert(webglSource.includes("validateScalar(") && webglSource.includes("'u_time'"), 
-  'WebGL validates u_time');
-assert(webglSource.includes("validateScalar(") && webglSource.includes("'u_zoom'"), 
-  'WebGL validates u_zoom');
+// Anti-freeze contract: per-frame validateScalar was removed from render paths
+// (it checked CPU-side values; validation happens at init only). Assert absence.
+assert(!webglSource.includes('validateScalar('), 'WebGL render path has no per-frame validateScalar() call');
+assert(!webgpuSource.includes('validateScalar('), 'WebGPU render path has no per-frame validateScalar() call');
 
-assert(webgpuSource.includes("validateScalar(") && webgpuSource.includes("'u_time'"), 
-  'WebGPU validates u_time');
-assert(webgpuSource.includes("validateScalar(") && webgpuSource.includes("'u_zoom'"), 
-  'WebGPU validates u_zoom');
+// Instead, shader compile/link must be non-blocking in both engines:
+assert(webglSource.includes('COMPLETION_STATUS'), 'WebGL polls COMPLETION_STATUS_KHR (non-blocking compile)');
+assert(webglSource.includes('pollCompletion'), 'WebGL uses pollCompletion() yield-based wait');
+assert(shaderManagerSource.includes('waitUntilCompiled'), 'ShaderManager uses waitUntilCompiled() yield-based wait');
+assert(webgpuSource.includes('createRenderPipelineAsync'), 'WebGPU compiles pipeline async (non-blocking)');
 
 // ═══════════════════════════════════════════════════════════════════════
 // Test 6: Documented Feature Gaps
@@ -162,10 +166,11 @@ assert(webgpuSource.includes("validateScalar(") && webgpuSource.includes("'u_zoo
 
 console.log('\n━━━ Test 6: Documented Feature Gaps ━━━');
 
-// WebGL-only features
-assert(webglSource.includes('collectSurfacePoints'), 'WebGL has surface point export (WebGL-only)');
-assert(webglSource.includes('evaluateSDF'), 'WebGL has SDF evaluation (WebGL-only)');
-assert(webglSource.includes('getExportData'), 'WebGL has export data (WebGL-only)');
+// Surface-point export / SDF evaluation / export-data helpers were removed from
+// both engines' render paths (anti-freeze). Assert absence.
+assert(!webglSource.includes('collectSurfacePoints'), 'WebGL has no surface point export (removed for anti-freeze)');
+assert(!webglSource.includes('evaluateSDF'), 'WebGL has no SDF evaluation (removed for anti-freeze)');
+assert(!webglSource.includes('getExportData'), 'WebGL has no export data (removed for anti-freeze)');
 assert(!webgpuSource.includes('collectSurfacePoints'), 'WebGPU does NOT have surface point export');
 assert(!webgpuSource.includes('getExportData'), 'WebGPU does NOT have export data');
 
@@ -175,9 +180,10 @@ assert(webgpuSource.includes('createRenderPipelineAsync'), 'WebGPU has async pip
 assert(webgpuSource.includes('device.lost'), 'WebGPU has device loss handler (WebGPU-only)');
 assert(webgpuSource.includes('getCompilationInfo'), 'WebGPU has shader compilation info (WebGPU-only)');
 
-// WebGL-only diagnostics
-assert(webglSource.includes('getError()'), 'WebGL has per-frame GL error checking (WebGL-only)');
-assert(webglSource.includes('Slow WebGL frame'), 'WebGL has slow frame logging (WebGL-only)');
+// WebGL-only diagnostics: per-frame getError() sync and slow-frame logging were
+// removed from the render path (getError forces GPU-CPU sync on mobile drivers)
+assert(webglSource.includes('getError()'), 'WebGL has GL error checking (dev-only, removed from per-frame path)');
+assert(!webglSource.includes('Slow WebGL frame'), 'WebGL has no per-frame slow-frame logging (removed for anti-freeze)');
 
 console.log('  ℹ️  Feature gaps documented and intentional');
 
@@ -226,9 +232,10 @@ assert(hookSource.includes('setQualityLevel(currentQuality + 1)'), 'Quality upgr
 
 console.log('\n━━━ Test 9: Performance Measurement ━━━');
 
-// Both engines use measurePerformance
-assert(webglSource.includes('measurePerformance'), 'WebGL uses measurePerformance()');
-assert(webgpuSource.includes('measurePerformance'), 'WebGPU uses measurePerformance()');
+// measurePerformance wrapper was removed from both engines' render paths
+// (per-frame timing prevented V8 inlining of render setup). Assert absence.
+assert(!webglSource.includes('measurePerformance('), 'WebGL render path has no measurePerformance() call');
+assert(!webgpuSource.includes('measurePerformance('), 'WebGPU render path has no measurePerformance() call');
 
 // Both engines update diagnostics
 assert(webglSource.includes('renderDiagnostics'), 'WebGL uses renderDiagnostics');
@@ -295,6 +302,6 @@ if (failures.length > 0) {
   process.exit(1);
 } else {
   console.log('\n  ✅ All cross-engine parity tests PASSED');
-  console.log('  ℹ️  WebGL-only: surface point export, GL error checking, slow frame logging');
+  console.log('  ℹ️  Anti-freeze contract: non-blocking compile; no per-frame validateScalar/measurePerformance/surface-export/slow-frame logging');
   console.log('  ℹ️  WebGPU-only: adapter info, async pipeline, device loss, compilation info');
 }
