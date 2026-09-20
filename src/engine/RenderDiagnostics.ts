@@ -77,9 +77,9 @@ export class RenderDiagnostics {
     
     this.logs.push(log);
     
-    // Keep only last 1000 logs
-    if (this.logs.length > 1000) {
-      this.logs = this.logs.slice(-1000);
+    // Keep only last 1000 logs — splice in-place to avoid allocating a new array (GC pressure)
+    if (this.logs.length > 1100) {
+      this.logs.splice(0, this.logs.length - 1000);
     }
     
     // Console output for errors and warnings

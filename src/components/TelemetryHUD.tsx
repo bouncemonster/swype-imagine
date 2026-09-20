@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TelemetryData } from '../types/fractal';
-import { Activity, Cpu, Zap, Gauge, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface TelemetryHUDProps {
   telemetry: TelemetryData;

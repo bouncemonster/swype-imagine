@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Component as ReactComponent, ErrorInfo, ReactNode } from 'react';
 import { FractalCanvas } from './components/FractalCanvas';
 import { TelemetryHUD } from './components/TelemetryHUD';
 import { ControlsPanel } from './components/ControlsPanel';
@@ -40,10 +40,25 @@ const ALL_FRACTAL_TYPES: FractalType[] = [
   'logisticBifurcation', 'fractalSpire', 'deJongAttractor', 'pickoverAttractor', 'vicsekFractal',
   'mandelbar', 'weierstrass3D', 'popcornFunction', 'bedheadAttractor', 'fourSpotAttractor',
   'svenssonAttractor',
+  // 4D Polytopes & Higher-Dimensional Manifolds
+  'tesseract', '120Cell', '600Cell', '24Cell', '5Cell',
+  'kleinBottle', 'projectivePlane', 'mobiusStrip3D', 'torusKnot4D',
+  // Fractal Flames
+  'flameSinusoidal', 'flameSpherical', 'flameSwirl', 'flameHorseshoe',
+  'flameButterfly', 'flameHeart', 'flameSpiral', 'flameHyperbolic',
+  'flameDiamond', 'flameWaves', 'flamePopcorn', 'flameRings', 'flameFan',
+  // Advanced IFS
+  'ifs3DTree', 'ifs3DFern', 'ifs3DSierpinski', 'ifs3DCantor', 'ifs3DKoch',
 ];
 const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'smoothCarve', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
 const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
 const CAMERA_MODES: CameraMode[] = ['orbit', 'flyThrough', 'goldenSpiral', 'kelvinInvert'];
+
+// Mobile device detection (shared with FractalCanvas)
+const IS_MOBILE = typeof window !== 'undefined' && (
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 1 && window.innerWidth < 1024)
+);
 
 const INITIAL_PARAMS: FractalParams = {
   type: 'phyllotaxis',
@@ -70,7 +85,8 @@ const INITIAL_PARAMS: FractalParams = {
   sphereFold: 0.65,
   interiorCut: 0.0,
   paletteId: 'lapis-lazuli',
-  iterations: 16,
+  // Mobile: fewer iterations to prevent GPU overload
+  iterations: IS_MOBILE ? 12 : 16,
   phiMultiplier: 1.61803398875,
   morphSpeed: 0.45,
   glowIntensity: 1.1,
@@ -80,13 +96,53 @@ const INITIAL_PARAMS: FractalParams = {
   rotY: 0.25,
   autoRotate: true,
   autoRotateSpeed: 0.12,
-  targetFps: 60, // Safe default — prevents GPU overheating and browser crashes
+  // Mobile: cap at 30 FPS to prevent overheating and browser crashes
+  targetFps: IS_MOBILE ? 30 : 60,
   enableAudio: false,
   audioVolume: 0.65,
   audioTuning: 'phi432',
   drsEnabled: true,
   paletteRotation: false,
 };
+
+// Error Boundary: catches React tree crashes (e.g. shader/GPU failures) and shows fallback UI.
+// Applied at the root in main.tsx (wrapping <App/>) so it also catches throws from App's own
+// render body (e.g. engine/palette initialization), not just its subtree.
+export class FractalErrorBoundary extends ReactComponent<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[FractalErrorBoundary] App crashed:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-950 text-neutral-100 p-8">
+          <h1 className="text-2xl font-bold mb-4">GPU Render Error</h1>
+          <p className="text-neutral-400 text-center max-w-md mb-6">
+            The fractal engine encountered an error. This usually happens due to GPU driver issues or unsupported hardware.
+          </p>
+          <p className="text-neutral-500 text-sm mb-6 font-mono">{this.state.error?.message}</p>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors"
+          >
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [neuroEngine] = useState(() => new NeuroAestheticsEngine());
@@ -105,6 +161,7 @@ export default function App() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showAtlasModal, setShowAtlasModal] = useState(false);
   const [isEngineReady, setIsEngineReady] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [showManifestModal, setShowManifestModal] = useState(false);
   const [isFirstManifestVisit, setIsFirstManifestVisit] = useState(false);
   const [scrollMode, setScrollMode] = useState<'feed' | 'zoom'>('feed');
@@ -142,6 +199,8 @@ export default function App() {
 
   useEffect(() => {
     if (!autoExplore) return;
+    // Mobile: longer interval (30s) to reduce GPU pressure from shader recompilation
+    const intervalMs = IS_MOBILE ? 30000 : 18000;
     const interval = setInterval(() => {
       // Golden ratio step through fractal types — ensures maximum coverage
       exploreIndexRef.current = (exploreIndexRef.current + Math.round(PHI_INV * ALL_FRACTAL_TYPES.length)) % ALL_FRACTAL_TYPES.length;
@@ -178,7 +237,7 @@ export default function App() {
         paletteRotation: true,
         autoRotate: true,
       }));
-    }, 18000); // Change every 18 seconds
+    }, intervalMs); // Change every 18s (desktop) or 30s (mobile)
     return () => clearInterval(interval);
   }, [autoExplore]);
 
@@ -523,6 +582,7 @@ export default function App() {
         onNextSpecimen={handleNextSpecimen}
         onPrevSpecimen={handlePrevSpecimen}
         onEngineReady={() => setIsEngineReady(true)}
+        onLoadProgress={setLoadProgress}
         scrollMode={scrollMode}
       />
 
@@ -646,6 +706,7 @@ export default function App() {
       {/* Sacred Geometry Cosmic Loader */}
       <CosmicLoader
         isReady={isEngineReady}
+        progress={loadProgress}
         onFinished={handleLoaderFinished}
       />
 

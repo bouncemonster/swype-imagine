@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  User, Sparkles, Wrench, Volume2, ShieldCheck, 
-  X, Check, Activity, BarChart3, Sliders, Dna, Brain, Eye,
-  Heart, Play, Trash2, Music
+  User, Sparkles, Wrench, Volume2, X,
+  Heart, Play, Trash2, BarChart3
 } from 'lucide-react';
 import { 
   TasteProfile, 

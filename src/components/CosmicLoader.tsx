@@ -2,27 +2,33 @@ import React, { useEffect, useState } from 'react';
 
 interface CosmicLoaderProps {
   isReady: boolean;
+  /** Real loading progress 0-1 from device init + shader compile + first frame. */
+  progress?: number;
   onFinished?: () => void;
 }
 
+// Phase text is DERIVED from the real progress value (see stageIndex), not a
+// fixed 450ms timer — so the wording always reflects what the GPU is genuinely
+// doing, and the bar reaches 100% exactly when the first frame is on screen.
 const PHASES = [
   'Пробуждение золотой спирали φ...',
-  'Синтез гармоник и фрактальных октав...',
-  'Рождение трехмерного континуума...',
+  'Пробуждение GPU-контекста...',
+  'Компиляция шейдеров фракталов...',
+  'Компоновка на видеокарту...',
   'Погружение в бесконечность...',
 ];
 
-export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, onFinished }) => {
-  const [phaseIndex, setPhaseIndex] = useState(0);
+function stageIndex(progress: number, isReady: boolean): number {
+  if (isReady || progress >= 1) return 4;
+  if (progress >= 0.7) return 3;
+  if (progress >= 0.4) return 2;
+  if (progress >= 0.12) return 1;
+  return 0;
+}
+
+export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 0, onFinished }) => {
   const [fadingOut, setFadingOut] = useState(false);
   const [hidden, setHidden] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPhaseIndex(prev => (prev < PHASES.length - 1 ? prev + 1 : prev));
-    }, 450);
-    return () => clearInterval(interval);
-  }, []);
 
   // CRITICAL: Force-dismiss loader after 15s even if engine never becomes ready.
   // Prevents infinite hang when GPU initialization fails silently.
@@ -154,13 +160,14 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, onFinished 
       <div className="w-64 max-w-[80vw] flex flex-col items-center">
         <div className="w-full h-1 bg-neutral-900/80 rounded-full overflow-hidden mb-2.5 border border-amber-500/20 shadow-inner">
           <div
-            className="h-full bg-gradient-to-r from-amber-600 via-amber-400 to-yellow-200 transition-all duration-500 ease-out"
-            style={{ width: `${Math.min(100, (phaseIndex + 1) * 25)}%` }}
+            id="cosmic-loader-progress"
+            className="h-full bg-gradient-to-r from-amber-600 via-amber-400 to-yellow-200 transition-[width] duration-500 ease-out"
+            style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%` }}
           />
         </div>
 
         <p className="text-xs text-amber-300/80 font-mono tracking-wide text-center h-5 transition-all">
-          {PHASES[phaseIndex]}
+          {PHASES[stageIndex(progress, isReady)]}
         </p>
       </div>
 

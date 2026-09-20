@@ -555,16 +555,28 @@ export class NeuroAestheticsEngine {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        // Guard: ensure typeAffinities exists (corrupted localStorage may omit it)
+        if (!parsed.typeAffinities || typeof parsed.typeAffinities !== 'object') {
+          parsed.typeAffinities = {};
+        }
         // Ensure all types exist
         ALL_FRACTAL_TYPES.forEach(t => {
-          if (parsed.typeAffinities && parsed.typeAffinities[t] === undefined) {
+          if (parsed.typeAffinities[t] === undefined) {
             parsed.typeAffinities[t] = 1.0;
           }
         });
+        // Guard: ensure all scalar fields exist (older versions may omit them)
+        if (typeof parsed.preferredHue !== 'number') parsed.preferredHue = 42;
+        if (typeof parsed.hueAffinityRange !== 'number') parsed.hueAffinityRange = 60;
+        if (typeof parsed.preferredIterations !== 'number') parsed.preferredIterations = 20;
+        if (typeof parsed.preferredMorphSpeed !== 'number') parsed.preferredMorphSpeed = 0.45;
+        if (typeof parsed.preferredGlow !== 'number') parsed.preferredGlow = 1.0;
+        if (typeof parsed.totalSpecimensExplored !== 'number') parsed.totalSpecimensExplored = 0;
+        if (typeof parsed.highestResonanceScore !== 'number') parsed.highestResonanceScore = 45;
         return parsed;
       }
     } catch {
-      // ignore
+      // ignore — malformed JSON, will use defaults below
     }
 
     const defaultAffinities = {} as Record<FractalType, number>;

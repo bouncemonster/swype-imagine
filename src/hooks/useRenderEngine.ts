@@ -21,6 +21,11 @@ export interface UseRenderEngineResult {
   activeEngineType: 'webgpu' | 'webgl2';
   isCompiling: boolean;
   isEngineReady: boolean;
+  // True when BOTH WebGPU and WebGL2 failed to initialize (silent failure — no throw,
+  // so the React error boundary does not catch it). Lets the UI show a clear
+  // "GPU unavailable" message instead of a blank canvas.
+  initFailed: boolean;
+  loadProgress: number;
   backendLabel: string;
   adapterInfo: string;
   fps: number;
@@ -73,6 +78,10 @@ export function useRenderEngine(
 
   const [isCompiling, setIsCompiling] = useState<boolean>(true);
   const [isEngineReady, setIsEngineReady] = useState<boolean>(false);
+  const [initFailed, setInitFailed] = useState<boolean>(false);
+  // Real loading progress (0-1) synced to actual device init + shader compile +
+  // first rendered frame — NOT a fixed timer.
+  const [loadProgress, setLoadProgress] = useState<number>(0);
   const [backendLabel, setBackendLabel] = useState<string>('Initializing...');
   const [adapterInfoState, setAdapterInfoState] = useState<string>('');
   const [fpsState, setFpsState] = useState(0);
@@ -96,6 +105,8 @@ export function useRenderEngine(
   onPrevSpecimenRef.current = onPrevSpecimen;
   const onInteractionRef = useRef(onInteraction);
   onInteractionRef.current = onInteraction;
+  const onEngineReadyRef = useRef(onEngineReady);
+  onEngineReadyRef.current = onEngineReady;
 
   // Performance telemetry refs
   const frameTimesRef = useRef<number[]>([]);
@@ -122,6 +133,8 @@ export function useRenderEngine(
   const inertiaThreshold = 0.00008; // Lower threshold for longer glide
   const inertiaEnabledRef = useRef(true); // Allow toggling inertia on/off
   const AUTO_ROTATION_RESUME_DELAY = 3000; // ms of no interaction before auto-rotation resumes
+  const firstRenderDoneRef = useRef(false); // Track first successful render for loading overlay
+  const lastQualityChangeRef = useRef<number>(0); // Cooldown for DynamicQuality to prevent rapid oscillation
 
   // Keep screenshot ref in sync
   useEffect(() => {
@@ -147,24 +160,35 @@ export function useRenderEngine(
   }, [forcedBackend, isEmbeddedBrowser]);
 
   // Resize handler — always syncs canvas buffer to container CSS size × DPR
+  // Mobile: cap at 1.0 DPR and max 1280px to prevent GPU overload
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const maxDpr = isEmbeddedBrowser ? 1.5 : isMobileDevice ? 1.5 : 2.0;
+    // Mobile: stricter DPR and resolution limits to prevent GPU crashes
+    const maxDpr = isMobileDevice ? 1.0 : (isEmbeddedBrowser ? 1.5 : 2.0);
     const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const clientW = container.clientWidth || window.innerWidth || 800;
     const clientH = container.clientHeight || window.innerHeight || 600;
 
-    const width = Math.max(Math.floor(clientW * dpr), 320);
-    const height = Math.max(Math.floor(clientH * dpr), 240);
+    // Cap resolution for mobile GPUs (max 1280px on longest side)
+    const maxMobileDim = isMobileDevice ? 1280 : 3840;
+    let width = Math.max(Math.floor(clientW * dpr), 320);
+    let height = Math.max(Math.floor(clientH * dpr), 240);
+    
+    // Enforce max dimension cap
+    if (Math.max(width, height) > maxMobileDim) {
+      const scale = maxMobileDim / Math.max(width, height);
+      width = Math.floor(width * scale);
+      height = Math.floor(height * scale);
+    }
 
     if (canvas.width !== width || canvas.height !== height) {
       const oldW = canvas.width, oldH = canvas.height;
       canvas.width = width;
       canvas.height = height;
-      console.info(`[Resize] Canvas buffer: ${oldW}x${oldH} → ${width}x${height} (container: ${clientW}x${clientH}, DPR: ${dpr.toFixed(2)})`);
+      console.info(`[Resize] Canvas buffer: ${oldW}x${oldH} → ${width}x${height} (container: ${clientW}x${clientH}, DPR: ${dpr.toFixed(2)}${isMobileDevice ? ', MOBILE' : ''})`);
     }
   }, [isEmbeddedBrowser, isMobileDevice]);
 
@@ -178,7 +202,7 @@ export function useRenderEngine(
 
     const forceHideTimeoutId = setTimeout(() => {
       if (!isDestroyed) {
-        console.warn('[useRenderEngine] Force-hiding loading overlay after 12s');
+        console.info('[useRenderEngine] Force-hiding loading overlay after 12s');
         setIsCompiling(false);
       }
     }, 12000);
@@ -186,6 +210,8 @@ export function useRenderEngine(
     const setupTimeoutId = setTimeout(() => {
       if (!engineReadyRef.current && !isDestroyed) {
         console.error('[useRenderEngine] Engine setup timed out after 20s — GPU unavailable');
+        // Force-hide loading overlay so user can interact with fallback UI
+        setIsCompiling(false);
       }
     }, 20000);
 
@@ -193,6 +219,7 @@ export function useRenderEngine(
       if (!canvas) return;
       console.info('[useRenderEngine] Setup starting, activeEngineType=', activeEngineType);
       setIsCompiling(true);
+      setInitFailed(false);
       engineReadyRef.current = false;
       setIsEngineReady(false);
 
@@ -216,15 +243,18 @@ export function useRenderEngine(
           activeBackendLabelRef.current = 'WebGPU (WGSL)';
           setBackendLabel('WebGPU (WGSL)');
           setAdapterInfoState(gpuEngine.adapterInfo);
+          // Context acquired → real init baseline. Completion (1.0 + onEngineReady)
+          // fires on the first RENDERED frame in the render loop, so the loader
+          // lifetime equals actual device init time. No fixed-timer fake progress.
+          setLoadProgress(0.12);
           
           // ADAPTIVE QUALITY: Set quality level based on device
           const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
           gpuEngine.setQualityLevel(qualityLevel);
           console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
           
-          setIsCompiling(false);
+          // NOTE: isCompiling stays true until first successful render (shader compilation is deferred)
           console.info(`[DIAG] Engine ready: WebGPU | ${gpuEngine.adapterInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
-          onEngineReady?.();
           return;
         } else {
           webgpuFailedRef.current = true;
@@ -248,25 +278,37 @@ export function useRenderEngine(
         activeBackendLabelRef.current = 'WebGL2 (GLSL)';
         setBackendLabel('WebGL2 (GLSL)');
         setAdapterInfoState(glEngine.rendererInfo);
+        // Context acquired → real init baseline; the remaining progress comes from
+        // the ACTUAL per-stage shader compile/link, and completion (1.0 +
+        // onEngineReady) fires only on the first RENDERED frame. The loading
+        // animation is therefore synced to real device init time on every device.
+        setLoadProgress(0.12);
+        glEngine.onCompileProgress = (_stage, pct) => {
+          setLoadProgress(0.12 + (pct / 100) * 0.8);
+        };
         
         // ADAPTIVE QUALITY: Set quality level based on device
         const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
         glEngine.setQualityLevel(qualityLevel);
         console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
         
-        setIsCompiling(false);
+        // NOTE: isCompiling stays true until first successful render (shader compilation is deferred)
         console.info(`[DIAG] Engine ready: WebGL2 | ${glEngine.rendererInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
-        onEngineReady?.();
       } else {
+        // Init failed — dismiss the loader so the fallback UI stays reachable.
+        setInitFailed(true);
         setIsCompiling(false);
-        onEngineReady?.();
+        setLoadProgress(1);
+        onEngineReadyRef.current?.();
       }
     }
 
     setup().catch((err) => {
       console.error('[useRenderEngine] Engine setup crashed:', err);
+      setInitFailed(true);
       setIsCompiling(false);
-      onEngineReady?.();
+      setLoadProgress(1);
+      onEngineReadyRef.current?.();
     });
 
     // Delayed resize re-check: ensures canvas buffer matches container after layout settles
@@ -287,7 +329,12 @@ export function useRenderEngine(
     };
     const handleContextRestored = () => {
       contextLostRef.current = false;
-      setup();
+      // Guard: don't re-init if component unmounted during context loss
+      if (!isDestroyed) {
+        setup().catch((err) => {
+          console.error('[useRenderEngine] Context restore setup failed:', err);
+        });
+      }
     };
 
     canvas.addEventListener('webglcontextlost', handleContextLost, false);
@@ -295,9 +342,16 @@ export function useRenderEngine(
 
     const container = containerRef.current;
     let resizeObserver: ResizeObserver | null = null;
+    let resizeDebounceId: ReturnType<typeof setTimeout> | null = null;
     if (container) {
       resizeObserver = new ResizeObserver(() => {
-        if (!isDestroyed) handleResize();
+        if (!isDestroyed) {
+          // Debounce resize to prevent multiple canvas reallocations during window drag/resize
+          if (resizeDebounceId) clearTimeout(resizeDebounceId);
+          resizeDebounceId = setTimeout(() => {
+            if (!isDestroyed) handleResize();
+          }, 50);
+        }
       });
       resizeObserver.observe(container);
     }
@@ -307,11 +361,14 @@ export function useRenderEngine(
       clearTimeout(setupTimeoutId);
       clearTimeout(forceHideTimeoutId);
       clearTimeout(delayedResizeId);
+      if (resizeDebounceId) clearTimeout(resizeDebounceId);
       canvas.removeEventListener('webglcontextlost', handleContextLost);
       canvas.removeEventListener('webglcontextrestored', handleContextRestored);
       if (resizeObserver) resizeObserver.disconnect();
       webgpuEngineRef.current?.destroy();
       webglEngineRef.current?.destroy();
+      // Clear keyboard state to prevent stuck keys after unmount
+      keysPressedRef.current.clear();
     };
   }, [activeEngineType, handleResize]);
 
@@ -320,6 +377,7 @@ export function useRenderEngine(
     let isRunning = true;
     let renderPaused = false;
     let lastRenderTimestamp = performance.now();
+    let consecutiveRenderErrors = 0; // Track consecutive render failures for quality recovery
 
     // Test harness pause/resume (headless browser screenshots)
     (window as any).__pauseRender = () => { renderPaused = true; };
@@ -356,14 +414,20 @@ export function useRenderEngine(
 
       const currentParams = paramsRef.current;
       const elapsedSinceLast = timestamp - lastRenderTimestamp;
-      const targetFps = currentParams.targetFps || 60;
-      const targetInterval = targetFps >= 240 ? 0 : (1000 / targetFps);
+      // Mobile: cap at 30 FPS to prevent GPU overheating and browser crashes
+      const defaultTargetFps = isMobileDevice ? 30 : 60;
+      const targetFps = currentParams.targetFps || defaultTargetFps;
+      const effectiveTargetFps = isMobileDevice ? Math.min(targetFps, 30) : targetFps;
+      const targetInterval = effectiveTargetFps >= 240 ? 0 : (1000 / effectiveTargetFps);
 
       if (targetInterval <= 0 || elapsedSinceLast >= targetInterval - 0.75) {
         const deltaMs = Math.min(elapsedSinceLast, 100);
         lastRenderTimestamp = timestamp;
 
         simTimeRef.current += (deltaMs / 1000.0);
+        // Wrap simTime to prevent float32 precision loss after extended runtime
+        // Shader uses sin/cos (periodic), so wrapping is mathematically transparent
+        if (simTimeRef.current > 3600) simTimeRef.current %= 3600;
         const simTime = simTimeRef.current;
 
         // Fly-through keyboard movement
@@ -441,13 +505,51 @@ export function useRenderEngine(
           rotY: Math.max(-1.52, Math.min(1.52, currentParams.rotY + autoRotY + inertiaRotY)),
         };
 
-        // Render
+        // Render — wrapped in try/catch to prevent render loop crash
         const curCanvas = canvasRef.current;
         if (curCanvas && curCanvas.width > 0 && curCanvas.height > 0) {
-          if (webgpuEngineRef.current) {
-            webgpuEngineRef.current.render(simTime, effectiveParams);
-          } else if (webglEngineRef.current) {
-            webglEngineRef.current.render(simTime, effectiveParams);
+          try {
+            // Detect shader swap start — show loading overlay BEFORE deferred compile runs
+            const activeEngine = webglEngineRef.current || webgpuEngineRef.current;
+            const isSwapping = (activeEngine as any)?.isSwappingShader === true;
+            if (isSwapping && firstRenderDoneRef.current) {
+              setIsCompiling(true);
+            }
+
+            if (webgpuEngineRef.current) {
+              webgpuEngineRef.current.render(simTime, effectiveParams);
+            } else if (webglEngineRef.current) {
+              webglEngineRef.current.render(simTime, effectiveParams);
+            }
+            consecutiveRenderErrors = 0; // Reset on successful render
+
+            // Hide loading overlay after first successful render OR after swap completes
+            if (!firstRenderDoneRef.current) {
+              firstRenderDoneRef.current = true;
+              setIsCompiling(false);
+              // First pixels are genuinely on screen → loading is truly done. This
+              // is the signal that syncs the loader lifetime to real device init.
+              console.info('[useRenderEngine] First frame rendered — device init complete, dismissing loader');
+              setLoadProgress(1);
+              onEngineReadyRef.current?.();
+            } else if (!isSwapping) {
+              // Swap completed — hide overlay
+              setIsCompiling(false);
+            }
+          } catch (renderErr) {
+            console.error('[useRenderEngine] Render frame error:', renderErr);
+            // Track consecutive errors — force minimum quality after 10 failures
+            // to help GPU recover from persistent driver/hardware issues
+            consecutiveRenderErrors++;
+            if (consecutiveRenderErrors >= 10) {
+              const errEngine = webglEngineRef.current || webgpuEngineRef.current;
+              if (errEngine && errEngine.qualityLevel > 0) {
+                errEngine.setQualityLevel(0);
+                console.warn('[useRenderEngine] 10+ consecutive render errors — forcing quality to minimum');
+              }
+              consecutiveRenderErrors = 0;
+            }
+            // Don't crash the loop — skip this frame
           }
         }
 
@@ -512,22 +614,26 @@ export function useRenderEngine(
             console.info(`[DIAG] Health: fps=${currentFps} avg=${avgFps} 1%=${onePercentLow} | fractal=${p.type} hybrid=${p.hybridType} | style=${p.renderStyle} cam=${p.cameraMode} | palette=${p.paletteId} seed=${p.paletteSeed ?? 0} rot=${p.paletteRotation} | audio=${p.enableAudio} tuning=${p.audioTuning} | res=${curCanvas?.width}x${curCanvas?.height}`);
           }
 
-          // DYNAMIC QUALITY: Auto-adjust based on FPS
-          // If FPS drops below threshold, lower quality; if stable, raise it
+          // DYNAMIC QUALITY: Auto-adjust based on FPS with hysteresis and cooldown
+          // Uses separate thresholds for up/down to prevent oscillation
+          // Cooldown: minimum 3s between quality changes to avoid rapid flipping
           const engine = webglEngineRef.current || webgpuEngineRef.current;
           if (engine) {
             const currentQuality = engine.qualityLevel;
-            const targetFps = currentParams.targetFps || 60;
-            const fpsThreshold = targetFps * 0.5; // 50% of target
+            const mobileTargetFps = isMobileDevice ? Math.min(currentParams.targetFps || 30, 30) : (currentParams.targetFps || 60);
+            const downThreshold = mobileTargetFps * 0.35; // Downgrade if below 35% of target (was 45%)
+            const upThreshold = mobileTargetFps * 0.92;   // Upgrade only above 92% of target
+            const now = performance.now();
+            const qualityCooldown = 3000; // ms minimum between quality changes
             
-            if (avgFps < fpsThreshold && currentQuality > 0) {
-              // FPS too low — downgrade quality
+            if (avgFps < downThreshold && currentQuality > 0 && (now - lastQualityChangeRef.current) > qualityCooldown) {
               engine.setQualityLevel(currentQuality - 1);
-              console.warn(`[DynamicQuality] FPS ${avgFps} < ${fpsThreshold} → quality ${currentQuality} → ${currentQuality - 1}`);
-            } else if (avgFps > targetFps * 0.9 && currentQuality < 2) {
-              // FPS stable — upgrade quality (only if we're at 90%+ of target)
+              lastQualityChangeRef.current = now;
+              console.warn(`[DynamicQuality] FPS ${avgFps} < ${downThreshold.toFixed(1)} → quality ${currentQuality} → ${currentQuality - 1}`);
+            } else if (avgFps > upThreshold && currentQuality < 2 && (now - lastQualityChangeRef.current) > qualityCooldown) {
               engine.setQualityLevel(currentQuality + 1);
-              console.info(`[DynamicQuality] FPS ${avgFps} > ${targetFps * 0.9} → quality ${currentQuality} → ${currentQuality + 1}`);
+              lastQualityChangeRef.current = now;
+              console.info(`[DynamicQuality] FPS ${avgFps} > ${upThreshold.toFixed(1)} → quality ${currentQuality} → ${currentQuality + 1}`);
             }
           }
         }
@@ -660,6 +766,8 @@ export function useRenderEngine(
     activeEngineType,
     isCompiling,
     isEngineReady,
+    initFailed,
+    loadProgress,
     backendLabel,
     adapterInfo: adapterInfoState,
     fps: fpsState,

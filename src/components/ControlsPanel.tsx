@@ -11,9 +11,7 @@ import {
 import { COLOR_PALETTES } from '../palettes';
 import { fractalArchitectures } from '../data/fractalArchitectures';
 import { 
-  Sliders, Play, Pause, Camera, Maximize, RotateCcw, 
-  BookOpen, Sparkles, X, Wrench, Dna, Brain, Cpu, Layers, GitMerge,
-  Eye, Compass, Palette, Lightbulb, Scissors, Move, Zap, Volume2, VolumeX, Music, BookmarkPlus
+  Camera, Maximize, BookOpen, X, Volume2, VolumeX, BookmarkPlus
 } from 'lucide-react';
 
 interface ControlsPanelProps {

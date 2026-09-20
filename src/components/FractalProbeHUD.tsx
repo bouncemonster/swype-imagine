@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crosshair, Compass, ShieldCheck, Activity } from 'lucide-react';
+import { Crosshair, Activity } from 'lucide-react';
 import { FractalParams } from '../types/fractal';
 
 interface FractalProbeHUDProps {

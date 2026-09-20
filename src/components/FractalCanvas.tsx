@@ -14,6 +14,7 @@ interface FractalCanvasProps {
   onNextSpecimen?: () => void;
   onPrevSpecimen?: () => void;
   onEngineReady?: () => void;
+  onLoadProgress?: (progress: number) => void;
   scrollMode?: 'feed' | 'zoom';
 }
 
@@ -28,6 +29,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   onNextSpecimen,
   onPrevSpecimen,
   onEngineReady,
+  onLoadProgress,
   scrollMode = 'feed',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,13 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     onScreenshotCaptured,
   });
 
-  const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling, stopRotation, toggleInertia, inertiaEnabledRef } = engine;
+  const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling, initFailed, loadProgress, stopRotation, toggleInertia, inertiaEnabledRef } = engine;
+
+  // Surface REAL loading progress (device init + shader compile + first frame) so
+  // the top-level loader can sync its animation to actual initialization time.
+  useEffect(() => {
+    onLoadProgress?.(loadProgress);
+  }, [loadProgress, onLoadProgress]);
 
   // Native wheel/touch listeners with passive:false + capture:true
   // capture:true ensures our listeners fire BEFORE React's document-level passive listeners
@@ -109,10 +117,12 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     canvas.addEventListener('wheel', wheelHandler, { passive: false, capture: true });
 
     const touchStartHandler = (e: TouchEvent) => {
+      // Always prevent default on touch to avoid duplicate pointer events on mobile
+      // and prevent browser gestures (pull-to-refresh, swipe nav) from interfering
+      e.preventDefault();
+      lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during touch
       if (e.touches.length === 2) {
-        e.preventDefault();
         e.stopPropagation(); // Prevent React 19 root-level passive listener conflict
-        lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during pinch
         const t1 = e.touches[0], t2 = e.touches[1];
         touchDistanceRef.current = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
       }
@@ -120,10 +130,10 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     canvas.addEventListener('touchstart', touchStartHandler, { passive: false, capture: true });
 
     const touchMoveHandler = (e: TouchEvent) => {
+      e.preventDefault(); // Prevent browser scroll/zoom gestures
+      lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during touch
       if (e.touches.length === 2) {
-        e.preventDefault();
         e.stopPropagation(); // Prevent React 19 root-level passive listener conflict
-        lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during pinch-zoom
         const t1 = e.touches[0], t2 = e.touches[1];
         const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
         if (touchDistanceRef.current !== null && touchDistanceRef.current > 5) {
@@ -228,6 +238,26 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       className="absolute inset-0 w-full h-full overflow-hidden bg-black select-none touch-none cursor-grab active:cursor-grabbing"
       style={{ touchAction: 'none', overscrollBehavior: 'none' }}
     >
+      {/* Clear user-facing message when no GPU backend could initialize (silent failure,
+          not caught by the React error boundary) — instead of a blank black canvas. */}
+      {initFailed && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-neutral-950 text-neutral-100 p-8 text-center">
+          <h2 className="text-xl font-semibold mb-3">3D rendering unavailable</h2>
+          <p className="text-neutral-400 max-w-md mb-2">
+            This app needs WebGL2 or WebGPU, which could not be started on this device or browser.
+          </p>
+          <p className="text-neutral-500 text-sm max-w-md mb-6">
+            Try updating your browser, enabling hardware acceleration, or using a different GPU.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-medium transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Visual indicator when GPU pipeline is compiling shaders */}
       {isCompiling && (
         <div
