@@ -87,8 +87,3 @@ PALETTE_THEMES.forEach((theme, themeIdx) => {
   }
 });
 
-// Export combined palettes
-export const ALL_PALETTES = [
-  // Will be combined with COLOR_PALETTES in App.tsx
-  ...PROCEDURAL_PALETTES,
-];

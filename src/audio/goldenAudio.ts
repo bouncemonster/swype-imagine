@@ -97,12 +97,18 @@ class GoldenAudioEngine {
       this.stopTimeout = null;
     }
 
+    // Close orphaned AudioContext if start() was called during the deferred stop window
+    if (this.ctx) {
+      try { this.ctx.close(); } catch {}
+      this.ctx = null;
+    }
+
     try {
       const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioContextClass();
 
       if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
+        this.ctx.resume().catch(() => { /* Browser may block auto-play — safe to ignore */ });
       }
 
       this.currentVolume = initialVolume;

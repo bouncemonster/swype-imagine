@@ -4,8 +4,8 @@
  */
 
 // NOTE: Import paths use non-standard resolution that works with Vite bundler but not tsc directly.
-// The category data files also contain ~140 type mismatches (wrong FractalType/CategoryKey values)
-// that need a separate cleanup pass. See AUDIT_REPORT.md.
+// The category data files are validated: all type:/category: literals resolve against the
+// FractalType union and FractalCategoryKey (0 mismatches as of this pass).
 import { CanonicalFractal, FractalCategoryKey } from './fractalCatalogTypes';
 import { FractalType, CompositeOp, RenderStyle } from '../types/fractal';
 

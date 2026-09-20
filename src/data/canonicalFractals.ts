@@ -1,4 +1,3 @@
-import { FractalType, CompositeOp } from '../types/fractal';
 export type { FractalCategoryKey, CanonicalFractal } from './fractalCatalogTypes';
 export { FRACTAL_CATEGORIES } from './fractalCatalogTypes';
 import { CanonicalFractal } from './fractalCatalogTypes';
@@ -14,6 +13,7 @@ import { PHYSICAL_FRACTALS } from './categories/physicalFractals';
 import { EXPANDED_REAL_FRACTALS } from './categories/expandedRealFractals';
 import { VISUALLY_DISTINCT_FRACTALS } from './categories/visuallyDistinctFractals';
 import { MANDALAS_3D } from './categories/mandalas3D';
+import { TEMPORAL_MANIFOLDS } from './categories/temporalManifolds';
 
 // Compose catalog from modular categories
 export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
@@ -27,4 +27,5 @@ export const CANONICAL_FRACTALS_CATALOG: CanonicalFractal[] = [
   ...EXPANDED_REAL_FRACTALS,
   ...VISUALLY_DISTINCT_FRACTALS,
   ...MANDALAS_3D,
+  ...TEMPORAL_MANIFOLDS,
 ];
