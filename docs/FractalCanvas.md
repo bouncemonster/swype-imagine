@@ -28,9 +28,9 @@ interface FractalCanvasProps {
 ## Key Features
 - **Wheel zoom**: Exponential, range [0.01, 100], sensitivity 0.0012
 - **Touch pinch**: 2-finger zoom with ratio-based scaling
-- **Pointer orbit**: Drag to rotate with inertia and braking
+- **Pointer orbit**: Drag to rotate with inertia and braking. Release velocity is an exponential moving average over a ~30ms window (not the raw last `pointermove` delta), so a sharp flick-and-release throws consistently and a small final move before lifting no longer kills the momentum
 - **Braking logic**: Direction change → stop rotation immediately
-- **Dynamic sensitivity**: Zoom-dependent rotation speed
+- **Continuous glide**: release momentum reuses the exact drag rotation factor (`0.0035` rad/px, kept in sync with `useRenderEngine` `INERTIA_ROT_SPEED`) so the figure keeps spinning at release with no speed jump; the old zoom-dependent sensitivity stalled the glide at close zooms
 
 ## Load Progress (lines 72-78)
 Destructures `loadProgress` from `useRenderEngine` (line 72) and surfaces it via a `useEffect` (lines 76-78):

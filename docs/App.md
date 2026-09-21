@@ -21,6 +21,7 @@ Orchestrates all UI components, manages fractal parameters, neuro-aesthetic engi
 - Interval: `IS_MOBILE ? 30000 : 18000` (18s desktop / 30s mobile, line 201)
 - Golden ratio stepping (`PHI_INV * length`) for maximum coverage
 - Varies: type, hybrid, tertiary, composite, render style, camera, zoom, iterations
+- **Render-style legibility bias**: `solid` (the true PBR form) is shown on ~50% of ticks (even `idx`), the other ~50% cycle the 6 stylized modes — because the heavily-processed modes (xray/quantum/gem/…) recolor the surface and hide the fractal's actual math, and the exploration feed is the default showcase
 - Disables on user interaction (`setAutoExplore(false)`)
 
 ### Loader Progress Wiring

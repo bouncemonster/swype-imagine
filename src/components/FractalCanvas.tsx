@@ -187,9 +187,6 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       onInteraction?.(0, orbitMagnitude);
     }
 
-    const currentZoom = paramsRef.current.zoom;
-    const dynamicSensitivity = 0.0025 * Math.max(0.15, Math.min(0.9, currentZoom / 2.0));
-
     // BRAKING LOGIC: If moving opposite to current velocity, apply braking
     const prevVelX = velocityRef.current.x;
     const prevVelY = velocityRef.current.y;
@@ -204,8 +201,17 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     if (directionChangedX || directionChangedY) {
       velocityRef.current = { x: 0, y: 0 };
     } else {
-      // Otherwise, update velocity normally
-      velocityRef.current = { x: newVelX, y: newVelY };
+      // Exponential moving average of the instantaneous velocity instead of the raw
+      // last-sample value. The old code stored a single pointermove delta, so a small
+      // final move before lifting (people decelerate to aim) zeroed the flick, and a
+      // lone spike over-shot it. Averaging over a ~30ms recent-motion window makes a
+      // sharp flick-and-release throw with consistent, predictable momentum on mouse,
+      // touch and pen alike.
+      const velBlend = 1 - Math.exp(-dt / 30);
+      velocityRef.current = {
+        x: prevVelX + (newVelX - prevVelX) * velBlend,
+        y: prevVelY + (newVelY - prevVelY) * velBlend,
+      };
     }
     
     // If velocity is very low, stop completely

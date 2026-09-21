@@ -219,7 +219,14 @@ export default function App() {
       const newTertiary = ALL_FRACTAL_TYPES[tertiaryIdx];
       // Cycle composite ops and render styles with different golden ratio phases
       const opIdx = Math.floor(idx * PHI_INV) % COMPOSITE_OPS.length;
-      const styleIdx = Math.floor(idx * PHI_INV * 1.3) % RENDER_STYLES.length;
+      // Legibility bias: the auto-explore feed is the default showcase, and the six
+      // stylized modes recolor/reprocess the surface, which hides the fractal's actual
+      // mathematical structure. Show the true PBR form ('solid') on ~half the ticks and
+      // cycle the 6 stylized modes over the rest, so the math stays visible while
+      // variety survives.
+      const styleIdx = idx % 2 === 0
+        ? 0
+        : 1 + (Math.floor(idx * PHI_INV * 1.3) % (RENDER_STYLES.length - 1));
       const camIdx = Math.floor(idx * PHI_INV * 0.7) % CAMERA_MODES.length;
       // Vary zoom for visual diversity (close, medium, far)
       const zoomOptions = [1.8, 2.5, 3.5, 5.0, 7.0];

@@ -507,11 +507,14 @@ export function useRenderEngine(
         // Inertia - frame-rate independent decay (was per-frame, now per-second)
         let inertiaRotX = 0, inertiaRotY = 0;
         if (inertiaEnabledRef.current && !isDraggingRef.current && (Math.abs(velocityRef.current.x) > inertiaThreshold || Math.abs(velocityRef.current.y) > inertiaThreshold)) {
-          const currentZoom = currentParams.zoom;
-          const dynamicSensitivity = 0.005 * Math.max(0.1, Math.min(1.2, currentZoom / 2.5));
+          // Reuse the EXACT drag rotation factor so the release glide continues the
+          // drag with no speed discontinuity. The previous zoom-dependent
+          // dynamicSensitivity diverged from the fixed drag rotationSpeed, so at close
+          // zooms the figure visibly stalled the instant the pointer was released.
           const dtSec = deltaMs / 1000.0;
-          inertiaRotX = velocityRef.current.x * deltaMs * dynamicSensitivity * 0.6;
-          inertiaRotY = velocityRef.current.y * deltaMs * dynamicSensitivity * 0.6;
+          const INERTIA_ROT_SPEED = 0.0035; // keep in sync with FractalCanvas handlePointerMove rotationSpeed
+          inertiaRotX = velocityRef.current.x * deltaMs * INERTIA_ROT_SPEED;
+          inertiaRotY = velocityRef.current.y * deltaMs * INERTIA_ROT_SPEED;
           // Frame-rate independent decay: 0.94 at 60fps → same feel at any FPS
           const frameRateIndependentDecay = Math.pow(inertiaDecay, dtSec * 60);
           velocityRef.current.x *= frameRateIndependentDecay;

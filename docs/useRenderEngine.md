@@ -24,6 +24,7 @@ Manages WebGPU/WebGL2 initialization, render loop, keyboard shortcuts, telemetry
 4. Russian keyboard support (Ы, Ш, А, К)
 5. Context loss handled here (re-init on restore)
 6. Mobile starts at quality level 0; embedded/desktop at 1 (medium)
+7. **Orbit inertia physics**: post-release rotation glides from `velocityRef` (px/ms, EMA-smoothed in `FractalCanvas`) with `inertiaRot = velocity * deltaMs * INERTIA_ROT_SPEED (0.0035)` — the same factor as the drag, so the glide is continuous at release across all zooms — decaying frame-rate-independently (`0.94^(dt*60)`, threshold `0.00008`). Auto-rotation stays paused for 3s after the last move (`AUTO_ROTATION_RESUME_DELAY`) so it never fights the throw. Toggle with `I`.
 
 ## Keyboard Shortcuts
 | Key | Action |
