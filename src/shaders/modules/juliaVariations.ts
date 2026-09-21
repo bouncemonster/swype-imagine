@@ -29,11 +29,19 @@ float mapJuliaBase(vec3 p, float t, float phi, int iters, float power, int vtype
                     sin(theta * power) * sin(-phiAngle * power), 
                     cos(theta * power));
       z += p;
+      // Conjugation preserves |z|, so the radial derivative recurrence is identical to
+      // the standard branch. Without this dr stayed 1.0 → d = 0.5*log(r)*r grossly
+      // over-estimated → the sphere-tracer stepped past the thin conjugate filigree.
+      dr = pow(r, power - 1.0) * power * dr + 1.0;
     } else if (vtype == 2) { // Burning Ship: abs
       z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
                     sin(theta * power) * sin(phiAngle * power), 
                     cos(theta * power));
       z = abs(z) + p;
+      // abs() is applied per-component AFTER the power step and preserves |z|, so the
+      // same radial-derivative tracking applies; omitted, these variants rendered as
+      // rounded blobs because their DE magnitude ignored derivative growth.
+      dr = pow(r, power - 1.0) * power * dr + 1.0;
     } else { // Standard Mandelbulb/Julia/Rotated
       z = zr * vec3(sin(theta * power) * cos(phiAngle * power), 
                     sin(theta * power) * sin(phiAngle * power), 
