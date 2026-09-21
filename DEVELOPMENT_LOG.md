@@ -10,6 +10,17 @@
 > before `LINK_STATUS`, single `gl.flush()` per call); the loader (CosmicLoader) is driven by real
 > compile-stage progress and dismisses on the first rendered frame, not a timer.
 
+## Session: September 21, 2026
+
+### Cross-engine render-style parity + backend deep-link
+
+Continuing the visual-quality arc (overexposure → per-style relief → sphere-clip dissolve). This session closed the last documented gap: **WebGPU (WGSL) still rendered the 7 styles as flat silhouettes** while WebGL had the relief-carrier fix.
+
+- **WGSL style port** (`webgpuShaders.ts`): shared `relief = clamp(dot(col, luma)*1.7, 0.22, 1.35)` + `baseCol` sliver on every style; `fwidth()`-derived widths for topo contours / hologram scanlines / hex grid; `u_time` terms slowed or made static (holo glitch/CA/shimmer, quantum waves/flux, iridescent orders). Each style ends in the same `mix(baseCol * k, styleCol * relief, …)` blend as WebGL — identical behaviour on both backends.
+- **`engine` URL param** (`App.tsx`): `#…&engine=webgpu|webgl2` initialises `forcedBackend`, so a share/demo link can pin the backend. Added to verify the WGSL port (`#type=mandelbulb&engine=webgpu&renderStyle=gemstone`).
+- **Verification reality**: the local headless Chromium cannot create a WebGPU device (`dxil.dll` WEA 87 → Dawn's D3D12 backend), so it falls back to WebGL2 there. WGSL correctness is therefore held by careful review (types/scopes/`smoothstep` edge ordering/`fwidth` in uniform control flow) **plus** the runtime WebGL fail-safe (a compile error can only downgrade, never break the demo). The user's Chrome uses the WebGPU fallback adapter successfully (per console traces), so the public demo exercises both paths.
+- Docs synced: `webgpuShaders.md` note 13 (parity achieved), `webglShaders.md` render-modes (cross-engine note), `App.md` (engine param), `CHANGELOG.md`. `tsc` clean, production build ok.
+
 ## Session: September 13, 2026
 
 ### Lazy Shader Compilation Implementation (v2.4.0) — FINAL

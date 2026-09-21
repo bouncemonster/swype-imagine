@@ -29,9 +29,9 @@ Orchestrates all UI components, manages fractal parameters, neuro-aesthetic engi
 - Progress semantics: 0.12 at context acquire, 0.12–0.92 during shader parse/compile/link, 1.0 on first rendered frame
 
 ### URL Sharing (hash-sync `useEffect`, ~line 302)
-- Parses `#type=...&hybrid=...&palette=...` from URL hash
-- Loads shared fractal configuration
-- Clears hash after loading
+- Parses `#type=...&hybrid=...&palette=...` from URL hash, plus render params: `renderStyle`, `zoom`, `morphSpeed`, `cameraMode`, `paletteSeed/paletteRotation`, `headlamp`, `fog`, `slicePlane/sliceAxis`, `audio/audioVol/audioTuning`, `drs`
+- **`engine=webgpu|webgl2`** — deep-links the rendering backend (initialises `forcedBackend`); defaults to `auto` (WebGL2 primary). Useful for demos and cross-engine verification (e.g. `#type=mandelbulb&engine=webgpu&renderStyle=gemstone`)
+- Loads shared fractal configuration; clears hash after loading
 
 ### Neuro-Feed Navigation (`handleNextSpecimen` / `handlePrevSpecimen`)
 - `handleNextSpecimen()` - step forward in history

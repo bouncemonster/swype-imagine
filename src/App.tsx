@@ -386,6 +386,9 @@ export default function App() {
             audioTuning: (params.get('audioTuning') as AudioTuning) || 'phi432',
             drsEnabled: params.get('drs') !== '0',
           }));
+          // Deep-link the rendering backend (useful for demos and cross-engine verification)
+          const engineParam = params.get('engine');
+          if (engineParam === 'webgpu' || engineParam === 'webgl2') setForcedBackend(engineParam);
           // Clear hash after loading
           window.history.replaceState(null, '', window.location.pathname);
           return;

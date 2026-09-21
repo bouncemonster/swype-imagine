@@ -60,6 +60,7 @@ All 431 type indices dispatch here: explicit `ftype == 0…140` branches for Man
 Headless screenshots (mandelbulb, all 7 modes) exposed two artifact classes and they are now fixed:
 - **Flat-blob collapse**: every stylized mode replaced `col` with a flat palette-derived color, so the 3D form vanished. A shared `relief` factor (normalized luminance of the shaded base PBR pass) now multiplies each style's color and a `baseCol` sliver is retained (`col = mix(baseCol*0.3–0.45, styleCol*relief, 0.7–0.82)`), so the figure stays three-dimensional on any palette.
 - **Moire + temporal flicker**: high-frequency decorative patterns (topo contours, hologram scanlines/hex grid, quantum interference rings) aliased into noise at distance, and `+ u_time` terms (hologram glitch/shimmer, quantum waves) read as per-frame grain. All pattern widths are now derived from `fwidth()` (fade instead of alias) and the time terms are slowed/removed.
+- **Cross-engine parity**: the full style rework (relief-carrier + `fwidth()` anti-aliasing + de-flicker + boundary fade) is now mirrored to WGSL in `webgpuShaders.ts`, so WebGL2 and WebGPU render the 7 modes identically. Force WebGPU on any deep-link with `#engine=webgpu`.
 
 Modes and their palette-independent identity:
 0: solid - PBR with AO, soft shadows, SSS (exposure rebased into ACES chromatic region)
