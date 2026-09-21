@@ -3206,11 +3206,11 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   let k = max(0.04, u.smooth_k * 0.45);
 
   // FRACTAL BREATHING: organic radial pulsation. Gated by morphGate. Rate/amplitude now
-  // match the WebGL path (0.8 freq, 0.06 amp) for cross-engine parity (was 0.4 / 0.025).
+  // match the WebGL path (0.8 freq, 0.11 amp) for cross-engine parity (was 0.4 / 0.025).
   let breathPrimary = sin(u.time * 0.8) * 0.5 + 0.5; // ~7.85s period
   let breathSecondary = sin(u.time * 0.8 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
   let breathTertiary = sin(u.time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
-  let breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06 * morphGate;
+  let breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.11 * morphGate;
   // Distance-weighted: surface breathes more than interior
   let breathWeight = 1.0 - exp(-r_bound * 0.8);
   p_eval = p_eval * (1.0 + breathAmount * breathWeight);
@@ -4069,6 +4069,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       neonCol = neonCol + u.secondary_color * curvNorm * rim * 0.6;
       neonCol = neonCol + baseCol * 0.06 * relief;
       col = neonCol;
+    }
+
+    // SHARED ANTI-FLATTEN REINFORCEMENT (WGSL mirror of the WebGL footer): guarantees no
+    // stylized mode flattens the figure by re-injecting the large-scale base shading AND the
+    // finest screen-space normal detail. Skipped for solid (style 0).
+    if (u.render_style > 0.5) {
+      let form = clamp(dot(baseCol, vec3<f32>(0.299, 0.587, 0.114)) * 1.35, 0.45, 1.5); // global relief
+      let micro = clamp(length(fwidth(n)) * 5.0, 0.0, 1.0);                              // tiny folds/creases
+      col = col * mix(1.0, form, 0.6);                          // carry the large-scale 3D shading
+      col = col + u.accent_color * micro * 0.22;                // reveal the finest geometric detail
+      col = col + baseCol * clamp(curvNorm, 0.0, 1.0) * 0.14;   // ridge/valley structure (outside & in)
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth

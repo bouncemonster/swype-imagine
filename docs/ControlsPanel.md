@@ -52,6 +52,7 @@ Sub-filter bar: All (24), φ Golden, Primes, TPMS, 4D Topology, Classic
 
 ### Tab 3: Camera & Inside (Камера/Внутри) - lines 381-570
 - **Camera Mode**: 4 modes (orbit, flyThrough, goldenSpiral, kelvinInvert)
+- **Auto-rotation toggle** (`toggle-auto-rotate-btn`): start/stop button bound to `params.autoRotate` via `onParamsChange` — shows Pause/"Вращается" when on, RotateCw/"Остановлено" when off; mirrors the `S` key and the accumulator-driven resume-ease in `useRenderEngine` (two-way, persistent)
 - **Render Style**: 10 modes (solid, xray, topo, hologram, iridescent, quantum, gemstone, wireframe, heatmap, neon)
 - **Slice Plane**: Multi-axis tomography (golden, x, y, z) + position slider
 - **Probe HUD**: Toggle for topological probe

@@ -11,7 +11,7 @@ import {
 import { COLOR_PALETTES } from '../palettes';
 import { fractalArchitectures } from '../data/fractalArchitectures';
 import { 
-  Camera, Maximize, BookOpen, X, Volume2, VolumeX, BookmarkPlus
+  Camera, Maximize, BookOpen, X, Volume2, VolumeX, BookmarkPlus, RotateCw, Pause
 } from 'lucide-react';
 
 interface ControlsPanelProps {
@@ -404,6 +404,28 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Auto-rotation start/stop — mirrors the S-key binding and the interact→hold→resume
+              behavior in the render loop. Bound to params.autoRotate (App state) so it persists. */}
+          <div className="bg-neutral-900/60 p-3 rounded-xl border border-neutral-800 flex items-center justify-between">
+            <div>
+              <span className="text-[11px] font-semibold text-neutral-200 block">Автовращение</span>
+              <span className="text-[8px] text-neutral-500">Пауза при взаимодействии, возобновление через ~3с</span>
+            </div>
+            <button
+              id="toggle-auto-rotate-btn"
+              onClick={() => onParamsChange(prev => ({ ...prev, autoRotate: !prev.autoRotate }))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-medium transition ${
+                params.autoRotate
+                  ? 'bg-amber-950/50 border-amber-500/70 text-amber-200'
+                  : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+              }`}
+              title="Клавиша S — пуск/стоп вращения"
+            >
+              {params.autoRotate ? <Pause className="w-3 h-3" /> : <RotateCw className="w-3 h-3" />}
+              <span>{params.autoRotate ? 'Вращается' : 'Остановлено'}</span>
+            </button>
           </div>
 
           {/* Rendering Modality: 7 Math-Driven Visualization Techniques */}

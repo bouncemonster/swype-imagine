@@ -193,7 +193,7 @@ export class ShaderManager {
       '  float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5;\n' +
       '  float breathSecondary = sin(u_time * 0.8 * phi + 1.0) * 0.5 + 0.5;\n' +
       '  float breathTertiary = sin(u_time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5;\n' +
-      '  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06 * morphGate;\n' +
+      '  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.11 * morphGate;\n' +
       '  float breathWeight = 1.0 - exp(-r_bound * 0.8);\n' +
       '  p_eval *= 1.0 + breathAmount * breathWeight;\n' +
       '  float precessAngle = u_time * 0.06 * morphGate;\n' +

@@ -18,6 +18,11 @@ export interface UseRenderEngineOptions {
   // (see prefetch effect).
   nextSpecimenTypes?: FractalType[] | null;
   onInteraction?: (zoomDelta: number, orbitDelta: number) => void;
+  // Commit a param change back through React state so it PERSISTS. The imperative
+  // `paramsRef.current = {...}` writes get overwritten the next time the controlled
+  // `params` prop re-syncs (App holds the source of truth), which is why the old
+  // keyboard rotation-stop never stuck. FractalCanvas passes its onParamsChange here.
+  commitParams?: (updater: (prev: FractalParams) => FractalParams) => void;
   screenshotRequested: boolean;
   onScreenshotCaptured: (dataUrl: string) => void;
 }
@@ -69,6 +74,7 @@ export function useRenderEngine(
     onPrevSpecimen,
     nextSpecimenTypes,
     onInteraction,
+    commitParams,
     screenshotRequested,
     onScreenshotCaptured,
   } = options;
@@ -115,6 +121,8 @@ export function useRenderEngine(
   onPrevSpecimenRef.current = onPrevSpecimen;
   const onInteractionRef = useRef(onInteraction);
   onInteractionRef.current = onInteraction;
+  const commitParamsRef = useRef(commitParams);
+  commitParamsRef.current = commitParams;
   const onEngineReadyRef = useRef(onEngineReady);
   onEngineReadyRef.current = onEngineReady;
 
@@ -146,6 +154,12 @@ export function useRenderEngine(
   const inertiaThreshold = 0.00008; // Lower threshold for longer glide
   const inertiaEnabledRef = useRef(true); // Allow toggling inertia on/off
   const AUTO_ROTATION_RESUME_DELAY = 3000; // ms of no interaction before auto-rotation resumes
+  // Auto-rotation is an ACCUMULATED angle stored here (not an absolute simTime term added
+  // to rotX each frame), so pausing simply stops accumulating and the view holds perfectly
+  // still, and resuming eases the spin back in from zero via the ease factor — no snap.
+  const autoRotAccumRef = useRef(0);   // accumulated auto-rotation yaw (rad)
+  const autoRotPhaseRef = useRef(0);   // phase for the gentle auto-rotation pitch wobble
+  const autoRotateEaseRef = useRef(0); // 0..1 ease-in multiplier when rotation (re)starts
   const firstRenderDoneRef = useRef(false); // Track first successful render for loading overlay
   const lastQualityChangeRef = useRef<number>(0); // Cooldown for DynamicQuality to prevent rapid oscillation
 
@@ -498,11 +512,28 @@ export function useRenderEngine(
           }
         }
 
-        // Auto rotation — PAUSED during interaction (drag/zoom), resumes after 3s idle
+        // Auto rotation — PAUSED during interaction (drag/zoom), holds absolutely still
+        // for the idle window, then eases the spin back in. Accumulated incrementally into
+        // autoRotAccumRef (see ref comment) so there is NO jump when grabbing/releasing:
+        // the old absolute `simTime * speed` term was re-added every frame on top of rotX
+        // but never persisted, so it disappeared the instant interaction began (the reported
+        // "вращение / остановить-запустить работает плохо" — the figure snapped backward).
         const timeSinceLastMove = timestamp - lastMoveTimeRef.current;
         const isInteracting = isDraggingRef.current || timeSinceLastMove < AUTO_ROTATION_RESUME_DELAY;
-        const autoRotX = (currentParams.autoRotate && !isInteracting) ? (simTime * currentParams.autoRotateSpeed * 0.12) : 0;
-        const autoRotY = (currentParams.autoRotate && !isInteracting) ? (Math.sin(simTime * 0.18) * 0.06) : 0;
+        const wantAutoRotate = currentParams.autoRotate && !isInteracting;
+        autoRotateEaseRef.current = wantAutoRotate
+          ? Math.min(1, autoRotateEaseRef.current + deltaMs / 1200)
+          : 0;
+        if (autoRotateEaseRef.current > 0) {
+          const spinRate = (currentParams.autoRotateSpeed ?? 0.12) * 0.5; // rad/sec at full ease
+          autoRotAccumRef.current += spinRate * autoRotateEaseRef.current * (deltaMs / 1000);
+          autoRotPhaseRef.current += autoRotateEaseRef.current * (deltaMs / 1000) * 0.18;
+          // Wrap the yaw to keep the float small; a full-turn wrap is visually identical so
+          // it never reads as a jump.
+          if (autoRotAccumRef.current > Math.PI * 2) autoRotAccumRef.current -= Math.PI * 2;
+        }
+        const autoRotX = autoRotAccumRef.current;
+        const autoRotY = Math.sin(autoRotPhaseRef.current) * 0.05;
 
         // Inertia - frame-rate independent decay (was per-frame, now per-second)
         let inertiaRotX = 0, inertiaRotY = 0;
@@ -760,16 +791,18 @@ export function useRenderEngine(
           e.preventDefault();
           onPrevSpecimenRef.current?.();
         } else if (e.key === 's' || e.key === 'S' || e.key === 'ы' || e.key === 'Ы') {
-          // Stop rotation (S or Russian Ы)
+          // Toggle auto-rotation start/stop (S or Russian Ы). Committed through React state
+          // (commitParams) so it PERSISTS — the previous direct paramsRef write was reverted
+          // the next time the controlled `params` prop re-synced, so stopping never stuck.
           e.preventDefault();
           velocityRef.current = { x: 0, y: 0 };
-          if (paramsRef.current) {
-            paramsRef.current = {
-              ...paramsRef.current,
-              autoRotate: false,
-            };
+          const nextAutoRotate = !paramsRef.current.autoRotate;
+          if (commitParamsRef.current) {
+            commitParamsRef.current(prev => ({ ...prev, autoRotate: nextAutoRotate }));
+          } else if (paramsRef.current) {
+            paramsRef.current = { ...paramsRef.current, autoRotate: nextAutoRotate };
           }
-          console.info('[Controls] Rotation stopped (S key)');
+          console.info(`[Controls] Auto-rotation ${nextAutoRotate ? 'started' : 'stopped'} (S key)`);
         } else if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') {
           // Toggle inertia (I or Russian Ш)
           e.preventDefault();
@@ -836,14 +869,14 @@ export function useRenderEngine(
     };
   }, []);
 
-  // Stop rotation function - immediately stops all rotation and inertia
+  // Stop rotation function - immediately stops all rotation and inertia (persisted via
+  // commitParams so a later prop re-sync cannot silently restart the auto-spin).
   const stopRotation = useCallback(() => {
     velocityRef.current = { x: 0, y: 0 };
-    if (paramsRef.current) {
-      paramsRef.current = {
-        ...paramsRef.current,
-        autoRotate: false,
-      };
+    if (commitParamsRef.current) {
+      commitParamsRef.current(prev => ({ ...prev, autoRotate: false }));
+    } else if (paramsRef.current) {
+      paramsRef.current = { ...paramsRef.current, autoRotate: false };
     }
   }, []);
 

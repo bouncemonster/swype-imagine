@@ -3175,7 +3175,7 @@ vec2 sceneSDF(vec3 p_world) {
   float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5; // 0-1, ~7.85s period
   float breathSecondary = sin(u_time * 0.8 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
   float breathTertiary = sin(u_time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
-  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06 * morphGate;
+  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.11 * morphGate;
   // Distance-weighted: surface breathes more than interior
   float breathWeight = 1.0 - exp(-r_bound * 0.8);
   p_eval *= 1.0 + breathAmount * breathWeight;
@@ -4139,6 +4139,21 @@ void main() {
       neonCol += u_secondary_color * curvNorm * rim * 0.6;
       neonCol += baseCol * 0.06 * relief;                   // faint core so it doesn't vanish head-on
       col = neonCol;
+    }
+
+    // SHARED ANTI-FLATTEN REINFORCEMENT — reaches EVERY stylized mode (this runs after the
+    // style dispatch and before post-processing, in the footer shared by all spliced shaders).
+    // A stylized mode that leans on its own palette colors can still wash out the 3D form, so
+    // re-inject BOTH scales of geometry that make a fractal read as solid: the large-scale
+    // shading (base PBR luminance) for the global silhouette, and the screen-space normal
+    // change (fwidth(n)) for the finest folds/crevices — micro detail a flat color would hide.
+    // Skipped for solid (style 0), which already IS the full base pass.
+    if (u_render_style > 0.5) {
+      float form = clamp(dot(baseCol, vec3(0.299, 0.587, 0.114)) * 1.35, 0.45, 1.5); // global relief
+      float micro = clamp(length(fwidth(n)) * 5.0, 0.0, 1.0);                          // tiny folds/creases
+      col *= mix(1.0, form, 0.6);                         // carry the large-scale 3D shading
+      col += u_accent_color * micro * 0.22;               // reveal the finest geometric detail
+      col += baseCol * clamp(curvNorm, 0.0, 1.0) * 0.14;  // ridge/valley structure (outside & in)
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth

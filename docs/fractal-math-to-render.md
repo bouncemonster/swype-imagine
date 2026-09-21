@@ -165,6 +165,21 @@ Audit findings that led to the current 10-style set:
   sliver so geometry reads through any palette. The new **Heatmap (8)** deliberately leans on `steps`/iteration
   density (the escape-time math itself) rather than surface shading — it is the closest style to "showing the raw
   iteration count", complementing **Wireframe (7)** (shows the DE fold lattice) and **Neon (9)** (edge-only rim).
+- **Shared ANTI-FLATTEN reinforcement (added).** The per-style `relief`/`baseCol` treatment is necessary
+  but not sufficient — a stylized mode can still wash out the large-scale form or hide the finest folds. A
+  single post-dispatch block in the footer (after the style `if/else`, before the fog; skipped when
+  `u_render_style > 0.5` is false, i.e. solid) now re-injects three independent depth cues for *every*
+  stylized mode at once: `form` (global relief from `baseCol` luminance, `col *= mix(1, form, 0.6)`),
+  `micro = length(fwidth(n))` (the finest screen-space normal detail — tiny folds/creases that survive any
+  recolor, tinted to the accent), and a `curvNorm` structure term. Because it lives after the dispatch it
+  propagates to all spliced + monolith shaders on both engines simultaneously (WGSL mirror in
+  `webgpuShaders.ts`). This is the mechanism that makes "all details, from the smallest to the largest,
+  outside and inside" read regardless of the chosen style.
+- **Fractal development (breath) amplitude.** The visible growth/shrink pulse is `p_eval *= 1.0 +
+  (breath terms) * AMP * morphGate`; the amplitude `AMP` was raised `0.06 → 0.11` so development is
+  perceptible. This constant is duplicated in exactly three places that must be kept in lockstep: the
+  monolith `sceneSDF` (`webglShaders.ts`), the production splice generator string
+  (`ShaderManager.generateMinimalSceneSDF`), and the WGSL `sceneSDF` (`webgpuShaders.ts`).
 - **Naming drift (cosmetic).** Internal ids `quantum`/`gemstone`/`iridescent` differ from the UI labels
   "Плазма"/"Кристалл"/"Перламутр". Harmless (ids are stable, labels are display-only) but noted so a future
   rename touches both, not just one.

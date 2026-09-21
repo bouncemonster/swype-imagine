@@ -58,6 +58,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   // Touch pinch zoom state (UI-only, not needed in render loop)
   const touchDistanceRef = useRef<number | null>(null);
   const lastWheelTimeRef = useRef<number>(0);
+  const lastFeedNavRef = useRef<number>(0); // debounce wheel-driven feed navigation
 
   // Use the render engine hook
   const engine = useRenderEngine(containerRef, {
@@ -71,6 +72,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     onPrevSpecimen,
     nextSpecimenTypes,
     onInteraction,
+    commitParams: onParamsChange,
     screenshotRequested,
     onScreenshotCaptured,
   });
@@ -112,8 +114,23 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       e.preventDefault();
       e.stopPropagation(); // Prevent React 19 root-level passive listener from also calling preventDefault
       lastMoveTimeRef.current = performance.now(); // Pause auto-rotation during zoom
-      // Reduced sensitivity: 0.0012 instead of 0.0018 for smoother zoom
-      const zoomFactor = Math.exp(Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY) * 0.0012, 0.18));
+      // Honor the scroll-mode toggle (previously ignored here — the canvas always zoomed,
+      // so the "Лента / Зум" switch was purely cosmetic). Feed mode navigates specimens
+      // with a 250ms debounce (a trackpad emits a burst of tiny deltas per gesture); zoom
+      // mode scales the camera.
+      if (scrollMode === 'feed') {
+        const now = performance.now();
+        if (now - lastFeedNavRef.current < 250) return;
+        lastFeedNavRef.current = now;
+        onInteraction?.(Math.abs(e.deltaY) * 0.015, 0);
+        if (e.deltaY > 0) onNextSpecimen?.();
+        else onPrevSpecimen?.();
+        return;
+      }
+      // Zoom mode: proportional curve (removed the old Math.sign hard-cap that made a
+      // trackpad's small continuous deltas barely move the view while a wheel notch jumped).
+      const norm = Math.max(-1.5, Math.min(1.5, e.deltaY / 100));
+      const zoomFactor = Math.exp(-norm * 0.12); // scroll down = zoom out, up = zoom in
       onInteraction?.(Math.abs(e.deltaY) * 0.015, 0);
       onParamsChange(prev => ({
         ...prev,
@@ -161,7 +178,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
       canvas.removeEventListener('touchstart', touchStartHandler, { capture: true });
       canvas.removeEventListener('touchmove', touchMoveHandler, { capture: true });
     };
-  }, [canvasRef, onParamsChange, onInteraction]);
+  }, [canvasRef, onParamsChange, onInteraction, scrollMode, onNextSpecimen, onPrevSpecimen, lastMoveTimeRef]);
 
   // Pointer Handlers for 3D Orbit with Inertia
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {

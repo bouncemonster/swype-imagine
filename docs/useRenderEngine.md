@@ -24,7 +24,8 @@ Manages WebGPU/WebGL2 initialization, render loop, keyboard shortcuts, telemetry
 4. Russian keyboard support (Ы, Ш, А, К)
 5. Context loss handled here (re-init on restore)
 6. Mobile starts at quality level 0; embedded/desktop at 1 (medium)
-7. **Orbit inertia physics**: post-release rotation glides from `velocityRef` (px/ms, EMA-smoothed in `FractalCanvas`) with `inertiaRot = velocity * deltaMs * INERTIA_ROT_SPEED (0.0035)` — the same factor as the drag, so the glide is continuous at release across all zooms — decaying frame-rate-independently (`0.94^(dt*60)`, threshold `0.00008`). Auto-rotation stays paused for 3s after the last move (`AUTO_ROTATION_RESUME_DELAY`) so it never fights the throw. Toggle with `I`.
+7. **Orbit inertia physics**: post-release rotation glides from `velocityRef` (px/ms, EMA-smoothed in `FractalCanvas`) with `inertiaRot = velocity * deltaMs * INERTIA_ROT_SPEED (0.0035)` — the same factor as the drag, so the glide is continuous at release across all zooms — decaying frame-rate-independently (`0.94^(dt*60)`, threshold `0.00008`). Auto-rotation stays paused for 3s after the last move (`AUTO_ROTATION_RESUME_DELAY`) so it never fights the throw. Toggle inertia with `I`.
+8. **Auto-rotation is an incremental accumulator, not an absolute time term**: yaw lives in `autoRotAccumRef` advanced by `spinRate * autoRotateEaseRef * (deltaMs/1000)` (wrapped at 2π), with `autoRotateEaseRef` ramping 0→1 over 1.2s. This refs-in-a-ref design is deliberate: `paramsRef.current` is re-synced from props every frame (App owns `params`), so any imperative write to it is clobbered — the accumulator is immune, so grab/release no longer snaps the model by the accumulated yaw. While `isInteracting` the ease is forced to 0 → the figure is **absolutely static**, then spins back up smoothly. `S` and `stopRotation` commit `autoRotate` through the new `commitParams` (→ `onParamsChange`) path so the start/stop is persistent and stays two-way with the ControlsPanel toggle.
 
 ## Keyboard Shortcuts
 | Key | Action |
@@ -32,7 +33,7 @@ Manages WebGPU/WebGL2 initialization, render loop, keyboard shortcuts, telemetry
 | 1-9, 0 | Render modes (keys 1-9 → solid…heatmap, key 0 → neon) |
 | F | Toggle flyThrough/orbit |
 | R | Reset camera |
-| S | Stop rotation |
+| S | Toggle auto-rotation start/stop (persistent, mirrors the Camera-tab button) |
 | I | Toggle inertia |
 | WASD/Arrows | Fly-through movement |
 | Space/Arrows | Next/prev specimen |
