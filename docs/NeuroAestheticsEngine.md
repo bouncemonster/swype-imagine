@@ -43,6 +43,12 @@ Imported from separate data file to reduce NeuroAestheticsEngine.ts monolith siz
 4. **Tertiary layer**: 50% chance to add 3rd fractal
 5. **Genetic parameters**: boxFold, sphereFold, smoothK, warpStrength, octaveLayers
 
+### `peekNextSpecimenType()`
+Pure prediction (no state mutation) of the type the next forward navigation will show — drives the renderer's background shader prefetch:
+- Mid-history → `history[currentSpecimenIndex + 1].type` (exact replay)
+- At tail during EXPLORATION_MODE → `ALL_FRACTAL_TYPES[explorationIndex]` (exact)
+- Post-exploration Thompson sampling is stochastic → returns `null` (no blind prefetch)
+
 ### `registerEngagement(dwell, zoom, orbit, specimen)`
 Calculates affinity score (0-100):
 - Base: 25%

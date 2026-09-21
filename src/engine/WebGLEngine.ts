@@ -26,6 +26,21 @@ export class WebGLEngine extends FractalEngineBase {
   // DynamicQuality in useRenderEngine raises quality again once FPS is stable.
   private warmupFramesLeft = 0;
   private preSwapQuality = 1;
+  // Fractal indices whose shaders are being background-prefetched (see prefetchFractal)
+  private prefetching = new Set<number>();
+
+  /** Uniform names cached per program — single source to avoid list drift. */
+  private static readonly UNIFORM_NAMES = [
+    'u_resolution', 'u_time', 'u_phi_val',
+    'u_cam_rot', 'u_zoom', 'u_fractal_type', 'u_hybrid_type', 'u_tertiary_type',
+    'u_iterations', 'u_glow_intensity', 'u_morph_speed', 'u_hybrid_blend', 'u_tertiary_blend',
+    'u_compose_op', 'u_smooth_k', 'u_warp_strength', 'u_octave_layers',
+    'u_box_fold', 'u_sphere_fold', 'u_interior_cut',
+    'u_primary_color', 'u_secondary_color', 'u_accent_color',
+    'u_cam_mode', 'u_cam_pos', 'u_slice_plane', 'u_slice_axis', 'u_render_style',
+    'u_headlamp_power', 'u_volumetric_fog', 'u_palette_seed', 'u_palette_rotation',
+    'u_auto_rotate', 'u_quality_level'
+  ];
 
   /**
    * Optional hook so the UI can drive a loading bar from the REAL per-stage
@@ -271,21 +286,8 @@ export class WebGLEngine extends FractalEngineBase {
       }
       
       // Cache uniform locations
-      this.uniformLocs = {};
-      const uniformNames = [
-        'u_resolution', 'u_time', 'u_phi_val',
-        'u_cam_rot', 'u_zoom', 'u_fractal_type', 'u_hybrid_type', 'u_tertiary_type',
-        'u_iterations', 'u_glow_intensity', 'u_morph_speed', 'u_hybrid_blend', 'u_tertiary_blend',
-        'u_compose_op', 'u_smooth_k', 'u_warp_strength', 'u_octave_layers',
-        'u_box_fold', 'u_sphere_fold', 'u_interior_cut',
-        'u_primary_color', 'u_secondary_color', 'u_accent_color',
-        'u_cam_mode', 'u_cam_pos', 'u_slice_plane', 'u_slice_axis', 'u_render_style',
-        'u_headlamp_power', 'u_volumetric_fog', 'u_palette_seed', 'u_palette_rotation',
-        'u_auto_rotate', 'u_quality_level'
-      ];
-      uniformNames.forEach(name => {
-        this.uniformLocs[name] = this.gl.getUniformLocation(program, name);
-      });
+      this.cacheUniformLocations(program);
+      this.shaderManager?.setProtectedIndices([fractalIdx]);
       
       console.info(`[WebGL2] Lazy compilation complete for fractal ${fractalIdx}`);
       this.beginWarmup();
@@ -362,6 +364,57 @@ export class WebGLEngine extends FractalEngineBase {
     this.warmupFramesLeft = 24; // ~0.4s at 60fps
   }
 
+  /** (Re-)cache uniform locations for the active program. */
+  private cacheUniformLocations(program: WebGLProgram): void {
+    if (!this.gl) return;
+    this.uniformLocs = {};
+    WebGLEngine.UNIFORM_NAMES.forEach(name => {
+      this.uniformLocs[name] = this.gl!.getUniformLocation(program, name);
+    });
+  }
+
+  /**
+   * True when background prefetching is safe: initial shader is up (currentFractalIdx
+   * >= 0 means the first lazy compile finished), no real swap in progress, and no
+   * other prefetch is already occupying the driver's compile queue.
+   */
+  public get canPrefetch(): boolean {
+    return !!this.gl && !this.isSwappingShader && this.currentFractalIdx >= 0 && this.prefetching.size === 0;
+  }
+
+  /**
+   * Background pre-compile of a predicted-next fractal shader into the LRU cache.
+   * Never touches the active program — the user keeps viewing/controlling the current
+   * fractal undisturbed (compilation runs in the GPU process via the non-blocking
+   * KHR poll loop). When the switch actually happens, render() takes the synchronous
+   * cached-swap fast path: zero skipped frames, no "Initializing GPU" overlay.
+   */
+  public prefetchFractal(fractalIdx: number): void {
+    if (!this.gl || !this.shaderManager || !this.canPrefetch) return;
+    if (this.shaderManager.isCached(fractalIdx)) return;
+    this.prefetching.add(fractalIdx);
+    console.info(`[WebGL2] Prefetch: compiling shader for fractal ${fractalIdx} in background...`);
+    this.shaderManager.getShaderForFractal(fractalIdx, GLSL_VERTEX_SHADER)
+      .then(() => console.info(`[WebGL2] Prefetch ready for fractal ${fractalIdx}`))
+      .catch(err => console.warn(`[WebGL2] Prefetch failed for fractal ${fractalIdx}:`, (err as Error)?.message ?? err))
+      .finally(() => this.prefetching.delete(fractalIdx));
+  }
+
+  /**
+   * Synchronously adopt an already-compiled (prefetched) program. Returns false when
+   * the VAO is not up yet (first frame still pending) — caller falls back to the
+   * regular async lazy-compile swap path.
+   */
+  private adoptCachedProgram(program: WebGLProgram, fractalIdx: number): boolean {
+    if (!this.gl || !this.vao) return false;
+    this.program = program;
+    this.currentFractalIdx = fractalIdx;
+    this.cacheUniformLocations(program);
+    this.shaderManager?.setProtectedIndices([fractalIdx]);
+    console.info(`[WebGL2] Instant swap to cached shader for fractal ${fractalIdx} (prefetched)`);
+    return true;
+  }
+
   /**
    * Renders one frame. Returns true ONLY when gl.drawArrays actually executed —
    * callers use this to distinguish a real on-screen frame from a silent skip
@@ -408,16 +461,22 @@ export class WebGLEngine extends FractalEngineBase {
       
       // Lazy compile shader for this fractal if needed
       if (this.currentFractalIdx !== indices.fractalIdx) {
-        this.isSwappingShader = true;
-        this.swapFrameCount = 0;
-        this.lazyCompileShader(indices.fractalIdx).then(() => {
-          this.isSwappingShader = false;
+        const cachedProgram = this.shaderManager?.getCachedProgram(indices.fractalIdx) ?? null;
+        if (cachedProgram && this.adoptCachedProgram(cachedProgram, indices.fractalIdx)) {
+          // Fast path: shader was background-prefetched — swapped synchronously,
+          // this very frame already draws the new fractal (no skip, no overlay).
+        } else {
+          this.isSwappingShader = true;
           this.swapFrameCount = 0;
-        }).catch(err => {
-          console.error('[WebGL2] Lazy compile failed, using full shader:', err);
-          this.isSwappingShader = false;
-          this.swapFrameCount = 0;
-        });
+          this.lazyCompileShader(indices.fractalIdx).then(() => {
+            this.isSwappingShader = false;
+            this.swapFrameCount = 0;
+          }).catch(err => {
+            console.error('[WebGL2] Lazy compile failed, using full shader:', err);
+            this.isSwappingShader = false;
+            this.swapFrameCount = 0;
+          });
+        }
       }
     }
 

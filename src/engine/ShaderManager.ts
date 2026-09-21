@@ -39,6 +39,13 @@ export class ShaderManager {
   private gl: WebGL2RenderingContext;
   private compiledShaders: Map<number, CachedShader> = new Map();
   private maxCacheSize = 8; // Increased from 5 to reduce recompilation during auto-explore
+  // In-flight compiles keyed by fractal index: a background prefetch and a user
+  // switch to the SAME fractal must share one compile — otherwise both splice the
+  // shader and the second cacheShader() overwrite leaks the first WebGLProgram.
+  private inFlight: Map<number, Promise<WebGLProgram>> = new Map();
+  // Indices whose programs the engine is actively displaying — eviction must never
+  // deleteProgram() these (a deleted bound program = GL error / black canvas).
+  private protectedIndices: Set<number> = new Set();
   private onProgress?: ProgressCallback;
   private sections: ShaderSections | null = null;
   // name -> full source for every function defined in the body region [headerEnd, sceneSDFStart).
@@ -309,7 +316,18 @@ export class ShaderManager {
   async getShaderForFractal(fractalIndex: number, vertexShaderSource: string): Promise<WebGLProgram> {
     const cached = this.compiledShaders.get(fractalIndex);
     if (cached) { cached.lastUsed = Date.now(); return cached.program; }
-    
+
+    // Dedupe: reuse an identical compile already in progress for this index
+    const pending = this.inFlight.get(fractalIndex);
+    if (pending) return pending;
+
+    const work = this.compileForFractal(fractalIndex, vertexShaderSource)
+      .finally(() => this.inFlight.delete(fractalIndex));
+    this.inFlight.set(fractalIndex, work);
+    return work;
+  }
+
+  private async compileForFractal(fractalIndex: number, vertexShaderSource: string): Promise<WebGLProgram> {
     // Yield to browser BEFORE heavy parsing — prevents main thread freeze on launch
     await new Promise<void>(resolve => setTimeout(resolve, 0));
     
@@ -385,17 +403,36 @@ export class ShaderManager {
     return shader;
   }
 
+  /** True when a compiled program for this fractal is already in the LRU cache. */
+  isCached(fractalIndex: number): boolean {
+    return this.compiledShaders.has(fractalIndex);
+  }
+
+  /** Synchronous cache hit for the fast program-swap path (null when absent). */
+  getCachedProgram(fractalIndex: number): WebGLProgram | null {
+    const cached = this.compiledShaders.get(fractalIndex);
+    if (cached) { cached.lastUsed = Date.now(); return cached.program; }
+    return null;
+  }
+
+  /** Programs the engine is displaying right now — LRU eviction must skip these. */
+  setProtectedIndices(indices: number[]): void {
+    this.protectedIndices = new Set(indices);
+  }
+
   private cacheShader(fractalIndex: number, program: WebGLProgram): void {
     if (this.compiledShaders.size >= this.maxCacheSize) {
       let oldestKey = -1;
       let oldestTime = Infinity;
       for (const [key, cached] of this.compiledShaders) {
+        if (this.protectedIndices.has(key)) continue; // never delete an in-use program
         if (cached.lastUsed < oldestTime) { oldestTime = cached.lastUsed; oldestKey = key; }
       }
       if (oldestKey >= 0) {
         this.gl.deleteProgram(this.compiledShaders.get(oldestKey)!.program);
         this.compiledShaders.delete(oldestKey);
       }
+      // All entries protected: allow a temporary overflow rather than killing a live program.
     }
     this.compiledShaders.set(fractalIndex, { program, lastUsed: Date.now() });
   }

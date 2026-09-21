@@ -19,6 +19,8 @@ interface FractalCanvasProps {
   onPrevSpecimen?: () => void;
   onEngineReady?: () => void;
   onLoadProgress?: (progress: number) => void;
+  /** Predicted next specimen type — engine background-prefetches its shader while the current one is viewed. */
+  nextSpecimenType?: FractalType | null;
   scrollMode?: 'feed' | 'zoom';
 }
 ```

@@ -1031,6 +1031,25 @@ export class NeuroAestheticsEngine {
     }
   }
 
+  /**
+   * Predict the fractal type the NEXT forward navigation will show, WITHOUT any
+   * state mutation — lets the renderer pre-compile its shader in the background
+   * while the user still views the current specimen. Returns null when the next
+   * pick is stochastic (post-exploration Thompson sampling) so no blind prefetch
+   * wastes LRU slots.
+   */
+  public peekNextSpecimenType(): FractalType | null {
+    // Next "Далее" replays an existing history item — its type is known exactly.
+    if (this.currentSpecimenIndex < this.history.length - 1) {
+      return this.history[this.currentSpecimenIndex + 1].type;
+    }
+    // At the tail: exploration mode breeds the next sequential type — also exact.
+    if (this.EXPLORATION_MODE && this.explorationIndex < ALL_FRACTAL_TYPES.length) {
+      return ALL_FRACTAL_TYPES[this.explorationIndex];
+    }
+    return null;
+  }
+
   public getHistory(): FractalSpecimen[] {
     return this.history;
   }

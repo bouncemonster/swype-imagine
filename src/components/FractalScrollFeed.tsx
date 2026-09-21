@@ -204,7 +204,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
               <div className="flex items-center gap-1">
                 <button
                   id="feed-ribbon-prev-btn"
-                  onClick={onPrev}
+                  onClick={(e) => { e.currentTarget.blur(); onPrev(); }}
                   className="p-1 rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
                   title="Предыдущий образец"
                 >
@@ -212,7 +212,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
                 </button>
                 <button
                   id="feed-ribbon-next-btn"
-                  onClick={onNext}
+                  onClick={(e) => { e.currentTarget.blur(); onNext(); }}
                   className="p-1 rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
                   title="Следующий образец"
                 >

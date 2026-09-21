@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback, RefObject } from 'react';
-import { FractalParams, TelemetryData, RenderStyle, CameraMode } from '../types/fractal';
+import { FractalParams, FractalType, TelemetryData, RenderStyle, CameraMode } from '../types/fractal';
 import { WebGPUEngine } from '../engine/WebGPUEngine';
 import { WebGLEngine } from '../engine/WebGLEngine';
+import { getFractalIndex } from '../engine/fractalMappers';
 
 export interface UseRenderEngineOptions {
   forcedBackend: 'webgpu' | 'webgl2' | 'auto';
@@ -12,6 +13,9 @@ export interface UseRenderEngineOptions {
   onEngineReady?: () => void;
   onNextSpecimen?: () => void;
   onPrevSpecimen?: () => void;
+  // Predicted fractal type of the NEXT specimen — its shader is background-
+  // prefetched while the user views the current one (see prefetch effect).
+  nextSpecimenType?: FractalType | null;
   onInteraction?: (zoomDelta: number, orbitDelta: number) => void;
   screenshotRequested: boolean;
   onScreenshotCaptured: (dataUrl: string) => void;
@@ -59,6 +63,7 @@ export function useRenderEngine(
     onEngineReady,
     onNextSpecimen,
     onPrevSpecimen,
+    nextSpecimenType,
     onInteraction,
     screenshotRequested,
     onScreenshotCaptured,
@@ -109,6 +114,9 @@ export function useRenderEngine(
   onEngineReadyRef.current = onEngineReady;
 
   // Performance telemetry refs
+  // Rising-edge timestamp of isSwappingShader — the swap overlay only appears when
+  // a swap actually exceeds this grace window (cached swaps never set the guard).
+  const swapGraceStartRef = useRef<number>(0);
   const frameTimesRef = useRef<number[]>([]);
   const lastTelemetryDispatchRef = useRef<number>(0);
   const lastHealthLogRef = useRef<number>(0);
@@ -510,11 +518,19 @@ export function useRenderEngine(
         const curCanvas = canvasRef.current;
         if (curCanvas && curCanvas.width > 0 && curCanvas.height > 0) {
           try {
-            // Detect shader swap start — show loading overlay BEFORE deferred compile runs
+            // Detect shader swap start — overlay shows only for swaps that take real
+            // time: prefetched programs swap synchronously inside render() (guard never
+            // set), and the 400ms grace absorbs single-frame cold swaps without a flash.
             const activeEngine = webglEngineRef.current || webgpuEngineRef.current;
             const isSwapping = (activeEngine as any)?.isSwappingShader === true;
             if (isSwapping && firstRenderDoneRef.current) {
-              setIsCompiling(true);
+              if (swapGraceStartRef.current === 0) {
+                swapGraceStartRef.current = performance.now();
+              } else if (performance.now() - swapGraceStartRef.current > 400) {
+                setIsCompiling(true);
+              }
+            } else {
+              swapGraceStartRef.current = 0;
             }
 
             let drewFrame = false;
@@ -659,10 +675,43 @@ export function useRenderEngine(
     };
   }, [activeEngineType]);
 
+  // Background prefetch: while the user views/controls the current fractal, pre-compile
+  // the predicted next specimen's shader into the WebGL engine's LRU cache (non-blocking
+  // KHR poll loop, GPU-process side). The actual switch then takes the synchronous
+  // cached fast path — no skipped frames, no "Initializing GPU" chip. Retries until the
+  // engine reports prefetch safety (initial compile done, no swap in flight).
+  useEffect(() => {
+    if (!nextSpecimenType) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const tryPrefetch = () => {
+      if (cancelled) return;
+      const engine = webglEngineRef.current;
+      if (!engine) {
+        // WebGPU backend has no prefetch path — stop instead of spinning forever;
+        // while WebGL is still setting up, keep retrying until the ref exists.
+        if (activeEngineType === 'webgpu') return;
+        timer = setTimeout(tryPrefetch, 2000);
+        return;
+      }
+      if (engine.canPrefetch) {
+        engine.prefetchFractal(getFractalIndex(nextSpecimenType));
+        return;
+      }
+      timer = setTimeout(tryPrefetch, 2000);
+    };
+    timer = setTimeout(tryPrefetch, 1000); // let the current swap/first frames settle
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+  }, [nextSpecimenType, activeEngineType]);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      const targetTag = (e.target as HTMLElement)?.tagName;
+      if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') return;
+      // Space/Enter on a focused BUTTON belong to native button activation — firing
+      // onNext here too would double-advance the feed (window handler + button click).
+      if (targetTag === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
       if (e.repeat) return;
       keysPressedRef.current.add(e.code);
 

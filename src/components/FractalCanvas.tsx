@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect } from 'react';
-import { FractalParams, TelemetryData } from '../types/fractal';
+import { FractalParams, FractalType, TelemetryData } from '../types/fractal';
 import { useRenderEngine } from '../hooks/useRenderEngine';
 import { userProblemLogger } from '../engine/UserProblemLogger';
 
@@ -15,6 +15,9 @@ interface FractalCanvasProps {
   onPrevSpecimen?: () => void;
   onEngineReady?: () => void;
   onLoadProgress?: (progress: number) => void;
+  // Predicted next specimen type — its shader is background-prefetched by the engine
+  // while the user views the current fractal, making the switch instant.
+  nextSpecimenType?: FractalType | null;
   scrollMode?: 'feed' | 'zoom';
 }
 
@@ -30,6 +33,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   onPrevSpecimen,
   onEngineReady,
   onLoadProgress,
+  nextSpecimenType,
   scrollMode = 'feed',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,6 +68,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     onEngineReady,
     onNextSpecimen,
     onPrevSpecimen,
+    nextSpecimenType,
     onInteraction,
     screenshotRequested,
     onScreenshotCaptured,

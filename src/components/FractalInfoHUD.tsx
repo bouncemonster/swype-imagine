@@ -364,7 +364,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               id="feed-prev-btn"
-              onClick={onPrev}
+              onClick={(e) => { e.currentTarget.blur(); onPrev(); }}
               className="p-1.5 sm:p-2 rounded-xl bg-neutral-900/80 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
               title="Предыдущий [Стрелка влево]"
             >
@@ -373,7 +373,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
 
             <button
               id="feed-next-btn"
-              onClick={onNext}
+              onClick={(e) => { e.currentTarget.blur(); onNext(); }}
               className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-semibold transition text-[11px] sm:text-xs flex items-center gap-1 shadow-md shadow-amber-500/20"
               title="Следующий случайный фрактал [Пробел]"
             >

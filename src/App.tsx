@@ -155,6 +155,9 @@ export default function App() {
   const [interactionType, setInteractionType] = useState<'idle' | 'zooming' | 'orbiting'>('idle');
   const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastNavTimeRef = useRef<number>(0);
+  // Timestamp of the last real user gesture (wheel/drag/pinch) — auto-explore must
+  // never yank the scene away while someone is actively manipulating the fractal.
+  const lastActivityAtRef = useRef<number>(Date.now());
 
   const [forcedBackend, setForcedBackend] = useState<'webgpu' | 'webgl2' | 'auto'>('auto');
   const [screenshotRequested, setScreenshotRequested] = useState(false);
@@ -202,6 +205,9 @@ export default function App() {
     // Mobile: longer interval (30s) to reduce GPU pressure from shader recompilation
     const intervalMs = IS_MOBILE ? 30000 : 18000;
     const interval = setInterval(() => {
+      // Idle gate: any gesture in the last 10s skips this tick (re-checked next
+      // interval) — fixes "the fractal changed although I didn't press Далее".
+      if (performance.now() - lastActivityAtRef.current < 10000) return;
       // Golden ratio step through fractal types — ensures maximum coverage
       exploreIndexRef.current = (exploreIndexRef.current + Math.round(PHI_INV * ALL_FRACTAL_TYPES.length)) % ALL_FRACTAL_TYPES.length;
       const idx = exploreIndexRef.current;
@@ -240,6 +246,23 @@ export default function App() {
     }, intervalMs); // Change every 18s (desktop) or 30s (mobile)
     return () => clearInterval(interval);
   }, [autoExplore]);
+
+  // Predicted next specimen type — drives the engine's background shader prefetch so
+  // the upcoming figure is already compiled while the user still views the current one.
+  const [nextSpecimenType, setNextSpecimenType] = useState<FractalType | null>(null);
+  useEffect(() => {
+    if (!neuroEngine) return;
+    if (autoExplore) {
+      // The auto-explore march is deterministic — compute the NEXT tick's type.
+      const step = Math.round(PHI_INV * ALL_FRACTAL_TYPES.length);
+      const nextIdx = (exploreIndexRef.current + step) % ALL_FRACTAL_TYPES.length;
+      setNextSpecimenType(ALL_FRACTAL_TYPES[nextIdx]);
+    } else {
+      // Feed navigation: exact for history replay and exploration mode, null when
+      // the next breed is stochastic (no blind prefetch).
+      setNextSpecimenType(neuroEngine.peekNextSpecimenType());
+    }
+  }, [neuroEngine, autoExplore, currentSpecimen, params.type]);
 
   const handleLoaderFinished = useCallback(() => {
     // Keep clean entrance directly into the 3D scroll feed without annoying popups
@@ -422,6 +445,7 @@ export default function App() {
 
   // Handle active user interaction (deep zooming or orbiting)
   const handleInteraction = useCallback((zoomDelta: number, orbitDelta: number) => {
+    lastActivityAtRef.current = performance.now(); // gates auto-explore + prefetch timing
     if (!neuroEngine || !currentSpecimen) return;
 
     const targetType = zoomDelta > 0 ? 'zooming' : (orbitDelta > 0 ? 'orbiting' : 'idle');
@@ -583,6 +607,7 @@ export default function App() {
         onPrevSpecimen={handlePrevSpecimen}
         onEngineReady={() => setIsEngineReady(true)}
         onLoadProgress={setLoadProgress}
+        nextSpecimenType={nextSpecimenType}
         scrollMode={scrollMode}
       />
 
