@@ -3476,8 +3476,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     rd = normalize(uv.x * uu + uv.y * vv + fov_factor * ww);
   }
 
-  // Golden ratio pseudo-dither to eliminate raymarch quantization banding
-  let dither = fract(sin(dot(uv, vec2<f32>(12.9898, 78.233)) + u.time * 0.05) * 43758.5453);
+  // Golden ratio pseudo-dither to eliminate raymarch quantization banding.
+  // Static per-pixel hash (u.time term removed — temporal jitter read as edge flicker),
+  // mirroring the WebGL fix.
+  let dither = fract(sin(dot(uv, vec2<f32>(12.9898, 78.233)) * 43758.5453));
   // Adaptive near-plane: scales with camera distance to prevent slicing
   let near_clip: f32 = max(0.0001, cam_dist * 0.0005);
   var t: f32 = near_clip + 0.001 * dither;
@@ -4039,26 +4041,25 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   col = acesToneMap(col);
 
   // BLOOM SIMULATION: Brightness-based glow for light sources and specular highlights
+  // Mirrors WebGL: narrow threshold, weak strength — wide bloom washed the form out.
   let brightness = dot(col, vec3<f32>(0.299, 0.587, 0.114));
-  let bloomThreshold: f32 = 0.6;
-  let bloomStrength = max(brightness - bloomThreshold, 0.0) * 0.35;
+  let bloomThreshold: f32 = 0.8;
+  let bloomStrength = max(brightness - bloomThreshold, 0.0) * 0.16;
   let bloomCol = col * bloomStrength + u.accent_color * bloomStrength * 0.15;
   col = col + bloomCol;
 
   // MINIMUM BRIGHTNESS FLOOR: Prevent completely black pixels
     col = max(col, vec3<f32>(0.004, 0.003, 0.005));
 
-  // CHROMATIC ABERRATION: Subtle color fringing for realism
-  // FIX: Use distance-based CA strength for more realistic effect
-  let caStrength: f32 = 0.0015 * (1.0 + t * 0.1);
-  let caR = fract(sin(dot(in.uv * u.resolution + vec2<f32>(caStrength, 0.0), vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
-  let caG = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
-  let caB = fract(sin(dot(in.uv * u.resolution + vec2<f32>(-caStrength, 0.0), vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
-  col.r = col.r + (caR - 0.5) * 0.008;
-  col.b = col.b + (caB - 0.5) * 0.008;
+  // CHROMATIC ABERRATION: static radial RGB lift (lens-tint style).
+  // The old time-varying hash on R/B was per-pixel flicker, not dispersion;
+  // with one scene sample per pixel true CA is not possible cheaply.
+  col.r = col.r + bg_rad * bg_rad * 0.012;
+  col.b = col.b - bg_rad * bg_rad * 0.010;
 
-  // Color-space dither to eliminate banding in smooth gradients
-  let ditherVal = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) + u.time * 0.07) * 43758.5453);
+  // Color-space dither to eliminate banding in smooth gradients.
+  // Static hash (u.time term removed): temporal dither shimmered on the surface.
+  let ditherVal = fract(sin(dot(in.uv * u.resolution, vec2<f32>(12.9898, 78.233)) * 43758.5453));
   col = col + (ditherVal - 0.5) * (1.0 / 128.0);
 
   let vigStrength = smoothstep(0.12, 1.0, cam_dist);

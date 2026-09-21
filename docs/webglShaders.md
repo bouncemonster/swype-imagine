@@ -70,6 +70,7 @@ Every mode now blends its effect OVER the base PBR relief (`col = mix(col*0.2–
 - Auto-exposure target 1.8→1.1, bloom threshold 0.6→0.8 / strength 0.35→0.16, and a lighter PBR composite prevent the cream-blowout that previously hid all form and hue.
 - God rays are gated on the Ether Fog slider and reduced 8→5 `sceneSDF` samples/pixel (perf + no warm-white veil).
 - `sceneSDF` evolves structurally: `phi` drifts on golden sub-harmonics of `u_time*u_morph_speed` and iteration depth breathes ±2, so figures develop over time (morphSpeed=0 freezes). Mirrored in `ShaderManager.generateMinimalSceneSDF` and `webgpuShaders.ts`.
+- Post-processing dead-code cleanup: the 25-tap "bokeh" DOF and 5-tap "motion blur" loops averaged `col` with itself (offsets never re-sampled the scene) — mathematical no-ops that only cost GPU time; removed. The chromatic-aberration and both dither hashes had a `+ u_time` term that manifested as per-pixel flicker/grain on the slowly-evolving surface, not dispersion or banding relief; CA is now a stable radial RGB lift and the dithers are static per-pixel hashes (still break banding, no shimmer). Mirrored in `webgpuShaders.ts` (which never had the DOF/motion loops but did carry the noisy CA/dither).
 
 ## Dependencies
 - `modules/juliaVariations.ts` - 50 Julia variants (ftype 141-190)

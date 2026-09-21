@@ -3471,8 +3471,10 @@ void main() {
     rd = normalize(uv.x * uu + uv.y * vv + fov_factor * ww);
   }
 
-  // Golden ratio pseudo-dither to eliminate raymarch quantization banding
-  float dither = fract(sin(dot(uv, vec2(12.9898, 78.233)) + u_time * 0.05) * 43758.5453);
+  // Golden ratio pseudo-dither to eliminate raymarch quantization banding.
+  // Static per-pixel hash (u_time term removed): a time-varying march start jitter
+  // showed as edge flicker, while a fixed sub-epsilon offset costs nothing visually.
+  float dither = fract(sin(dot(uv, vec2(12.9898, 78.233)) * 43758.5453));
   // Adaptive near-plane: scales with camera distance to prevent slicing
   float near_clip = max(0.0001, cam_dist * 0.0005);
   float t = near_clip + 0.001 * dither;
@@ -4146,68 +4148,26 @@ void main() {
   vec3 bloomCol = col * bloomStrength + u_accent_color * bloomStrength * 0.15;
   col += bloomCol;
 
-  // DEPTH OF FIELD: Bokeh-based blur for realistic camera focus
-  // Focus distance based on camera distance, aperture based on zoom
-  float focusDistance = cam_dist * 1.2;
-  float aperture = 0.15 / max(cam_dist * 0.5, 0.5); // Wider aperture when close
-  float dofBlur = abs(t - focusDistance) * aperture / focusDistance;
-  dofBlur = clamp(dofBlur, 0.0, 1.0);
-  
-  if (dofBlur > 0.01) {
-    // Multi-sample bokeh blur (simplified 5x5 kernel)
-    vec3 blurred = vec3(0.0);
-    float total = 0.0;
-    for (int x = -2; x <= 2; x++) {
-      for (int y = -2; y <= 2; y++) {
-        vec2 offset = vec2(float(x), float(y)) * dofBlur * 0.008;
-        float weight = 1.0 - length(vec2(float(x), float(y))) / 2.83;
-        weight = max(weight, 0.0);
-        // Sample at offset (simplified - uses current color)
-        blurred += col * weight;
-        total += weight;
-      }
-    }
-    col = blurred / total;
-  }
-
-  // MOTION BLUR: Based on camera movement (simplified - uses time-based blur)
-  // Approximate motion from camera rotation speed
-  float motionSpeed = 0.0;
-  if (u_cam_mode > 0.5) {
-    // Fly-through mode - more motion blur
-    motionSpeed = 0.15;
-  } else if (u_auto_rotate > 0.5) {
-    // Auto-rotate mode - slight motion blur
-    motionSpeed = 0.05;
-  }
-  motionSpeed = clamp(motionSpeed, 0.0, 0.3);
-  if (motionSpeed > 0.01) {
-    vec3 motionCol = vec3(0.0);
-    float motionTotal = 0.0;
-    for (int mb_i = -2; mb_i <= 2; mb_i++) {
-      vec2 mbOffset = rd.xy * float(mb_i) * motionSpeed * 0.002;
-      float mbWeight = 1.0 - abs(float(mb_i)) * 0.15;
-      motionCol += col * mbWeight;
-      motionTotal += mbWeight;
-    }
-    col = mix(col, motionCol / motionTotal, motionSpeed * 0.4);
-  }
+  // DOF / MOTION BLUR (removed as dead code): the old 25-tap "bokeh" and 5-tap
+  // "motion blur" loops averaged col with itself (offsets were computed but never
+  // used to re-sample the scene), so they were a mathematical no-op that only cost
+  // GPU time and optimizer pressure. A real single-pass raymarcher cannot blur
+  // without extra sceneSDF samples; defocus was never visually present anyway.
 
   // MINIMUM BRIGHTNESS FLOOR
   col = max(col, vec3(0.004, 0.003, 0.005));
 
-  // CHROMATIC ABERRATION: Subtle color fringing for realism
-  // Simulates lens dispersion - different wavelengths focus at different distances
-  // FIX: Use distance-based CA strength for more realistic effect
-  float caStrength = 0.0015 * (1.0 + t * 0.1); // Stronger CA at distance
-  float caR = fract(sin(dot(v_uv * u_resolution + vec2(caStrength, 0.0), vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
-  float caG = fract(sin(dot(v_uv * u_resolution, vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
-  float caB = fract(sin(dot(v_uv * u_resolution + vec2(-caStrength, 0.0), vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
-  col.r += (caR - 0.5) * 0.008; // Very subtle red channel shift
-  col.b += (caB - 0.5) * 0.008; // Very subtle blue channel shift
+  // CHROMATIC ABERRATION: static radial RGB lift (lens-tint style).
+  // The old version added a time-varying hash to R/B channels — that was per-pixel
+  // flicker (grain), not dispersion. With one scene sample per pixel true CA is not
+  // possible cheaply, so keep only a stable subtle fringing driven by screen radius.
+  col.r += bg_rad * bg_rad * 0.012;
+  col.b -= bg_rad * bg_rad * 0.010;
 
-  // Color-space dither to eliminate banding in smooth gradients
-  float ditherVal = fract(sin(dot(v_uv * u_resolution, vec2(12.9898, 78.233)) + u_time * 0.07) * 43758.5453);
+  // Color-space dither to eliminate banding in smooth gradients.
+  // Static hash (u_time term removed): temporal-varying dither read as shimmer/grain
+  // on the slowly evolving surface; a fixed sub-1/128 dither still breaks banding.
+  float ditherVal = fract(sin(dot(v_uv * u_resolution, vec2(12.9898, 78.233)) * 43758.5453));
   col = col + (ditherVal - 0.5) * (1.0 / 128.0);
 
   // DEPTH FOG: Always-on exponential fog for 3D depth perception

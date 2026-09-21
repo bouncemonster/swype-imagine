@@ -239,7 +239,7 @@ export abstract class FractalEngineBase {
 
     // [44-47] palette rotation + auto_rotate + quality level
     out[44] = params.paletteRotation ? 1.0 : 0.0;
-    out[45] = params.autoRotate ? 1.0 : 0.0; // Auto-rotation flag for shader motion blur
+    out[45] = params.autoRotate ? 1.0 : 0.0; // Auto-rotation flag (camera path handles rotation; shader keeps the slot)
     out[46] = this.qualityLevel; // 0=low (mobile), 1=medium (laptop), 2=high (desktop)
     out[47] = 0.0;
 
