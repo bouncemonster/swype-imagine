@@ -1,7 +1,7 @@
 /**
- * Prefetch-cycle verification: proves that (1) the NEXT specimen's shader is
- * background-compiled while the user views the current fractal, (2) the actual
- * switch then takes the synchronous cached fast path ("Instant swap") with NO
+ * Prefetch-cycle verification: proves that (1) the NEXT TWO specimen shaders are
+ * background-compiled IN PARALLEL while the user views the current fractal, (2) the
+ * actual switch then takes the synchronous cached fast path ("Instant swap") with NO
  * "Initializing GPU" swap guard and NO "Shader swap timeout", and (3) the canvas
  * really shows the new fractal after the switch.
  * Usage: npx tsx tests/prefetch-test.ts   (dev server must be on :5173)
@@ -40,12 +40,22 @@ async function main() {
     fails.push('first frame never rendered (40s) — cannot evaluate prefetch');
   }
 
-  // 2. Background prefetch of the next exploration type (mandelbulb = fractal 1)
-  //    must START without any user interaction and must REACH READY.
+  // 2. Background prefetch of the next TWO exploration types (mandelbulb = fractal 1,
+  //    quaternionJulia = fractal 2) must START without any user interaction and the
+  //    first must REACH READY before we click.
   const prefetchStarted = await waitForLine('Prefetch: compiling shader for fractal 1', 30000);
   if (!prefetchStarted) fails.push('prefetch for fractal 1 never started after first frame');
-  const prefetchReady = await waitForLine('Prefetch ready for fractal 1', 60000);
-  if (!prefetchReady) fails.push('prefetch for fractal 1 never completed (60s)');
+  const prefetch2Started = await waitForLine('Prefetch: compiling shader for fractal 2', 30000);
+  if (!prefetch2Started) fails.push('prefetch for fractal 2 never started (2-ahead prediction broken)');
+  const prefetchReady = await waitForLine('Prefetch ready for fractal 1', 90000);
+  if (!prefetchReady) fails.push('prefetch for fractal 1 never completed (90s)');
+  // Parallelism evidence (informational): fractal 2 must be KICKED OFF before
+  // fractal 1 finishes — serial chaining would mean the ANGLE pool isn't utilized.
+  const iS1 = consoleLines.findIndex(l => l.includes('Prefetch: compiling shader for fractal 1'));
+  const iS2 = consoleLines.findIndex(l => l.includes('Prefetch: compiling shader for fractal 2'));
+  const iR1 = consoleLines.findIndex(l => l.includes('Prefetch ready for fractal 1'));
+  const parallel = iS1 >= 0 && iS2 >= 0 && iR1 >= 0 && iS2 < iR1;
+  console.log(`parallel prefetch evidence (f2 kicked before f1 ready): ${parallel}`);
 
   // 3. User-driven switch: must take the synchronous cached fast path.
   //    NB: the bottom HUD auto-hides after 3s (pointer-events-none), so a real
@@ -87,7 +97,7 @@ async function main() {
   if (fill <= 0.005) fails.push(`canvas black after prefetched switch (fill ${(fill * 100).toFixed(1)}%)`);
 
   console.log('\n=== PREFETCH TEST ===');
-  console.log(`  prefetch started: ${prefetchStarted}, ready: ${prefetchReady}`);
+  console.log(`  prefetch f1 started: ${prefetchStarted}, f2 started: ${prefetch2Started}, f1 ready: ${prefetchReady}, parallel: ${parallel}`);
   if (fails.length) {
     console.log('FAILURES:');
     fails.forEach(f => console.log('  - ' + f));

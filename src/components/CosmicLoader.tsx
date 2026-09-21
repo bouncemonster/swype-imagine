@@ -30,15 +30,15 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
   const [fadingOut, setFadingOut] = useState(false);
   const [hidden, setHidden] = useState(false);
 
-  // CRITICAL: Force-dismiss loader after 30s even if engine never becomes ready.
+  // CRITICAL: Force-dismiss loader after 60s even if engine never becomes ready.
   // Prevents infinite hang when GPU initialization fails silently. Kept well above
-  // worst-case real compile times (slow/headless GPUs measurably exceed the old 15s
-  // bound, where force-dismiss raced the genuine first frame and exposed a black
-  // canvas — caught by tests/loader-sync-test.ts pixel check).
+  // worst-case real-hardware cold start (ANGLE driver init + first shader compile
+  // measurably exceeds 30s on desktop GPUs, where an early force-dismiss raced the
+  // genuine first frame and exposed a black canvas — caught by loader-sync-test).
   useEffect(() => {
     const forceDismissTimer = setTimeout(() => {
       if (!isReady) {
-        console.warn('[CosmicLoader] Force-dismissing after 30s — engine failed to initialize');
+        console.warn('[CosmicLoader] Force-dismissing after 60s — engine failed to initialize');
         setFadingOut(true);
         const hideTimer = setTimeout(() => {
           setHidden(true);
@@ -46,7 +46,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
         }, 700);
         return () => clearTimeout(hideTimer);
       }
-    }, 30000);
+    }, 60000);
     return () => clearTimeout(forceDismissTimer);
   }, [isReady, onFinished]);
 

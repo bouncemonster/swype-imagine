@@ -76,19 +76,22 @@ export class ShaderManager {
    * A single gl.flush() at each call site kicks driver-side work; we must NOT
    * flush per-spin (flush() is a synchronous GPU-process IPC round-trip).
    *
-   * The budget must EXCEED the worst real link time (ANGLE/D3D11 defers the
-   * expensive driver compile to LINK time — up to ~11s for heavy raymarch
-   * shaders). If we gave up early we'd fall through to the synchronous
-   * COMPILE_STATUS/LINK_STATUS read, which is exactly what froze the browser.
-   * Polling until completion flips keeps the wait non-blocking; the final status
-   * read then returns instantly.
+   * The budget must EXCEED the worst real compile/link time (ANGLE/D3D11 defers
+   * the expensive driver compile to LINK time — tens of seconds for the first
+   * cold shaders on real hardware, and longer while the pool runs concurrent
+   * prefetches). If we gave up early we'd fall through to the synchronous
+   * COMPILE_STATUS/LINK_STATUS read, which is exactly what froze the browser —
+   * loader-sync-test measured a 3.4s main-thread stall that was this fall-through.
+   * 16000 spins ≈ 2.5-5 minutes of yielding polls: a hung compile is surfaced by
+   * the engine's 120s swap guard, not by a frozen tab.
    */
   private async waitUntilCompiled(poll: () => boolean, label: string): Promise<void> {
     if (!this.parallelCompile) {
       await new Promise<void>(resolve => setTimeout(resolve, 0));
       return;
     }
-    const budget = label === 'link' ? 3200 : 800;
+    const budget = 16000; // 'link' and 'frag' alike — both can outlive a small budget
+    void label;
     for (let spins = 0; spins < budget; spins++) {
       if (poll()) return;
       await new Promise<void>(resolve => setTimeout(resolve, 5));
@@ -348,15 +351,16 @@ export class ShaderManager {
     }
     
     this.reportProgress(fractalIndex, 'compiling', 40);
-    const program = await this.compileShaderProgram(vertexShaderSource, fragmentSource);
+    const program = await this.compileShaderProgram(vertexShaderSource, fragmentSource, fractalIndex);
     this.reportProgress(fractalIndex, 'linking', 80);
     this.cacheShader(fractalIndex, program);
     this.reportProgress(fractalIndex, 'complete', 100);
     return program;
   }
 
-  private async compileShaderProgram(vertexSource: string, fragmentSource: string): Promise<WebGLProgram> {
+  private async compileShaderProgram(vertexSource: string, fragmentSource: string, fractalIndex: number): Promise<WebGLProgram> {
     const vertexShader = await this.compileShaderStage(this.gl.VERTEX_SHADER, vertexSource);
+    this.reportProgress(fractalIndex, 'compiling', 50); // vertex done, fragment (the heavy one) next
     let fragmentShader: WebGLShader;
     try {
       fragmentShader = await this.compileShaderStage(this.gl.FRAGMENT_SHADER, fragmentSource);
@@ -365,6 +369,9 @@ export class ShaderManager {
       this.gl.deleteShader(vertexShader);
       throw e;
     }
+    this.reportProgress(fractalIndex, 'linking', 65); // ANGLE/D3D11 defers the real driver
+    // compile to link time — this is the longest wait, so surface a distinct mark for it
+    // instead of a flat plateau between 40% and 80%.
     const program = this.gl.createProgram()!;
     this.gl.attachShader(program, vertexShader);
     this.gl.attachShader(program, fragmentShader);

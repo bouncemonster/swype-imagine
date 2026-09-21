@@ -19,8 +19,8 @@ interface FractalCanvasProps {
   onPrevSpecimen?: () => void;
   onEngineReady?: () => void;
   onLoadProgress?: (progress: number) => void;
-  /** Predicted next specimen type — engine background-prefetches its shader while the current one is viewed. */
-  nextSpecimenType?: FractalType | null;
+  /** Predicted next specimen types (1st + 2nd ahead) — engine background-prefetches their shaders in parallel while the current one is viewed. */
+  nextSpecimenTypes?: FractalType[];
   scrollMode?: 'feed' | 'zoom';
 }
 ```
@@ -47,7 +47,7 @@ This feeds the CosmicLoader pipeline: device init → shader compile stages → 
 3. `key={activeEngineType}` - forces fresh canvas context on backend switch
 4. `paramsRef` - keeps animation loop stable without re-subscribing
 5. Embedded browser detection (Qoder, Electron) → forces WebGL2
-6. `isCompiling` overlay (`#gpu-pipeline-loading-overlay`) shows while GPU pipeline compiles shaders
+6. `isCompiling` overlay (`#gpu-pipeline-loading-overlay`) shows while GPU pipeline compiles shaders; during a cold swap it renders the REAL compile percentage (`shaderCompilePct` from `engine.getSwapProgress()`) with a small progress bar — no blind pulse
 
 ## Interaction Tracking
 - `onInteraction?.(zoomDelta, 0)` - zoom magnitude on wheel (line 111) and pinch (line 142)

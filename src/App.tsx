@@ -247,20 +247,22 @@ export default function App() {
     return () => clearInterval(interval);
   }, [autoExplore]);
 
-  // Predicted next specimen type — drives the engine's background shader prefetch so
-  // the upcoming figure is already compiled while the user still views the current one.
-  const [nextSpecimenType, setNextSpecimenType] = useState<FractalType | null>(null);
+  // Predicted next specimen types (1st and 2nd ahead) — drive the engine's parallel
+  // background shader prefetch so upcoming figures are already compiled while the user
+  // still views the current one.
+  const [nextSpecimenTypes, setNextSpecimenTypes] = useState<FractalType[]>([]);
   useEffect(() => {
     if (!neuroEngine) return;
     if (autoExplore) {
-      // The auto-explore march is deterministic — compute the NEXT tick's type.
+      // The auto-explore march is deterministic — compute the next two ticks' types.
       const step = Math.round(PHI_INV * ALL_FRACTAL_TYPES.length);
-      const nextIdx = (exploreIndexRef.current + step) % ALL_FRACTAL_TYPES.length;
-      setNextSpecimenType(ALL_FRACTAL_TYPES[nextIdx]);
+      const len = ALL_FRACTAL_TYPES.length;
+      const nextIdx = (exploreIndexRef.current + step) % len;
+      setNextSpecimenTypes([ALL_FRACTAL_TYPES[nextIdx], ALL_FRACTAL_TYPES[(nextIdx + step) % len]]);
     } else {
-      // Feed navigation: exact for history replay and exploration mode, null when
-      // the next breed is stochastic (no blind prefetch).
-      setNextSpecimenType(neuroEngine.peekNextSpecimenType());
+      // Feed navigation: exact for history replay and exploration mode, empty when
+      // the next breeds are stochastic (no blind prefetch).
+      setNextSpecimenTypes(neuroEngine.peekNextSpecimenTypes(2));
     }
   }, [neuroEngine, autoExplore, currentSpecimen, params.type]);
 
@@ -607,7 +609,7 @@ export default function App() {
         onPrevSpecimen={handlePrevSpecimen}
         onEngineReady={() => setIsEngineReady(true)}
         onLoadProgress={setLoadProgress}
-        nextSpecimenType={nextSpecimenType}
+        nextSpecimenTypes={nextSpecimenTypes}
         scrollMode={scrollMode}
       />
 

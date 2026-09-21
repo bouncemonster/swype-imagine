@@ -1034,20 +1034,23 @@ export class NeuroAestheticsEngine {
   /**
    * Predict the fractal type the NEXT forward navigation will show, WITHOUT any
    * state mutation — lets the renderer pre-compile its shader in the background
-   * while the user still views the current specimen. Returns null when the next
-   * pick is stochastic (post-exploration Thompson sampling) so no blind prefetch
-   * wastes LRU slots.
+   * while the user still views the current specimen. Returns an empty array when the
+   * next picks are stochastic (post-exploration Thompson sampling) so no blind
+   * prefetch wastes LRU slots.
    */
-  public peekNextSpecimenType(): FractalType | null {
-    // Next "Далее" replays an existing history item — its type is known exactly.
-    if (this.currentSpecimenIndex < this.history.length - 1) {
-      return this.history[this.currentSpecimenIndex + 1].type;
+  public peekNextSpecimenTypes(count = 2): FractalType[] {
+    const out: FractalType[] = [];
+    // Next "Далее" clicks replay existing history items — their types are known exactly.
+    for (let i = this.currentSpecimenIndex + 1; i < this.history.length && out.length < count; i++) {
+      out.push(this.history[i].type);
     }
-    // At the tail: exploration mode breeds the next sequential type — also exact.
-    if (this.EXPLORATION_MODE && this.explorationIndex < ALL_FRACTAL_TYPES.length) {
-      return ALL_FRACTAL_TYPES[this.explorationIndex];
+    // At/past the tail: exploration mode breeds the next sequential types — also exact.
+    if (this.EXPLORATION_MODE) {
+      for (let k = this.explorationIndex; out.length < count && k < ALL_FRACTAL_TYPES.length; k++) {
+        out.push(ALL_FRACTAL_TYPES[k]);
+      }
     }
-    return null;
+    return out;
   }
 
   public getHistory(): FractalSpecimen[] {

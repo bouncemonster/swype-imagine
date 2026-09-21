@@ -20,14 +20,26 @@ export class WebGLEngine extends FractalEngineBase {
   private packedUniforms = new Float32Array(48);
   private lastLoggedFractalType: string = '';
   private isSwappingShader = false; // Guard against re-entrant render during shader swap
-  private swapFrameCount = 0; // Safety: auto-reset isSwappingShader if compilation hangs
+  // Safety for the swap guard is TIME-based, not frame-based: cold ANGLE/D3D11
+  // driver compiles on real hardware measurably exceed 5s (the old 301-frame
+  // budget), and firing mid-wait both spammed "Shader swap timeout" and made the
+  // loading chip flicker off/re-arm every 5s. 120s only trips on a genuinely hung compile.
+  private swapStartTime = 0;
+  private swapTargetIdx = -1;
   // Warmup: first frames of a freshly compiled shader run at quality 0 so the
   // GPU/driver ramp-up can't spike frame times and make the browser unresponsive;
   // DynamicQuality in useRenderEngine raises quality again once FPS is stable.
   private warmupFramesLeft = 0;
   private preSwapQuality = 1;
-  // Fractal indices whose shaders are being background-prefetched (see prefetchFractal)
+  // Fractal indices whose shaders are being background-prefetched (see prefetchFractal).
+  // ANGLE compiles shaders on its own thread pool (KHR_parallel_shader_compile), so up to
+  // PREFETCH_CONCURRENCY may be in flight — this is what makes cold-start usable: figures
+  // 1 and 2 compile concurrently with figure 0 instead of serially after it.
+  private static readonly PREFETCH_CONCURRENCY = 2;
   private prefetching = new Set<number>();
+  // Latest ShaderManager stage percent per fractal index — surfaces REAL compile
+  // progress (10/40/80/100) on the swap chip instead of a blind pulse animation.
+  private compilePctByIndex = new Map<number, number>();
 
   /** Uniform names cached per program — single source to avoid list drift. */
   private static readonly UNIFORM_NAMES = [
@@ -152,6 +164,7 @@ export class WebGLEngine extends FractalEngineBase {
     // Initialize ShaderManager for lazy compilation
     this.shaderManager = new ShaderManager(gl, (progress) => {
       console.info(`[ShaderManager] ${progress.stage}: ${progress.fractalName} (${progress.progress}%)`);
+      this.compilePctByIndex.set(progress.fractalIndex, progress.progress);
       this.onCompileProgress?.(progress.stage, progress.progress);
     });
 
@@ -240,9 +253,12 @@ export class WebGLEngine extends FractalEngineBase {
       return;
     }
     gl.flush(); // ONE kickoff so the GPU process starts compile/link; never flush per-spin
-    // Budget must exceed worst-case driver link time (~11s for heavy raymarch
-    // shaders) so we keep yielding instead of falling through to the blocking read.
-    for (let spins = 0; spins < 3200; spins++) {
+    // Budget must exceed worst-case real driver compile/link time — cold ANGLE/D3D11
+    // link of the monolithic fallback shader can take tens of seconds. Exhausting the
+    // budget early would fall through to the blocking status read and freeze the tab
+    // (same pitfall measured in loader-sync-test). A hung compile is caught by the
+    // 120s swap guard in render(), not by a short poll budget here.
+    for (let spins = 0; spins < 16000; spins++) {
       if (readStatus(COMPLETION_STATUS_KHR)) return;
       await new Promise<void>(resolve => setTimeout(resolve, 5));
     }
@@ -374,12 +390,14 @@ export class WebGLEngine extends FractalEngineBase {
   }
 
   /**
-   * True when background prefetching is safe: initial shader is up (currentFractalIdx
-   * >= 0 means the first lazy compile finished), no real swap in progress, and no
-   * other prefetch is already occupying the driver's compile queue.
+   * True when background prefetching is safe: GL context + ShaderManager are up and
+   * no real swap is in flight (a waiting user must not share the driver's compile
+   * pool with extra work). Up to PREFETCH_CONCURRENCY prefetches may run at once —
+   * they do NOT need the first fractal to be rendered yet, which is what lets the
+   * cold-start chain (figures 1 and 2) overlap figure 0's compile.
    */
   public get canPrefetch(): boolean {
-    return !!this.gl && !this.isSwappingShader && this.currentFractalIdx >= 0 && this.prefetching.size === 0;
+    return !!this.gl && !!this.shaderManager && !this.isSwappingShader && this.prefetching.size < WebGLEngine.PREFETCH_CONCURRENCY;
   }
 
   /**
@@ -391,6 +409,7 @@ export class WebGLEngine extends FractalEngineBase {
    */
   public prefetchFractal(fractalIdx: number): void {
     if (!this.gl || !this.shaderManager || !this.canPrefetch) return;
+    if (fractalIdx === this.currentFractalIdx || this.prefetching.has(fractalIdx)) return;
     if (this.shaderManager.isCached(fractalIdx)) return;
     this.prefetching.add(fractalIdx);
     console.info(`[WebGL2] Prefetch: compiling shader for fractal ${fractalIdx} in background...`);
@@ -398,6 +417,17 @@ export class WebGLEngine extends FractalEngineBase {
       .then(() => console.info(`[WebGL2] Prefetch ready for fractal ${fractalIdx}`))
       .catch(err => console.warn(`[WebGL2] Prefetch failed for fractal ${fractalIdx}:`, (err as Error)?.message ?? err))
       .finally(() => this.prefetching.delete(fractalIdx));
+  }
+
+  /**
+   * Real compile progress (0-100) of the swap the user is currently waiting on —
+   * read by the UI to show "Initializing GPU… 40%" driven by actual ShaderManager
+   * stages rather than an indeterminate pulse.
+   */
+  public getSwapProgress(): number {
+    if (this.swapTargetIdx < 0) return 100;
+    if (this.shaderManager?.isCached(this.swapTargetIdx)) return 100;
+    return this.compilePctByIndex.get(this.swapTargetIdx) ?? 5;
   }
 
   /**
@@ -409,6 +439,7 @@ export class WebGLEngine extends FractalEngineBase {
     if (!this.gl || !this.vao) return false;
     this.program = program;
     this.currentFractalIdx = fractalIdx;
+    this.swapTargetIdx = -1;
     this.cacheUniformLocations(program);
     this.shaderManager?.setProtectedIndices([fractalIdx]);
     console.info(`[WebGL2] Instant swap to cached shader for fractal ${fractalIdx} (prefetched)`);
@@ -429,12 +460,14 @@ export class WebGLEngine extends FractalEngineBase {
 
     // Guard: don't re-enter render during shader swap
     if (this.isSwappingShader) {
-      this.swapFrameCount++;
-      // Safety: reset after ~5s (300 frames at 60fps) in case compilation hung
-      if (this.swapFrameCount > 300) {
-        console.warn('[WebGL2] Shader swap timeout — resetting after', this.swapFrameCount, 'frames');
+      // Time-based safety valve (see swapStartTime comment): real cold driver compiles
+      // take tens of seconds — the guard must stay up for the whole wait so the chip
+      // shows one continuous honest progress instead of flickering every ~5s.
+      if (performance.now() - this.swapStartTime > 120000) {
+        console.warn('[WebGL2] Shader swap timeout — resetting after', Math.round((performance.now() - this.swapStartTime) / 1000), 's');
         this.isSwappingShader = false;
-        this.swapFrameCount = 0;
+        this.swapStartTime = 0;
+        this.swapTargetIdx = -1;
       }
       return false;
     }
@@ -467,14 +500,17 @@ export class WebGLEngine extends FractalEngineBase {
           // this very frame already draws the new fractal (no skip, no overlay).
         } else {
           this.isSwappingShader = true;
-          this.swapFrameCount = 0;
+          this.swapStartTime = performance.now();
+          this.swapTargetIdx = indices.fractalIdx;
           this.lazyCompileShader(indices.fractalIdx).then(() => {
             this.isSwappingShader = false;
-            this.swapFrameCount = 0;
+            this.swapStartTime = 0;
+            this.swapTargetIdx = -1;
           }).catch(err => {
             console.error('[WebGL2] Lazy compile failed, using full shader:', err);
             this.isSwappingShader = false;
-            this.swapFrameCount = 0;
+            this.swapStartTime = 0;
+            this.swapTargetIdx = -1;
           });
         }
       }

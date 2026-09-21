@@ -13,9 +13,10 @@ export interface UseRenderEngineOptions {
   onEngineReady?: () => void;
   onNextSpecimen?: () => void;
   onPrevSpecimen?: () => void;
-  // Predicted fractal type of the NEXT specimen — its shader is background-
-  // prefetched while the user views the current one (see prefetch effect).
-  nextSpecimenType?: FractalType | null;
+  // Predicted fractal types of the NEXT specimens (1st and 2nd ahead) — their shaders
+  // are background-prefetched in parallel while the user views the current one
+  // (see prefetch effect).
+  nextSpecimenTypes?: FractalType[] | null;
   onInteraction?: (zoomDelta: number, orbitDelta: number) => void;
   screenshotRequested: boolean;
   onScreenshotCaptured: (dataUrl: string) => void;
@@ -24,6 +25,9 @@ export interface UseRenderEngineOptions {
 export interface UseRenderEngineResult {
   activeEngineType: 'webgpu' | 'webgl2';
   isCompiling: boolean;
+  // Real compile progress (0-100, 0 = unknown) of the shader swap the user is
+  // waiting on — drives the "Initializing GPU… N%" chip instead of a blind pulse.
+  shaderCompilePct: number;
   isEngineReady: boolean;
   // True when BOTH WebGPU and WebGL2 failed to initialize (silent failure — no throw,
   // so the React error boundary does not catch it). Lets the UI show a clear
@@ -63,7 +67,7 @@ export function useRenderEngine(
     onEngineReady,
     onNextSpecimen,
     onPrevSpecimen,
-    nextSpecimenType,
+    nextSpecimenTypes,
     onInteraction,
     screenshotRequested,
     onScreenshotCaptured,
@@ -82,6 +86,7 @@ export function useRenderEngine(
   });
 
   const [isCompiling, setIsCompiling] = useState<boolean>(true);
+  const [shaderCompilePct, setShaderCompilePct] = useState<number>(0);
   const [isEngineReady, setIsEngineReady] = useState<boolean>(false);
   const [initFailed, setInitFailed] = useState<boolean>(false);
   // Real loading progress (0-1) synced to actual device init + shader compile +
@@ -208,12 +213,16 @@ export function useRenderEngine(
     handleResize();
     let isDestroyed = false;
 
+    // Failsafe only — must stay ABOVE worst-case real-hardware cold compile (ANGLE
+    // driver init + first shaders measurably exceed 12s on desktop GPUs, so a 12s
+    // cut exposed the undrawn canvas mid-init). The honest dismissal is the first
+    // rendered frame; this only trips on a genuinely hung pipeline.
     const forceHideTimeoutId = setTimeout(() => {
-      if (!isDestroyed) {
-        console.info('[useRenderEngine] Force-hiding loading overlay after 12s');
+      if (!isDestroyed && !firstRenderDoneRef.current) {
+        console.info('[useRenderEngine] Force-hiding loading overlay after 60s (engine never produced a first frame)');
         setIsCompiling(false);
       }
-    }, 12000);
+    }, 60000);
 
     const setupTimeoutId = setTimeout(() => {
       if (!engineReadyRef.current && !isDestroyed) {
@@ -229,6 +238,9 @@ export function useRenderEngine(
       setIsCompiling(true);
       setInitFailed(false);
       engineReadyRef.current = false;
+      // Per-engine first-frame bookkeeping: a backend re-init must earn its own
+      // first rendered frame before the loader/overlay dismissal logic counts it.
+      firstRenderDoneRef.current = false;
       setIsEngineReady(false);
 
       if (webgpuEngineRef.current) {
@@ -528,6 +540,10 @@ export function useRenderEngine(
                 swapGraceStartRef.current = performance.now();
               } else if (performance.now() - swapGraceStartRef.current > 400) {
                 setIsCompiling(true);
+                // Honest percentage from the engine's live ShaderManager stages —
+                // identical value most frames, so React bails without re-renders.
+                setShaderCompilePct(typeof (activeEngine as any).getSwapProgress === 'function'
+                  ? (activeEngine as any).getSwapProgress() : 0);
               }
             } else {
               swapGraceStartRef.current = 0;
@@ -559,6 +575,7 @@ export function useRenderEngine(
             } else if (!isSwapping) {
               // Swap completed — hide overlay
               setIsCompiling(false);
+              setShaderCompilePct(0);
             }
           } catch (renderErr) {
             console.error('[useRenderEngine] Render frame error:', renderErr);
@@ -676,12 +693,16 @@ export function useRenderEngine(
   }, [activeEngineType]);
 
   // Background prefetch: while the user views/controls the current fractal, pre-compile
-  // the predicted next specimen's shader into the WebGL engine's LRU cache (non-blocking
-  // KHR poll loop, GPU-process side). The actual switch then takes the synchronous
-  // cached fast path — no skipped frames, no "Initializing GPU" chip. Retries until the
-  // engine reports prefetch safety (initial compile done, no swap in flight).
+  // the predicted NEXT (and next-after-that) specimen shaders into the WebGL engine's
+  // LRU cache in parallel (non-blocking KHR poll loop, GPU-process side). The actual
+  // switch then takes the synchronous cached fast path — no skipped frames, no
+  // "Initializing GPU" chip. Two-ahead + parallel in flight is what covers the fast
+  // clicker: on real hardware one cold ANGLE compile still takes seconds-to-tens-of-
+  // seconds, so a single serial prefetch could not finish before the next click.
+  // Retries until the engine reports prefetch safety (no swap in flight, queue room).
   useEffect(() => {
-    if (!nextSpecimenType) return;
+    const types = (nextSpecimenTypes ?? []).filter(Boolean) as FractalType[];
+    if (!types.length) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const tryPrefetch = () => {
@@ -691,18 +712,20 @@ export function useRenderEngine(
         // WebGPU backend has no prefetch path — stop instead of spinning forever;
         // while WebGL is still setting up, keep retrying until the ref exists.
         if (activeEngineType === 'webgpu') return;
-        timer = setTimeout(tryPrefetch, 2000);
+        timer = setTimeout(tryPrefetch, 1000);
         return;
       }
       if (engine.canPrefetch) {
-        engine.prefetchFractal(getFractalIndex(nextSpecimenType));
+        // prefetchFractal self-gates on canPrefetch/queue room, so listing every
+        // predicted type just fills the parallel queue by priority order.
+        for (const t of types) engine.prefetchFractal(getFractalIndex(t));
         return;
       }
-      timer = setTimeout(tryPrefetch, 2000);
+      timer = setTimeout(tryPrefetch, 1000);
     };
-    timer = setTimeout(tryPrefetch, 1000); // let the current swap/first frames settle
+    timer = setTimeout(tryPrefetch, 300); // let the engine ref appear / current swap settle
     return () => { cancelled = true; if (timer) clearTimeout(timer); };
-  }, [nextSpecimenType, activeEngineType]);
+  }, [nextSpecimenTypes, activeEngineType]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -822,6 +845,7 @@ export function useRenderEngine(
   return {
     activeEngineType,
     isCompiling,
+    shaderCompilePct,
     isEngineReady,
     initFailed,
     loadProgress,

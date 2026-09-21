@@ -3,7 +3,7 @@
 **181 lines | Loading screen with real progress-driven phases**
 
 ## Purpose
-Full-screen loading overlay shown during GPU initialization. Displays animated fractal emblem and a progress bar driven by REAL engine load progress (device init + shader compile + first rendered frame). Force-dismisses after 15 seconds if engine fails.
+Full-screen loading overlay shown during GPU initialization. Displays animated fractal emblem and a progress bar driven by REAL engine load progress (device init + shader compile + first rendered frame). Force-dismisses after 60 seconds if engine fails.
 
 ## Props Interface (lines 3-8)
 ```typescript
@@ -80,7 +80,7 @@ CosmicLoader   → progress bar width + stageIndex-derived phase text
 useEffect(() => {
   const forceDismissTimer = setTimeout(() => {
     if (!isReady) {
-      console.warn('[CosmicLoader] Force-dismissing after 30s — engine failed to initialize');
+      console.warn('[CosmicLoader] Force-dismissing after 60s — engine failed to initialize');
       setFadingOut(true);
       const hideTimer = setTimeout(() => {
         setHidden(true);
@@ -92,7 +92,7 @@ useEffect(() => {
   return () => clearTimeout(forceDismissTimer);
 }, [isReady, onFinished]);
 ```
-**Safety mechanism**: Force-dismisses after 30 seconds if engine never becomes ready. Prevents infinite hang on GPU initialization failure. Raised from the old 15 s bound because slow/headless ANGLE compiles measurably exceed it (first frame ≈16 s), and the 15 s timer raced the genuine first frame, detaching over a black canvas — caught by the pixel readback check in `tests/loader-sync-test.ts`.
+**Safety mechanism**: Force-dismisses after 60 seconds if engine never becomes ready. Prevents infinite hang on GPU initialization failure. Raised from 30 s because real-hardware cold ANGLE starts (driver init + first shader compile) measurably exceed it, and an early force-dismiss races the genuine first frame, detaching over a black canvas — caught by the pixel readback check in `tests/loader-sync-test.ts`.
 
 ## Normal Dismiss (lines 50-63)
 ```typescript

@@ -15,9 +15,10 @@ interface FractalCanvasProps {
   onPrevSpecimen?: () => void;
   onEngineReady?: () => void;
   onLoadProgress?: (progress: number) => void;
-  // Predicted next specimen type — its shader is background-prefetched by the engine
-  // while the user views the current fractal, making the switch instant.
-  nextSpecimenType?: FractalType | null;
+  // Predicted next specimen types (1st and 2nd ahead) — their shaders are background-
+  // prefetched in parallel by the engine while the user views the current fractal,
+  // making the upcoming switches instant.
+  nextSpecimenTypes?: FractalType[] | null;
   scrollMode?: 'feed' | 'zoom';
 }
 
@@ -33,7 +34,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   onPrevSpecimen,
   onEngineReady,
   onLoadProgress,
-  nextSpecimenType,
+  nextSpecimenTypes,
   scrollMode = 'feed',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,13 +69,13 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     onEngineReady,
     onNextSpecimen,
     onPrevSpecimen,
-    nextSpecimenType,
+    nextSpecimenTypes,
     onInteraction,
     screenshotRequested,
     onScreenshotCaptured,
   });
 
-  const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling, initFailed, loadProgress, stopRotation, toggleInertia, inertiaEnabledRef } = engine;
+  const { canvasRef, isDraggingRef, velocityRef, lastMousePosRef, lastInteractionReportTimeRef, lastMoveTimeRef, activeEngineType, isCompiling, shaderCompilePct, initFailed, loadProgress, stopRotation, toggleInertia, inertiaEnabledRef } = engine;
 
   // Surface REAL loading progress (device init + shader compile + first frame) so
   // the top-level loader can sync its animation to actual initialization time.
@@ -263,15 +264,30 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         </div>
       )}
 
-      {/* Visual indicator when GPU pipeline is compiling shaders */}
+      {/* Visual indicator when GPU pipeline is compiling shaders. The percentage is the
+          REAL ShaderManager stage progress of the pending swap (getSwapProgress), so on
+          slow cold compiles the user sees honest movement instead of a blind pulse. */}
       {isCompiling && (
         <div
           id="gpu-pipeline-loading-overlay"
           className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-950/60 backdrop-blur-xs pointer-events-none transition-opacity duration-300"
         >
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/90 border border-amber-500/30 text-amber-300 text-xs font-mono shadow-2xl animate-pulse">
-            <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <span>Initializing GPU ({activeEngineType === 'webgpu' ? 'WebGPU WGSL' : 'WebGL2 GLSL'})...</span>
+          <div className="flex flex-col items-center gap-2 px-4 py-2.5 rounded-2xl bg-neutral-900/90 border border-amber-500/30 text-amber-300 text-xs font-mono shadow-2xl">
+            <div className="flex items-center gap-2 animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <span>
+                Initializing GPU ({activeEngineType === 'webgpu' ? 'WebGPU WGSL' : 'WebGL2 GLSL'})
+                {shaderCompilePct > 0 ? ` — ${shaderCompilePct}%` : '...'}
+              </span>
+            </div>
+            {shaderCompilePct > 0 && (
+              <div className="w-44 h-1 rounded-full bg-neutral-800 overflow-hidden">
+                <div
+                  className="h-full bg-amber-400/80 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min(shaderCompilePct, 100)}%` }}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
