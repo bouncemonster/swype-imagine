@@ -10,7 +10,7 @@
 | [WebGLEngine.ts](../src/engine/WebGLEngine.ts) | 523 | 23KB | WebGL2 renderer |
 | [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | 239 | 8.7KB | WebGPU renderer |
 | [useRenderEngine.ts](../src/hooks/useRenderEngine.ts) | 782 | 34KB | React hook, lifecycle, render loop |
-| [webglShaders.ts](../src/shaders/webglShaders.ts) | 4195 | 161KB | GLSL shaders, 431 SDFs, 7 modes |
+| [webglShaders.ts](../src/shaders/webglShaders.ts) | 4195 | 161KB | GLSL shaders, 431 SDFs, 10 modes |
 | [webgpuShaders.ts](../src/shaders/webgpuShaders.ts) | 4070 | 159KB | WGSL shaders |
 
 ## Detailed Analysis

@@ -32,9 +32,10 @@ export class WebGLEngine extends FractalEngineBase {
   private warmupFramesLeft = 0;
   private preSwapQuality = 1;
   // Fractal indices whose shaders are being background-prefetched (see prefetchFractal).
-  // ANGLE compiles shaders on its own thread pool (KHR_parallel_shader_compile), so up to
-  // PREFETCH_CONCURRENCY may be in flight — this is what makes cold-start usable: figures
-  // 1 and 2 compile concurrently with figure 0 instead of serially after it.
+  // ANGLE exposes a compile thread pool (KHR_parallel_shader_compile) so up to
+  // PREFETCH_CONCURRENCY may be in flight, but the driver-side LINK step is effectively
+  // serialized — so the CALLER (useRenderEngine) holds prefetch back until the first real
+  // frame is painted, then warms the next figures for instant subsequent switches.
   private static readonly PREFETCH_CONCURRENCY = 2;
   private prefetching = new Set<number>();
   // Latest ShaderManager stage percent per fractal index — surfaces REAL compile
@@ -392,9 +393,11 @@ export class WebGLEngine extends FractalEngineBase {
   /**
    * True when background prefetching is safe: GL context + ShaderManager are up and
    * no real swap is in flight (a waiting user must not share the driver's compile
-   * pool with extra work). Up to PREFETCH_CONCURRENCY prefetches may run at once —
-   * they do NOT need the first fractal to be rendered yet, which is what lets the
-   * cold-start chain (figures 1 and 2) overlap figure 0's compile.
+   * pool with extra work). Up to PREFETCH_CONCURRENCY prefetches may run at once.
+   * NOTE: this getter does not itself check the first-frame state — the cold-start
+   * hold (do not prefetch until figure 0 has painted) is enforced by the caller in
+   * useRenderEngine, because ANGLE serializes the driver-side link and overlapping
+   * prefetch onto the critical path delays the very first frame the user waits for.
    */
   public get canPrefetch(): boolean {
     return !!this.gl && !!this.shaderManager && !this.isSwappingShader && this.prefetching.size < WebGLEngine.PREFETCH_CONCURRENCY;

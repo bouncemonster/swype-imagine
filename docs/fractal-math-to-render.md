@@ -17,7 +17,7 @@ FractalType string  →  getFractalIndex()  →  u_fractal_type (float, uniform 
                                                  ↓
                               raymarch:  step = |DE| · relax(0.85–1.05), capped 0.5, sign-tracked
                               normals: tetrahedral gradient of sceneSDF().x
-                              color:   palette( sceneSDF().y orbitTrap , … ) + 7 render styles
+                              color:   palette( sceneSDF().y orbitTrap , … ) + 10 render styles
 ```
 
 So the **single most important math→render factor is the quality of the Distance Estimator**
@@ -143,3 +143,28 @@ recurrence line — as happened to Julia's tricorn/burning-ship branches. The ha
   sweeps through 5 bases. Prefer quoting "431 catalogue types drawn from ~146 distinct distance
   estimators across 9 mathematical families." (§4's 19 aliases are extra union names outside the 431
   and do not inflate the headline.)
+
+## 6. Render-mechanics audit (the shared footer style dispatch)
+
+The render styles are not per-fractal code — they live in the **shared footer** of every shader
+(GLSL `webglShaders.ts` / WGSL `webgpuShaders.ts`), dispatched by `if (u_render_style > X.5 && u_render_style < Y.5)`.
+Because the footer reaches all spliced and monolith shaders, a defect here affects every figure at once.
+Audit findings that led to the current 10-style set:
+
+- **Open-ended dispatch catch-all (fixed).** Gemstone was the last branch and tested only `> 5.5`
+  with no upper bound, so *any* out-of-range `render_style` silently rendered as gemstone instead of
+  falling through to the solid default. Adding styles 7/8/9 made this a correctness hazard (an interim
+  index mismatch would have shown the wrong effect). Every stylized branch is now a bounded `> X.5 && < Y.5`
+  window; `fractal-autotest.ts` asserts each new window string exists in BOTH shaders.
+- **Per-style `sceneSDF` re-evaluation is an FPS sink (documented, not removed).** Gemstone computes two
+  extra full `sceneSDF()` evaluations per pixel for its internal-reflection bounces (~3× the field cost of a
+  single shade). This is deliberate light transport, kept for the look, but it is the heaviest style on the
+  timeline and interacts with `DynamicQuality`; recorded here so it is a conscious trade-off.
+- **Style identity must survive the palette.** A stylized mode that rebuilds `col` purely from palette colors
+  flattens the 3D form; every style (including the 3 new ones) carries the shared `relief` factor + a `baseCol`
+  sliver so geometry reads through any palette. The new **Heatmap (8)** deliberately leans on `steps`/iteration
+  density (the escape-time math itself) rather than surface shading — it is the closest style to "showing the raw
+  iteration count", complementing **Wireframe (7)** (shows the DE fold lattice) and **Neon (9)** (edge-only rim).
+- **Naming drift (cosmetic).** Internal ids `quantum`/`gemstone`/`iridescent` differ from the UI labels
+  "Плазма"/"Кристалл"/"Перламутр". Harmless (ids are stable, labels are display-only) but noted so a future
+  rename touches both, not just one.

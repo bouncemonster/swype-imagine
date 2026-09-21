@@ -3,7 +3,7 @@
 **4195 lines | 161KB | GLSL ES 3.0 shaders**
 
 ## Purpose
-Complete WebGL2 shader pipeline: vertex shader, fragment shader, 131 inline SDF map functions + 5 parameterized variant families, 7 render modes, post-processing. All 431 fractal type indices (0-430) dispatch through this fragment shader.
+Complete WebGL2 shader pipeline: vertex shader, fragment shader, 131 inline SDF map functions + 5 parameterized variant families, 10 render modes, post-processing. All 431 fractal type indices (0-430) dispatch through this fragment shader.
 
 ## Structure
 ```
@@ -19,7 +19,7 @@ Complete WebGL2 shader pipeline: vertex shader, fragment shader, 131 inline SDF 
    - evalSingleFractal() - dispatch for ALL 431 indices (lines 2893-3060)
    - sceneSDF() - composite evaluation (line 3115)
    - Lighting (soft shadows, SSS, AO, reflections)
-   - 7 render modes (solid, xray, topo, hologram, iridescent, quantum, gemstone)
+   - 10 render modes (solid, xray, topo, hologram, iridescent, quantum, gemstone, wireframe, heatmap, neon)
    - Post-processing (ACES, bloom, DOF, motion blur, god rays, vignette)
    - main() - entry point (line 3396)
 ```
@@ -60,7 +60,7 @@ All 431 type indices dispatch here: explicit `ftype == 0…140` branches for Man
 Headless screenshots (mandelbulb, all 7 modes) exposed two artifact classes and they are now fixed:
 - **Flat-blob collapse**: every stylized mode replaced `col` with a flat palette-derived color, so the 3D form vanished. A shared `relief` factor (normalized luminance of the shaded base PBR pass) now multiplies each style's color and a `baseCol` sliver is retained (`col = mix(baseCol*0.3–0.45, styleCol*relief, 0.7–0.82)`), so the figure stays three-dimensional on any palette.
 - **Moire + temporal flicker**: high-frequency decorative patterns (topo contours, hologram scanlines/hex grid, quantum interference rings) aliased into noise at distance, and `+ u_time` terms (hologram glitch/shimmer, quantum waves) read as per-frame grain. All pattern widths are now derived from `fwidth()` (fade instead of alias) and the time terms are slowed/removed.
-- **Cross-engine parity**: the full style rework (relief-carrier + `fwidth()` anti-aliasing + de-flicker + boundary fade) is now mirrored to WGSL in `webgpuShaders.ts`, so WebGL2 and WebGPU render the 7 modes identically. Force WebGPU on any deep-link with `#engine=webgpu`.
+- **Cross-engine parity**: the full style rework (relief-carrier + `fwidth()` anti-aliasing + de-flicker + boundary fade) is now mirrored to WGSL in `webgpuShaders.ts`, so WebGL2 and WebGPU render the modes identically. Force WebGPU on any deep-link with `#engine=webgpu`.
 
 Modes and their palette-independent identity:
 0: solid - PBR with AO, soft shadows, SSS (exposure rebased into ACES chromatic region)
@@ -70,6 +70,11 @@ Modes and their palette-independent identity:
 4: iridescent - Thin-film interference (relief-preserving)
 5: quantum - Cold-cyan→hot-magenta field (halved spatial freq, slowed drift = no racing rings)
 6: gemstone - Prismatic cast + Beer-Lambert + caustics (relief-preserving)
+7: wireframe - Structural coordinate lattice the DE folds over, `fwidth()`-AA grid + depth fade
+8: heatmap - Blackbody colormap of escape-time density (`steps`), the most literal read of the iteration math
+9: neon - Emissive Fresnel rim contour on near-black (only surface edges emit; faint core keeps silhouette)
+
+Style dispatch is bounded: every stylized branch tests `> X.5 && < Y.5`, so an out-of-range `render_style` falls through to the solid default rather than being swallowed by an open-ended `> 5.5` catch-all (gemstone previously used one; now `< 6.5`).
 
 ## Exposure & Internal Evolution
 - Auto-exposure target 1.8→1.1, bloom threshold 0.6→0.8 / strength 0.35→0.16, and a lighter PBR composite prevent the cream-blowout that previously hid all form and hue.
@@ -88,7 +93,7 @@ Space-filling fractals (apollonian, etc.) reach the `r_bound > 5.0` reject in `s
 - `modules/hybridVariations.ts` - 90 Hybrid variants (ftype 341-430)
 
 ## Notes
-- All 7 render modes embedded (no external modules needed)
+- All 10 render modes embedded (no external modules needed)
 - Post-processing embedded inline (duplicate module files were deleted)
 - KHR_parallel_shader_compile for async compilation
 - Binary search refinement (20 iterations) for surface accuracy

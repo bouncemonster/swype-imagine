@@ -23,8 +23,8 @@ interface FractalScrollFeedProps {
 }
 ```
 
-## RENDER_STYLES_CONFIG (lines 35-99)
-Configuration for all 7 render styles with icons and descriptions:
+## RENDER_STYLES_CONFIG (lines 35-124)
+Configuration for all 10 render styles with icons and descriptions:
 
 | ID | Label | Icon | Accent Color |
 |----|-------|------|--------------|
@@ -35,6 +35,9 @@ Configuration for all 7 render styles with icons and descriptions:
 | iridescent | Радужная интерференция | Droplet | purple |
 | quantum | Квантовое поле энергии | Atom | rose |
 | gemstone | Кристаллическая рефракция | Flame | amber |
+| wireframe | Каркас координатной решётки | Grid3x3 | teal |
+| heatmap | Термограмма времени выхода | Thermometer | orange |
+| neon | Неоновый контур Френеля | Zap | fuchsia |
 
 Each style has:
 - `id`: RenderStyle
@@ -55,8 +58,8 @@ Each style has:
   - Icons: MousePointer (feed) vs ZoomIn (zoom)
 
 ### Render Style Selector (lines 168-197)
-- Title: "Механика рендеринга (7)"
-- 2-column grid of 7 render styles
+- Title: "Механика рендеринга (10)" (dynamic: `RENDER_STYLES_CONFIG.length`)
+- 2-column grid of 10 render styles
 - Each button shows icon + shortLabel
 - Selected style gets accent color
 - Max height: 28 (scrollable)
@@ -92,7 +95,7 @@ Each style has:
 │ [Radio] 3D Скролл-Лента  [Feed] │
 │         Фракталы & Гибриды      │
 ├─────────────────────────────────┤
-│ Механика рендеринга (7)         │
+│ Механика рендеринга (10)        │
 │ ┌──────┬──────┐                 │
 │ │Solid │X-Ray │                 │
 │ │Topo  │Holo  │                 │

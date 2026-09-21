@@ -718,6 +718,17 @@ export function useRenderEngine(
         timer = setTimeout(tryPrefetch, 1000);
         return;
       }
+      // Cold-start guard: ANGLE/D3D11 serializes the driver-side LINK step, so launching
+      // background prefetches while the FIRST fractal is still compiling pushes the
+      // critical-path shader's completion behind them and delays the first painted frame —
+      // the init log shows fractal 0 reaching "linking 65%" early but only "complete 100%"
+      // AFTER prefetched fractals 1 & 2 finished, keeping the loader up through ~3× the link
+      // work. Hold prefetch until the first real frame is on screen; after that, warming the
+      // next figures still makes subsequent switches instant (the original goal).
+      if (!firstRenderDoneRef.current) {
+        timer = setTimeout(tryPrefetch, 400);
+        return;
+      }
       if (engine.canPrefetch) {
         // prefetchFractal self-gates on canPrefetch/queue room, so listing every
         // predicted type just fills the parallel queue by priority order.
@@ -767,11 +778,11 @@ export function useRenderEngine(
             velocityRef.current = { x: 0, y: 0 };
           }
           console.info(`[Controls] Inertia ${inertiaEnabledRef.current ? 'enabled' : 'disabled'} (I key)`);
-        } else if (e.key >= '1' && e.key <= '7') {
-          // Quick render mode switch (1-7)
+        } else if (/^[1-9]$/.test(e.key) || e.key === '0') {
+          // Quick render mode switch: keys 1-9 → styles 1-9, key 0 → style 10 (neon)
           e.preventDefault();
-          const RENDER_STYLE_NAMES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
-          const renderStyleIndex = parseInt(e.key) - 1;
+          const RENDER_STYLE_NAMES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone', 'wireframe', 'heatmap', 'neon'];
+          const renderStyleIndex = e.key === '0' ? 9 : parseInt(e.key) - 1;
           const renderStyleName = RENDER_STYLE_NAMES[renderStyleIndex] || 'solid';
           if (paramsRef.current) {
             paramsRef.current = {

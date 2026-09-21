@@ -380,7 +380,7 @@ Each component has dedicated doc in `docs/`:
 3. **Neuro-aesthetics** - AI-driven personalization
 4. **Scientific focus** - Mathematical formulas and dimensions
 5. **Real-time morphing** - Smooth transitions
-6. **7 render modes** - Diverse visualization styles
+6. **10 render modes** - Diverse visualization styles
 7. **Golden ratio** - Aesthetic harmony throughout
 
 ### Technical Achievements

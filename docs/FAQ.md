@@ -12,7 +12,7 @@
 - **Neuro-aesthetics**: AI-driven recommendations based on user preferences
 - **Scientific focus**: Mathematical formulas, dimensions, descriptions
 - **Real-time morphing**: Smooth transitions between fractal types
-- **7 render modes**: Solid, X-ray, Topographic, Hologram, Iridescent, Quantum, Gemstone
+- **10 render modes**: Solid, X-ray, Topographic, Hologram, Iridescent, Quantum, Gemstone, Wireframe, Heatmap, Neon
 
 ### Q: Do I need a powerful GPU?
 **A:** 
@@ -112,7 +112,7 @@ npm run preview
 - **50 Julia variations** in shader modules
 - **90 hybrid variations** in shader modules
 
-### Q: What are the 7 render modes?
+### Q: What are the 10 render modes?
 **A:**
 1. **Solid**: PBR lighting + shadows + ambient occlusion
 2. **X-Ray**: Volume rendering, density tomography
@@ -121,6 +121,9 @@ npm run preview
 5. **Iridescent**: Multi-order thin-film interference
 6. **Quantum**: Energy field visualization
 7. **Gemstone**: Refraction + caustics + dispersion
+8. **Wireframe (Каркас)**: The coordinate lattice the DE folds over (fwidth-AA grid + depth fade)
+9. **Heatmap (Термограмма)**: Blackbody colormap of escape-time / iteration density
+10. **Neon (Неон)**: Emissive Fresnel rim contour on near-black
 
 ### Q: What is morphing?
 **A:** Smooth transition between fractal types by interpolating parameters. Enable in ControlsPanel → Morphology → Morph Speed.
@@ -207,7 +210,7 @@ npm run dev
 - 50 Julia variations
 - 90 hybrid variations
 - 431 fractal types
-- 7 render modes
+- 10 render modes
 - Post-processing effects
 - All inlined for performance
 

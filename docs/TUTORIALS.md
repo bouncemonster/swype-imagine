@@ -139,7 +139,10 @@ export type RenderStyle =
   | 'iridescent'
   | 'quantum'
   | 'gemstone'
-  | 'yourMode';  // Add here
+  | 'wireframe'   // 7
+  | 'heatmap'     // 8
+  | 'neon'        // 9
+  | 'yourMode';   // 10 — Add here
 ```
 
 ### Step 2: Implement in Shader
@@ -162,19 +165,15 @@ vec3 renderYourMode(vec3 albedo, vec3 normal, vec3 pos, float depth) {
 ```
 
 ### Step 3: Add to Render Switch
-In fragment shader:
+The real dispatcher is a bounded if/else chain in the shared shader **footer** (`webglShaders.ts` GLSL + `webgpuShaders.ts` WGSL mirror). Every style tests a `> X.5 && < Y.5` window so an out-of-range value falls through to the solid default — never leave the last branch open-ended. Append your window after the highest existing index (currently neon `> 8.5`):
 ```glsl
-vec3 color;
-if (u.render_style < 0.5) {
-  color = renderSolid(albedo, normal, pos, depth);
-} else if (u.render_style < 1.5) {
-  color = renderXray(albedo, normal, pos, depth);
-}
-// ... other modes
-else if (u.render_style < 7.5) {
-  color = renderYourMode(albedo, normal, pos, depth);
+} else if (u_render_style > 8.5 && u_render_style < 9.5) {
+  // 10. YourMode — carry the shared `relief` factor + a `baseCol` sliver
+  // so the 3D form survives on any palette (see docs/fractal-math-to-render.md §6).
+  col = yourStyleCol * relief + baseCol * 0.1;
 }
 ```
+Then extend `getRenderStyleIndex` (add `case 'yourMode': return 10;`), `App.RENDER_STYLES`, `ControlsPanel`, `FractalScrollFeed` (`RENDER_STYLES_CONFIG`), `NeuroAestheticsEngine` styles, the keyboard map, and the `fractal-autotest.ts` branch assertions for both shaders.
 
 ### Step 4: Add UI Control
 Update `src/components/ControlsPanel.tsx`:

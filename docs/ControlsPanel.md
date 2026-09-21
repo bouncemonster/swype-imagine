@@ -52,7 +52,7 @@ Sub-filter bar: All (24), φ Golden, Primes, TPMS, 4D Topology, Classic
 
 ### Tab 3: Camera & Inside (Камера/Внутри) - lines 381-570
 - **Camera Mode**: 4 modes (orbit, flyThrough, goldenSpiral, kelvinInvert)
-- **Render Style**: 7 modes (solid, xray, topo, hologram, iridescent, quantum, gemstone)
+- **Render Style**: 10 modes (solid, xray, topo, hologram, iridescent, quantum, gemstone, wireframe, heatmap, neon)
 - **Slice Plane**: Multi-axis tomography (golden, x, y, z) + position slider
 - **Probe HUD**: Toggle for topological probe
 - **Macro Mode**: Ultra-macro 10⁻⁴ ray march step

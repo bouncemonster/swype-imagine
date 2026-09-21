@@ -4014,7 +4014,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       qCol = qCol + u.primary_color * curvNorm * 0.35;
       qCol = qCol * (0.6 + trapDetail * 0.4);
       col = mix(baseCol * 0.35, qCol * relief + sssCol * 0.5, 0.82);
-    } else if (u.render_style > 5.5) {
+    } else if (u.render_style > 5.5 && u.render_style < 6.5) {
       // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       let beerDist = min(max(t - 0.5, 0.0), 20.0);
       // Asymmetric absorption
@@ -4042,6 +4042,33 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       gemCol = gemCol + u.secondary_color * trapDetail * 0.25 * beer;
       gemCol = gemCol * facetStrength;
       col = mix(baseCol * 0.40, gemCol * relief + gemSpec + u.accent_color * caustic * 0.5, 0.80);
+    } else if (u.render_style > 6.5 && u.render_style < 7.5) {
+      // 7. Каркас (Wireframe): the coordinate lattice the DE folds over, AA'd by derivatives.
+      let gp = p * 3.0;
+      let cellW = max(fwidth(gp), vec3<f32>(1e-5));
+      let grid = abs(fract(gp - vec3<f32>(0.5)) - vec3<f32>(0.5)) / cellW;
+      let line = 1.0 - clamp(min(min(grid.x, grid.y), grid.z), 0.0, 1.0);
+      let depthFade = clamp(1.0 - t / 24.0, 0.15, 1.0);
+      var wireCol = mix(u.secondary_color, u.accent_color, fresnel) * (0.10 + line * 1.7) * depthFade;
+      wireCol = wireCol + u.primary_color * curvNorm * line * 0.9;
+      wireCol = wireCol + baseCol * 0.08 * relief;
+      col = mix(vec3<f32>(0.015, 0.015, 0.025), wireCol, clamp(line * 0.85 + 0.25, 0.0, 1.0));
+    } else if (u.render_style > 7.5 && u.render_style < 8.5) {
+      // 8. Термограмма (Heatmap): blackbody colormap of escape-time density (iteration math).
+      let heat = clamp(f32(steps) / 64.0 + trapDetail * 0.25, 0.0, 1.0);
+      var heatCol = mix(vec3<f32>(0.02, 0.01, 0.08), vec3<f32>(0.25, 0.05, 0.55), smoothstep(0.0, 0.25, heat));
+      heatCol = mix(heatCol, vec3<f32>(0.85, 0.12, 0.20), smoothstep(0.25, 0.50, heat));
+      heatCol = mix(heatCol, vec3<f32>(1.00, 0.55, 0.10), smoothstep(0.50, 0.72, heat));
+      heatCol = mix(heatCol, vec3<f32>(1.00, 0.95, 0.55), smoothstep(0.72, 0.90, heat));
+      heatCol = mix(heatCol, vec3<f32>(1.00, 1.00, 1.00), smoothstep(0.90, 1.00, heat));
+      col = heatCol * relief * (0.75 + ao * 0.35);
+    } else if (u.render_style > 8.5) {
+      // 9. Неон (Neon): emissive Fresnel contour on near-black — only the edges emit.
+      let rim = pow(clamp(1.0 - abs(dot(n, -rd)), 0.0, 1.0), 2.2);
+      var neonCol = mix(u.accent_color, u.primary_color, rim) * (rim * 2.2 + 0.05);
+      neonCol = neonCol + u.secondary_color * curvNorm * rim * 0.6;
+      neonCol = neonCol + baseCol * 0.06 * relief;
+      col = neonCol;
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth

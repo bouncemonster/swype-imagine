@@ -423,6 +423,9 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 { id: 'iridescent', label: 'Перламутр', desc: 'Интерференция' },
                 { id: 'quantum', label: 'Плазма', desc: 'Поле энергии' },
                 { id: 'gemstone', label: 'Кристалл', desc: 'Рефракция' },
+                { id: 'wireframe', label: 'Каркас', desc: 'Решётка DE' },
+                { id: 'heatmap', label: 'Термограмма', desc: 'Плотность итераций' },
+                { id: 'neon', label: 'Неон', desc: 'Краевой свет' },
               ].map((style) => (
                 <button
                   key={style.id}

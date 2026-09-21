@@ -11,8 +11,8 @@ Each type has:
 - Numeric index (0-430)
 - Description comment with mathematical context
 
-### RenderStyle (lines 446-455)
-**9 members / 7 unique indices** (topo/sonar/lidar share index 2):
+### RenderStyle (lines 446-458)
+**12 members / 10 unique indices** (topo/sonar/lidar share index 2):
 | Value | Index | Description |
 |-------|-------|-------------|
 | solid | 0 | PBR with AO, soft shadows, SSS |
@@ -22,8 +22,11 @@ Each type has:
 | iridescent | 4 | Thin-film interference |
 | quantum | 5 | Wave interference + magnetic fields |
 | gemstone | 6 | Beer-Lambert + caustics |
+| wireframe | 7 | Coordinate-lattice skeleton (DE fold space, fwidth-AA) |
+| heatmap | 8 | Blackbody escape-time density (iteration-count colormap) |
+| neon | 9 | Emissive Fresnel rim contour on near-black |
 
-### CompositeOp (lines 457-465)
+### CompositeOp (lines 460-468)
 **8 composite operations**:
 | Value | Index | Description |
 |-------|-------|-------------|

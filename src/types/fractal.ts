@@ -452,7 +452,10 @@ export type RenderStyle =
   | 'hologram'    // 3: True Volumetric Holographic Projection with Chromatic Aberration
   | 'iridescent'  // 4: Thin-Film Interference with Spectral Dispersion
   | 'quantum'     // 5: Quantum Field Energy Visualization with Standing Wave Interference
-  | 'gemstone';   // 6: Physical Refraction with Beer-Lambert + Caustics
+  | 'gemstone'      // 6: Physical Refraction with Beer-Lambert + Caustics
+  | 'wireframe'     // 7: Structural Coordinate Lattice (Wireframe) of the DE fold space
+  | 'heatmap'       // 8: Blackbody Escape-Time Heatmap (iteration-density visualization)
+  | 'neon';         // 9: Emissive Fresnel Contour on near-black (edge-glow silhouette)
 
 export type CompositeOp = 
   | 'smoothMorph'        // 0: Topological continuous morphing between shapes

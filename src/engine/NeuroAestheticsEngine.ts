@@ -1105,18 +1105,18 @@ export class NeuroAestheticsEngine {
   // Suggest a render style based on fractal archetype and user preferences
   // Each archetype has natural render style affinities for maximum visual impact
   suggestRenderStyle(specimenType?: FractalType): RenderStyle {
-    const styles: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
+    const styles: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone', 'wireframe', 'heatmap', 'neon'];
     
     // If we have a specimen type, use archetype-based suggestion
     if (specimenType) {
       const arch = getFractalArchetype(specimenType);
       // Each archetype has natural render style affinities
       const archetypeStyles: Record<AestheticArchetype, RenderStyle[]> = {
-        geometry: ['solid', 'gemstone', 'topo'], // Geometric fractals look great with PBR and crystal
-        complex: ['hologram', 'quantum', 'iridescent'], // Complex fractals shine with holographic effects
-        minimal: ['topo', 'solid', 'gemstone'], // Minimal fractals benefit from topographic clarity
-        primes: ['quantum', 'hologram', 'iridescent'], // Prime fractals have spectral quality
-        attractors: ['xray', 'quantum', 'hologram'], // Attractors look like medical scans
+        geometry: ['solid', 'gemstone', 'topo', 'wireframe'], // Geometric fractals: PBR, crystal, or the raw lattice
+        complex: ['hologram', 'quantum', 'iridescent', 'heatmap'], // Complex fractals: holographic + escape-time density
+        minimal: ['topo', 'solid', 'gemstone', 'wireframe'], // Minimal fractals: topographic clarity or clean wireframe
+        primes: ['quantum', 'hologram', 'iridescent', 'heatmap'], // Prime fractals: spectral + iteration-density heat
+        attractors: ['xray', 'quantum', 'hologram', 'neon'], // Attractors: medical-scan or glowing neon tubes
       };
       const preferred = archetypeStyles[arch] || styles;
       // 60% chance to pick from archetype-preferred styles, 40% random for variety

@@ -51,7 +51,7 @@ const ALL_FRACTAL_TYPES: FractalType[] = [
   'ifs3DTree', 'ifs3DFern', 'ifs3DSierpinski', 'ifs3DCantor', 'ifs3DKoch',
 ];
 const COMPOSITE_OPS: CompositeOp[] = ['smoothUnion', 'smoothMorph', 'smoothIntersection', 'smoothCarve', 'domainWarp', 'quantumResonance', 'fractalLattice', 'goldenSpiralFold'];
-const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone'];
+const RENDER_STYLES: RenderStyle[] = ['solid', 'xray', 'topo', 'hologram', 'iridescent', 'quantum', 'gemstone', 'wireframe', 'heatmap', 'neon'];
 const CAMERA_MODES: CameraMode[] = ['orbit', 'flyThrough', 'goldenSpiral', 'kelvinInvert'];
 
 // Mobile device detection (shared with FractalCanvas)

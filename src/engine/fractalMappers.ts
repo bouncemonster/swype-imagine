@@ -572,6 +572,11 @@ export function getRenderStyleIndex(style?: string): number {
     case 'plasma': return 5; // plasma alias for quantum
     case 'gemstone':
     case 'crystal': return 6; // crystal alias for gemstone
+    case 'wireframe':
+    case 'lattice': return 7;
+    case 'heatmap':
+    case 'thermal': return 8;
+    case 'neon': return 9;
     default: return 0;
   }
 }

@@ -95,9 +95,9 @@
 
 ### 5. getRenderStyleIndex(style?: string): number ️ CRITICAL
 
-**Purpose:** Maps render style strings to indices (0-6)
+**Purpose:** Maps render style strings to indices (0-9)
 
-**CRITICAL:** Index 39 in uniform buffer contains this value and switches between 7 render modes in shader
+**CRITICAL:** Index 39 in uniform buffer contains this value and switches between 10 render modes in shader
 
 **Mappings:**
 ```
@@ -108,6 +108,9 @@
 'iridescent' → 4
 'quantum' → 5
 'gemstone' → 6
+'wireframe'/'lattice' → 7
+'heatmap'/'thermal' → 8
+'neon' → 9
 ```
 
 **Default:** Returns 0 (solid) - standard PBR rendering

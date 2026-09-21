@@ -4079,7 +4079,7 @@ void main() {
       qCol *= (0.6 + trapDetail * 0.4);
       qCol *= 0.72; // STYLE FIX: tame the additive blowout that washed the field to pale pink
       col = mix(baseCol * 0.35, qCol * relief + sssColor * 0.5, 0.82); // STYLE FIX: preserve relief
-    } else if (u_render_style > 5.5) {
+    } else if (u_render_style > 5.5 && u_render_style < 6.5) {
       // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       float beerDist = min(max(t - 0.5, 0.0), 20.0);
       // Asymmetric absorption: red penetrates deepest, blue absorbs fastest
@@ -4110,6 +4110,35 @@ void main() {
       gemCol += u_secondary_color * trapDetail * 0.25 * beer;
       gemCol *= facetStrength;
       col = mix(baseCol * 0.40, gemCol * relief + gemSpec + u_accent_color * caustic * 0.5, 0.80); // STYLE FIX: preserve relief
+    } else if (u_render_style > 6.5 && u_render_style < 7.5) {
+      // 7. Каркас (Wireframe): the coordinate lattice the DE folds over, anti-aliased by
+      // screen-space derivatives. Reveals the raw geometric skeleton, not the shaded skin.
+      vec3 gp = p * 3.0;
+      vec3 cellW = max(fwidth(gp), vec3(1e-5));
+      vec3 grid = abs(fract(gp - 0.5) - 0.5) / cellW;
+      float line = 1.0 - clamp(min(min(grid.x, grid.y), grid.z), 0.0, 1.0);
+      float depthFade = clamp(1.0 - t / 24.0, 0.15, 1.0);
+      vec3 wireCol = mix(u_secondary_color, u_accent_color, fresnel) * (0.10 + line * 1.7) * depthFade;
+      wireCol += u_primary_color * curvNorm * line * 0.9;   // structural ridges glow
+      wireCol += baseCol * 0.08 * relief;                   // faint fill keeps the silhouette
+      col = mix(vec3(0.015, 0.015, 0.025), wireCol, clamp(line * 0.85 + 0.25, 0.0, 1.0));
+    } else if (u_render_style > 7.5 && u_render_style < 8.5) {
+      // 8. Термограмма (Heatmap): blackbody colormap of escape-time density — the most
+      // literal read of the iteration math (how long each point took to blow up).
+      float heat = clamp(float(steps) / 64.0 + trapDetail * 0.25, 0.0, 1.0);
+      vec3 heatCol = mix(vec3(0.02, 0.01, 0.08), vec3(0.25, 0.05, 0.55), smoothstep(0.0, 0.25, heat));
+      heatCol = mix(heatCol, vec3(0.85, 0.12, 0.20), smoothstep(0.25, 0.50, heat));
+      heatCol = mix(heatCol, vec3(1.00, 0.55, 0.10), smoothstep(0.50, 0.72, heat));
+      heatCol = mix(heatCol, vec3(1.00, 0.95, 0.55), smoothstep(0.72, 0.90, heat));
+      heatCol = mix(heatCol, vec3(1.00, 1.00, 1.00), smoothstep(0.90, 1.00, heat));
+      col = heatCol * relief * (0.75 + ao * 0.35);
+    } else if (u_render_style > 8.5) {
+      // 9. Неон (Neon): emissive Fresnel contour on near-black — only the surface edges emit.
+      float rim = pow(clamp(1.0 - abs(dot(n, -rd)), 0.0, 1.0), 2.2);
+      vec3 neonCol = mix(u_accent_color, u_primary_color, rim) * (rim * 2.2 + 0.05);
+      neonCol += u_secondary_color * curvNorm * rim * 0.6;
+      neonCol += baseCol * 0.06 * relief;                   // faint core so it doesn't vanish head-on
+      col = neonCol;
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth

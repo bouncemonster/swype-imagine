@@ -13,7 +13,9 @@ import {
   Activity,
   Atom,
   Droplet,
-  Grid
+  Grid,
+  Grid3x3,
+  Thermometer
 } from 'lucide-react';
 import { FractalSpecimen, RenderStyle, FractalParams } from '../types/fractal';
 
@@ -95,6 +97,30 @@ export const RENDER_STYLES_CONFIG: {
     icon: Flame,
     desc: 'Закон Бугера-Ламберта, каустики, дисперсия спектра, золотой спекуляр',
     accent: 'border-amber-400/50 text-amber-200 bg-amber-600/10',
+  },
+  {
+    id: 'wireframe',
+    label: 'Каркас координатной решётки',
+    shortLabel: 'Каркас',
+    icon: Grid3x3,
+    desc: 'Структурная решётка пространства DE-складок, силовые рёбра кривизны',
+    accent: 'border-teal-500/50 text-teal-300 bg-teal-500/10',
+  },
+  {
+    id: 'heatmap',
+    label: 'Термограмма времени выхода',
+    shortLabel: 'Термограмма',
+    icon: Thermometer,
+    desc: 'Чернотельная карта плотности итераций — прямое чтение математики выхода',
+    accent: 'border-orange-500/50 text-orange-300 bg-orange-500/10',
+  },
+  {
+    id: 'neon',
+    label: 'Неоновый контур Френеля',
+    shortLabel: 'Неон',
+    icon: Zap,
+    desc: 'Светящийся краевой контур на почти чёрном — только рёбра поверхности эмиссивны',
+    accent: 'border-fuchsia-500/50 text-fuchsia-300 bg-fuchsia-500/10',
   },
 ];
 

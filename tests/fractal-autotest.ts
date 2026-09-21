@@ -208,15 +208,20 @@ section('5. Render Styles');
 
 const RENDER_STYLES: RenderStyle[] = [
   'solid', 'xray', 'topo', 'sonar', 'lidar', 'hologram', 'iridescent', 'quantum', 'gemstone',
+  'wireframe', 'heatmap', 'neon',
 ];
 for (const style of RENDER_STYLES) {
   const idx = getRenderStyleIndex(style);
-  assert(idx >= 0 && idx <= 6, `${style} has invalid render style index ${idx}`);
+  assert(idx >= 0 && idx <= 9, `${style} has invalid render style index ${idx}`);
 }
 // Verify aliases map to same index
 assert(getRenderStyleIndex('topo') === getRenderStyleIndex('sonar'), 'topo and sonar should have same index');
 assert(getRenderStyleIndex('topo') === getRenderStyleIndex('lidar'), 'topo and lidar should have same index');
-console.log(`  ✓ All 7 render styles (+ 2 aliases) mapped correctly`);
+// Verify the 3 new styles map to their own distinct indices 7/8/9
+assert(getRenderStyleIndex('wireframe') === 7, 'wireframe should be index 7');
+assert(getRenderStyleIndex('heatmap') === 8, 'heatmap should be index 8');
+assert(getRenderStyleIndex('neon') === 9, 'neon should be index 9');
+console.log(`  ✓ All 10 render styles (+ 2 aliases) mapped correctly`);
 
 // ============================================
 // 6. PALETTE SYSTEM
@@ -347,6 +352,10 @@ assert(glsl.includes('u_render_style > 2.5'), 'GLSL: render style 3 (hologram) b
 assert(glsl.includes('u_render_style > 3.5'), 'GLSL: render style 4 (iridescent) branch');
 assert(glsl.includes('u_render_style > 4.5'), 'GLSL: render style 5 (quantum) branch');
 assert(glsl.includes('u_render_style > 5.5'), 'GLSL: render style 6 (gemstone) branch');
+assert(glsl.includes('u_render_style > 5.5 && u_render_style < 6.5'), 'GLSL: gemstone branch upper-bounded (no open-ended catch-all)');
+assert(glsl.includes('u_render_style > 6.5 && u_render_style < 7.5'), 'GLSL: render style 7 (wireframe) branch');
+assert(glsl.includes('u_render_style > 7.5 && u_render_style < 8.5'), 'GLSL: render style 8 (heatmap) branch');
+assert(glsl.includes('u_render_style > 8.5'), 'GLSL: render style 9 (neon) branch');
 
 // WGSL checks
 const wgsl = WGSL_SHADER;
@@ -358,12 +367,16 @@ assert(wgsl.includes('beerDist'), 'WGSL: Beer-Lambert distance clamp present');
 assert(wgsl.includes('min(max(t - 0.5, 0.0), 20.0)'), 'WGSL: gemstone clamped to 20.0');
 assert(wgsl.includes('render_style > 0.5'), 'WGSL: render style 1 (xray) branch');
 assert(wgsl.includes('render_style > 5.5'), 'WGSL: render style 6 (gemstone) branch');
+assert(wgsl.includes('render_style > 5.5 && u.render_style < 6.5'), 'WGSL: gemstone branch upper-bounded (no open-ended catch-all)');
+assert(wgsl.includes('render_style > 6.5 && u.render_style < 7.5'), 'WGSL: render style 7 (wireframe) branch');
+assert(wgsl.includes('render_style > 7.5 && u.render_style < 8.5'), 'WGSL: render style 8 (heatmap) branch');
+assert(wgsl.includes('render_style > 8.5'), 'WGSL: render style 9 (neon) branch');
 
-// Verify all 7 render styles implemented in both shaders
+// Verify all 10 render styles (9 branches + implicit solid=0) implemented in both shaders
 const glslStyleCount = (glsl.match(/u_render_style >/g) || []).length;
 const wgslStyleCount = (wgsl.match(/render_style >/g) || []).length;
-assert(glslStyleCount >= 6, `GLSL: at least 6 render style branches (got ${glslStyleCount})`);
-assert(wgslStyleCount >= 6, `WGSL: at least 6 render style branches (got ${wgslStyleCount})`);
+assert(glslStyleCount >= 9, `GLSL: at least 9 render style branches (got ${glslStyleCount})`);
+assert(wgslStyleCount >= 9, `WGSL: at least 9 render style branches (got ${wgslStyleCount})`);
 
 // Verify critical math functions present
 assert(glsl.includes('calcNormal'), 'GLSL: normal calculation');
@@ -382,8 +395,8 @@ assert(wgsl.includes('acesToneMap'), 'WGSL: ACES tone mapping');
 assert(wgsl.includes('sceneSDF'), 'WGSL: scene SDF evaluation');
 assert(wgsl.includes('evalSingleFractal'), 'WGSL: fractal dispatch');
 
-console.log(`  ✓ GLSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
-console.log(`  ✓ WGSL: headlamp, palette rotation, gemstone clamp, all 7 render styles`);
+console.log(`  ✓ GLSL: headlamp, palette rotation, gemstone clamp, all 10 render styles (7/8/9 = wireframe/heatmap/neon)`);
+console.log(`  ✓ WGSL: headlamp, palette rotation, gemstone clamp, all 10 render styles (7/8/9 = wireframe/heatmap/neon)`);
 console.log(`  ✓ Both: normals, AO, ACES tonemap, SDF dispatch (GLSL keeps dynamic soft shadows; WGSL is AO-only)`);
 
 // ============================================
@@ -417,7 +430,7 @@ if (failed > 0) {
   process.exit(1);
 } else {
   console.log(`\n✓ ALL TESTS PASSED — Engine integrity verified`);
-  console.log(`  86 SDFs | 26 palettes × 101 seeds | 7 render styles | 5 audio families`);
+  console.log(`  86 SDFs | 26 palettes × 101 seeds | 10 render styles | 5 audio families`);
   console.log(`  Share-link: 33 params | Palette rotation: active | Per-fractal audio: unique`);
   process.exit(0);
 }
