@@ -725,6 +725,12 @@ export class NeuroAestheticsEngine {
 
     // 1. Select Fractal Type with EXPLORATION MODE
     let selectedType = forceType;
+    // During the first sequential pass through every canonical type we render it PURE
+    // (no hybrid morph), so each fractal's characteristic form is legible. Blending two
+    // random fractals at 0.15-0.70 strength turns a recognisable Mandelbulb/Menger into
+    // an amorphous blob — the user's "не вижу характерных форм" complaint. Hybrids resume
+    // for the taste-driven phase after the showcase pass.
+    let isExplorationShowcase = false;
     if (!selectedType) {
       const types = ALL_FRACTAL_TYPES;
       
@@ -732,6 +738,7 @@ export class NeuroAestheticsEngine {
       if (this.EXPLORATION_MODE && this.explorationIndex < types.length) {
         selectedType = types[this.explorationIndex];
         this.explorationIndex++;
+        isExplorationShowcase = true;
         console.info(`[NeuroAesthetics] Exploration mode: showing type ${this.explorationIndex}/${types.length}: ${selectedType}`);
       } else {
         // After exploration, use Thompson sampling with reduced penalty
@@ -805,7 +812,7 @@ export class NeuroAestheticsEngine {
 
     // High-performance mathematically compatible hybrid breeding
     // FIX: Increased hybrid chance and wider blend ranges for more dramatic combinations
-    const isHybrid = Math.random() < 0.80;
+    const isHybrid = !isExplorationShowcase && Math.random() < 0.80;
     let hybridType = selectedType;
     let tertiaryType = selectedType;
     let hybridBlend = 0.0;

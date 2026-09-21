@@ -245,8 +245,13 @@ export default function App() {
         compositeOp: COMPOSITE_OPS[opIdx],
         renderStyle: RENDER_STYLES[styleIdx],
         cameraMode: CAMERA_MODES[camIdx],
-        hybridBlend: 0.2 + (idx % 5) * 0.12,
-        tertiaryBlend: 0.1 + (idx % 4) * 0.08,
+        // Characteristic-form legibility: the timer ALWAYS hybridised before (blend 0.2–0.68),
+        // so no specimen ever showed a fractal's true signature shape — the user's "не вижу
+        // характерных форм" complaint. On the same ticks that already render `solid` (even idx)
+        // drop the blend to 0 so the canonical single-fractal form reads clearly; hybridise the
+        // rest for variety. (hybridBlend 0 makes the shader skip the secondary layer entirely.)
+        hybridBlend: styleIdx === 0 ? 0 : 0.2 + (idx % 5) * 0.10,
+        tertiaryBlend: styleIdx === 0 ? 0 : 0.1 + (idx % 4) * 0.08,
         zoom: zoomOptions[zoomIdx],
         iterations: iterOptions[iterIdx],
         // The showcase default (0.45) advances the evolution clock so slowly that a full

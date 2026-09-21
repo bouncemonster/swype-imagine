@@ -37,9 +37,9 @@ Imported from separate data file to reduce NeuroAestheticsEngine.ts monolith siz
 ## Key Methods
 
 ### `breedNextSpecimen(forceType?)`
-1. **Type selection**: EXPLORATION_MODE shows all 113 ALL_FRACTAL_TYPES sequentially first
+1. **Type selection**: EXPLORATION_MODE shows all 113 ALL_FRACTAL_TYPES sequentially first — during this showcase pass each type renders **pure** (`isExplorationShowcase` forces `isHybrid=false`) so its characteristic form is legible
 2. **Palette evolution**: Golden angle stepping (137.5°) with 50% mutation chance
-3. **Hybrid breeding**: 80% chance, 60% random partner, 40% compatibility matrix
+3. **Hybrid breeding**: 80% chance **after the showcase pass only**, 60% random partner, 40% compatibility matrix
 4. **Tertiary layer**: 50% chance to add 3rd fractal
 5. **Genetic parameters**: boxFold, sphereFold, smoothK, warpStrength, octaveLayers
 

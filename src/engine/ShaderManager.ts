@@ -85,15 +85,19 @@ export class ShaderManager {
    * 16000 spins ≈ 2.5-5 minutes of yielding polls: a hung compile is surfaced by
    * the engine's 120s swap guard, not by a frozen tab.
    */
-  private async waitUntilCompiled(poll: () => boolean, label: string): Promise<void> {
+  private async waitUntilCompiled(poll: () => boolean, label: string, onTick?: (elapsedMs: number) => void): Promise<void> {
     if (!this.parallelCompile) {
       await new Promise<void>(resolve => setTimeout(resolve, 0));
       return;
     }
     const budget = 16000; // 'link' and 'frag' alike — both can outlive a small budget
     void label;
+    const start = performance.now();
     for (let spins = 0; spins < budget; spins++) {
       if (poll()) return;
+      // Fire ~every 100ms so a long driver link can creep the progress bar/chip
+      // instead of freezing on the last discrete stage mark (the "stops mid-way" bug).
+      if (onTick && spins % 20 === 19) onTick(performance.now() - start);
       await new Promise<void>(resolve => setTimeout(resolve, 5));
     }
   }
@@ -359,7 +363,7 @@ export class ShaderManager {
     
     this.reportProgress(fractalIndex, 'compiling', 40);
     const program = await this.compileShaderProgram(vertexShaderSource, fragmentSource, fractalIndex);
-    this.reportProgress(fractalIndex, 'linking', 80);
+    this.reportProgress(fractalIndex, 'linking', 96); // ≥ the link-creep ceiling (94) so the swap chip stays monotonic
     this.cacheShader(fractalIndex, program);
     this.reportProgress(fractalIndex, 'complete', 100);
     return program;
@@ -384,9 +388,21 @@ export class ShaderManager {
     this.gl.attachShader(program, fragmentShader);
     this.gl.linkProgram(program);
     this.gl.flush(); // same kickoff rationale as compileShader above
-    // Non-blocking wait for link completion (same rationale as compile polling)
-    await this.waitUntilCompiled(() =>
-      !!this.gl.getProgramParameter(program, ShaderManager.COMPLETION_STATUS_KHR), 'link');
+    // Non-blocking wait for link completion (same rationale as compile polling).
+    // The link is the dominant cost of a cold start, so creep the reported progress from
+    // 66 toward 94 on an asymptote over the wait instead of freezing at 65 until it snaps
+    // to 80 — that freeze was the visible "progress bar stops in the middle" symptom. The
+    // value is time-based (link duration is unknown), but it always advances and nears the
+    // finish, which is honest for an indeterminate driver-side compile. useRenderEngine
+    // clamps with Math.max, so this can never rewind the bar.
+    let lastLinkPct = 65;
+    await this.waitUntilCompiled(
+      () => !!this.gl.getProgramParameter(program, ShaderManager.COMPLETION_STATUS_KHR),
+      'link',
+      (elapsedMs) => {
+        const p = Math.min(94, Math.round(66 + 28 * (1 - Math.exp(-elapsedMs / 7000))));
+        if (p !== lastLinkPct) { lastLinkPct = p; this.reportProgress(fractalIndex, 'linking', p); }
+      });
     // Always delete shader objects after linking (they're attached to the program now)
     this.gl.deleteShader(vertexShader);
     this.gl.deleteShader(fragmentShader);
