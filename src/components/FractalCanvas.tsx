@@ -35,7 +35,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
   onEngineReady,
   onLoadProgress,
   nextSpecimenTypes,
-  scrollMode = 'feed',
+  scrollMode = 'zoom',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 

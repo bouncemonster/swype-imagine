@@ -4141,19 +4141,36 @@ void main() {
       col = neonCol;
     }
 
-    // SHARED ANTI-FLATTEN REINFORCEMENT — reaches EVERY stylized mode (this runs after the
-    // style dispatch and before post-processing, in the footer shared by all spliced shaders).
-    // A stylized mode that leans on its own palette colors can still wash out the 3D form, so
-    // re-inject BOTH scales of geometry that make a fractal read as solid: the large-scale
-    // shading (base PBR luminance) for the global silhouette, and the screen-space normal
-    // change (fwidth(n)) for the finest folds/crevices — micro detail a flat color would hide.
-    // Skipped for solid (style 0), which already IS the full base pass.
+    // PALETTE DETAIL LENS — rework of the old anti-flatten reinforcement. The stylized
+    // modes used to OVERRIDE the specimen's own palette with fixed "identities" (blue-white
+    // xray, cyan hologram, magenta quantum, ...) and stack additive glow, so switching
+    // palettes changed nothing AND highlights blew out to white ("слепят, нет разнообразия
+    // палитр"). This runs after the style dispatch (shared by every spliced shader) and
+    // instead RE-TINTS each mode with the fractal's OWN palette hue, using the mode's
+    // structural brightness purely as a detail signal — colour variety that tracks the
+    // palette, visible fine detail, and a bounded Reinhard curve so it can never blind.
+    // A faint trace of the mode's own hue is kept for identity. Skipped for solid (style 0).
     if (u_render_style > 0.5) {
-      float form = clamp(dot(baseCol, vec3(0.299, 0.587, 0.114)) * 1.35, 0.45, 1.5); // global relief
-      float micro = clamp(length(fwidth(n)) * 5.0, 0.0, 1.0);                          // tiny folds/creases
-      col *= mix(1.0, form, 0.6);                         // carry the large-scale 3D shading
-      col += u_accent_color * micro * 0.22;               // reveal the finest geometric detail
-      col += baseCol * clamp(curvNorm, 0.0, 1.0) * 0.14;  // ridge/valley structure (outside & in)
+      vec3 luma3 = vec3(0.299, 0.587, 0.114);
+      float styleLum = dot(col, luma3);
+      float lumN = styleLum / (1.0 + styleLum);                    // Reinhard: bounded [0,1), no blowout
+      // TRUE specimen palette hue, taken straight from the palette uniforms. The previous
+      // version derived hue from baseCol, but the base PBR floods mat_col with the golden
+      // accent + white specular, so baseCol arrives already desaturated to cream — every
+      // palette then collapsed to the same pale wash and the modes looked like solid.
+      vec3 paletteRef = u_primary_color * 0.55 + u_secondary_color * 0.30 + u_accent_color * 0.15;
+      vec3 palHue = paletteRef / max(dot(paletteRef, luma3), 1e-3);
+      vec3 styleHue = col / max(styleLum, 1e-3);                  // the mode's own hue (kept faintly)
+      vec3 tint = mix(palHue, styleHue, 0.22);                    // palette-led, hint of mode identity
+      col = tint * (0.16 + 0.95 * lumN) * relief;                 // palette colour + style detail + 3D form
+      float micro = clamp(length(fwidth(n)) * 3.0, 0.0, 1.0);     // finest creases/folds
+      col *= (1.0 + micro * 0.16);                                // modulate detail (never add white)
+      col += baseCol * clamp(curvNorm, 0.0, 1.0) * 0.05;          // subtle ridge/valley structure
+      // HARD ANTI-BLIND CEILING: keep stylized modes out of ACES' desaturating range so the
+      // brightest pixels stay saturated palette colour instead of washing to white. A uniform
+      // scale preserves hue ratios (saturation), so this only dims the hottest highlights.
+      float outLum = dot(col, luma3);
+      col *= min(1.0, 0.82 / max(outLum, 1e-3));
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth
@@ -4208,10 +4225,12 @@ void main() {
   // Prevents overexposure for fractals with intense lighting (mandelbox, kleinian, etc.)
   // Uses per-channel Reinhard-style compression to preserve color ratios
   float preMax = max(col.r, max(col.g, col.b));
-  // EXPOSURE FIX: target lowered 1.8 -> 1.1. 1.8 let highlights sit deep in ACES'
-  // desaturating roll-off (everything converged to white); 1.1 keeps the brightest
-  // channel just under the clip point so hue is preserved after tone mapping.
-  float exposureTarget = 1.1;
+  // EXPOSURE FIX: target lowered 1.8 -> 1.1 -> 0.9. 1.8 let highlights sit deep in
+  // ACES' desaturating roll-off (everything converged to white); 1.1 still left the
+  // brightest lit face (the bottom of the specimen) just past the shoulder, so solid
+  // washed to pale cream and every stylized mode inherited it via baseCol. 0.9 lands
+  // the peak inside ACES' chromatic region so hue and relief survive tone mapping.
+  float exposureTarget = 0.9;
   if (preMax > exposureTarget) {
     col *= exposureTarget / preMax;
   }

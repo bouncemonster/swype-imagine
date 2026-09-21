@@ -4071,15 +4071,28 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       col = neonCol;
     }
 
-    // SHARED ANTI-FLATTEN REINFORCEMENT (WGSL mirror of the WebGL footer): guarantees no
-    // stylized mode flattens the figure by re-injecting the large-scale base shading AND the
-    // finest screen-space normal detail. Skipped for solid (style 0).
+    // PALETTE DETAIL LENS (WGSL mirror of the WebGL footer): re-tints each stylized mode
+    // with the specimen's OWN palette hue (colour variety that tracks the palette) and uses
+    // the mode's structural brightness only as a bounded detail signal (Reinhard), so it can
+    // never blow out to white. Skipped for solid (style 0).
     if (u.render_style > 0.5) {
-      let form = clamp(dot(baseCol, vec3<f32>(0.299, 0.587, 0.114)) * 1.35, 0.45, 1.5); // global relief
-      let micro = clamp(length(fwidth(n)) * 5.0, 0.0, 1.0);                              // tiny folds/creases
-      col = col * mix(1.0, form, 0.6);                          // carry the large-scale 3D shading
-      col = col + u.accent_color * micro * 0.22;                // reveal the finest geometric detail
-      col = col + baseCol * clamp(curvNorm, 0.0, 1.0) * 0.14;   // ridge/valley structure (outside & in)
+      let luma3 = vec3<f32>(0.299, 0.587, 0.114);
+      let styleLum = dot(col, luma3);
+      let lumN = styleLum / (1.0 + styleLum);                    // Reinhard: bounded [0,1), no blowout
+      // TRUE specimen palette hue from the palette uniforms (parity with WebGL). Deriving it
+      // from baseCol collapsed every palette to the same cream wash the base PBR produced.
+      let paletteRef = u.primary_color * 0.55 + u.secondary_color * 0.30 + u.accent_color * 0.15;
+      let palHue = paletteRef / max(dot(paletteRef, luma3), 1e-3);
+      let styleHue = col / max(styleLum, 1e-3);                  // the mode's own hue (kept faintly)
+      let tint = mix(palHue, styleHue, 0.22);                    // palette-led, hint of mode identity
+      col = tint * (0.16 + 0.95 * lumN) * relief;                // palette colour + style detail + 3D form
+      let micro = clamp(length(fwidth(n)) * 3.0, 0.0, 1.0);      // finest creases/folds
+      col = col * (1.0 + micro * 0.16);                          // modulate detail (never add white)
+      col = col + baseCol * clamp(curvNorm, 0.0, 1.0) * 0.05;    // subtle ridge/valley structure
+      // HARD ANTI-BLIND CEILING: keep stylized modes out of ACES' desaturating range (uniform
+      // scale preserves hue ratios, so only the hottest highlights dim, never wash to white).
+      let outLum = dot(col, luma3);
+      col = col * min(1.0, 0.82 / max(outLum, 1e-3));
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth
@@ -4093,6 +4106,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // r=5 render sphere (visible circle, black outside). Dissolve the outer shell into
     // the background; bounded fractals never reach 3.5 so are unaffected.
     col = col * (1.0 - smoothstep(3.5, 5.0, length(p)));
+  }
+
+  // AUTO-EXPOSURE (parity with the WebGL footer): WGSL previously fed col straight into
+  // ACES with no highlight limit, so WebGPU desaturated blown faces to white. Pull the
+  // brightest channel to 0.9 — inside ACES' chromatic region — so hue and relief survive.
+  let preMax = max(col.r, max(col.g, col.b));
+  let exposureTarget: f32 = 0.9;
+  if (preMax > exposureTarget) {
+    col = col * (exposureTarget / preMax);
   }
 
   col = acesToneMap(col);

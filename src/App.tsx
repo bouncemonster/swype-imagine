@@ -167,7 +167,9 @@ export default function App() {
   const [loadProgress, setLoadProgress] = useState(0);
   const [showManifestModal, setShowManifestModal] = useState(false);
   const [isFirstManifestVisit, setIsFirstManifestVisit] = useState(false);
-  const [scrollMode, setScrollMode] = useState<'feed' | 'zoom'>('feed');
+  // Wheel-over-canvas defaults to ZOOM (the historical behaviour). The «Лента/Зум»
+  // toggle in the feed still lets a user switch the wheel to specimen navigation.
+  const [scrollMode, setScrollMode] = useState<'feed' | 'zoom'>('zoom');
   const [isFeedOpen, setIsFeedOpen] = useState(false);
   const [likedSpecimens, setLikedSpecimens] = useState<FractalSpecimen[]>([]);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());

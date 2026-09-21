@@ -26,7 +26,7 @@ interface FractalCanvasProps {
 ```
 
 ## Key Features
-- **Wheel honours `scrollMode`** (was previously dead — always zoomed): `scrollMode==='feed'` navigates specimens (next/prev on scroll direction) debounced 250ms via `lastFeedNavRef`; `scrollMode==='zoom'` zooms with a proportional curve `exp(-clamp(deltaY/100, ±1.5) * 0.12)` (range [0.01, 100]) that feels identical on trackpad and discrete wheel, replacing the old inconsistent `exp(sign*min(|deltaY|*0.0012, 0.18))`
+- **Wheel honours `scrollMode`** (was previously dead — always zoomed): **default is `'zoom'`** (prop default in `FractalCanvas` + `App` `useState('zoom')`) so the wheel zooms as it historically did — the earlier `'feed'` default made the wheel navigate specimens and read as a regression. `scrollMode==='feed'` navigates specimens (next/prev on scroll direction) debounced 250ms via `lastFeedNavRef`; `scrollMode==='zoom'` zooms with a proportional curve `exp(-clamp(deltaY/100, ±1.5) * 0.12)` (range [0.01, 100]) that feels identical on trackpad and discrete wheel, replacing the old inconsistent `exp(sign*min(|deltaY|*0.0012, 0.18))`. `scrollMode` is in the wheel-listener effect's dep array, so the «Лента/Зум» toggle re-binds the handler live.
 - **Touch pinch**: 2-finger zoom with ratio-based scaling
 - **Pointer orbit**: Drag to rotate with inertia and braking. Release velocity is an exponential moving average over a ~30ms window (not the raw last `pointermove` delta), so a sharp flick-and-release throws consistently and a small final move before lifting no longer kills the momentum
 - **Braking logic**: Direction change → stop rotation immediately
