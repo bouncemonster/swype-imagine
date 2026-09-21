@@ -66,26 +66,32 @@ the honest count of distinct *mechanisms* is ~146 functions spanning ~9 mathemat
 (algebraic escape-time, folding/KIFS, implicit/TPMS, dynamical-system attractors, higher-D
 projections, number-theoretic fields, stochastic/growth, L-system/grammar, flame IFS).
 
-## 4. Alias collisions (advertised ≠ rendered)
+## 4. Alias mappings in `getFractalIndex` (defensive fallbacks, NOT catalog items)
 
-19 catalog names are silently mapped to a *different* fractal's math by `getFractalIndex`
-(`fractalMappers.ts:138-156`) — they exist in the `FractalType` union but have no DE of their own:
+`fractalMappers.ts:138-156` maps 19 extra `FractalType` union names onto existing indices.
+Verified against `tests/fractal-autotest.ts:147-159`: the advertised **431** types are a
+closed, uniquely-indexed set (`ALL_FRACTAL_TYPES`, indices 0–430) that **does not contain these
+alias names** — so they are *not* selectable catalog/atlas entries. They exist only so that a
+legacy caller (e.g. a hand-typed `#type=chenAttractor` deep-link) returns a visually-related
+figure instead of falling through `default: return 0` (phyllotaxis). Impact is therefore low, and
+the earlier "advertised ≠ rendered" framing here overstated a user-facing problem — corrected.
 
-| Advertised name | Actually renders | 
-|-----------------|------------------|
-| `chenAttractor`, `dadrasAttractor` | Rossler (`73`) |
-| `sprottAttractor` | DeJong (`77`) |
-| `perlinNoise`, `randomTerrain` | Spherical harmonics (`58`) |
-| `worleyNoise` | Reaction-diffusion (`60`) |
-| `penroseTiling` | Quasicrystal (`10`) |
-| `platonicSolids` | Icosahedron (`6`) |
-| `sierpinskiTriangle` | Sierpinski-octahedron (`14`) |
-| `mandala` | Phyllotaxis (`0`) |
-| …(and 9 more: `burningShip`→27, `dlAggregate`/`percolationCluster`→33, `fibonacciSphere`/`goldenSpiral`→22, `ifsFractal`→25, `newtonFractal`→28, `schwarzSurface`→50, `torusKnot`→57) |
+They split into two honest groups:
 
-These are a **representational gap**: the UI/atlas can offer a name whose distinct mathematics is
-never shown. Genuinely fixing them needs new catalog ordinals (risky — the 131–430 space is fully
-allocated to variants), so they are documented here rather than silently rewired.
+| Group | Names → index | Reality |
+|-------|---------------|---------|
+| **Exact synonyms** (benign — same math) | `burningShip`→27 (`burningShip3D`), `newtonFractal`→28 (`newtonBasins`), `dlAggregate`→33 (`dlaCluster`), `schwarzSurface`→50 (`schwarzP`), `mobiusStrip3D`→111 | correct by design |
+| **Different-math fallbacks** (name implies X, renders a *similar* Y) | `chenAttractor`/`dadrasAttractor`→rossler(73), `sprottAttractor`→deJong(77), `perlinNoise`/`randomTerrain`→sph-harmonics(58), `worleyNoise`→reaction-diffusion(60), `percolationCluster`→dla(33), `mandala`→phyllotaxis(0), `fibonacciSphere`/`goldenSpiral`→fib-snowflake(22), `penroseTiling`→quasicrystal(10), `platonicSolids`→icosahedral(6), `sierpinskiTriangle`→sierp-octa(14), `ifsFractal`→dragon(25), `torusKnot`→goldenKnot(57) | graceful approximation, not distinct DEs |
+
+**Why the different-math group is documented, not implemented:** giving `chen`/`dadras`/`sprott`
+et al. real DEs needs (a) a new ordinal, (b) a matching branch in *all three* `sceneSDF` copies
+(monolith + `generateMinimalSceneSDF` + WGSL), and (c) new catalog entries just to be user-visible —
+while (d) `*Variant`/new-monolith types cannot be headless-verified (the 4230-line monolith compile
+stalls headless). Since none of these names reach a user through the catalog today, the change buys
+no visible payoff yet risks the passing 431-unique-index invariant and the shader-sync contract, so
+it is deliberately left as a documented fallback. If ever surfaced in the UI, the correct path is:
+add the type to `ALL_FRACTAL_TYPES` + a new high ordinal + a self-contained Tier-A/C DE mirrored to
+both engines, and verify on a real GPU (not headless).
 
 ## 5. Concrete fidelity fix this session: `mapJuliaBase` derivative tracking
 
@@ -132,6 +138,8 @@ recurrence line — as happened to Julia's tricorn/burning-ship branches. The ha
   composites + `domainWarpByGeometry` + per-type adaptive-iterations that the monolith (and thus
   every `*Base/*Variant` type) applies. A single ordinal therefore gets slightly different
   structure/detail treatment depending on which path it takes.
-- **Alias + variant inflation** means headline "431 fractals" overstates distinct mathematics;
-  prefer quoting "~146 distinct distance estimators across 9 families, expanded to 431 catalogue
-  entries via parameter sweeps (and 19 aliases pending real DEs)."
+- **Variant sharing vs the headline count:** the 431 catalogue entries are 431 *uniquely-indexed*
+  types (test-enforced), but only ~146 distinct DE *functions*, because indices 131–430 are parameter
+  sweeps through 5 bases. Prefer quoting "431 catalogue types drawn from ~146 distinct distance
+  estimators across 9 mathematical families." (§4's 19 aliases are extra union names outside the 431
+  and do not inflate the headline.)
