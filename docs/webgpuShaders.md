@@ -132,6 +132,8 @@ Each fractal type has a `mapXxx()` function returning `vec2<f32>(distance, orbit
 10. **Entry points**: `@vertex` and `@fragment` decorators
 11. **No dynamic shader compilation**: Single monolithic shader
 12. **Performance**: WebGPU generally faster than WebGL2
+13. **Exposure + internal evolution parity**: the PBR composite was rebased into ACES' chromatic region (`diffuse 0.95 / bounce 0.55 / spec 0.7 / rim 0.6 / sss 0.7`, AO `0.4+0.6*ao`) and `sceneSDF` now drifts `phi` on golden sub-harmonics of `t` + breathes `iters` ±2, mirroring the WebGL fixes. The 7 render-style identity rewrites were applied to WebGL only for now (WebGL2 is the primary backend; WebGPU still shows the prior style colors).
+14. **`mod()` builtin**: the shader uses WGSL `mod` (e.g. the Menger fold at :613). Modern Tint (Chrome ~118+, incl. the user's Chrome 153) accepts it; some older headless Chromium builds reject it with "unresolved call target" — a tooling artifact, not a shader regression. The per-edit WGSL was verified to compile via `createShaderModule().getCompilationInfo()` on a fallback adapter.
 
 ## Related Files
 - `WebGPUEngine.ts` - WebGPU renderer using this shader

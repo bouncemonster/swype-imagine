@@ -3194,7 +3194,11 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   }
   
   let t = u.time * u.morph_speed;
-  let phi = u.phi_val;
+  // INTERNAL EVOLUTION (mirrors WebGL sceneSDF): golden sub-harmonic phi drift +
+  // iteration-depth breathing so figures develop structurally, gated by morph_speed.
+  let phiEvo = (sin(t * 0.35) * 0.05 + sin(t * 0.21 + 1.7) * 0.03) * clamp(u.morph_speed, 0.0, 1.0);
+  let phi = u.phi_val + phiEvo;
+  iters = clamp(iters + i32(2.0 * sin(t * 0.13 + 0.5)), 6, 64);
   let compOp = i32(u.compose_op + 0.5);
   let k = max(0.04, u.smooth_k * 0.45);
 
@@ -3809,8 +3813,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let rim = u.accent_color * fresnel * 0.8 * (0.3 + 0.7 * ao);
 
     // IMPROVED full lighting: ambient + refl + diffuse + bounce + specular + rim + SSS
-    col = ambient * 0.5 + reflCol + diffuse * 1.4 + bounceCol * 1.8 + specular * 1.3 + rim * 1.5 + sssCol * 1.8;
-    col = col * (0.3 + 0.7 * ao);
+    // EXPOSURE FIX (mirrors WebGL): the old composite (bounce*1.8 + sss*1.8 + rim*1.5
+    // over full-brightness diffuse) over-drove ACES into a washed-out blob. Land it in
+    // ACES' chromatic region so palette hue and surface relief survive.
+    col = ambient * 0.5 + reflCol * 0.5 + diffuse * 0.95 + bounceCol * 0.55 + specular * 0.7 + rim * 0.6 + sssCol * 0.7;
+    col = col * (0.4 + 0.6 * ao);
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u.headlamp_power > 0.01) {

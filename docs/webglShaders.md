@@ -57,13 +57,19 @@ Complete WebGL2 shader pipeline: vertex shader, fragment shader, 131 inline SDF 
 All 431 type indices dispatch here: explicit `ftype == 0…140` branches for Mandelbrot variants (131-140), then compressed range rules (:3045-3057) — Julia 141-190, IFS 191-240, L-System 241-290, Flame 291-340, Hybrid 341-430 — each delegating to the module lookup functions. Unmapped indices fall through to `mapPhyllotaxis`.
 
 ## Render Modes (u_render_style)
-0: solid - PBR with AO, soft shadows, SSS
-1: xray - Volumetric tomography
-2: topo/sonar/lidar - Topographic contours
-3: hologram - Chromatic aberration + scanlines
-4: iridescent - Thin-film interference
-5: quantum - Wave interference + magnetic fields
-6: gemstone - Beer-Lambert + caustics
+Every mode now blends its effect OVER the base PBR relief (`col = mix(col*0.2–0.45, styleCol, 0.72–0.85)`) instead of discarding it, and carries a palette-independent identity so the figure stays readable and the 7 modes stay visually distinct on any palette:
+0: solid - PBR with AO, soft shadows, SSS (exposure rebased into ACES chromatic region)
+1: xray - Cool blue-white volumetric tomography w/ contrast curve
+2: topo/sonar/lidar - Real water→snow elevation ramp + high-contrast contours
+3: hologram - Cyan projector identity + stronger scanlines/hex grid
+4: iridescent - Thin-film interference (relief-preserving)
+5: quantum - Cold-cyan→hot-magenta field (tamed additive blowout)
+6: gemstone - Prismatic blue→magenta cast + Beer-Lambert + caustics
+
+## Exposure & Internal Evolution
+- Auto-exposure target 1.8→1.1, bloom threshold 0.6→0.8 / strength 0.35→0.16, and a lighter PBR composite prevent the cream-blowout that previously hid all form and hue.
+- God rays are gated on the Ether Fog slider and reduced 8→5 `sceneSDF` samples/pixel (perf + no warm-white veil).
+- `sceneSDF` evolves structurally: `phi` drifts on golden sub-harmonics of `u_time*u_morph_speed` and iteration depth breathes ±2, so figures develop over time (morphSpeed=0 freezes). Mirrored in `ShaderManager.generateMinimalSceneSDF` and `webgpuShaders.ts`.
 
 ## Dependencies
 - `modules/juliaVariations.ts` - 50 Julia variants (ftype 141-190)

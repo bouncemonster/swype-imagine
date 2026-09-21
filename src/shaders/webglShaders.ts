@@ -3153,7 +3153,15 @@ vec2 sceneSDF(vec3 p_world) {
   }
   
   float t = u_time * u_morph_speed;
-  float phi = u_phi_val;
+  // INTERNAL EVOLUTION: the golden fold parameter phi drifts on slow golden-ratio
+  // sub-harmonics of the morph clock, so the fractal's structure genuinely develops
+  // over time (bulb counts / fold symmetry morph) instead of sitting as a static set
+  // that only pulses and rotates. Amplitude scales with u_morph_speed → set it to 0
+  // for a frozen figure. This is the answer to "fractals should live in development".
+  float phiEvo = (sin(t * 0.35) * 0.05 + sin(t * 0.21 + 1.7) * 0.03) * clamp(u_morph_speed, 0.0, 1.0);
+  float phi = u_phi_val + phiEvo;
+  // Detail depth breathes on a slower golden cycle → fine structure emerges and recedes.
+  iters = clamp(iters + int(2.0 * sin(t * 0.13 + 0.5)), 6, 64);
   int compOp = int(u_compose_op + 0.5);
   float k = max(0.04, u_smooth_k * 0.45);
 
@@ -3843,9 +3851,15 @@ void main() {
     // Stronger rim at grazing angles, color-shifted — boosted for 3D edge definition
     vec3 rim = u_accent_color * fresnel * 1.2 * (0.4 + 0.6 * ao);
 
-    // FULL PBR Lighting: reduced ambient, stronger directional for 3D depth
-    col = ambient * 0.35 + diffuse * 2.0 + specular * 1.5 + rim * 1.6 + sssColor * sssBackLight + bounceCol * 1.2 + reflCol * 0.6;
-    col *= (0.55 + 0.45 * ao); // Softer AO contrast — preserves shadow detail
+    // FULL PBR Lighting
+    // EXPOSURE FIX: the previous composite (diffuse*2.0 + spec*1.5 + rim*1.6 +
+    // bounce*1.2 on top of an already full-brightness mat_col) drove the HDR signal
+    // to 3-6 per channel, so auto-exposure + ACES clipped the whole surface to a
+    // cream blob — palette hue and surface relief were destroyed (the #1 visual
+    // complaint). Keep the same terms but land the composite in ACES' chromatic
+    // region (0.2-1.0) where color and shading survive.
+    col = ambient * 0.55 + diffuse * 0.95 + specular * 0.7 + rim * 0.6 + sssColor * sssBackLight * 0.5 + bounceCol * 0.5 + reflCol * 0.45;
+    col *= (0.62 + 0.38 * ao); // Gentle AO contrast — preserves shadow detail without crushing to black
 
     // Headlamp: camera-attached flashlight for illuminating dark interior halls
     if (u_headlamp_power > 0.01) {
@@ -3897,8 +3911,12 @@ void main() {
       // Depth-based scatter: deeper = more Compton scatter (bluish haze)
       vec3 scatterCol = vec3(0.6, 0.7, 0.9) * pathLen * 0.15 * (1.0 - boneDensity);
       vec3 xrayCol = mix(xrayVessel, xrayCore, boneDensity * 0.85) + xrayShell * 0.5 + scatterCol;
-      xrayCol += u_accent_color * curvNorm * 0.35;
-      col = mix(col * 0.12, xrayCol * 1.6, 0.78 + 0.22 * ao);
+      // STYLE FIX: give the radiograph its own cool blue-white identity instead of
+      // inheriting the surface palette (gold palettes made X-Ray a flat cream blob).
+      xrayCol = mix(xrayCol, vec3(0.70, 0.82, 1.0) * (0.35 + boneDensity + curvNorm * 0.5), 0.6);
+      xrayCol = pow(clamp(xrayCol, 0.0, 1.0), vec3(1.4)); // STYLE FIX: deepen radiograph contrast (was flat gray)
+      // Keep a sliver of the base relief so the silhouette still reads as 3D.
+      col = mix(col * 0.30, xrayCol * 1.2, 0.74 + 0.20 * ao);
     } else if (u_render_style > 1.5 && u_render_style < 2.5) {
       // 2. Топография: Height-based terrain + multi-scale contours + ridge detection
       // Use world-space Y as elevation (real terrain height, not normal Y)
@@ -3920,10 +3938,12 @@ void main() {
       float slope = 1.0 - abs(dot(n, vec3(0.0, 1.0, 0.0)));
       float slopeShade = pow(slope, 0.6);
       // Color zones by elevation (like real topographic maps)
-      vec3 waterZone = u_secondary_color * 0.35; // Low elevation = water/valley
-      vec3 lowlandZone = mix(u_secondary_color, u_primary_color, 0.3) * (0.5 + height * 0.4);
-      vec3 highlandZone = u_primary_color * (0.6 + height * 0.8);
-      vec3 peakZone = u_accent_color * (0.8 + curvNorm * 1.2);
+      // STYLE FIX: real topographic-map elevation ramp (water→lowland→highland→snow)
+      // instead of palette colors, so contours read on any palette.
+      vec3 waterZone = vec3(0.08, 0.20, 0.42);
+      vec3 lowlandZone = vec3(0.18, 0.42, 0.28) * (0.7 + height * 0.5);
+      vec3 highlandZone = vec3(0.72, 0.58, 0.30) * (0.7 + height * 0.5);
+      vec3 peakZone = vec3(0.95, 0.95, 0.98) * (0.8 + curvNorm * 0.4);
       // Blend zones by elevation
       vec3 topoCol = mix(waterZone, lowlandZone, smoothstep(0.15, 0.35, height));
       topoCol = mix(topoCol, highlandZone, smoothstep(0.40, 0.65, height));
@@ -3933,11 +3953,12 @@ void main() {
       // Add valley shadows
       topoCol *= (0.7 + 0.3 * (1.0 - valleyLine));
       // Apply contour lines (darken along contours)
-      topoCol = mix(topoCol, topoCol * 0.35, (1.0 - contour) * 0.5);
+      // STYLE FIX: darker, higher-contrast contour lines (were washed out at 0.5 mix).
+      topoCol = mix(topoCol, topoCol * 0.12, (1.0 - contour) * 0.75);
       // Slope shading
       topoCol *= (0.55 + 0.45 * slopeShade);
-      // Ambient occlusion
-      col = topoCol * (0.45 + 0.55 * ao);
+      // Blend over the base relief so the 3D form survives the map projection.
+      col = mix(col * 0.35, topoCol * (0.45 + 0.55 * ao), 0.82);
     } else if (u_render_style > 2.5 && u_render_style < 3.5) {
       // 3. Голографическая проекция: Chromatic aberration + interference + hex grid
       float depthNorm = clamp(t / 20.0, 0.0, 1.0);
@@ -3945,12 +3966,14 @@ void main() {
       float rOff = sin(depthNorm * 25.0 + u_time * 3.5) * 0.03;
       float gOff = sin(depthNorm * 25.0 + u_time * 3.5 + 2.094) * 0.03;
       float bOff = sin(depthNorm * 25.0 + u_time * 3.5 + 4.189) * 0.03;
-      vec3 holoBase = u_primary_color * vec3(1.0 + rOff, 1.0 + gOff, 1.0 + bOff);
+      // STYLE FIX: cyan projector identity (was u_primary → gold palettes killed the
+      // "hologram" look). Per-channel chromatic offset retained.
+      vec3 holoBase = mix(vec3(0.20, 0.70, 1.0), u_primary_color, 0.22) * vec3(1.0 + rOff, 1.0 + gOff, 1.0 + bOff);
       // Fresnel edge glow
       float holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
       // Scan lines with depth-varying frequency
       float scanFreq = 200.0 + depthNorm * 150.0;
-      float scanline = 0.80 + 0.20 * sin(v_uv.y * scanFreq + u_time * 10.0);
+      float scanline = 0.60 + 0.40 * sin(v_uv.y * scanFreq + u_time * 10.0); // STYLE FIX: stronger scanlines
       // Curvature wireframe
       float wireframe = smoothstep(0.25, 0.75, curvNorm);
       // Data glitch bursts
@@ -3971,7 +3994,7 @@ void main() {
       holoCol += u_primary_color * trapDetail * 0.35;
       // Hex grid lines
       holoCol += u_secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
-      col = mix(col * 0.06, holoCol, 0.94);
+      col = mix(col * 0.22, holoCol, 0.84); // STYLE FIX: keep base relief showing through
     } else if (u_render_style > 3.5 && u_render_style < 4.5) {
       // 4. Радужная интерференция: Thin-film + Fresnel + 5-order interference
       float nv = max(dot(n, -rd), 0.0);
@@ -3995,7 +4018,7 @@ void main() {
       iridCol *= (0.6 + trapDetail * 0.3 + iridDiff);
       // Fresnel rim for iridescence
       iridCol += u_accent_color * pow(fresnel, 1.5) * 0.4;
-      col = iridCol * (0.45 + 0.55 * ao) + specIrid;
+      col = mix(col * 0.45, iridCol * (0.45 + 0.55 * ao) + specIrid, 0.72); // STYLE FIX: preserve relief
     } else if (u_render_style > 4.5 && u_render_style < 5.5) {
       // 5. Квантовое поле: Energy field + magnetic flux + PBR
       float wave1 = sin(length(p) * 12.0 - u_time * 3.5);
@@ -4008,8 +4031,10 @@ void main() {
       float flux = (flux1 + flux2) * 0.5;
       float probability = trapDetail * 0.5 + (0.5 + 0.5 * interference) * 0.35 + flux * 0.15;
       float energy = pow(abs(interference), 0.7) * (0.5 + curvNorm * 0.5);
-      vec3 plasmaCold = u_secondary_color * (0.20 + probability * 0.5);
-      vec3 plasmaHot = u_accent_color * (0.6 + energy * 1.8);
+      // STYLE FIX: quantum field gets a cold-cyan→hot-magenta identity so it's not a
+      // palette-colored blob; energy still drives the cold/hot mix.
+      vec3 plasmaCold = mix(vec3(0.10, 0.35, 0.75), u_secondary_color, 0.25) * (0.20 + probability * 0.5);
+      vec3 plasmaHot = mix(vec3(1.0, 0.25, 0.75), u_accent_color, 0.3) * (0.6 + energy * 1.8);
       vec3 qCol = mix(plasmaCold, plasmaHot, energy);
       // PBR diffuse
       float plasmaDiff = max(dot(n, light1), 0.0) * 0.4 + max(dot(n, light2), 0.0) * 0.15;
@@ -4023,7 +4048,8 @@ void main() {
       qCol += u_accent_color * pow(fresnel, 2.0) * 1.2;
       qCol += u_primary_color * curvNorm * 0.35;
       qCol *= (0.6 + trapDetail * 0.4);
-      col = qCol * (0.35 + 0.65 * ao) + sssColor * 1.2;
+      qCol *= 0.72; // STYLE FIX: tame the additive blowout that washed the field to pale pink
+      col = mix(col * 0.35, qCol * (0.30 + 0.55 * ao) + sssColor * 0.6, 0.85); // STYLE FIX: preserve relief
     } else if (u_render_style > 5.5) {
       // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       float beerDist = min(max(t - 0.5, 0.0), 20.0);
@@ -4034,7 +4060,10 @@ void main() {
       float caustic2 = pow(max(dot(n, light1), 0.0), 8.0) * 0.8;
       float caustic = caustic1 + caustic2;
       float facetStrength = 0.3 + curvNorm * 0.7;
-      vec3 refractCol = mix(u_primary_color, u_accent_color, fresnel * facetStrength);
+      // STYLE FIX: gem gets a prismatic blue→magenta cast (was pure palette color → a
+      // gold palette turned the "crystal" into a flat yellow blob).
+      vec3 prism = mix(vec3(0.20, 0.55, 1.0), vec3(0.75, 0.25, 1.0), fresnel);
+      vec3 refractCol = mix(u_primary_color, prism, 0.6) * (0.7 + facetStrength * 0.6);
       vec3 gemCol = refractCol * beer;
       // Internal reflection: bounce light inside the gem
       vec3 internalReflDir = reflect(rd, n);
@@ -4051,7 +4080,7 @@ void main() {
       gemCol.b *= (1.0 - dispersion * 0.5);
       gemCol += u_secondary_color * trapDetail * 0.25 * beer;
       gemCol *= facetStrength;
-      col = gemCol * (0.6 + 0.4 * ao) + gemSpec + u_accent_color * caustic * 0.6;
+      col = mix(col * 0.4, gemCol * (0.6 + 0.4 * ao) + gemSpec + u_accent_color * caustic * 0.6, 0.82); // STYLE FIX: preserve relief
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth
@@ -4069,31 +4098,39 @@ void main() {
     float atmosphere = 1.0 - exp(-t * 0.008);
     col = mix(col, col + rayleighScatter * 0.15, clamp(atmosphere, 0.0, 1.0));
 
-    // GOD RAYS / VOLUMETRIC LIGHT: Light shafts from sun direction
-    // Sample along light ray for volumetric scattering effect
-    float godRayIntensity = 0.0;
-    float godRayStep = 0.5;
-    for (int gr_i = 0; gr_i < 8; gr_i++) {
-      float gr_t = float(gr_i) * godRayStep;
-      vec3 gr_p = ro + rd * gr_t;
-      // Check if this point is in shadow (simple occlusion)
-      float gr_d = sceneSDF(gr_p).x;
-      if (gr_d > 0.1) {
-        // Point is in light - add god ray contribution
-        float gr_falloff = exp(-gr_t * 0.08);
-        godRayIntensity += gr_falloff * 0.12;
+    // GOD RAYS / VOLUMETRIC LIGHT: Light shafts from sun direction.
+    // PERF/EXPOSURE FIX: this loop calls sceneSDF once per sample — previously 8
+    // unconditional samples per hit pixel (a major FPS sink that fed the
+    // DynamicQuality 2->1 flapping) plus a warm-white (1.0,0.95,0.8) veil that
+    // contributed to the cream blowout. Now gated on the Ether Fog slider (the
+    // effect that motivates volumetric light), reduced to 5 samples, and tinted
+    // toward the palette accent so it never washes the surface to white.
+    if (u_volumetric_fog > 0.05) {
+      float godRayIntensity = 0.0;
+      float godRayStep = 0.8;
+      for (int gr_i = 0; gr_i < 5; gr_i++) {
+        float gr_t = float(gr_i) * godRayStep;
+        vec3 gr_p = ro + rd * gr_t;
+        float gr_d = sceneSDF(gr_p).x;
+        if (gr_d > 0.1) {
+          float gr_falloff = exp(-gr_t * 0.08);
+          godRayIntensity += gr_falloff * 0.12;
+        }
       }
+      godRayIntensity = clamp(godRayIntensity, 0.0, 1.0);
+      vec3 godRayColor = mix(vec3(1.0, 0.95, 0.8), u_accent_color, 0.5) * godRayIntensity * sunAmount * 0.25 * clamp(u_volumetric_fog, 0.0, 1.0);
+      col += godRayColor;
     }
-    godRayIntensity = clamp(godRayIntensity, 0.0, 1.0);
-    vec3 godRayColor = vec3(1.0, 0.95, 0.8) * godRayIntensity * sunAmount * 0.4;
-    col += godRayColor;
   }
 
   // AUTO-EXPOSURE: Smooth brightness compression before ACES tone mapping
   // Prevents overexposure for fractals with intense lighting (mandelbox, kleinian, etc.)
   // Uses per-channel Reinhard-style compression to preserve color ratios
   float preMax = max(col.r, max(col.g, col.b));
-  float exposureTarget = 1.8;
+  // EXPOSURE FIX: target lowered 1.8 -> 1.1. 1.8 let highlights sit deep in ACES'
+  // desaturating roll-off (everything converged to white); 1.1 keeps the brightest
+  // channel just under the clip point so hue is preserved after tone mapping.
+  float exposureTarget = 1.1;
   if (preMax > exposureTarget) {
     col *= exposureTarget / preMax;
   }
@@ -4102,8 +4139,10 @@ void main() {
 
   // BLOOM SIMULATION: Brightness-based glow for light sources and specular highlights
   float brightness = dot(col, vec3(0.299, 0.587, 0.114));
-  float bloomThreshold = 0.6;
-  float bloomStrength = max(brightness - bloomThreshold, 0.0) * 0.35;
+  // BLOOM FIX: threshold 0.6 -> 0.8, strength 0.35 -> 0.16. The old wide bloom
+  // re-added brightness across the whole surface, washing out the fractal's form.
+  float bloomThreshold = 0.8;
+  float bloomStrength = max(brightness - bloomThreshold, 0.0) * 0.16;
   vec3 bloomCol = col * bloomStrength + u_accent_color * bloomStrength * 0.15;
   col += bloomCol;
 

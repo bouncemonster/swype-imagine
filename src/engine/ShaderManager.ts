@@ -182,7 +182,12 @@ export class ShaderManager {
       '  if (r_bound > 5.0) return vec2((r_bound - 2.8) / max(inv_scale, 0.0001), r_bound);\n' +
       '  int iters = int(clamp(u_iterations, 6.0, 64.0));\n' +
       '  float t = u_time * u_morph_speed;\n' +
-      '  float phi = u_phi_val;\n' +
+      // INTERNAL EVOLUTION (mirrors the monolithic sceneSDF): phi drifts on golden
+      // sub-harmonics of the morph clock and iteration depth breathes, so the spliced
+      // per-fractal shader evolves structurally instead of rendering a frozen set.
+      '  float phiEvo = (sin(t * 0.35) * 0.05 + sin(t * 0.21 + 1.7) * 0.03) * clamp(u_morph_speed, 0.0, 1.0);\n' +
+      '  float phi = u_phi_val + phiEvo;\n' +
+      '  iters = clamp(iters + int(2.0 * sin(t * 0.13 + 0.5)), 6, 64);\n' +
       '  float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5;\n' +
       '  float breathSecondary = sin(u_time * 0.8 * phi + 1.0) * 0.5 + 0.5;\n' +
       '  float breathTertiary = sin(u_time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5;\n' +
