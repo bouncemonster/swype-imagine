@@ -154,6 +154,16 @@ compatibility_date = "2025-01-01"
 pages_build_output_dir = "dist"
 ```
 
+### Temporary public preview (Cloudflare Quick Tunnel vs Pages)
+For a throwaway share link without deploying, `cloudflared tunnel --url http://localhost:<port>` allocates a `https://<random>.trycloudflare.com` URL and needs no account/ports/domain. **Caveat found on this machine:** the argotunnel data plane dials the Cloudflare edge on **outbound port 7844** (QUIC/UDP *and* HTTP/2/TCP); if the local network/firewall blocks 7844 the tunnel never becomes reachable (pre-check reports `hard_fail=true`, `dial tcp <edge>:7844: i/o timeout`) even though `api.cloudflare.com:443` passes and a URL is printed. Switching `--protocol http2` or agent permissions does not help — 7844 has no 443 fallback in the tunnel data plane.
+When that happens, deploy the built `dist/` to **Cloudflare Pages** instead (443-only, already the project's configured target, account is pre-authenticated via `wrangler login`):
+```powershell
+npx wrangler pages deploy dist --project-name golden-ratio-fractal-engine --commit-dirty=true
+# -> https://<hash>.golden-ratio-fractal-engine.pages.dev  + stable alias
+#    https://master.golden-ratio-fractal-engine.pages.dev
+```
+This gives a persistent, HTTPS, DDoS-protected public link over the one port the network allows. Verify with `Invoke-WebRequest <url>` (expect `200` + the current bundle filename in the HTML).
+
 ---
 
 ## Deploy to Vercel
