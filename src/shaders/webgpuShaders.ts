@@ -4036,6 +4036,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let fogDist = max(0.0, t - fogStart);
     let fog = 1.0 - exp(-fogDist * fogDist * fogDensity * 0.5); // Exponential-squared for smoother falloff
     col = mix(col, vec3<f32>(0.005, 0.004, 0.008), fog * clamp(u.volumetric_fog, 0.0, 1.0));
+
+    // BOUNDARY FADE (mirrors WebGL): space-filling fractals were hard-clipped to the
+    // r=5 render sphere (visible circle, black outside). Dissolve the outer shell into
+    // the background; bounded fractals never reach 3.5 so are unaffected.
+    col = col * (1.0 - smoothstep(3.5, 5.0, length(p)));
   }
 
   col = acesToneMap(col);

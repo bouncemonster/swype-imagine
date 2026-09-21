@@ -3894,6 +3894,15 @@ void main() {
 
     // Curvature and trapDetail already computed above for palette engine
 
+    // SHARED RELIEF CARRIER: the base PBR pass above already encodes the 3D form
+    // (AO + diffuse gradient + specular). The stylized modes below previously
+    // replaced col with flat palette-derived color, so every style collapsed to a
+    // featureless silhouette (the "ужасный плоский блоб" artifact). Keep a
+    // normalized luminance of the shaded base and re-apply it to each style, plus
+    // retain a sliver of the base color, so the figure stays three-dimensional.
+    float relief = clamp(dot(col, vec3(0.299, 0.587, 0.114)) * 1.7, 0.22, 1.35);
+    vec3 baseCol = col;
+
     if (u_render_style > 0.5 && u_render_style < 1.5) {
       // 1. X-Ray Томография: Volumetric scattering + beam hardening + bone density
       float dens = clamp(float(steps) / 65.0, 0.0, 1.0);
@@ -3918,7 +3927,7 @@ void main() {
       xrayCol = mix(xrayCol, vec3(0.70, 0.82, 1.0) * (0.35 + boneDensity + curvNorm * 0.5), 0.6);
       xrayCol = pow(clamp(xrayCol, 0.0, 1.0), vec3(1.4)); // STYLE FIX: deepen radiograph contrast (was flat gray)
       // Keep a sliver of the base relief so the silhouette still reads as 3D.
-      col = mix(col * 0.30, xrayCol * 1.2, 0.74 + 0.20 * ao);
+      col = mix(baseCol * 0.35, xrayCol * relief * 1.15, 0.72 + 0.20 * ao);
     } else if (u_render_style > 1.5 && u_render_style < 2.5) {
       // 2. Топография: Height-based terrain + multi-scale contours + ridge detection
       // Use world-space Y as elevation (real terrain height, not normal Y)
@@ -3927,10 +3936,16 @@ void main() {
       float contourFine = abs(fract(height * 20.0) - 0.5) * 2.0;
       float contourMed = abs(fract(height * 8.0) - 0.5) * 2.0;
       float contourCoarse = abs(fract(height * 3.0 + curvNorm * 0.3) - 0.5) * 2.0;
-      // Combine scales: fine contours are thinner, coarse are wider
-      float contourF = smoothstep(0.0, 0.035, contourFine);
-      float contourM = smoothstep(0.0, 0.07, contourMed);
-      float contourC = smoothstep(0.0, 0.12, contourCoarse);
+      // Combine scales: fine contours are thinner, coarse are wider.
+      // ANTI-ALIAS: derive each line width from the screen-space derivative of the
+      // height field so contours fade instead of aliasing into moire at distance
+      // (the old fixed 0.035/0.07/0.12 widths turned into a noisy dither far away).
+      float wF = clamp(fwidth(height * 20.0) * 2.0, 0.02, 0.5);
+      float wM = clamp(fwidth(height * 8.0) * 2.0, 0.04, 0.5);
+      float wC = clamp(fwidth(height * 3.0) * 2.0, 0.06, 0.6);
+      float contourF = smoothstep(0.0, wF, contourFine);
+      float contourM = smoothstep(0.0, wM, contourMed);
+      float contourC = smoothstep(0.0, wC, contourCoarse);
       float contour = min(contourF, min(contourM, contourC));
       // Ridge detection: high curvature = mountain ridges
       float ridgeLine = smoothstep(0.25, 0.75, curvNorm);
@@ -3960,43 +3975,48 @@ void main() {
       // Slope shading
       topoCol *= (0.55 + 0.45 * slopeShade);
       // Blend over the base relief so the 3D form survives the map projection.
-      col = mix(col * 0.35, topoCol * (0.45 + 0.55 * ao), 0.82);
+      col = mix(baseCol * 0.40, topoCol * relief, 0.80);
     } else if (u_render_style > 2.5 && u_render_style < 3.5) {
       // 3. Голографическая проекция: Chromatic aberration + interference + hex grid
       float depthNorm = clamp(t / 20.0, 0.0, 1.0);
       // Chromatic aberration: per-channel offset based on depth
-      float rOff = sin(depthNorm * 25.0 + u_time * 3.5) * 0.03;
-      float gOff = sin(depthNorm * 25.0 + u_time * 3.5 + 2.094) * 0.03;
-      float bOff = sin(depthNorm * 25.0 + u_time * 3.5 + 4.189) * 0.03;
+      float rOff = sin(depthNorm * 25.0 + u_time * 0.8) * 0.03;
+      float gOff = sin(depthNorm * 25.0 + u_time * 0.8 + 2.094) * 0.03;
+      float bOff = sin(depthNorm * 25.0 + u_time * 0.8 + 4.189) * 0.03;
       // STYLE FIX: cyan projector identity (was u_primary → gold palettes killed the
       // "hologram" look). Per-channel chromatic offset retained.
       vec3 holoBase = mix(vec3(0.20, 0.70, 1.0), u_primary_color, 0.22) * vec3(1.0 + rOff, 1.0 + gOff, 1.0 + bOff);
       // Fresnel edge glow
       float holoFres = pow(1.0 - abs(dot(n, -rd)), 2.5);
-      // Scan lines with depth-varying frequency
-      float scanFreq = 200.0 + depthNorm * 150.0;
-      float scanline = 0.60 + 0.40 * sin(v_uv.y * scanFreq + u_time * 10.0); // STYLE FIX: stronger scanlines
+      // Scan lines with depth-varying frequency.
+      // ANTI-ALIAS + DE-FLICKER: the old 200-350 freq over a ~520px canvas put the
+      // pattern below pixel size (moire) and u_time*10 made it race. Lower the
+      // frequency, slow the drift, and fade contrast as the pattern goes sub-pixel.
+      float scanFreq = 120.0 + depthNorm * 80.0;
+      float slPhase = v_uv.y * scanFreq + u_time * 2.0;
+      float slAA = clamp(1.0 - fwidth(slPhase) * 1.5, 0.0, 1.0);
+      float scanline = 1.0 - (0.4 - 0.4 * sin(slPhase)) * slAA;
       // Curvature wireframe
       float wireframe = smoothstep(0.25, 0.75, curvNorm);
-      // Data glitch bursts
-      float glitch = step(0.965, fract(sin(dot(p, vec3(12.9898, 78.233, 45.164)) + u_time * 2.5) * 43758.5));
+      // Data glitch bursts (static per point - the old +u_time term was per-frame sparkle/noise)
+      float glitch = step(0.99, fract(sin(dot(p, vec3(12.9898, 78.233, 45.164)) * 43758.5)));
       // Hexagonal grid overlay (holographic data mesh)
       float hexScale = 25.0;
       vec3 hexP = p * hexScale;
       float hx = abs(fract(hexP.x * 0.5) - 0.5) * 2.0;
       float hy = abs(fract(hexP.y * 0.866) - 0.5) * 2.0;
       float hexGrid = min(hx, hy);
-      float hexLine = smoothstep(0.0, 0.08, hexGrid);
-      // Shimmer
-      float shimmer = 0.85 + 0.15 * sin(u_time * 6.0 + length(p) * 12.0);
+      float hexLine = smoothstep(0.0, clamp(fwidth(hexP.x * 0.5) * 2.0, 0.05, 0.6), hexGrid);
+      // Shimmer (slowed + gentler: was u_time*6 + length*12 = fast grain)
+      float shimmer = 0.9 + 0.1 * sin(u_time * 1.2 + length(p) * 4.0);
       vec3 holoCol = holoBase * (0.30 + holoFres * 1.5 + wireframe * 0.6) * scanline * shimmer;
       holoCol += u_accent_color * wireframe * 1.4;
       holoCol += vec3(0.12, 0.35, 0.75) * holoFres * 1.8;
-      holoCol += u_accent_color * glitch * 3.5;
+      holoCol += u_accent_color * glitch * 1.2;
       holoCol += u_primary_color * trapDetail * 0.35;
       // Hex grid lines
       holoCol += u_secondary_color * (1.0 - hexLine) * 0.15 * (0.5 + depthNorm * 0.5);
-      col = mix(col * 0.22, holoCol, 0.84); // STYLE FIX: keep base relief showing through
+      col = mix(baseCol * 0.30, holoCol * relief, 0.82); // STYLE FIX: keep base relief showing through
     } else if (u_render_style > 3.5 && u_render_style < 4.5) {
       // 4. Радужная интерференция: Thin-film + Fresnel + 5-order interference
       float nv = max(dot(n, -rd), 0.0);
@@ -4020,16 +4040,19 @@ void main() {
       iridCol *= (0.6 + trapDetail * 0.3 + iridDiff);
       // Fresnel rim for iridescence
       iridCol += u_accent_color * pow(fresnel, 1.5) * 0.4;
-      col = mix(col * 0.45, iridCol * (0.45 + 0.55 * ao) + specIrid, 0.72); // STYLE FIX: preserve relief
+      col = mix(baseCol * 0.45, iridCol * relief + specIrid, 0.70); // STYLE FIX: preserve relief
     } else if (u_render_style > 4.5 && u_render_style < 5.5) {
       // 5. Квантовое поле: Energy field + magnetic flux + PBR
-      float wave1 = sin(length(p) * 12.0 - u_time * 3.5);
-      float wave2 = cos(dot(p, normalize(vec3(1.618, 1.0, 0.618))) * 7.0 + u_time * 2.2);
-      float wave3 = sin(dot(p, normalize(vec3(-0.618, 1.618, 1.0))) * 9.0 - u_time * 1.8);
+      // DE-FLICKER / DE-MOIRE: halved spatial frequencies (length*12 -> *6) and
+      // slowed the time drift (u_time*3.5 -> *0.8) so the interference reads as a
+      // field instead of racing concentric moire rings.
+      float wave1 = sin(length(p) * 6.0 - u_time * 0.8);
+      float wave2 = cos(dot(p, normalize(vec3(1.618, 1.0, 0.618))) * 4.0 + u_time * 0.5);
+      float wave3 = sin(dot(p, normalize(vec3(-0.618, 1.618, 1.0))) * 5.0 - u_time * 0.4);
       float interference = (wave1 + wave2 + wave3) / 3.0;
       // Magnetic flux lines (curl-like field visualization)
-      float flux1 = sin(p.x * 8.0 + u_time * 1.5) * cos(p.z * 6.0 - u_time * 1.2);
-      float flux2 = cos(p.y * 7.0 - u_time * 1.8) * sin(p.x * 5.0 + u_time * 0.9);
+      float flux1 = sin(p.x * 5.0 + u_time * 0.5) * cos(p.z * 4.0 - u_time * 0.4);
+      float flux2 = cos(p.y * 4.0 - u_time * 0.5) * sin(p.x * 3.0 + u_time * 0.3);
       float flux = (flux1 + flux2) * 0.5;
       float probability = trapDetail * 0.5 + (0.5 + 0.5 * interference) * 0.35 + flux * 0.15;
       float energy = pow(abs(interference), 0.7) * (0.5 + curvNorm * 0.5);
@@ -4051,7 +4074,7 @@ void main() {
       qCol += u_primary_color * curvNorm * 0.35;
       qCol *= (0.6 + trapDetail * 0.4);
       qCol *= 0.72; // STYLE FIX: tame the additive blowout that washed the field to pale pink
-      col = mix(col * 0.35, qCol * (0.30 + 0.55 * ao) + sssColor * 0.6, 0.85); // STYLE FIX: preserve relief
+      col = mix(baseCol * 0.35, qCol * relief + sssColor * 0.5, 0.82); // STYLE FIX: preserve relief
     } else if (u_render_style > 5.5) {
       // 6. Кристалл: Internal reflections + caustics + dispersion + Beer-Lambert
       float beerDist = min(max(t - 0.5, 0.0), 20.0);
@@ -4082,7 +4105,7 @@ void main() {
       gemCol.b *= (1.0 - dispersion * 0.5);
       gemCol += u_secondary_color * trapDetail * 0.25 * beer;
       gemCol *= facetStrength;
-      col = mix(col * 0.4, gemCol * (0.6 + 0.4 * ao) + gemSpec + u_accent_color * caustic * 0.6, 0.82); // STYLE FIX: preserve relief
+      col = mix(baseCol * 0.40, gemCol * relief + gemSpec + u_accent_color * caustic * 0.5, 0.80); // STYLE FIX: preserve relief
     }
 
     // IMPROVED FOG: Exponential-squared falloff for more natural atmospheric depth
@@ -4123,6 +4146,14 @@ void main() {
       vec3 godRayColor = mix(vec3(1.0, 0.95, 0.8), u_accent_color, 0.5) * godRayIntensity * sunAmount * 0.25 * clamp(u_volumetric_fog, 0.0, 1.0);
       col += godRayColor;
     }
+
+    // BOUNDARY FADE: space-filling fractals (apollonian, etc.) grow out to the r=5
+    // render sphere and were hard-clipped to a visible circle with pure black beyond
+    // it ("objects confined to a sphere, nothing renders outside it"). Dissolve the
+    // outer shell into the background instead of a hard cut. This is a pure post-shade
+    // multiply: the raymarch bounds/step tuning are untouched, and bounded fractals
+    // (mandelbulb, mandelbox) never reach radius 3.5 so are completely unaffected.
+    col *= 1.0 - smoothstep(3.5, 5.0, length(p));
   }
 
   // AUTO-EXPOSURE: Smooth brightness compression before ACES tone mapping

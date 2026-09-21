@@ -57,20 +57,27 @@ Complete WebGL2 shader pipeline: vertex shader, fragment shader, 131 inline SDF 
 All 431 type indices dispatch here: explicit `ftype == 0…140` branches for Mandelbrot variants (131-140), then compressed range rules (:3045-3057) — Julia 141-190, IFS 191-240, L-System 241-290, Flame 291-340, Hybrid 341-430 — each delegating to the module lookup functions. Unmapped indices fall through to `mapPhyllotaxis`.
 
 ## Render Modes (u_render_style)
-Every mode now blends its effect OVER the base PBR relief (`col = mix(col*0.2–0.45, styleCol, 0.72–0.85)`) instead of discarding it, and carries a palette-independent identity so the figure stays readable and the 7 modes stay visually distinct on any palette:
+Headless screenshots (mandelbulb, all 7 modes) exposed two artifact classes and they are now fixed:
+- **Flat-blob collapse**: every stylized mode replaced `col` with a flat palette-derived color, so the 3D form vanished. A shared `relief` factor (normalized luminance of the shaded base PBR pass) now multiplies each style's color and a `baseCol` sliver is retained (`col = mix(baseCol*0.3–0.45, styleCol*relief, 0.7–0.82)`), so the figure stays three-dimensional on any palette.
+- **Moire + temporal flicker**: high-frequency decorative patterns (topo contours, hologram scanlines/hex grid, quantum interference rings) aliased into noise at distance, and `+ u_time` terms (hologram glitch/shimmer, quantum waves) read as per-frame grain. All pattern widths are now derived from `fwidth()` (fade instead of alias) and the time terms are slowed/removed.
+
+Modes and their palette-independent identity:
 0: solid - PBR with AO, soft shadows, SSS (exposure rebased into ACES chromatic region)
 1: xray - Cool blue-white volumetric tomography w/ contrast curve
-2: topo/sonar/lidar - Real water→snow elevation ramp + high-contrast contours
-3: hologram - Cyan projector identity + stronger scanlines/hex grid
+2: topo/sonar/lidar - water→snow elevation ramp + fwidth-AA contours
+3: hologram - Cyan projector identity + anti-aliased scanlines/hex grid (glitch now static, no sparkle)
 4: iridescent - Thin-film interference (relief-preserving)
-5: quantum - Cold-cyan→hot-magenta field (tamed additive blowout)
-6: gemstone - Prismatic blue→magenta cast + Beer-Lambert + caustics
+5: quantum - Cold-cyan→hot-magenta field (halved spatial freq, slowed drift = no racing rings)
+6: gemstone - Prismatic cast + Beer-Lambert + caustics (relief-preserving)
 
 ## Exposure & Internal Evolution
 - Auto-exposure target 1.8→1.1, bloom threshold 0.6→0.8 / strength 0.35→0.16, and a lighter PBR composite prevent the cream-blowout that previously hid all form and hue.
 - God rays are gated on the Ether Fog slider and reduced 8→5 `sceneSDF` samples/pixel (perf + no warm-white veil).
 - `sceneSDF` evolves structurally: `phi` drifts on golden sub-harmonics of `u_time*u_morph_speed` and iteration depth breathes ±2, so figures develop over time (morphSpeed=0 freezes). Mirrored in `ShaderManager.generateMinimalSceneSDF` and `webgpuShaders.ts`.
 - Post-processing dead-code cleanup: the 25-tap "bokeh" DOF and 5-tap "motion blur" loops averaged `col` with itself (offsets never re-sampled the scene) — mathematical no-ops that only cost GPU time; removed. The chromatic-aberration and both dither hashes had a `+ u_time` term that manifested as per-pixel flicker/grain on the slowly-evolving surface, not dispersion or banding relief; CA is now a stable radial RGB lift and the dithers are static per-pixel hashes (still break banding, no shimmer). Mirrored in `webgpuShaders.ts` (which never had the DOF/motion loops but did carry the noisy CA/dither).
+
+## Boundary Fade (the "render sphere")
+Space-filling fractals (apollonian, etc.) reach the `r_bound > 5.0` reject in `sceneSDF` and were hard-clipped to a visible circle with pure black outside it ("objects confined to a sphere, nothing renders outside"). A `col *= 1.0 - smoothstep(3.5, 5.0, length(p))` at the end of the hit block dissolves the outer shell into the background instead of a hard cut. It is a pure post-shade multiply — the raymarch bounds/step tuning (see the transparent-sphere safety check) are untouched, and bounded fractals (mandelbulb, mandelbox) never reach radius 3.5 so are completely unaffected. Mirrored in `webgpuShaders.ts`. Note: apollonian's intrinsic orbit-trap speckle at high detail is a separate fractal-shading matter, not a render-style or bounds artifact.
 
 ## Dependencies
 - `modules/juliaVariations.ts` - 50 Julia variants (ftype 141-190)
