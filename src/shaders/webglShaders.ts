@@ -3153,33 +3153,37 @@ vec2 sceneSDF(vec3 p_world) {
   }
   
   float t = u_time * u_morph_speed;
-  // INTERNAL EVOLUTION: the golden fold parameter phi drifts on slow golden-ratio
-  // sub-harmonics of the morph clock, so the fractal's structure genuinely develops
-  // over time (bulb counts / fold symmetry morph) instead of sitting as a static set
-  // that only pulses and rotates. Amplitude scales with u_morph_speed → set it to 0
-  // for a frozen figure. This is the answer to "fractals should live in development".
-  float phiEvo = (sin(t * 0.35) * 0.05 + sin(t * 0.21 + 1.7) * 0.03) * clamp(u_morph_speed, 0.0, 1.0);
+  // A single "aliveness" dial: morph_speed gates BOTH the genuine structural evolution
+  // (phi fold-drift, iteration breath) AND the rigid breathing / precession wobble below.
+  // Amplitudes saturate at clamp(morph_speed,0,1), so pushing morph_speed PAST 1 only
+  // SPEEDS the mathematical development (via t), never amplifies the rigid wobble. This
+  // keeps the fractal's actual structure the star of the motion instead of a rigid-body
+  // tumble masking it; and because morph_speed also drives t, low values calm the figure
+  // for close study of its math.
+  float morphGate = clamp(u_morph_speed, 0.0, 1.0);
+  // INTERNAL EVOLUTION: the golden fold parameter phi drifts on golden-ratio sub-harmonics
+  // of the morph clock so bulb counts / fold symmetry genuinely develop over time.
+  float phiEvo = (sin(t * 0.5) * 0.05 + sin(t * 0.3 + 1.7) * 0.03) * morphGate;
   float phi = u_phi_val + phiEvo;
   // Detail depth breathes on a slower golden cycle → fine structure emerges and recedes.
-  iters = clamp(iters + int(2.0 * sin(t * 0.13 + 0.5)), 6, 64);
+  iters = clamp(iters + int(2.0 * sin(t * 0.18 + 0.5)), 6, 64);
   int compOp = int(u_compose_op + 0.5);
   float k = max(0.04, u_smooth_k * 0.45);
 
-  // FRACTAL BREATHING: Organic radial pulsation at golden-ratio frequencies
-  // Creates living, breathing geometry that visibly grows and contracts
-  float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5; // 0-1, ~7.85s period (faster)
+  // FRACTAL BREATHING: organic radial pulsation at golden-ratio frequencies.
+  // Gated by morphGate → the figure sits perfectly still when morph_speed is 0.
+  float breathPrimary = sin(u_time * 0.8) * 0.5 + 0.5; // 0-1, ~7.85s period
   float breathSecondary = sin(u_time * 0.8 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
   float breathTertiary = sin(u_time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
-  // Combine for non-repeating organic motion (sum of golden-ratio frequencies)
-  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06; // Increased from 0.025 to 0.06 for more visible growth
+  float breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06 * morphGate;
   // Distance-weighted: surface breathes more than interior
   float breathWeight = 1.0 - exp(-r_bound * 0.8);
   p_eval *= 1.0 + breathAmount * breathWeight;
 
-  // ORBITAL PRECESSION: Slow rotation of evaluation space
-  // Creates gentle tumbling motion that reveals hidden symmetry
-  float precessAngle = u_time * 0.06; // Very slow: ~104s per revolution
-  float precessY = u_time * 0.037; // Different speed on Y axis
+  // ORBITAL PRECESSION: slow tumble of evaluation space. Gated by morphGate (rate, not
+  // just amplitude) so a frozen figure keeps a fixed orientation and reads as pure math.
+  float precessAngle = u_time * 0.06 * morphGate; // ~104s/rev at morphGate=1
+  float precessY = u_time * 0.037 * morphGate; // Different speed on Y axis
   float cp = cos(precessAngle), sp = sin(precessAngle);
   float cq = cos(precessY), sq = sin(precessY);
   // Rotate around Y axis

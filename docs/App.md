@@ -22,6 +22,7 @@ Orchestrates all UI components, manages fractal parameters, neuro-aesthetic engi
 - Golden ratio stepping (`PHI_INV * length`) for maximum coverage
 - Varies: type, hybrid, tertiary, composite, render style, camera, zoom, iterations
 - **Render-style legibility bias**: `solid` (the true PBR form) is shown on ~50% of ticks (even `idx`), the other ~50% cycle the 6 stylized modes — because the heavily-processed modes (xray/quantum/gem/…) recolor the surface and hide the fractal's actual math, and the exploration feed is the default showcase
+- **Development-visible morph clock**: each tick sets `morphSpeed: [0.9, 1.15, 1.4][idx % 3]` instead of inheriting the calm 0.45 showcase default. At 0.45 a full structural re-fold cycle outlasts the 18s dwell, so the specimen looked static and never appeared to develop. Because the shader's rigid breath/precession now saturate at `clamp(morph,0,1)`, raising `morphSpeed` speeds ONLY the genuine mathematical evolution, not the wobble. Measured headless: structural frame-delta went from ~3.8 (near-frozen, camera-orbit only) to ~12.1 at `morph=1.4` — a 3.2× increase
 - Disables on user interaction (`setAutoExplore(false)`)
 
 ### Loader Progress Wiring

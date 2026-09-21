@@ -3194,29 +3194,30 @@ fn sceneSDF(p_world: vec3<f32>) -> vec2<f32> {
   }
   
   let t = u.time * u.morph_speed;
-  // INTERNAL EVOLUTION (mirrors WebGL sceneSDF): golden sub-harmonic phi drift +
-  // iteration-depth breathing so figures develop structurally, gated by morph_speed.
-  let phiEvo = (sin(t * 0.35) * 0.05 + sin(t * 0.21 + 1.7) * 0.03) * clamp(u.morph_speed, 0.0, 1.0);
+  // INTERNAL EVOLUTION (mirrors WebGL sceneSDF): morph_speed is a single aliveness dial.
+  // Amplitudes saturate at clamp(morph_speed,0,1) so raising it past 1 only speeds the
+  // mathematical development (via t); the rigid breath/precession are gated too, so a
+  // frozen figure keeps a fixed orientation and reads as pure structure.
+  let morphGate = clamp(u.morph_speed, 0.0, 1.0);
+  let phiEvo = (sin(t * 0.5) * 0.05 + sin(t * 0.3 + 1.7) * 0.03) * morphGate;
   let phi = u.phi_val + phiEvo;
-  iters = clamp(iters + i32(2.0 * sin(t * 0.13 + 0.5)), 6, 64);
+  iters = clamp(iters + i32(2.0 * sin(t * 0.18 + 0.5)), 6, 64);
   let compOp = i32(u.compose_op + 0.5);
   let k = max(0.04, u.smooth_k * 0.45);
 
-  // FRACTAL BREATHING: Organic radial pulsation at golden-ratio frequencies
-  // Creates living, breathing geometry that subtly grows and contracts
-  let breathPrimary = sin(u.time * 0.4) * 0.5 + 0.5; // ~15.7s period
-  let breathSecondary = sin(u.time * 0.4 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
-  let breathTertiary = sin(u.time * 0.4 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
-  // Combine for non-repeating organic motion
-  let breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.025;
+  // FRACTAL BREATHING: organic radial pulsation. Gated by morphGate. Rate/amplitude now
+  // match the WebGL path (0.8 freq, 0.06 amp) for cross-engine parity (was 0.4 / 0.025).
+  let breathPrimary = sin(u.time * 0.8) * 0.5 + 0.5; // ~7.85s period
+  let breathSecondary = sin(u.time * 0.8 * phi + 1.0) * 0.5 + 0.5; // Phase-shifted
+  let breathTertiary = sin(u.time * 0.8 * phi * phi + 2.0) * 0.5 + 0.5; // Triple-phi
+  let breathAmount = (breathPrimary * 0.5 + breathSecondary * 0.3 + breathTertiary * 0.2) * 0.06 * morphGate;
   // Distance-weighted: surface breathes more than interior
   let breathWeight = 1.0 - exp(-r_bound * 0.8);
   p_eval = p_eval * (1.0 + breathAmount * breathWeight);
 
-  // ORBITAL PRECESSION: Slow rotation of evaluation space
-  // Creates gentle tumbling motion that reveals hidden symmetry
-  let precessAngle = u.time * 0.06; // Very slow: ~104s per revolution
-  let precessY = u.time * 0.037; // Different speed on Y axis
+  // ORBITAL PRECESSION: slow tumble of evaluation space, gated by morphGate (rate).
+  let precessAngle = u.time * 0.06 * morphGate; // ~104s/rev at morphGate=1
+  let precessY = u.time * 0.037 * morphGate; // Different speed on Y axis
   let cp = cos(precessAngle); let sp = sin(precessAngle);
   let cq = cos(precessY); let sq = sin(precessY);
   // Rotate around Y axis

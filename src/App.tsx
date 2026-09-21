@@ -247,6 +247,12 @@ export default function App() {
         tertiaryBlend: 0.1 + (idx % 4) * 0.08,
         zoom: zoomOptions[zoomIdx],
         iterations: iterOptions[iterIdx],
+        // The showcase default (0.45) advances the evolution clock so slowly that a full
+        // structural cycle outlasts the 18s dwell → the figure looks static and its math
+        // never appears to develop. Bias exploration to a faster morph clock; because the
+        // shader's rigid breath/precession saturate at clamp(morph,0,1), this speeds ONLY
+        // the genuine mathematical development, not the wobble. Varied for diversity.
+        morphSpeed: [0.9, 1.15, 1.4][idx % 3],
         paletteRotation: true,
         autoRotate: true,
       }));

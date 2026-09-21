@@ -12,6 +12,10 @@
 
 ## Session: September 21, 2026
 
+### Making the mathematical development actually visible (deep investigation)
+
+The user asked to keep digging because "in the project there are very many files, connections, and the causes may be deep." Traced the *development* data flow end-to-end instead of patching symptoms: `main()` → the monolith `sceneSDF` (webglShaders.ts:3115) → the production `ShaderManager.generateMinimalSceneSDF` (the splice ~151 single types actually run) → WGSL `sceneSDF`. Findings: (1) the real structural evolution (`phiEvo`, iteration breath) is small and slow, but `sceneSDF` also ran a rigid breathing scale-pulse and an orbital-precession tumble off **raw `u_time`** — so the perceived "life" was mostly rigid-body wobble hiding the math; (2) `morphSpeed=0` did **not** freeze the figure (the wobble was ungated), contradicting the code comment; (3) at the 0.45 showcase default the evolution clock completes only ~0.45 of a fold cycle in the 18s auto-explore dwell, so it looks static then swaps. Unified fix: one `morphGate = clamp(u_morph_speed,0,1)` gating breath amplitude + precession rate in all three paths, raised `phi`-fold frequencies, and biased exploration to `morphSpeed [0.9,1.15,1.4]`; WGSL breath rebalanced to WebGL parity. Headless two-frame delta probe (temporary, deleted after) measured structural change 3.81 (near-frozen, camera-only) → 12.14 (morph 1.4) = 3.2×, isolating morph-driven development from the identical camera orbit. `tsc` 0, `npm test` 1861/0, build ok.
+
 ### Cross-engine render-style parity + backend deep-link
 
 Continuing the visual-quality arc (overexposure → per-style relief → sphere-clip dissolve). This session closed the last documented gap: **WebGPU (WGSL) still rendered the 7 styles as flat silhouettes** while WebGL had the relief-carrier fix.
