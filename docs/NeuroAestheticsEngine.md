@@ -37,7 +37,7 @@ Imported from separate data file to reduce NeuroAestheticsEngine.ts monolith siz
 ## Key Methods
 
 ### `breedNextSpecimen(forceType?)`
-1. **Type selection**: EXPLORATION_MODE shows all 113 ALL_FRACTAL_TYPES sequentially first — during this showcase pass each type renders **pure** (`isExplorationShowcase` forces `isHybrid=false`) so its characteristic form is legible
+1. **Type selection**: EXPLORATION_MODE shows the **curated `SOLID_EXPLORATION_TYPES`** (61 of the 113 `ALL_FRACTAL_TYPES`) sequentially first — during this showcase pass each type renders **pure** (`isExplorationShowcase` forces `isHybrid=false`) so its characteristic form is legible. The 52 excluded types (strange attractors / curves / discrete maps that render as dust, camera-inside fog DEs, and the polytope family whose base distance is discarded → flat blob) are dropped from the automatic rotation but stay fully available in the Atlas and the manual picker (see `SHOWCASE_EXCLUDED` and the CHANGELOG entry).
 2. **Palette evolution**: Golden angle stepping (137.5°) with 50% mutation chance
 3. **Hybrid breeding**: 80% chance **after the showcase pass only**, 60% random partner, 40% compatibility matrix
 4. **Tertiary layer**: 50% chance to add 3rd fractal
@@ -46,7 +46,7 @@ Imported from separate data file to reduce NeuroAestheticsEngine.ts monolith siz
 ### `peekNextSpecimenTypes(count = 2)`
 Pure prediction (no state mutation) of the types the next forward navigations will show — drives the renderer's parallel background shader prefetch:
 - History ahead of the cursor → their exact types (replay)
-- Remaining slots during EXPLORATION_MODE → `ALL_FRACTAL_TYPES[explorationIndex…]` (exact sequential breeds)
+- Remaining slots during EXPLORATION_MODE → `SOLID_EXPLORATION_TYPES[explorationIndex…]` (exact sequential breeds, matching the showcase pass)
 - Post-exploration Thompson sampling is stochastic → fewer/none returned (no blind prefetch)
 
 ### `registerEngagement(dwell, zoom, orbit, specimen)`

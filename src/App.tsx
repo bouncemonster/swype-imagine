@@ -12,7 +12,7 @@ import { FractalProbeHUD } from './components/FractalProbeHUD';
 import { FractalScrollFeed } from './components/FractalScrollFeed';
 import { DebugOverlay } from './components/DebugOverlay';
 import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle, CompositeOp, CameraMode, SliceAxis, AudioTuning } from './types/fractal';
-import { NeuroAestheticsEngine } from './engine/NeuroAestheticsEngine';
+import { NeuroAestheticsEngine, SOLID_EXPLORATION_TYPES } from './engine/NeuroAestheticsEngine';
 import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
 import { PROCEDURAL_PALETTES } from './palettesProcedural';
@@ -202,6 +202,16 @@ export default function App() {
   const exploreIndexRef = useRef(0);
   const PHI_INV = 0.61803398875; // Golden ratio inverse for maximum spread
 
+  // Golden-ratio step that is guaranteed coprime with `len` so the march visits every
+  // index exactly once per cycle (round(PHI_INV*len) alone can share a factor with len,
+  // e.g. 42 and 68 → gcd 2 → only half the curated list would ever appear).
+  const goldenStep = (len: number): number => {
+    const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+    let s = Math.max(1, Math.round(PHI_INV * len));
+    while (s < len && gcd(s, len) !== 1) s++;
+    return s;
+  };
+
   useEffect(() => {
     if (!autoExplore) return;
     // Mobile: longer interval (30s) to reduce GPU pressure from shader recompilation
@@ -210,11 +220,15 @@ export default function App() {
       // Idle gate: any gesture in the last 10s skips this tick (re-checked next
       // interval) — fixes "the fractal changed although I didn't press Далее".
       if (performance.now() - lastActivityAtRef.current < 10000) return;
-      // Golden ratio step through fractal types — ensures maximum coverage
-      exploreIndexRef.current = (exploreIndexRef.current + Math.round(PHI_INV * ALL_FRACTAL_TYPES.length)) % ALL_FRACTAL_TYPES.length;
+      // Golden ratio step through the CURATED solid showcase — ensures maximum coverage
+      // of recognizable characteristic forms (dust/fog/blob types are curated out; see
+      // NeuroAestheticsEngine.SOLID_EXPLORATION_TYPES).
+      const solidLen = SOLID_EXPLORATION_TYPES.length;
+      exploreIndexRef.current = (exploreIndexRef.current + goldenStep(solidLen)) % solidLen;
       const idx = exploreIndexRef.current;
-      const newType = ALL_FRACTAL_TYPES[idx];
-      // Use golden ratio offsets for hybrid/tertiary to ensure they differ from primary
+      const newType = SOLID_EXPLORATION_TYPES[idx];
+      // Hybrid/tertiary accents still draw from the full catalog for variety (they are
+      // skipped on the pure `solid` ticks via hybridBlend=0, and only tint the primary).
       const hybridIdx = (idx + Math.round(PHI_INV * 37)) % ALL_FRACTAL_TYPES.length;
       const tertiaryIdx = (idx + Math.round(PHI_INV * 73)) % ALL_FRACTAL_TYPES.length;
       const newHybrid = ALL_FRACTAL_TYPES[hybridIdx];
@@ -274,11 +288,12 @@ export default function App() {
   useEffect(() => {
     if (!neuroEngine) return;
     if (autoExplore) {
-      // The auto-explore march is deterministic — compute the next two ticks' types.
-      const step = Math.round(PHI_INV * ALL_FRACTAL_TYPES.length);
-      const len = ALL_FRACTAL_TYPES.length;
+      // The auto-explore march is deterministic — compute the next two ticks' types from
+      // the same curated list + coprime step the timer uses.
+      const step = goldenStep(SOLID_EXPLORATION_TYPES.length);
+      const len = SOLID_EXPLORATION_TYPES.length;
       const nextIdx = (exploreIndexRef.current + step) % len;
-      setNextSpecimenTypes([ALL_FRACTAL_TYPES[nextIdx], ALL_FRACTAL_TYPES[(nextIdx + step) % len]]);
+      setNextSpecimenTypes([SOLID_EXPLORATION_TYPES[nextIdx], SOLID_EXPLORATION_TYPES[(nextIdx + step) % len]]);
     } else {
       // Feed navigation: exact for history replay and exploration mode, empty when
       // the next breeds are stochastic (no blind prefetch).

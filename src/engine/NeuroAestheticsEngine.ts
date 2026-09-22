@@ -176,6 +176,41 @@ export const ALL_FRACTAL_TYPES: FractalType[] = [
   'ifs3DKoch',
 ];
 
+// AUTO-SHOWCASE CURATION (evidence-based).
+// A headless pixel sweep of all 113 exploration types at the app's default framing
+// (zoom 3.2) measured two signals — coverage (lit fraction) and surface detail (mean
+// |gradient|) — cross-checked against rendered screenshots. Three classes never read as
+// a recognizable characteristic 3D form, so they are dropped from the AUTOMATIC showcase
+// rotation (they remain fully available in the Atlas and the manual picker):
+//   (a) non-volumetric entries — strange attractors, plane/space curves, discrete maps,
+//       L-systems — render as sparse dust or blank inside a volumetric SDF raymarcher;
+//   (b) DEs that return a length-folded magnitude with no running-min surface distance
+//       (poincareSphere, spiralTunnel, reactionDiffusion, fractalCross, the high-fill
+//       flames, ifs3D tree/fern/sierpinski) fill the frame with camera-inside fog;
+//   (c) the 4D polytope family computes a base primitive distance then discards it,
+//       collapsing to a flat blob (see docs/CHANGELOG.md — known DE defect).
+// Thin-but-genuine forms (goldenKnot, juliaSet3D, cliffordKlein, …) are KEPT: low
+// coverage there reflects small/thin real geometry, not dust.
+const SHOWCASE_EXCLUDED: ReadonlySet<FractalType> = new Set<FractalType>([
+  // (a) non-volumetric: dust / blank / wrong-shape
+  'lorenzAttractor', 'antoineNecklace', 'dlaCluster', 'henonAttractor', 'aizawaAttractor',
+  'thomasAttractor', 'halvorsenAttractor', 'gosperCurve', 'lSystemPlant', 'barnsleyFern3D',
+  'chuaCircuit', 'standardMap', 'ikedaMap', 'chladniFigures', 'fitzHugh', 'rosslerAttractor',
+  'duffingAttractor', 'deJongAttractor', 'pickoverAttractor', 'vicsekFractal', 'popcornFunction',
+  'bedheadAttractor', 'fourSpotAttractor', 'svenssonAttractor', 'flameButterfly', 'flameHyperbolic',
+  'fibonacciSnowflake', 'pythagorasTree3D', 'fatouSet', 'sierpinskiOcta', 'mandelbar',
+  'ifs3DKoch', 'hopfFibration', 'phoenixFractal',
+  // (b) camera-inside fog / blob
+  'spiralTunnel', 'poincareSphere', 'reactionDiffusion', 'fractalCross', 'flameHeart',
+  'flameWaves', 'flameRings', 'flameFan', 'ifs3DTree', 'ifs3DFern', 'ifs3DSierpinski',
+  'rosslerHyperchaos', 'apollonianGasket',
+  // (c) polytope DE bug
+  'tesseract', '120Cell', '600Cell', '24Cell', '5Cell',
+]);
+
+// The curated set the auto-explore feed and exploration showcase rotate through.
+export const SOLID_EXPLORATION_TYPES: FractalType[] = ALL_FRACTAL_TYPES.filter(t => !SHOWCASE_EXCLUDED.has(t));
+
 export const FRACTAL_NAMES: Partial<Record<FractalType, string>> = {
   phyllotaxis: 'Филлотаксис Фибоначчи',
   mandelbulb: 'Золотой Мандельбульб 3D',
@@ -733,13 +768,17 @@ export class NeuroAestheticsEngine {
     let isExplorationShowcase = false;
     if (!selectedType) {
       const types = ALL_FRACTAL_TYPES;
+      // The first sequential pass is the legibility showcase — it walks the curated
+      // solid list so every tick is a recognizable characteristic form; dust/fog/blob
+      // entries are skipped here but still reachable via the taste phase and the Atlas.
+      const showcaseTypes = SOLID_EXPLORATION_TYPES;
       
       // EXPLORATION MODE: Show all types sequentially first
-      if (this.EXPLORATION_MODE && this.explorationIndex < types.length) {
-        selectedType = types[this.explorationIndex];
+      if (this.EXPLORATION_MODE && this.explorationIndex < showcaseTypes.length) {
+        selectedType = showcaseTypes[this.explorationIndex];
         this.explorationIndex++;
         isExplorationShowcase = true;
-        console.info(`[NeuroAesthetics] Exploration mode: showing type ${this.explorationIndex}/${types.length}: ${selectedType}`);
+        console.info(`[NeuroAesthetics] Exploration mode: showing type ${this.explorationIndex}/${showcaseTypes.length}: ${selectedType}`);
       } else {
         // After exploration, use Thompson sampling with reduced penalty
         const weights = types.map(t => {
@@ -1052,9 +1091,11 @@ export class NeuroAestheticsEngine {
       out.push(this.history[i].type);
     }
     // At/past the tail: exploration mode breeds the next sequential types — also exact.
+    // Mirrors breedNextSpecimen's showcase pass, which walks SOLID_EXPLORATION_TYPES (the
+    // curated forms), so the prefetch warms the shaders that will actually be shown.
     if (this.EXPLORATION_MODE) {
-      for (let k = this.explorationIndex; out.length < count && k < ALL_FRACTAL_TYPES.length; k++) {
-        out.push(ALL_FRACTAL_TYPES[k]);
+      for (let k = this.explorationIndex; out.length < count && k < SOLID_EXPLORATION_TYPES.length; k++) {
+        out.push(SOLID_EXPLORATION_TYPES[k]);
       }
     }
     return out;

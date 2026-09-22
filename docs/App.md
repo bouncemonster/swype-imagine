@@ -17,9 +17,9 @@ Orchestrates all UI components, manages fractal parameters, neuro-aesthetic engi
 ## Key Features
 
 ### Auto-Explore Mode (`autoExplore` useEffect, ~line 198-240)
-- Cycles through the 113 `ALL_FRACTAL_TYPES` entries (App.tsx:24-52; 431 is the FractalType union size, not this list)
+- Cycles through the curated **`SOLID_EXPLORATION_TYPES`** (imported from `NeuroAestheticsEngine`; 61 of the 113 `ALL_FRACTAL_TYPES` in App.tsx:24-52 — the 52 excluded are dust/fog/blob types that never read as a characteristic form; see the `SHOWCASE_EXCLUDED` comment and CHANGELOG). Hybrid/tertiary accents still draw from the full 113 for variety
 - Interval: `IS_MOBILE ? 30000 : 18000` (18s desktop / 30s mobile, line 201)
-- Golden ratio stepping (`PHI_INV * length`) for maximum coverage
+- Golden ratio stepping via `goldenStep(len)` — `round(PHI_INV * len)` bumped to the nearest value **coprime with `len`** so the march visits every curated index exactly once (a naive step can share a factor with the list length and skip half of it)
 - Varies: type, hybrid, tertiary, composite, render style, camera, zoom, iterations
 - **Render-style legibility bias**: `solid` (the true PBR form) is shown on ~50% of ticks (even `idx`), the other ~50% cycle the 6 stylized modes — because the heavily-processed modes (xray/quantum/gem/…) recolor the surface and hide the fractal's actual math, and the exploration feed is the default showcase
 - **Development-visible morph clock**: each tick sets `morphSpeed: [0.9, 1.15, 1.4][idx % 3]` instead of inheriting the calm 0.45 showcase default. At 0.45 a full structural re-fold cycle outlasts the 18s dwell, so the specimen looked static and never appeared to develop. Because the shader's rigid breath/precession now saturate at `clamp(morph,0,1)`, raising `morphSpeed` speeds ONLY the genuine mathematical evolution, not the wobble. Measured headless: structural frame-delta went from ~3.8 (near-frozen, camera-orbit only) to ~12.1 at `morph=1.4` — a 3.2× increase
