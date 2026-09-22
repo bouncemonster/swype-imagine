@@ -66,6 +66,32 @@ the honest count of distinct *mechanisms* is ~146 functions spanning ~9 mathemat
 (algebraic escape-time, folding/KIFS, implicit/TPMS, dynamical-system attractors, higher-D
 projections, number-theoretic fields, stochastic/growth, L-system/grammar, flame IFS).
 
+### 3b. Verified runtime dispatch probe (corrects the "variants → monolith" claim)
+
+A headless probe (loaded production with `#type=<variant>` and read the app's own
+`[ShaderManager] Built minimal shader for fractal N (mapX)` line) shows the lazy per-fractal path
+does **NOT** uniformly fall back to the monolith for `idx ≥ 131`. `extractFractalFunction` resolves
+an index to the **N-th `map*` definition by source position**, and because the five `*Variations`
+modules are `import`ed and concatenated at the TOP of the source (webglShaders.ts:2-6), the
+definition order is shifted relative to the catalog ordinal. Result (measured, 0 compile errors):
+
+| catalog idx | type | minimal shader actually built | correct? |
+|-------------|------|-------------------------------|----------|
+| 1 | mandelbulb | `mapMandelbulb` | ✅ |
+| 135 | mandelbrotVariant5 | **`mapFlameSwirl`** | ❌ wrong form |
+| 141 | juliaVariant1 | **`mapFlameDiamond`** | ❌ wrong form |
+| 167 | juliaVariant27 | (none built → monolith fallback) | ⚠️ fallback |
+| 197/262/296/356/430 | ifs/lsystem/flame/hybrid variants | (none built → monolith fallback) | ⚠️ fallback |
+
+So indices that happen to land on an existing definition (131–~145) render a **silently wrong**
+form; indices past the definition count fall through to the monolith (which dispatches correctly
+via `if (ftype == N)`). **This is latent, not user-facing:** the live UI never selects `idx ≥ 131`
+— the showcase is 61 curated, `ALL_FRACTAL_TYPES` is 113, and the Atlas catalog resolves to 57
+unique core types, all `idx 0–130` (verified: 0 `*Variant`-typed catalog entries). The monolith
+`evalSingleFractal` dispatch (0–430) is correct; only the WebGL *lazy splice* path is misaligned.
+Do not surface `*Variant` ids in the UI without first fixing `extractFractalFunction` to key on the
+catalog ordinal (explicit name table), not source position.
+
 ## 4. Alias mappings in `getFractalIndex` (defensive fallbacks, NOT catalog items)
 
 `fractalMappers.ts:138-156` maps 19 extra `FractalType` union names onto existing indices.

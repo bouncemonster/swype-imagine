@@ -22,7 +22,7 @@ Shader Code:      358KB (GLSL + WGSL + modules)
 Shader Modules:   38KB (649 lines, kkrieger-compressed from 189KB/7934 lines)
 Total Lines:      ~25,000 (code + docs)
 Components:       12 UI components
-Fractal Types:    431 active (WebGL: all 431; WGSL: 131/431)
+Fractal Types:    431 catalog ids → ~146 distinct DE functions; UI exposes 113 (idx 0-130), showcase curates 61 (WebGL lazy path renders only idx 0-130; WGSL 131/431). See docs/fractal-math-to-render.md
 Render Modes:     7
 Color Palettes:   666
 ```

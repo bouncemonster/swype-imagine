@@ -72,8 +72,8 @@
 
 ## Key Numbers
 
-- **431** fractal types (all active, all rendered)
-- **145** canonical fractals in catalog (10 category keys)
+- **431** catalog type ids → **~146** distinct distance estimators; the live UI renders **113** (idx 0–130), curated to **61** in the auto-showcase (see [fractal-math-to-render.md](fractal-math-to-render.md))
+- **146** catalog entries (57 unique engine types across 10 category keys)
 - **7** render modes
 - **8** composite operations
 - **4** camera modes
