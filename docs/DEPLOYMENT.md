@@ -1,4 +1,4 @@
-# Deployment Guide
+# Deployment Guide
 
 > Canonical repo: https://github.com/bouncemonster/swype-imagine — local path J:\project\swype-imagine\app. Docker section below is reference-only; Hyper-V ports 9001-9003 are academy/battle.
 
@@ -17,7 +17,7 @@
 ## Local Development
 
 ### Prerequisites
-- Node.js 18+ or Bun
+- Node.js 20+ (required by Vite 6 / Tailwind 4) or Bun
 - npm 9+ or bun
 - Git
 
@@ -112,7 +112,7 @@ npx vite-bundle-analyzer dist/assets/*.js
 
 3. **Environment Variables** (if needed)
    ```
-   NODE_VERSION: 18
+   NODE_VERSION: 20
    ```
 
 4. **Deploy**
@@ -285,7 +285,7 @@ netlify deploy --prod --dir=dist
 ### Dockerfile
 ```dockerfile
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -422,7 +422,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
       
       - name: Install dependencies
         run: npm ci
@@ -443,7 +443,7 @@ jobs:
 
 `.gitlab-ci.yml`:
 ```yaml
-image: node:18
+image: node:20
 
 stages:
   - build
@@ -573,7 +573,7 @@ rm -rf node_modules package-lock.json
 npm install
 
 # Check Node version
-node --version  # Should be 18+
+node --version  # Should be 20+ (Vite 6 / Tailwind 4)
 
 # Check npm version
 npm --version  # Should be 9+
