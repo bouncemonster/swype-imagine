@@ -451,6 +451,27 @@ export const DEFAULT_ZOOMS: Partial<Record<FractalType, number>> = {
   ifs3DKoch: 2.0,
 };
 
+// Per-type tuned genome for DEs whose characteristic structure only appears in a
+// narrow parameter regime. The generic genetic sampler (random boxFold 0.7–2.2,
+// sphereFold 0.35–1.4, phi≈1.618, iters 12–32) destroys those forms — e.g. mandelbox
+// renders as a featureless cube because its box-fold clamp (u_box_fold) drifts too
+// large and its scale (from phi) never reaches the canonical ~-2. When a type is in
+// this table, these values override the random genome whenever it is the primary
+// figure, so its signature geometry reads. Verified by headless param sweep: mandelbox
+// detail |grad| 9 → 31 and the recursive box structure appears at these values.
+export interface TunedGenome {
+  phi?: number;
+  iterations?: number;
+  zoom?: number;
+  boxFold?: number;
+  sphereFold?: number;
+}
+export const TUNED_GENOME: Partial<Record<FractalType, TunedGenome>> = {
+  // Canonical fractal-box: clamp radius 1.0, sphere-fold ~0.5, scale ≈ -2.0 (phi 2.0),
+  // deep iterations, framed just outside the structure.
+  mandelbox: { phi: 2.0, iterations: 14, zoom: 4.0, boxFold: 1.0, sphereFold: 0.5 },
+};
+
 export interface TasteProfile {
   typeAffinities: Record<FractalType, number>;
   preferredHue: number;
@@ -947,8 +968,11 @@ export class NeuroAestheticsEngine {
     }
 
     // Continuous genetic morphological parameters (keep interior solid by default)
-    const boxFold = parseFloat((0.7 + Math.random() * 1.5).toFixed(3));
-    const sphereFold = parseFloat((0.35 + Math.random() * 1.05).toFixed(3));
+    // Per-type tuned genome overrides the random sampler for DEs that only express
+    // their signature structure in a narrow parameter regime (e.g. mandelbox).
+    const tuned = TUNED_GENOME[selectedType];
+    const boxFold = tuned?.boxFold ?? parseFloat((0.7 + Math.random() * 1.5).toFixed(3));
+    const sphereFold = tuned?.sphereFold ?? parseFloat((0.35 + Math.random() * 1.05).toFixed(3));
     const interiorCut = 0.0;
 
     const specimen: FractalSpecimen = {
@@ -969,12 +993,12 @@ export class NeuroAestheticsEngine {
       sphereFold,
       interiorCut,
       palette,
-      iterations,
-      phiMultiplier,
+      iterations: tuned?.iterations ?? iterations,
+      phiMultiplier: tuned?.phi ?? phiMultiplier,
       morphSpeed,
       pureShowcase: isExplorationShowcase,
       glowIntensity,
-      zoom,
+      zoom: tuned?.zoom ?? zoom,
       affinityScore: Math.round(25 + Math.random() * 15),
       dwellTimeSeconds: 0,
       zoomInteractions: 0,

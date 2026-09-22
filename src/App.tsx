@@ -12,7 +12,7 @@ import { FractalProbeHUD } from './components/FractalProbeHUD';
 import { FractalScrollFeed } from './components/FractalScrollFeed';
 import { DebugOverlay } from './components/DebugOverlay';
 import { FractalParams, TelemetryData, FractalSpecimen, FractalType, RenderStyle, CompositeOp, CameraMode, SliceAxis, AudioTuning } from './types/fractal';
-import { NeuroAestheticsEngine, SOLID_EXPLORATION_TYPES } from './engine/NeuroAestheticsEngine';
+import { NeuroAestheticsEngine, SOLID_EXPLORATION_TYPES, TUNED_GENOME } from './engine/NeuroAestheticsEngine';
 import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
 import { PROCEDURAL_PALETTES } from './palettesProcedural';
@@ -250,6 +250,10 @@ export default function App() {
       // Vary iterations for complexity diversity
       const iterOptions = [12, 18, 24, 30, 36];
       const iterIdx = Math.floor(idx * PHI_INV * 2.1) % iterOptions.length;
+      // Per-type tuned genome (see NeuroAestheticsEngine.TUNED_GENOME): some DEs only
+      // express their signature structure in a narrow parameter regime, so override the
+      // random sampler for them on this path too (mirrors breedNextSpecimen).
+      const tuned = TUNED_GENOME[newType];
 
       setParams(prev => ({
         ...prev,
@@ -266,8 +270,11 @@ export default function App() {
         // rest for variety. (hybridBlend 0 makes the shader skip the secondary layer entirely.)
         hybridBlend: styleIdx === 0 ? 0 : 0.2 + (idx % 5) * 0.10,
         tertiaryBlend: styleIdx === 0 ? 0 : 0.1 + (idx % 4) * 0.08,
-        zoom: zoomOptions[zoomIdx],
-        iterations: iterOptions[iterIdx],
+        zoom: tuned?.zoom ?? zoomOptions[zoomIdx],
+        iterations: tuned?.iterations ?? iterOptions[iterIdx],
+        boxFold: tuned?.boxFold ?? prev.boxFold,
+        sphereFold: tuned?.sphereFold ?? prev.sphereFold,
+        phiMultiplier: tuned?.phi ?? prev.phiMultiplier,
         // The showcase default (0.45) advances the evolution clock so slowly that a full
         // structural cycle outlasts the 18s dwell → the figure looks static and its math
         // never appears to develop. Bias exploration to a faster morph clock; because the

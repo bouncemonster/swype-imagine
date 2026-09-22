@@ -89,8 +89,14 @@ Russian display names for all fractal types.
 ### `DEFAULT_ZOOMS`
 Optimal zoom level per fractal type (1.5 - 3.5 range).
 
+### `TUNED_GENOME`
+Per-type parameter overrides (`phi`, `iterations`, `zoom`, `boxFold`, `sphereFold`) for DEs whose signature structure only exists in a narrow regime and is destroyed by the random genetic sampler. `mandelbox` is the seeded entry (`boxFold 1.0 / sphereFold 0.5 / phi 2.0 / iters 14 / zoom 4.0` — random boxFold up to 2.2 clamps the box fold too wide and it renders as a featureless cube). Applied on **both** specimen paths: `breedNextSpecimen` overrides the sampled genome, and `App.tsx`'s auto-explore timer mirrors the same overrides. Verify any new entry with a headless param sweep + screenshot before adding it.
+
+### Showcase render-style forcing
+During the pure exploration showcase the specimen carries `pureShowcase: true` (on `FractalSpecimen`), and `App.applySpecimen` forces `renderStyle: 'solid'` for it — the archetype-affinity `suggestRenderStyle` modes (hologram/quantum/iridescent/heatmap) recolor the surface so heavily that distinct forms read as "the same blob". Stylized variety resumes outside the showcase pass.
+
 ## Critical Notes
-1. **EXPLORATION_MODE = true**: Shows all 113 types sequentially before random selection
+1. **EXPLORATION_MODE = true**: Shows the 61 curated `SOLID_EXPLORATION_TYPES` sequentially before random selection
 2. **RANDOM_HYBRID_MODE = true**: 60% chance for completely random hybrid partners
 3. **RECENT_WINDOW = 20**: Tracks last 20 types to avoid repetition
 4. **History limit**: 100 specimens max, FIFO
