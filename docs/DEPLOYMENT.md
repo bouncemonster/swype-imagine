@@ -1,6 +1,6 @@
-﻿# Deployment Guide
+# Deployment Guide
 
-> Canonical repo: https://github.com/bouncemonster/swype-imagine — local path J:\project\swipe-imagine\app. Docker section below is reference-only; Hyper-V ports 9001-9003 are academy/battle.
+> Canonical repo: https://github.com/bouncemonster/swype-imagine — local path J:\project\swype-imagine\app. Docker section below is reference-only; Hyper-V ports 9001-9003 are academy/battle.
 
 ## Table of Contents
 1. [Local Development](#local-development)
@@ -25,7 +25,7 @@
 ```bash
 # Clone repository
 git clone https://github.com/bouncemonster/swype-imagine.git
-cd app  # under J:\project\swipe-imagine, repo root is swype-imagine
+cd app  # under J:\project\swype-imagine, repo root is swype-imagine
 
 # Install dependencies
 npm install

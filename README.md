@@ -1,5 +1,5 @@
-﻿> **Repo:** https://github.com/bouncemonster/swype-imagine
-> **Local git root:** `J:\project\swipe-imagine\app` (folder `swipe-imagine`, GitHub spelling **swype-imagine**)
+> **Repo:** https://github.com/bouncemonster/swype-imagine
+> **Local git root:** `J:\project\swype-imagine\app` (folder `swype-imagine`, GitHub spelling **swype-imagine**)
 > Local `npm run dev` → typically `http://localhost:3000`. Not academy `:9002` / battle `:9003`.
 # Golden Ratio WebGPU Fractal Engine
 

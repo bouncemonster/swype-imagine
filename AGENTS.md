@@ -1,8 +1,8 @@
-﻿GitHub spelling: `swype-imagine` (local folder `swipe-imagine`).
+GitHub spelling: `swype-imagine` (local folder `swype-imagine`).
 
 # Agent Rules — swype-imagine
 
-**Git root:** `J:\project\swipe-imagine\app` → `git@github.com:bouncemonster/swype-imagine.git`  
+**Git root:** `J:\project\swype-imagine\app` → `git@github.com:bouncemonster/swype-imagine.git`  
 **Deep context:** see `AGENT.md` (architecture). This file = rules.
 
 ## Git
