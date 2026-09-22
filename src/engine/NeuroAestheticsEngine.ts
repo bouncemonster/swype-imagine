@@ -972,6 +972,7 @@ export class NeuroAestheticsEngine {
       iterations,
       phiMultiplier,
       morphSpeed,
+      pureShowcase: isExplorationShowcase,
       glowIntensity,
       zoom,
       affinityScore: Math.round(25 + Math.random() * 15),

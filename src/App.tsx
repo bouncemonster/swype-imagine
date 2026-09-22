@@ -324,8 +324,15 @@ export default function App() {
     setCurrentSpecimen(specimen);
     setResonanceScore(specimen.affinityScore);
 
-    // Suggest a varied render style based on fractal archetype
-    const suggestedStyle = neuroEngine?.suggestRenderStyle(specimen.type) || 'solid';
+    // Suggest a varied render style based on fractal archetype — EXCEPT during the pure
+    // exploration showcase: there the whole point is to read each type's characteristic
+    // geometry, and the archetype-preferred stylized modes (hologram/quantum/iridescent/
+    // heatmap for the "complex"/"primes" archetypes — which is most fractals) recolor the
+    // surface so heavily that distinct forms blur into "the same couple of figures". Force
+    // the true PBR `solid` for the showcase pass; stylized variety resumes afterwards.
+    const suggestedStyle = specimen.pureShowcase
+      ? 'solid'
+      : (neuroEngine?.suggestRenderStyle(specimen.type) || 'solid');
 
     setParams(prev => ({
       ...prev,

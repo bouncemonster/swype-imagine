@@ -569,6 +569,7 @@ export interface FractalSpecimen {
   iterations: number;
   phiMultiplier: number;
   morphSpeed: number;
+  pureShowcase?: boolean;          // True during the first exploration pass: render the canonical single form in solid so its geometry is legible
   glowIntensity: number;
   zoom: number;
   affinityScore?: number;          // 0 to 100 estimated affinity (default 0)
