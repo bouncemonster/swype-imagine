@@ -66,31 +66,41 @@ the honest count of distinct *mechanisms* is ~146 functions spanning ~9 mathemat
 (algebraic escape-time, folding/KIFS, implicit/TPMS, dynamical-system attractors, higher-D
 projections, number-theoretic fields, stochastic/growth, L-system/grammar, flame IFS).
 
-### 3b. Verified runtime dispatch probe (corrects the "variants → monolith" claim)
+### 3b. Dispatch mis-resolution: root cause, user impact, and fix (was: "latent")
 
-A headless probe (loaded production with `#type=<variant>` and read the app's own
-`[ShaderManager] Built minimal shader for fractal N (mapX)` line) shows the lazy per-fractal path
-does **NOT** uniformly fall back to the monolith for `idx ≥ 131`. `extractFractalFunction` resolves
-an index to the **N-th `map*` definition by source position**, and because the five `*Variations`
-modules are `import`ed and concatenated at the TOP of the source (webglShaders.ts:2-6), the
-definition order is shifted relative to the catalog ordinal. Result (measured, 0 compile errors):
+The WebGL lazy per-fractal path (`ShaderManager.extractFractalFunction`) used to resolve a catalog
+ordinal to the **N-th `map*` definition by source position**. But the assembled `FRAGMENT_SHADER_SOURCE`
+is not just the hand-written base functions: the five `${*VARIATIONS_GLSL}` modules are interpolated
+**in the middle of the template** (webglShaders.ts:2588-2602, i.e. between `map600Cell`=catalog 106 and
+`map24Cell`=catalog 107), injecting hundreds of variant `map*` functions *before* the later base types.
+So positional alignment holds only for catalog **0-106**; every base type at **ordinal >= 107** is
+shifted. Measured before the fix (0 compile errors, so it failed silently):
 
-| catalog idx | type | minimal shader actually built | correct? |
+| catalog idx | type | what positional splice built | correct? |
 |-------------|------|-------------------------------|----------|
-| 1 | mandelbulb | `mapMandelbulb` | ✅ |
-| 135 | mandelbrotVariant5 | **`mapFlameSwirl`** | ❌ wrong form |
-| 141 | juliaVariant1 | **`mapFlameDiamond`** | ❌ wrong form |
-| 167 | juliaVariant27 | (none built → monolith fallback) | ⚠️ fallback |
-| 197/262/296/356/430 | ifs/lsystem/flame/hybrid variants | (none built → monolith fallback) | ⚠️ fallback |
+| 1 | mandelbulb | `mapMandelbulb` | ✅ (idx < 107) |
+| 115 | flameSwirl | `mapMandelbrotVariant9` (a concrete variant name) | ❌ **wrong form, user-visible** |
+| 109 | kleinBottle | a `*Base`/`*Variant` name → guard → monolith | ⚠️ right form, slow path |
 
-So indices that happen to land on an existing definition (131–~145) render a **silently wrong**
-form; indices past the definition count fall through to the monolith (which dispatches correctly
-via `if (ftype == N)`). **This is latent, not user-facing:** the live UI never selects `idx ≥ 131`
-— the showcase is 61 curated, `ALL_FRACTAL_TYPES` is 113, and the Atlas catalog resolves to 57
-unique core types, all `idx 0–130` (verified: 0 `*Variant`-typed catalog entries). The monolith
-`evalSingleFractal` dispatch (0–430) is correct; only the WebGL *lazy splice* path is misaligned.
-Do not surface `*Variant` ids in the UI without first fixing `extractFractalFunction` to key on the
-catalog ordinal (explicit name table), not source position.
+**This was user-facing, not latent** (the earlier note here was wrong): 12 curated feed types sit at
+ordinals 109-129 — `kleinBottle, projectivePlane, mobiusStrip3D, torusKnot4D, flameSinusoidal,
+flameSpherical, flameSwirl, flameHorseshoe, flameSpiral, flameDiamond, flamePopcorn, ifs3DCantor`.
+Those whose shifted position landed on a *concrete* variant name rendered the **wrong fractal**; those
+landing on a `*Base`/`*Variant` name hit the guard and fell back to the monolith (correct but slower).
+
+**Fix (shipped):** `extractFractalFunction` now resolves the ordinal to its function **name** via
+`buildOrdinalNameMap()`, which parses the monolith's own `evalSingleFractal` dispatch table
+(`if (ftype == N) return [vec2(]mapName(`) — the *same* source of truth the full shader uses at runtime,
+covering ordinals 0-140 contiguously. It then extracts that function **by name** (brace-matched).
+Ordinals 141-430 are dispatched by compressed parameterized ranges (no single name) → return empty →
+monolith fallback (which handles them correctly). Verified: `tsc` clean, `npm test` 1875/0, and a
+headless probe against the **deployed** bundle confirms all 12 previously-mis-resolved types + a
+low-index control now build their correct `map*` (13/13, 0 errors). The **WebGPU engine is unaffected**
+— `WebGPUEngine` compiles the full WGSL and dispatches by `u_fractal_type` at runtime, with no
+positional splice.
+
+Note: the earlier "variants -> monolith" and "all 0-130 correct" framings in this doc were both
+inaccurate; the true boundary was the interpolation point (~107), and it affected visible feed forms.
 
 ## 4. Alias mappings in `getFractalIndex` (defensive fallbacks, NOT catalog items)
 

@@ -53,6 +53,13 @@ export class ShaderManager {
   // mapHybridVariant, ...) that a fractal's map function references but which do NOT live in the
   // header. Without this the spliced minimal shader compiles to "no matching overloaded function".
   private funcIndex: Map<string, string> | null = null;
+  // catalog ordinal (u_fractal_type) -> concrete map function NAME, parsed from the
+  // monolithic evalSingleFractal dispatch table (`if (ftype == N) return vec2(mapName(`).
+  // This is the SAME source of truth the full shader uses at runtime, so the minimal-splice
+  // path resolves the identical function the monolith would — unlike counting map* defs by
+  // source position, which drifts once the ${*VARIATIONS} modules are interpolated before the
+  // later base types (catalog >=107), silently splicing the wrong fractal.
+  private ordinalNameMap: Map<number, string> | null = null;
   // KHR_parallel_shader_compile lets us POLL compile/link completion instead of
   // blocking the main thread on COMPILE_STATUS. Without it, getShaderParameter()
   // stalls the whole browser (frozen loader animation, dead input) during the
@@ -136,23 +143,38 @@ export class ShaderManager {
     return this.sections;
   }
 
+  private buildOrdinalNameMap(): Map<number, string> {
+    if (this.ordinalNameMap) return this.ordinalNameMap;
+    const map = new Map<number, string>();
+    const re = /if\s*\(ftype\s*==\s*(\d+)\)\s*return\s+(?:vec2\(\s*)?(map\w+)\s*\(/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(FRAGMENT_SHADER_SOURCE)) !== null) {
+      map.set(parseInt(m[1], 10), m[2]);
+    }
+    this.ordinalNameMap = map;
+    console.info('[ShaderManager] Parsed dispatch table: ' + map.size + ' ordinal->function name(s)');
+    return map;
+  }
+
   private extractFractalFunction(fractalIndex: number): { code: string; name: string; returnType: string; takesIters: boolean } {
     // Reuse cached lines from parseSections instead of re-splitting the 4000+ line string
     const sections = this.parseSections();
     const lines = sections.cachedLines;
-    let funcIndex = 0;
+    // Resolve the catalog ordinal to its concrete function name via the monolith's own
+    // dispatch table, then extract THAT function by name. Ordinals the dispatch handles via
+    // compressed parameterized ranges (>=141) have no single name -> return empty so the
+    // caller falls back to the full monolithic shader (which dispatches them correctly).
+    const targetName = this.buildOrdinalNameMap().get(fractalIndex);
+    if (!targetName) return { code: '', name: 'mapPhyllotaxis', returnType: 'vec2', takesIters: true };
+    const defRe = new RegExp('^(?:vec2|float)\\s+' + targetName + '\\s*\\(');
     let funcStart = -1;
     for (let i = 0; i < lines.length; i++) {
-      const trimmed = lines[i].trim();
-      if (trimmed.startsWith('vec2 map') || trimmed.startsWith('float map')) {
-        if (funcIndex === fractalIndex) { funcStart = i; break; }
-        funcIndex++;
-      }
+      if (defRe.test(lines[i].trim())) { funcStart = i; break; }
     }
     if (funcStart === -1) return { code: '', name: 'mapPhyllotaxis', returnType: 'vec2', takesIters: true };
     const sigMatch = lines[funcStart].trim().match(/^(vec2|float)\s+(map\w+)\(/);
     const returnType = sigMatch ? sigMatch[1] : 'vec2';
-    const funcName = sigMatch ? sigMatch[2] : 'mapPhyllotaxis';
+    const funcName = sigMatch ? sigMatch[2] : targetName;
     // Detect if function takes 'iters' parameter (some functions like mapSpiralTunnel, mapGyroid don't)
     const takesIters = /int\s+iters/.test(lines[funcStart]);
     let braceCount = 0;
