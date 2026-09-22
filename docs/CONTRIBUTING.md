@@ -1,4 +1,4 @@
-# Contributing Guide
+﻿# Contributing Guide
 
 ## Welcome! 🎉
 
@@ -71,12 +71,12 @@ Screenshots, mockups, or examples.
    ```bash
    # Click "Fork" on GitHub
    # or
-   gh repo fork your-username/golden-ratio-webgpu-fractal-engine
+   gh repo fork bouncemonster/swype-imagine
    ```
 
 2. **Clone your fork**
    ```bash
-   git clone https://github.com/your-username/golden-ratio-webgpu-fractal-engine.git
+   git clone https://github.com/bouncemonster/swype-imagine.git
    cd golden-ratio-webgpu-fractal-engine
    ```
 
@@ -345,3 +345,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 - [ ] Respond to review feedback
 
 Thank you for contributing! 🙏
+

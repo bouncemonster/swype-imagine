@@ -1,3 +1,5 @@
+﻿GitHub spelling: `swype-imagine` (local folder `swipe-imagine`).
+
 # Agent Rules — swype-imagine
 
 **Git root:** `J:\project\swipe-imagine\app` → `git@github.com:bouncemonster/swype-imagine.git`  
@@ -27,3 +29,4 @@ npm test             # Run tests
 ```powershell
 nvidia-smi           # GPU status
 ```
+

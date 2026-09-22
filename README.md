@@ -1,3 +1,6 @@
+﻿> **Repo:** https://github.com/bouncemonster/swype-imagine
+> **Local git root:** `J:\project\swipe-imagine\app` (folder `swipe-imagine`, GitHub spelling **swype-imagine**)
+> Local `npm run dev` → typically `http://localhost:3000`. Not academy `:9002` / battle `:9003`.
 # Golden Ratio WebGPU Fractal Engine
 
 **431 тип фракталов** (141 core + 290 вариантов) с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением. **v2.4.0**: Модульная шейдерная архитектура с lazy compilation для предотвращения крашей браузера.
@@ -169,3 +172,4 @@ MIT License — Free for research and commercial use
 **Built with ❤️ for the fractal community**
 
 *Last updated: September 2026*
+

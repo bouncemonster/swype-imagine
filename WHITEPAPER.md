@@ -1,4 +1,4 @@
-# Golden Ratio WebGPU Fractal Engine — Whitepaper
+﻿# Golden Ratio WebGPU Fractal Engine — Whitepaper
 
 ## 📋 Executive Summary
 
@@ -301,7 +301,7 @@
 ## 📞 Contact и Resources
 
 - **Live Demo**: https://golden-ratio-fractal-engine.pages.dev/
-- **Source Code**: https://github.com/yourusername/golden-ratio-webgpu-fractal-engine
+- **Source Code**: https://github.com/bouncemonster/swype-imagine
 - **Documentation**: README.md, ARCHITECTURE.md, TECHNICAL_DOCS.md
 - **License**: MIT
 
@@ -310,3 +310,4 @@
 **Golden Ratio WebGPU Fractal Engine** — где математика встречает искусство в реальном времени.
 
 *Last updated: September 2026*
+

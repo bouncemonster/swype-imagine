@@ -1,4 +1,6 @@
-# Deployment Guide
+﻿# Deployment Guide
+
+> Canonical repo: https://github.com/bouncemonster/swype-imagine — local path J:\project\swipe-imagine\app. Docker section below is reference-only; Hyper-V ports 9001-9003 are academy/battle.
 
 ## Table of Contents
 1. [Local Development](#local-development)
@@ -22,8 +24,8 @@
 ### Setup
 ```bash
 # Clone repository
-git clone https://github.com/your-username/golden-ratio-webgpu-fractal-engine.git
-cd golden-ratio-webgpu-fractal-engine
+git clone https://github.com/bouncemonster/swype-imagine.git
+cd app  # under J:\project\swipe-imagine, repo root is swype-imagine
 
 # Install dependencies
 npm install
@@ -652,3 +654,4 @@ wrangler pages deploy dist
 - [Vercel Docs](https://vercel.com/docs)
 - [Netlify Docs](https://docs.netlify.com/)
 - [Vite Deployment Guide](https://vitejs.dev/guide/static-deploy.html)
+
