@@ -140,7 +140,7 @@ npm run deploy:cf
 
 ### Custom Domain
 1. Pages project → Custom domains
-2. Add domain (e.g., fractals.example.com)
+2. Add domain: **`fractal.simundis.com`** (live as of 2026-09)
 3. Update DNS:
    ```
    Type: CNAME
@@ -400,7 +400,13 @@ serve dist -l 8080
 
 ## CI/CD Pipeline
 
-> ⚠️ НЕ НАСТРОЕНО в этом проекте / reference only — this repo has no `.github/` or `.gitlab-ci.yml`. Kept as generic guidance only.
+> ✅ Configured: `.github/workflows/ci.yml` runs on every push/PR to `main`.
+> Gate: `tsc --noEmit` → `npm run build` → `npm run test:unit` (718) → `npm run test` (1875) → `mobile-design-audit`.
+> Deploy: manual via `npm run deploy:cf` or `npx wrangler pages deploy dist --commit-dirty=true`.
+> Note (2026-09-23): GitHub Actions billing lock on the account blocks runner allocation
+> for `typecheck-and-build`; once resolved the workflow is fully functional.
+
+The reference examples below show a future auto-deploy pattern (not yet wired):
 
 ### GitHub Actions
 

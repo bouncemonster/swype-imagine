@@ -379,7 +379,7 @@ icon-only controls and a wrapping ribbon.
 
 ## Known Gaps
 
-Gaps 1, 2, 4, 5, and 6 are closed (see below). Gap 3 remains **`needs-design-decision`**.
+Gaps 1–2 and 4–6 are closed (see below). Gap 3 is resolved as a design decision.
 They are recorded here so an automated edit cannot silently re-create them.
 
 1. ~~**No declared theme (conflict, high impact).** `src/index.css` has no `@theme` block and no CSS
@@ -414,10 +414,18 @@ They are recorded here so an automated edit cannot silently re-create them.
    `boxShadow: '0 0 … color-mix(in srgb, var(--brand-amber) …, transparent)'` style. The
    v3→v4 hex drift is eliminated at the source (one token change updates all uses) and
    the semantic naming matches the rest of the design system.
-3. **Two greyscale families split by component boundary.** `slate-*` appears only in
+3. ~~**Two greyscale families split by component boundary.** `slate-*` appears only in
    `FractalAtlasModal` (65), `FractalProbeHUD` (13), `ProjectManifestModal` (7); the other nine
    components use `neutral-*` (e.g. 109 in `ControlsPanel`). Decision: adopt `neutral` and migrate
-   85 sites, or declare slate the intentional "atlas/data" sub-palette.
+   85 sites, or declare slate the intentional "atlas/data" sub-palette.~~
+   **Resolved 2026-09-23**: Decision — **slate is the intentional atlas/data sub-palette**.
+   The three slate-only components (`FractalAtlasModal`, `FractalProbeHUD`, `ProjectManifestModal`)
+   are all informational/data-browsing overlays, while the nine `neutral-*` components are
+   control/HUD/settings surfaces. Slate’s cooler blue tint is a valid semantic signal at the
+   component-role level: data panels feel “instrument readout”, controls feel “warm panel.”
+   Migrating 85 sites to neutral would be pure churn with zero visual benefit. The split is
+   intentional and documented; new data-browsing surfaces should continue using `slate-*`;
+   new control/HUD surfaces should use `neutral-*`.
 4. ~~**`theme-color` disagrees with the painted background.** `index.html` declares `#0a0a0a` while
    the root paints `#030305`, and there are three bespoke near-blacks (`#030305`, `#090812`,
    `#06050b`). Mobile browser chrome will band against the app. One-line fix.~~
