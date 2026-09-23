@@ -96,16 +96,23 @@ structure). The remaining two (79 vicsek, 82 popcorn) are NOT the flat-plane cla
 79 is a genuine 3D cross fold and 82 already has a z-slab — so they stay sparse and are
 left as-is (making them fatter would be an aesthetic math change, not a bug fix).
 
-## Sparse list (42 — valid, framing polish)
+## Sparse list (23 — valid, framing polish)
+
+Verified from the current `sweep-results.jsonl` (last record per idx), all fills in
+the 0.7–2.9% band — genuine thin line/curve/2D structures, no exact-0 field bugs:
 
 antoineNecklace(32), dlaCluster(33), henonAttractor(41), aizawaAttractor(42),
-thomasAttractor(43), halvorsenAttractor(44), juliaSet3D(45), lSystemPlant(49),
-barnsleyFern3D(53), goldenKnot(57), standardMap(64), ikedaMap(65),
-chladniFigures(71), rosslerAttractor(73), duffingAttractor(74),
-deJongAttractor(77), pickoverAttractor(78), bedheadAttractor(83),
-fourSpotAttractor(84), svenssonAttractor(85), flowerOfLife(87),
-mobiusStrip3D(111), ifsVariant45(235), lsystemVariant{2,4,12,14,22,24,32,34,42,44},
-flameVariant{3,5,13,15,23,25,33,35,45}.
+thomasAttractor(43), halvorsenAttractor(44), juliaSet3D(45), gosperCurve(48),
+lSystemPlant(49), barnsleyFern3D(53), goldenKnot(57), standardMap(64),
+ikedaMap(65), chladniFigures(71), fitzHugh(72), rosslerAttractor(73),
+duffingAttractor(74), deJongAttractor(77), bedheadAttractor(83),
+fourSpotAttractor(84), ifs3DFern(127), lsystemVariant44(284), flameVariant33(323).
+
+> The previous version of this list was stale (it claimed 42 and named types that
+> framing has since lifted to rendered — flowerOfLife(87), mobiusStrip3D(111),
+> ifsVariant45(235) and most lsystem/flame variants — while omitting gosperCurve(48),
+> fitzHugh(72), ifs3DFern(127) which are now the thin-but-valid sparse entries). This
+> list is now regenerated from the data, not from memory.
 
 ## Fix plan (ordered by confidence)
 
