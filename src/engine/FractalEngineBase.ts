@@ -129,6 +129,11 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   44:  { zoomScale: 0.45, tiltOffset: 0.0 }, // halvorsenAttractor — 0.52% at default
   78:  { zoomScale: 0.45, tiltOffset: 0.0 }, // pickoverAttractor — 0.91% at default
   85:  { zoomScale: 0.45, tiltOffset: 0.0 }, // svenssonAttractor — 0.55% at default
+  // Last un-framed sparse entries, framed at sibling-proven values (sweep-verified):
+  111: { zoomScale: 0.7, tiltOffset: 0.0 }, // mobiusStrip3D — thin ribbon surface
+  87:  { zoomScale: 0.5, tiltOffset: 0.0 }, // flowerOfLife — flat disc pattern, close in
+  235: { zoomScale: 0.5, tiltOffset: 0.0 }, // ifsVariant45 — sibling of framed IFS shells
+  272: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant32 — same value as L-system batch
   132: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant2 (high-power thin shell)
   133: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant3
   134: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant4

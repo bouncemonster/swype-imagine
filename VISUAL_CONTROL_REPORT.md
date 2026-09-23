@@ -24,8 +24,8 @@ the 3% threshold (see commit `ac5dd3b`).
 
 | status   | count | note |
 |----------|-------|------|
-| rendered | 402   | healthy (4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed; 333 + 8 flame + 8 L-system variants + 2 attractors lifted sparse->rendered via framing) |
-| sparse   | 26    | valid object, small — framing lever exhausted for most (thin line orbits already at 0.22-0.45; thomas/halvorsen 4-5x fill gain at 0.45 still <3%) |
+| rendered | 406   | healthy (4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed; 333 + 8 flame + 9 L-system + 2 attractors + mobiusStrip3D/flowerOfLife/ifsVariant45 lifted sparse->rendered via framing) |
+| sparse   | 22    | valid object, small — every one has been framing-checked (override or base-table); residual are intrinsically thin line/2D structures where the camera lever is exhausted |
 | black    | 3     | near-empty only — gosperCurve/vicsekFractal/popcornFunction, all at framing ceiling (see B). NO exact-0% field bugs remain |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
