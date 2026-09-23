@@ -379,13 +379,23 @@ icon-only controls and a wrapping ribbon.
 
 ## Known Gaps
 
-All five are **`needs-design-decision`**, not policy. They are recorded here so an automated edit
-cannot silently re-create them.
+Gaps 1, 2, 4, and 5 are closed (see below). Gaps 3 and 6 remain **`needs-design-decision`**.
+They are recorded here so an automated edit cannot silently re-create them.
 
-1. **No declared theme (conflict, high impact).** `src/index.css` has no `@theme` block and no CSS
+1. ~~**No declared theme (conflict, high impact).** `src/index.css` has no `@theme` block and no CSS
    variables, so nothing resists a new one-off value; meanwhile 173 arbitrary px type sites and
    21 hardcoded hexes are de-facto tokens with no names. Proposed: add an additive `@theme` block
-   with the values in this file (zero visual change), then migrate call sites opportunistically.
+   with the values in this file (zero visual change), then migrate call sites opportunistically.~~
+   **Closed 2026-09-23**: `src/index.css` now has a `@theme` block that declares:
+   – micro text tiers (`--text-micro: 10px`, `--text-nano: 11px`, `--text-micro-sm: 9px`,
+   `--text-micro-xs: 8px`) creating named `text-micro`/`text-nano`/etc. utilities;
+   – semantic surfaces (`--color-canvas`, `--color-surface-deep`, `--color-surface-loader`,
+   `--color-surface-modal`) replacing `bg-[#hex]` arbitrary values;
+   – brand aliases (`--color-brand`, `--color-brand-bright`, `--color-brand-soft`,
+   `--color-brand-warm`, `--color-brand-deep`) mapping to Tailwind's `--color-amber-*` scale.
+   Additive: all 173 existing arbitrary sites still compile unchanged; the coarse-pointer
+   floor rule covers both old `text-[Npx]` and new `.text-micro`/`.text-nano` class names.
+   Migration is now opportunistic (new code uses named tokens, old code follows when touched).
 2. **Hardcoded brand hexes are v3 hexes next to v4 utilities (measured drift).** ~~Painting both and
    reading pixels: `amber-500` renders `#fe9a00` but the code literals say `#f59e0b` (max channel
    Δ **11**); `amber-400` renders `#ffb900` against literal `#fbbf24` (Δ **36**, visible: the
@@ -408,9 +418,14 @@ cannot silently re-create them.
    `FractalAtlasModal` (65), `FractalProbeHUD` (13), `ProjectManifestModal` (7); the other nine
    components use `neutral-*` (e.g. 109 in `ControlsPanel`). Decision: adopt `neutral` and migrate
    85 sites, or declare slate the intentional "atlas/data" sub-palette.
-4. **`theme-color` disagrees with the painted background.** `index.html` declares `#0a0a0a` while
+4. ~~**`theme-color` disagrees with the painted background.** `index.html` declares `#0a0a0a` while
    the root paints `#030305`, and there are three bespoke near-blacks (`#030305`, `#090812`,
-   `#06050b`). Mobile browser chrome will band against the app. One-line fix.
+   `#06050b`). Mobile browser chrome will band against the app. One-line fix.~~
+   **Closed 2026-09-23**: `theme-color` in `index.html` was corrected to `#030305` (matching the
+   root `html, body, #root` background). The remaining two near-blacks (`#06050b` in CosmicLoader,
+   `#090812` in ProjectManifestModal) are overlay/surface backgrounds at a different z-layer and
+   intentionally differ from the document root; they are now declared as `@theme` tokens
+   (`--color-surface-loader`, `--color-surface-modal`) for semantic naming.
 5. **Reduced motion is only half-covered.** ~~`prefers-reduced-motion` appears once, in `App.tsx:70`
    (boot-time render loop). There are **no** `motion-reduce:` CSS variants, so `animate-pulse` (6
    sites) and `animate-ping` (6) keep looping for reduced-motion users. WCAG 2.3.3 is met for

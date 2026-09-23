@@ -8,7 +8,9 @@ Real-time 3D fractal visualization engine with **431 fractal types** (141 core +
 - **Rendering**: WebGL2 (primary, all 431 types), WebGPU (optional — 131/431 types implemented, 131-430 fall back to phyllotaxis)
 - **Shaders**: GLSL ES 3.00 (WebGL2), WGSL (WebGPU)
 - **Build**: Vite with esbuild, ~4s build time
-- **Bundle**: 873 KB JS, 76 KB CSS
+- **Bundle**: boot `index` 283 KB / 88 KB brotli; total JS ~830 KB across 9 chunks, 80 KB CSS
+- **Code splitting**: React.lazy on ControlsPanel + 4 modals (ExplanationModal, UserProfileModal,
+  ProjectManifestModal, FractalAtlasModal) — 5 lazy chunks fetched on demand, not at boot
 
 ## Directory Structure
 ```
@@ -34,15 +36,15 @@ src/                                          # 54 TypeScript/TSX files, ~935KB 
 │   └── MathValidation.ts        # Math validation (1.5KB, 58 lines; not used in render paths)
 ├── components/
 │   ├── FractalCanvas.tsx        # Main canvas, camera controls (10KB, 269 lines)
-│   ├── ControlsPanel.tsx        # UI controls (43KB, 873 lines)
+│   ├── ControlsPanel.tsx        # UI controls (43KB, 873 lines) — lazy
 │   ├── TelemetryHUD.tsx         # FPS/stats display (7.6KB, 171 lines)
 │   ├── FractalInfoHUD.tsx       # Fractal info overlay (17KB, 389 lines)
 │   ├── FractalProbeHUD.tsx      # Probe overlay (5.5KB, 128 lines)
 │   ├── FractalScrollFeed.tsx    # Horizontal browser (12KB, 281 lines)
-│   ├── FractalAtlasModal.tsx    # Atlas modal (33KB, 574 lines)
-│   ├── ExplanationModal.tsx     # Explanation modal (16KB, 207 lines)
-│   ├── UserProfileModal.tsx     # User profile modal (18KB, 363 lines)
-│   ├── ProjectManifestModal.tsx # Manifest modal (8.5KB, 176 lines)
+│   ├── FractalAtlasModal.tsx    # Atlas modal (33KB, 574 lines) — lazy (+ 95KB catalog)
+│   ├── ExplanationModal.tsx     # Explanation modal (16KB, 207 lines) — lazy
+│   ├── UserProfileModal.tsx     # User profile modal (18KB, 363 lines) — lazy
+│   ├── ProjectManifestModal.tsx # Manifest modal (8.5KB, 176 lines) — lazy
 │   ├── CosmicLoader.tsx         # Progress-driven loading overlay (6.9KB, 180 lines)
 │   └── DebugOverlay.tsx         # Debug overlay (6.6KB, 158 lines)
 ├── hooks/
@@ -72,7 +74,7 @@ src/                                          # 54 TypeScript/TSX files, ~935KB 
 │   └── fractal.ts               # TypeScript interfaces (33KB, 576 lines)
 ├── palettes.ts                  # Color palettes — 26 hand-crafted (7.6KB, 212 lines)
 ├── palettesProcedural.ts        # Procedural palettes — 640 (80 themes × 8) (3.3KB, 89 lines)
-├── App.tsx                      # Main app component (30KB, 717 lines)
+├── App.tsx                      # Main app component (30KB, 717 lines) — 5 React.lazy() + Suspense
 └── main.tsx                     # Entry point (725B, 18 lines)
 
 tests/                                        # 19 test files, ~5480 lines

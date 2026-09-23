@@ -77,7 +77,7 @@ Screenshots, mockups, or examples.
 2. **Clone your fork**
    ```bash
    git clone https://github.com/bouncemonster/swype-imagine.git
-   cd golden-ratio-webgpu-fractal-engine
+   cd swype-imagine/app
    ```
 
 3. **Create a branch**
@@ -149,34 +149,9 @@ Screenshots, mockups, or examples.
 
 #### Pull Request Template
 
-```markdown
-## Description
-Brief description of changes.
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Testing
-Describe how you tested your changes.
-
-## Screenshots
-If applicable, add screenshots.
-
-## Checklist
-- [ ] Code follows project style
-- [ ] Self-review completed
-- [ ] Comments added for complex logic
-- [ ] Documentation updated
-- [ ] No new warnings
-- [ ] Tests added/updated
-- [ ] All tests pass
-
-## Related Issues
-Closes #123
-```
+PRs auto-populate from [`.github/pull_request_template.md`](../.github/pull_request_template.md).
+Key sections: Summary, Affected layers, Evidence checklist (tsc/build/test:unit/test/test:mobile),
+Screenshots, Performance, Risk & rollback, Docs.
 
 ### 4. Improving Documentation 📚
 
@@ -196,7 +171,7 @@ Documentation improvements are highly valued!
 
 ### 5. Adding Fractals 🎨
 
-See [TUTORIALS.md](docs/TUTORIALS.md#how-to-add-a-new-fractal-type) for detailed guide.
+See [TUTORIALS.md](TUTORIALS.md#how-to-add-a-new-fractal-type) for detailed guide.
 
 **Quick steps:**
 1. Define SDF function in `src/shaders/webglShaders.ts`
@@ -206,7 +181,7 @@ See [TUTORIALS.md](docs/TUTORIALS.md#how-to-add-a-new-fractal-type) for detailed
 
 ### 6. Adding Render Modes 🎭
 
-See [TUTORIALS.md](docs/TUTORIALS.md#how-to-create-a-new-render-mode) for guide.
+See [TUTORIALS.md](TUTORIALS.md#how-to-create-a-new-render-mode) for guide.
 
 **Quick steps:**
 1. Implement render function in shader
@@ -267,11 +242,17 @@ Performance improvements are always welcome!
 
 ### Automated Testing
 ```bash
-# Run the automated fractal test suite
-npm test
+# Run unit tests (mapper + shader-math + engine-parity: 718 assertions)
+npm run test:unit
+
+# Run integration autotest (1875 assertions)
+npm run test
 
 # Run browser (E2E) tests
 npm run test:browser
+
+# Run mobile design audit (tap targets + text floor + safe-area)
+npm run test:mobile -- http://127.0.0.1:4173
 
 # Run everything (unit + visual + headless + benchmark + quality)
 npm run test:all
@@ -320,9 +301,9 @@ Contributors are recognized in:
 
 ## Questions?
 
-- Check [FAQ.md](docs/FAQ.md)
-- Open GitHub Discussion
-- Contact maintainers
+- Check [FAQ.md](FAQ.md)
+- Open a [GitHub Discussion](https://github.com/bouncemonster/swype-imagine/discussions)
+- Use the [bug report](https://github.com/bouncemonster/swype-imagine/issues/new?template=bug_report.yml) or [feature request](https://github.com/bouncemonster/swype-imagine/issues/new?template=feature_request.yml) form
 
 ## License
 

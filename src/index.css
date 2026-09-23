@@ -1,16 +1,46 @@
 @import "tailwindcss";
 
 /* ============================================================
-   DESIGN.md Known Gap 2 — brand hex tokens.
-   Six components previously hardcoded v3 Tailwind amber hexes
-   (`#f59e0b` / `#fbbf24`) in SVG `stopColor`/`stroke`/`fill`
-   attributes and in `box-shadow` values. Tailwind v4 renders
-   those utilities at different oklch-precise sRGB values, so
-   the literals had drifted (Δ11 for amber-500, Δ36 for
-   amber-400 — visible paler/yellower). Aliases below let the
-   SVG/box-shadow paths reference the same semantic token as
-   the utility classes, so a future theme change is one place.
+   DESIGN.md Known Gap 1 — @theme token layer.
+   Before this block, index.css had only `@import "tailwindcss"`
+   and no declared theme, so 173 arbitrary `text-[Npx]` and 2
+   `bg-[#hex]` call sites had no named alternative. Adding
+   semantic tokens here creates utility classes (text-micro,
+   bg-canvas, etc.) that new code should prefer; existing
+   arbitrary values still compile unchanged (additive, zero
+   visual delta).
    ============================================================ */
+@theme {
+  /* Typography — micro tiers for dense HUD overlays.
+     173 arbitrary `text-[8-11px]` sites map to these names. */
+  --text-micro: 10px;
+  --text-micro--line-height: 15px;
+  --text-nano: 11px;
+  --text-nano--line-height: 16px;
+  --text-micro-sm: 9px;
+  --text-micro-sm--line-height: 14px;
+  --text-micro-xs: 8px;
+  --text-micro-xs--line-height: 12px;
+
+  /* Surfaces — named backgrounds replacing arbitrary `bg-[#hex]`.
+     Values correspond to DESIGN.md colors.* frontmatter entries. */
+  --color-canvas: #030305;           /* root background / html / body */
+  --color-surface-deep: #0a0a0a;    /* overlay surface, modal backdrop */
+  --color-surface-loader: #06050b;  /* CosmicLoader full-screen backdrop */
+  --color-surface-modal: #090812;   /* ProjectManifestModal panel */
+
+  /* Brand — semantic alias so future utilities write `text-brand`
+     instead of hardcoding amber-500. */
+  --color-brand: var(--color-amber-500);
+  --color-brand-bright: var(--color-amber-400);
+  --color-brand-soft: var(--color-amber-200);
+  --color-brand-warm: var(--color-amber-300);
+  --color-brand-deep: var(--color-amber-600);
+}
+
+/* Inline-style / SVG references (boxShadow, stopColor) use the
+   --brand-amber* prefix for historical compatibility. These are
+   equivalent to the @theme --color-brand* above. */
 :root {
   --brand-amber: var(--color-amber-500);        /* main CTA / glow */
   --brand-amber-bright: var(--color-amber-400); /* high-emphasis accent */
@@ -104,13 +134,17 @@ input[type="range"] {
     font-size: 1rem;
   }
   /* Legibility floor for the dense HUD: bump the sub-12px arbitrary
-     text steps up to text-xs (12px) on touch devices only, so the
-     desktop information density is untouched. If a class stops being
-     used the rule is simply inert. */
+     text steps (and their @theme equivalents) up to text-xs (12px) on
+     touch devices only, so the desktop information density is untouched.
+     If a class stops being used the rule is simply inert. */
   .text-\[8px\],
   .text-\[9px\],
   .text-\[10px\],
-  .text-\[11px\] {
+  .text-\[11px\],
+  .text-micro-xs,
+  .text-micro-sm,
+  .text-micro,
+  .text-nano {
     font-size: 0.75rem;
     line-height: 1rem;
   }
