@@ -24,8 +24,8 @@ the 3% threshold (see commit `ac5dd3b`).
 
 | status   | count | note |
 |----------|-------|------|
-| rendered | 384   | healthy (incl. 4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed after the sweep; flameVariant43 black->rendered via framing) |
-| sparse   | 44    | valid object, small — framing polish (incl. ifs3DFern, fitzHugh now black->valid) |
+| rendered | 392   | healthy (4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed; 333 + 8 weak flame variants black/sparse->rendered via framing) |
+| sparse   | 36    | valid object, small — framing polish (incl. ifs3DFern, fitzHugh; flameVariant33 framed 0.63%->2.7%) |
 | black    | 3     | near-empty only — gosperCurve/vicsekFractal/popcornFunction, all at framing ceiling (see B). NO exact-0% field bugs remain |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 

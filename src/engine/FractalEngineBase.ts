@@ -99,6 +99,18 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   120: { zoomScale: 0.5,  tiltOffset: 0.0 }, // flameHyperbolic
   127: { zoomScale: 0.4,  tiltOffset: 0.0 }, // ifs3DFern — orbit-traced fern (fixed at source); small attractor, frame like barnsleyFern3D(53)
   333: { zoomScale: 0.6,  tiltOffset: 0.0 }, // flameVariant43 — thin flame on mapFlameBase; frame closer than default 1.0
+  // Weak flame variants (same mapFlameBase, large param / op=4 discs) render thin at
+  // default 1.0 (<1.2%). Framed closer to 0.45 — sweep-verified: 8/9 sparse->rendered
+  // (2.7-5.7%), none over-zoomed to inside-black. flameVariant43(333) framed 0.6.
+  293: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant3
+  295: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant5
+  303: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant13
+  305: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant15
+  313: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant23
+  315: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant25
+  323: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant33
+  325: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant35
+  335: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant45
   132: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant2 (high-power thin shell)
   133: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant3
   134: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant4
