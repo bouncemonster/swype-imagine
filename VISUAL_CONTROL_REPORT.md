@@ -24,9 +24,9 @@ the 3% threshold (see commit `ac5dd3b`).
 
 | status   | count | note |
 |----------|-------|------|
-| rendered | 383   | healthy (incl. 4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed after the sweep) |
-| sparse   | 43    | valid object, small — framing polish (incl. ifs3DFern, now black->valid) |
-| black    | 5     | near-empty framing candidates only — NO exact-0% field bugs remain |
+| rendered | 384   | healthy (incl. 4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed after the sweep; flameVariant43 black->rendered via framing) |
+| sparse   | 44    | valid object, small — framing polish (incl. ifs3DFern, fitzHugh now black->valid) |
+| black    | 3     | near-empty only — gosperCurve/vicsekFractal/popcornFunction, all at framing ceiling (see B). NO exact-0% field bugs remain |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
 No shader compile errors, no page crashes, no WebGL context loss across the
@@ -78,16 +78,23 @@ correctly and is the reference fix.
 
 ### B. Near-empty (0.01–0.35%) — object present, out of frame
 
-| idx | type | fill |
-|-----|------|------|
-| 48  | gosperCurve | 0.01% |
-| 72  | fitzHugh | 0.33% |
-| 79  | vicsekFractal | 0.05% |
-| 82  | popcornFunction | 0.12% |
-| 333 | flameVariant43 | 0.35% |
+Framing-lever pass (FRACTAL_CAM_ADJUST_OVERRIDES, verified via re-probe):
 
-These render a real but extremely sparse/thin structure; they are framing
-candidates (camera zoom), same treatment as the 42 sparse types.
+| idx | type | before | after | status |
+|-----|------|--------|-------|--------|
+| 333 | flameVariant43 | 0.35% | **56.7%** | ✅ black->rendered (thin flame on mapFlameBase; framed 1.0->0.6, no shader change) |
+| 72  | fitzHugh | 0.33% | **2.4%** | ✅ black->sparse (flat 2D neural attractor; framed 1.0->0.22 face-on) |
+| 48  | gosperCurve | 0.01% | 0.01% | ⏸ at ceiling (0.25+tilt put camera *inside* -> errored); intrinsic thin curve |
+| 79  | vicsekFractal | 0.05% | 0.05% | ⏸ at ceiling (already 0.25/0.4); flat diffusion cluster |
+| 82  | popcornFunction | 0.12% | 0.12% | ⏸ at ceiling (already 0.25/0.5); flat 2D map |
+
+333 and 72 were simply un-framed (default zoomScale 1.0); the designed camera lever
+resolved both with no shader churn. The remaining three already carry aggressive
+overrides and closer camera goes inside -> black, so they are intrinsically thin
+flat structures, **not defects** — they render a real but hairline 2D object that
+the >3% / >0.5% thresholds classify as black/sparse. Making them fatter would mean
+extruding 2D->3D in-shader (an aesthetic change to their math, not a bug fix) and
+is intentionally not done here.
 
 ## Sparse list (42 — valid, framing polish)
 
