@@ -1,7 +1,7 @@
 # Golden Ratio WebGPU Fractal Engine - Architecture
 
 ## Project Overview
-Real-time 3D fractal visualization engine with **431 fractal types** (141 core + 290 variants), **7 render modes**, and advanced PBR lighting. **v6.0.0** stable release; modular shader architecture with lazy compilation (introduced v2.4.0).
+Real-time 3D fractal visualization engine with **431 fractal types** (141 core + 290 variants), **10 render modes**, and advanced PBR lighting. **v6.0.0** stable release; modular shader architecture with lazy compilation (introduced v2.4.0).
 
 ## Tech Stack
 - **Runtime**: TypeScript 5.8, React 19, Vite ^6.2.3

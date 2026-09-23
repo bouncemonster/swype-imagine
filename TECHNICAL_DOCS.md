@@ -441,7 +441,7 @@ npx tsx tests/fractal-autotest.ts
 **Coverage:**
 - 431 fractal types (уникальные индексы 0-430)
 - 26 palettes × 101 seeds
-- 7 render styles
+- 10 render styles
 - 5 audio families
 - 33 share-link parameters
 
