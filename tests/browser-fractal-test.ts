@@ -6,7 +6,7 @@
  * 2. Take screenshots of key fractal types
  * 3. Measure real FPS during rendering
  * 4. Capture console logs (WebGL warnings, shader errors)
- * 5. Run visual regression against baselines
+ * 5. Run phase-tolerant visual regression (perceptual coverage vs stat baselines)
  * 6. Generate comprehensive report
  * 
  * Usage: npx tsx tests/browser-fractal-test.ts
@@ -154,10 +154,10 @@ async function runBrowserTests(): Promise<void> {
       try {
         const result = await harness.compareWithBaseline(type, index);
         if (result.match) {
-          console.log(`  ✅ #${index} ${type}: MATCH (${result.diffPercent}% diff)`);
+          console.log(`  ✅ #${index} ${type}: OK (coverage Δ ${result.diffPercent}%)`);
           passCount++;
         } else {
-          console.log(`  ❌ #${index} ${type}: MISMATCH (${result.diffPercent}% diff)`);
+          console.log(`  ❌ #${index} ${type}: REGRESSION (coverage Δ ${result.diffPercent}% vs baseline — object thinned/vanished)`);
           failCount++;
         }
       } catch (err) {

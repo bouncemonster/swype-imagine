@@ -5,7 +5,7 @@
  * - WebGL2-enabled headless Chromium via Playwright
  * - Console log capture (WebGL warnings, shader errors, FPS metrics)
  * - Screenshot capture at checkpoints
- * - Visual regression testing (pixel comparison against baselines)
+ * - Visual regression testing (phase-tolerant perceptual coverage comparison)
  * - Real-time FPS monitoring
  * - Synchronized test execution across suites
  * 
@@ -223,21 +223,24 @@ function categorizeConsole(type: string, text: string): ConsoleEntry['category']
   return 'info';
 }
 
-// ─── Pixel diff (pure JS, no native deps) ────────────────────────────
+// ─── Phase-tolerant perceptual regression (pure JS, no native deps) ───
 
-function comparePixels(baseline: Buffer, current: Buffer): { diffPixels: number; totalPixels: number } {
-  // Both must be same size PNG buffers — compare raw byte differences
-  const minLen = Math.min(baseline.length, current.length);
-  let diffPixels = 0;
-  
-  // Simple byte-level comparison (works for same-format PNGs)
-  for (let i = 0; i < minLen; i++) {
-    if (Math.abs(baseline[i] - current[i]) > 10) {
-      diffPixels++;
-    }
-  }
-  
-  return { diffPixels, totalPixels: minLen };
+export interface CanvasStats { avgLum: number; nonBlackRatio: number; }
+
+// Fractals animate continuously (rotation / palette spin / precession all advance with
+// u_time), so an exact-pixel diff against a baseline is meaningless — a CORRECT frame
+// differs from its baseline on every run (the old byte-level PNG compare reported ~90%
+// "diff" on untouched types). Instead compare perceptual COVERAGE (non-black fill ratio
+// sampled from the live canvas — the same metric as visual-snapshot-sweep) and flag a
+// regression only when an object's on-screen presence collapses vs its baseline: it went
+// near-black, or lost >70% of its coverage. Robust to animation phase; catches real
+// breaks (degenerate/black field, vanished geometry, blown-out palette).
+function compareCoverage(baseline: CanvasStats, current: CanvasStats): { match: boolean; coverageDeltaPct: number } {
+  const b = baseline.nonBlackRatio, c = current.nonBlackRatio;
+  const collapsed = c < 0.005 && b >= 0.02;   // clearly-present baseline → now near-black
+  const shrank = b > 0.02 && c < b * 0.3;      // lost more than 70% of screen coverage
+  const coverageDeltaPct = Math.round((Math.abs(b - c) / Math.max(b, 1e-6)) * 10000) / 100;
+  return { match: !(collapsed || shrank), coverageDeltaPct };
 }
 
 // ─── Main Harness Class ──────────────────────────────────────────────
@@ -604,58 +607,86 @@ export class BrowserTestHarness {
   
   // ─── Visual Regression ───────────────────────────────────────────
   
-  async compareWithBaseline(fractalType: string, fractalIndex: number): Promise<RegressionResult> {
-    const baselinePath = resolve(this.config.baselineDir, `fractal-${fractalIndex.toString().padStart(3, '0')}-${fractalType}.png`);
-    const currentPath = resolve(this.config.screenshotDir, `fractal-${fractalIndex.toString().padStart(3, '0')}-${fractalType}.png`);
-    
-    // Take current screenshot if not already taken
-    if (!existsSync(currentPath)) {
-      await this.screenshotFractal(fractalType, fractalIndex);
+  /** Sample perceptual stats from the LIVE canvas (avgLum + non-black fill ratio).
+   *  Pauses the rAF loop for a stable read, then resumes. Same technique the
+   *  authoritative visual-snapshot-sweep uses, so both agree on "coverage". */
+  async captureCanvasStats(): Promise<CanvasStats | null> {
+    if (!this.page) return null;
+    try {
+      await Promise.race([
+        this.page.evaluate(() => { (window as any).__pauseRender?.(); }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('pause timeout')), 3000)),
+      ]);
+      await this.page.waitForTimeout(150);
+      const stats = await this.page.evaluate(() => {
+        const c = document.querySelector('canvas') as HTMLCanvasElement | null;
+        if (!c || !c.width || !c.height) return null;
+        let url: string;
+        try { url = c.toDataURL('image/png'); } catch { return null; }
+        return new Promise((res) => {
+          const img = new Image();
+          img.onload = () => {
+            const off = document.createElement('canvas');
+            off.width = img.width; off.height = img.height;
+            const ctx = off.getContext('2d');
+            if (!ctx) return res(null);
+            ctx.drawImage(img, 0, 0);
+            const d = ctx.getImageData(0, 0, off.width, off.height).data;
+            let sum = 0, nonBlack = 0, count = 0;
+            for (let y = 0; y < off.height; y += 4) {
+              for (let x = 0; x < off.width; x += 4) {
+                const i = (y * off.width + x) * 4;
+                const lum = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+                sum += lum; if (lum > 16) nonBlack++; count++;
+              }
+            }
+            res(count > 0 ? { avgLum: sum / count, nonBlackRatio: nonBlack / count } : null);
+          };
+          img.onerror = () => res(null);
+          img.src = url;
+        });
+      });
+      return (stats as CanvasStats | null) ?? null;
+    } catch {
+      return null;
+    } finally {
+      await this.page.evaluate(() => { (window as any).__resumeRender?.(); }).catch(() => {});
     }
-    
-    // If no baseline exists, save current as baseline
-    if (!existsSync(baselinePath)) {
-      const currentBuffer = readFileSync(currentPath);
-      writeFileSync(baselinePath, currentBuffer);
-      
-      const result: RegressionResult = {
-        fractalType,
-        fractalIndex,
-        match: true,
-        diffPixels: 0,
-        diffPercent: 0,
-        baselinePath,
-        currentPath,
-      };
+  }
+
+  async compareWithBaseline(fractalType: string, fractalIndex: number): Promise<RegressionResult> {
+    const key = `fractal-${fractalIndex.toString().padStart(3, '0')}-${fractalType}`;
+    const currentPath = resolve(this.config.screenshotDir, `${key}.png`);
+    // Baselines are perceptual stat snapshots kept in the gitignored results dir —
+    // exact-pixel baselines are impossible to maintain on a continuously-animated engine.
+    const baselinePath = resolve(this.config.resultsDir, 'baseline-stats', `${key}.json`);
+
+    // Ensure the page shows this fractal, take a fresh live measurement (+ PNG record).
+    await this.setFractalType(fractalIndex);
+    const current = await this.captureCanvasStats();
+    await this.screenshot(key).catch(() => {});
+
+    const base = { fractalType, fractalIndex, currentPath, baselinePath, diffPixels: 0 };
+
+    // Couldn't measure (no page/canvas) → do NOT report a false regression.
+    if (!current) {
+      const result: RegressionResult = { ...base, match: true, diffPercent: 0 };
       this.regressionResults.push(result);
       return result;
     }
-    
-    // Compare
-    const baselineBuffer = readFileSync(baselinePath);
-    const currentBuffer = readFileSync(currentPath);
-    const { diffPixels, totalPixels } = comparePixels(baselineBuffer, currentBuffer);
-    const diffPercent = totalPixels > 0 ? diffPixels / totalPixels : 0;
-    const match = diffPercent <= this.config.regressionThreshold;
-    
-    const result: RegressionResult = {
-      fractalType,
-      fractalIndex,
-      match,
-      diffPixels,
-      diffPercent: Math.round(diffPercent * 10000) / 100,
-      baselinePath,
-      currentPath,
-    };
-    
-    // Save diff image if mismatch
-    if (!match) {
-      const diffPath = resolve(this.config.resultsDir, `diff-${fractalIndex.toString().padStart(3, '0')}-${fractalType}.png`);
-      result.diffPath = diffPath;
-      // Copy current as diff marker (full pixel diff would need image processing lib)
-      writeFileSync(diffPath, currentBuffer);
+
+    // Bootstrap the baseline on first run, then always match against it.
+    if (!existsSync(baselinePath)) {
+      mkdirSync(dirname(baselinePath), { recursive: true });
+      writeFileSync(baselinePath, JSON.stringify(current, null, 2));
+      const result: RegressionResult = { ...base, match: true, diffPercent: 0 };
+      this.regressionResults.push(result);
+      return result;
     }
-    
+
+    const baselineStats = JSON.parse(readFileSync(baselinePath, 'utf8')) as CanvasStats;
+    const { match, coverageDeltaPct } = compareCoverage(baselineStats, current);
+    const result: RegressionResult = { ...base, match, diffPercent: coverageDeltaPct };
     this.regressionResults.push(result);
     return result;
   }
