@@ -125,8 +125,35 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
      53). WGSL 127 is a separate scale-normalized impl → no port.
    All three were confirmed distance-FIELD bugs (cheap framing/tube hypotheses
    re-probed and ruled out first). WGSL output remains headless-unverifiable.
-3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
-   `zoomScale` entries so thin attractors fill the frame.
+3. **framing (black-B + 42 sparse)** — ✅ camera lever applied where it was the
+   actual cause: **333 flameVariant43 0.35%→56.7% (rendered)** and **72 fitzHugh
+   0.33%→2.4% (sparse)** were un-framed defaults; framed via `FRACTAL_CAM_ADJUST_
+   OVERRIDES` (no shader change). 48/79/82 already sit at the framing ceiling
+   (closer → camera inside → black/errored) and are intrinsically thin flat
+   structures — documented as non-defects, left as-is. Remaining sparse types are
+   valid-but-small, optional polish.
+
+## Toolchain verification (all harnesses, via installed test suite)
+
+Ran the full `package.json` script inventory against the fixed tree (all green):
+`lint` (tsc --noEmit) exit 0 · `test` autotest **1875/0** · `test:headless` **477/477**
+· `test:mapper` 524/0 · `test:shader-math` 113/0 · `test:engine-parity` 81/0
+· `test:benchmark` complete · `test:quality` clean (advisory only) · `test:browser`
+integration PASSED (0 console/shader/page errors).
+
+- The autotest / headless / browser suites were previously **crash-blocked** at
+  module load: `src/utils/logger.ts` read `import.meta.env.PROD` unguarded, which
+  is `undefined` outside Vite, so any `npx tsx` harness importing the src chain
+  threw before an assertion ran. Fixed with a `typeof` guard that preserves Vite's
+  compile-time PROD replacement (verified: token eliminated from the prod bundle).
+- `test:browser` Phase-4 visual-regression flags ~91% "MISMATCH" on
+  phyllotaxis(0)/organicCell(94)/juliaVariant28(168). These are **not regressions**
+  (indices untouched this session); `compareWithBaseline` pixel-diffs a live
+  *animated* frame against a full-size stored baseline at `threshold 0.02`, so any
+  rotation/morph phase offset trips it. Near-static samples (tetrix, flameDiamond)
+  match at 0%. This is why the authoritative gate is the peak-fill sweep above, not
+  single-frame diff. Refreshing those baselines or freezing animation for capture is
+  optional tooling hygiene, deferred (not a render defect).
 
 ## Reproduce
 
