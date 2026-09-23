@@ -189,7 +189,7 @@ perf: optimize ray marching loop
 - **Scenarios**: All fractal types, render modes, camera modes
 
 ### Automated Testing (implemented — 19 TypeScript files in `tests/`)
-- **Unit** (`npm run test:unit`): `fractal-mapper-test.ts` (521 assertions), `shader-math-validation-test.ts` (113), `cross-engine-parity-test.ts` (79)
+- **Unit** (`npm run test:unit`): `fractal-mapper-test.ts` (524 assertions), `shader-math-validation-test.ts` (113), `cross-engine-parity-test.ts` (81)
 - **Integration** (`npm run test`): `fractal-autotest.ts` (822 assertions — all 431 types, palettes, render styles, audio, share links)
 - **Browser** (`npm run test:browser` / `test:browser:headed`): `browser-harness.ts`, `browser-fractal-test.ts`, `advanced-fractal-test.ts`, `external-browser-test.ts`
 - **Headless smoke** (`npm run test:headless`): `headless-fractal-test.ts`, `browser-smoke-test.ts`

@@ -58,9 +58,9 @@ src/                                          # 54 TypeScript/TSX files, ~935KB
 └── main.tsx               # Entry point (725B, 18 lines)
 
 tests/                                        # 19 test files, ~5480 lines
-├── fractal-mapper-test.ts       # 521 assertions
+├── fractal-mapper-test.ts       # 524 assertions
 ├── shader-math-validation-test.ts # 113 assertions
-├── cross-engine-parity-test.ts  # 79 assertions
+├── cross-engine-parity-test.ts  # 81 assertions
 ├── fractal-autotest.ts          # 822 assertions
 ├── loader-sync-test.ts          # Синхронизация лоадера с реальным прогрессом
 ├── responsiveness-probe.ts      # Замер input-latency
@@ -421,16 +421,16 @@ npx tsx tests/fractal-autotest.ts
 
 ### Testing
 
-**Unit Tests (715 assertions):**
+**Unit Tests (718 assertions):**
 
 ```bash
 npm run test:unit
 ```
 
 **Coverage:**
-- **fractal-mapper-test.ts** (521 assertions): Index mapping completeness, alias mappings, render style mapping, composite op mapping, camera mode mapping, index uniqueness, index bounds
+- **fractal-mapper-test.ts** (524 assertions): Index mapping completeness, alias mappings, render style mapping, composite op mapping, camera mode mapping, index uniqueness, index bounds
 - **shader-math-validation-test.ts** (113 assertions): MathValidation logic, GLSL division-by-zero guards, NaN/Infinity protection, color mixing correctness, shader module parameter ranges, GLSL anti-patterns, SDF distance estimate properties, ray marching safety, uniform buffer consistency, mathematical constants accuracy
-- **cross-engine-parity-test.ts** (79 assertions): Base class contract, uniform packing parity, shader index computation, draw call parity, uniform validation, documented feature gaps, fallback mechanism, quality level parity, performance measurement, WebGL init fallback chain, WebGPU init safety
+- **cross-engine-parity-test.ts** (81 assertions): Base class contract, uniform packing parity, shader index computation, draw call parity, uniform validation, documented feature gaps, fallback mechanism, quality level parity, performance measurement, WebGL init fallback chain, WebGPU init safety
 
 **Integration Tests (822 assertions):**
 
@@ -522,7 +522,7 @@ npm run test:all           # unit + integration + headless + benchmark + quality
 
 ### Phase 5.1 (Current) - September 2026
 - ✅ 0 TypeScript errors (strict mode ✅ включён в tsconfig.json)
-- ✅ Unit test suite: 715 assertions (mapper, shader-math, engine-parity)
+- ✅ Unit test suite: 718 assertions (mapper, shader-math, engine-parity)
 - ✅ Fixed WebGLEngine.ts RenderingContext type narrowing (35 errors)
 - ✅ Fixed data category FractalCategoryKey/FractalType mismatches (55 errors)
 - ✅ Fixed Record<FractalType> incompleteness (7 errors)

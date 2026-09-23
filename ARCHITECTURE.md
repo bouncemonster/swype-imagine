@@ -77,9 +77,9 @@ src/                                          # 54 TypeScript/TSX files, ~935KB 
 
 tests/                                        # 19 test files, ~5480 lines
 ├── fractal-autotest.ts          # 822-assertion integration test (421 lines)
-├── fractal-mapper-test.ts       # Mapper completeness (521 assertions, 260 lines)
+├── fractal-mapper-test.ts       # Mapper completeness (524 assertions, 260 lines)
 ├── shader-math-validation-test.ts # GLSL math safety (113 assertions, 578 lines)
-├── cross-engine-parity-test.ts  # WebGL/WebGPU parity (79 assertions, 307 lines)
+├── cross-engine-parity-test.ts  # WebGL/WebGPU parity (81 assertions, 307 lines)
 ├── browser-harness.ts           # Playwright browser test harness (764 lines)
 ├── browser-fractal-test.ts      # Browser integration test (230 lines)
 ├── external-browser-test.ts     # External-browser rendering test (269 lines)
@@ -276,7 +276,7 @@ data/canonicalFractals.ts
 - **Shader compilation**: Parallel (KHR_parallel_shader_compile)
 - **Source code**: ~935KB TypeScript in src/ (73 ts/tsx files total: 54 src + 19 tests)
 - **TypeScript errors**: 0 (strict mode ✅ enabled)
-- **Unit tests**: 715 assertions (521 mapper + 113 shader-math + 81 engine-parity)
+- **Unit tests**: 718 assertions (524 mapper + 113 shader-math + 81 engine-parity)
 
 ## Known Issues
 1. **Passive event listener warnings**: Fixed with `touchAction: 'none'`
@@ -300,7 +300,7 @@ npm run build        # Production build (dist/)
 npm run preview      # Preview production build
 npm run deploy:cf    # Deploy to Cloudflare Pages
 npm run lint         # TypeScript type check (tsc --noEmit)
-npm run test:unit    # Unit tests (715 assertions: mapper + shader-math + engine-parity)
+npm run test:unit    # Unit tests (718 assertions: mapper + shader-math + engine-parity)
 npm run test         # Integration tests (822 assertions)
 npm run test:browser # Playwright browser tests
 npm run test:all     # Full test suite (unit + integration + headless + benchmark + quality)

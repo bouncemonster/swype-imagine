@@ -153,7 +153,7 @@ FRAGMENT_SHADER = HEADER + FRACTALS_A + FRACTALS_B + FRACTALS_C + MANDELBROT_VAR
 #### 2. Current Project State (Verified)
 - **TypeScript errors**: 0 (tsconfig `strict: true` ✅ enabled — all null/undefined narrowing fixed)
 - **Build**: ~873 KB JS (222 KB gzipped), ~76 KB CSS (varies per build)
-- **Unit tests**: 715 passed (521 mapper + 113 shader-math + 81 engine-parity)
+- **Unit tests**: 718 passed (524 mapper + 113 shader-math + 81 engine-parity)
 - **Integration tests**: 822 assertions
 - **Total source files**: 73 (54 src + 19 tests)
 - **Total source size**: ~1052KB

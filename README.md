@@ -22,7 +22,7 @@
 - **Type Safety**: 0 ошибок TypeScript (strict mode ✅ включён), типизация всех 431 типов
 - **Lazy Shader Compilation**: Модульная архитектура предотвращает краши браузера (v2.4.0)
 - **Прогресс-загрузка**: CosmicLoader следует реальному прогрессу компиляции шейдеров (parsing 10% → compiling 40% → linking 80% → complete 100%) и скрывается на первом отрисованном кадре
-- **Тестирование**: 715 assertions (521 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions + browser tests
+- **Тестирование**: 718 assertions (524 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions + browser tests
 
 ## 📦 Установка и запуск
 
@@ -40,7 +40,7 @@ npm run build
 npm run deploy:cf
 
 # Запуск тестов
-npm run test:unit      # Unit tests (715 assertions)
+npm run test:unit      # Unit tests (718 assertions)
 npm run test           # Integration tests (822 assertions)
 npm run test:browser   # Playwright browser tests
 npm run test:all       # Full test suite
@@ -150,16 +150,16 @@ src/
 - **Rendering**: GLSL ES 3.0 (WebGL2) / WGSL (WebGPU)
 - **Deploy**: Cloudflare Pages via Wrangler
 - **Build**: Bun/npm
-- **Testing**: Playwright + custom test harness, 715 assertions (521 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions
+- **Testing**: Playwright + custom test harness, 718 assertions (524 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions
 - **Type Safety**: 0 TypeScript errors (strict mode ✅ enabled)
 
 ## 🧪 Тестирование
 
 | Suite | Assertions | Description |
 |-------|------------|-------------|
-| **fractal-mapper-test** | 521 | Index mapping completeness, aliases, render styles, composite ops, camera modes |
+| **fractal-mapper-test** | 524 | Index mapping completeness, aliases, render styles, composite ops, camera modes |
 | **shader-math-validation-test** | 113 | Division-by-zero guards, NaN protection, color mixing, SDF properties, uniform consistency |
-| **cross-engine-parity-test** | 79 | WebGL/WebGPU uniform packing, draw calls, fallback, quality levels |
+| **cross-engine-parity-test** | 81 | WebGL/WebGPU uniform packing, draw calls, fallback, quality levels |
 | **fractal-autotest** | 822 | SDF functions, palettes, render styles, audio, share links |
 | **Browser tests** | Visual | Playwright + Chromium visual regression |
 
