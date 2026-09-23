@@ -96,6 +96,7 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   // 117 flameButterfly: stale 0.5 zoom was tuned for the old (black) formula;
   // now delegates to mapFlameBase op2 like flameVariant3, which frames at 1.0.
   120: { zoomScale: 0.5,  tiltOffset: 0.0 }, // flameHyperbolic
+  127: { zoomScale: 0.4,  tiltOffset: 0.0 }, // ifs3DFern — orbit-traced fern (fixed at source); small attractor, frame like barnsleyFern3D(53)
   132: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant2 (high-power thin shell)
   133: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant3
   134: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant4

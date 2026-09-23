@@ -2832,17 +2832,35 @@ float mapIFS3DTree(vec3 p, float t, float phi, int iters) {
 }
 
 float mapIFS3DFern(vec3 p, float t, float phi, int iters) {
-  float d = 1e10;
-  for (int i = 0; i < 10; i++) {
-    vec3 z = p;
-    if (i % 4 == 0) z = z * 0.85 + vec3(0.0, 0.1, 0.0);
-    else if (i % 4 == 1) z = z * 0.2 + vec3(0.0, 0.2, 0.0);
-    else if (i % 4 == 2) { z.x = -z.x * 0.85; z = z + vec3(0.0, 0.15, 0.0); }
-    else { z.x = -z.x * 0.85; z = z + vec3(0.0, 0.1, 0.0); }
-    z *= phi;
-    d = min(d, length(z) * pow(phi, -float(i)));
+  // Orbit-traced Barnsley fern (same proven technique as mapBarnsleyFern3D).
+  // The old min-over-transformed-copies fold assumed phi per-iteration growth
+  // on a set of contraction maps (x0.85/x0.2) that keep z flat, so it produced
+  // a degenerate zero-thickness field that never crossed 0 -> fully black.
+  // Generating the attractor point cloud and measuring min distance to a tube
+  // gives the 2D sheet real 3D thickness.
+  vec3 q0 = p * 1.2;
+  q0.xz = rot2D(t * 0.06) * q0.xz;
+  float minDist = 1e10;
+  for (int s = 0; s < 4; s++) {
+    vec3 q = vec3(0.0);
+    for (int i = 0; i < 30; i++) {
+      float fi = float(i);
+      float choice = fract(sin(fi * 12.9898 + float(s) * 78.233 + 43.12) * 43758.5453);
+      if (choice < 0.01) {
+        q = vec3(0.0, 0.16 * q.y, 0.0);
+      } else if (choice < 0.86) {
+        q = vec3(0.85 * q.x + 0.04 * q.y, -0.04 * q.x + 0.85 * q.y + 1.6, 0.3 * q.z);
+      } else if (choice < 0.93) {
+        q = vec3(0.2 * q.x - 0.26 * q.y, 0.23 * q.x + 0.22 * q.y + 1.6, 0.3 * q.z);
+      } else {
+        q = vec3(-0.15 * q.x + 0.28 * q.y, 0.26 * q.x + 0.24 * q.y + 0.44, 0.3 * q.z);
+      }
+      minDist = min(minDist, length(q0 - q * 0.4));
+    }
   }
-  return d - 0.1;
+  float d = minDist - 0.06;
+  float bound = length(p) - 2.2;
+  return max(d, bound * 0.6);
 }
 
 float mapIFS3DSierpinski(vec3 p, float t, float phi, int iters) {

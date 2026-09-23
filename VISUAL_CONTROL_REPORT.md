@@ -25,8 +25,8 @@ the 3% threshold (see commit `ac5dd3b`).
 | status   | count | note |
 |----------|-------|------|
 | rendered | 382   | healthy (incl. 4 flame types + mandelbulbMandelboxHybrid fixed after the sweep) |
-| sparse   | 42    | valid object, small — framing polish |
-| black    | 7     | 2 exact-0% field bugs (112, 127) + 5 near-empty framing |
+| sparse   | 43    | valid object, small — framing polish (incl. ifs3DFern, now black->valid) |
+| black    | 6     | 1 exact-0% field bug (112 torusKnot4D) + 5 near-empty framing |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
 No shader compile errors, no page crashes, no WebGL context loss across the
@@ -44,7 +44,7 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 | 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
 | 117 | flameButterfly | scaled only `xy` (z unscaled) → constant field; stale `zoomScale 0.5` | ✅ FIXED (WebGL) |
 | 120 | flameHyperbolic | same `pow(phi,-N)` over-normalization on a non-phi-growing op | ✅ FIXED (WebGL) |
-| 127 | ifs3DFern | all IFS transforms keep `z` and offset only in `y` → an infinitely-thin 2D sheet in 3D; mixed contraction (×0.85/×0.2) vs `×phi` growth makes the `pow(phi,-i)` normalization inconsistent | open (field) |
+| 127 | ifs3DFern | old min-over-transformed-copies fold gave a zero-thickness degenerate field. **Rewritten as an orbit-traced Barnsley fern** (same technique as mapBarnsleyFern3D/idx 53), framed at zoomScale 0.4 | ✅ FIXED (WebGL: black -> valid; 2.5% fill, thin by nature like idx 53) |
 
 **Fix applied (113/114/117/120):** the four standalone `mapFlame*` functions now
 delegate to the proven `mapFlameBase` (correct escape-time derivative) with a
@@ -109,10 +109,11 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
    deferred to a visible-adapter machine.
 2. **102** — ✅ DONE: rewrote as a `mapMandelbulb`-style DE (escape break +
    consistent `dr` + positive interior) in GLSL **and** WGSL; WebGL verified
-   0% → 7.9%. **112 / 127** — remaining confirmed field bugs (cheap framing /
-   tube-thickness hypotheses re-probed and ruled out); each needs a per-function
-   SDF rework (proper folded knot SDF / z-extruded fern); verify via WebGL
-   re-probe after each.
+   0% → 7.9%. **127** — ✅ DONE: rewritten as an orbit-traced fern + framed at
+   0.4; WebGL verified black → valid (2.5% thin fill, like idx 53). **112** —
+   remaining field bug: angle-projection DE is degenerate (zoom-out / tube-
+   thickness / DE-scale-up all re-probed and stayed exact 0.0%); needs a proper
+   torus-knot SDF; verify via WebGL re-probe after.
 3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
    `zoomScale` entries so thin attractors fill the frame.
 
