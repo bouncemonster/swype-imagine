@@ -111,6 +111,17 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   323: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant33
   325: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant35
   335: { zoomScale: 0.45, tiltOffset: 0.0 }, // flameVariant45
+  // Weak L-system variants (mapLSystemVariant, thin branching) framed 1.0->0.6
+  // (conservative: structures extend upward from a base, big zoom-in can clip).
+  242: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant2
+  244: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant4
+  252: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant12
+  254: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant14
+  262: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant22
+  264: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant24
+  274: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant34
+  282: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant42
+  284: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant44
   132: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant2 (high-power thin shell)
   133: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant3
   134: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant4
