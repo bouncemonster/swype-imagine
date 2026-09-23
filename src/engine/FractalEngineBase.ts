@@ -122,6 +122,13 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   274: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant34
   282: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant42
   284: { zoomScale: 0.6, tiltOffset: 0.0 }, // lsystemVariant44
+  // Thin strange attractors still at the plain 1.0 default (siblings like
+  // aizawa/lorenz were framed earlier). 0.45 sweep-verified: 2-3x fill gain,
+  // none inside-black (err=0); line orbits stay intrinsically thin.
+  43:  { zoomScale: 0.45, tiltOffset: 0.0 }, // thomasAttractor — 0.63% at default
+  44:  { zoomScale: 0.45, tiltOffset: 0.0 }, // halvorsenAttractor — 0.52% at default
+  78:  { zoomScale: 0.45, tiltOffset: 0.0 }, // pickoverAttractor — 0.91% at default
+  85:  { zoomScale: 0.45, tiltOffset: 0.0 }, // svenssonAttractor — 0.55% at default
   132: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant2 (high-power thin shell)
   133: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant3
   134: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant4
