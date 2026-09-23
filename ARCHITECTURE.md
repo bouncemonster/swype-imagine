@@ -275,7 +275,7 @@ data/canonicalFractals.ts
 - **SDF calls per pixel**: ~170-270 (with all effects)
 - **Shader compilation**: Parallel (KHR_parallel_shader_compile)
 - **Source code**: ~935KB TypeScript in src/ (73 ts/tsx files total: 54 src + 19 tests)
-- **TypeScript errors**: 0 (strict mode not yet enabled)
+- **TypeScript errors**: 0 (strict mode ✅ enabled)
 - **Unit tests**: 715 assertions (521 mapper + 113 shader-math + 81 engine-parity)
 
 ## Known Issues

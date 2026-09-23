@@ -3,7 +3,7 @@
 ## Code Style
 
 ### TypeScript
-- **Strict mode**: NOT yet enabled — `as any` casts exist (see AUDIT_REPORT.md)
+- **Strict mode**: ✅ enabled in `tsconfig.json` (`"strict": true`) — 0 errors. Remaining `as any` are intentional (debug `window` hooks, `getContext` options, diagnostic payload)
 - **Interfaces**: Use for component props and data structures
 - **Types**: Use `type` for unions, aliases
 - **Naming**:
@@ -309,7 +309,7 @@ try {
 
 Before merging:
 - [ ] Code follows style guide
-- [ ] TypeScript strict mode passes (when enabled)
+- [ ] TypeScript strict mode passes
 - [ ] No console errors
 - [ ] Tested on desktop
 - [ ] Tested on mobile

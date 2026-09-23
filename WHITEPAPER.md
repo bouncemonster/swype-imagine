@@ -4,7 +4,7 @@
 
 **Golden Ratio WebGPU Fractal Engine** — это первый в мире open-source real-time фрактальный движок с **431 уникальным типом фракталов**, использующий современные технологии WebGL2/WebGPU для рендеринга в браузере. Проект демонстрирует возможности веб-технологий для сложных математических визуализаций, ранее доступных только в десктопных приложениях.
 
-**Ключевое достижение**: 431 тип фракталов в реальном времени в браузере с производительностью 60 FPS на современном hardware. 0 ошибок TypeScript (strict mode пока не включён), 715 unit-assertions (521 mapper + 113 shader-math + 81 engine-parity).
+**Ключевое достижение**: 431 тип фракталов в реальном времени в браузере с производительностью 60 FPS на современном hardware. 0 ошибок TypeScript (strict mode ✅ включён), 715 unit-assertions (521 mapper + 113 shader-math + 81 engine-parity).
 
 ---
 
@@ -185,7 +185,7 @@
 - **Dual backend** — WebGL2 основной (все 431 типов), WebGPU опциональный
 - **Lazy shader assembly** — ShaderManager собирает минимальный шейдер на фрактал (~900 строк вместо 4171-строчного монолита) + 5 сжатых variation-модулей (12x компрессия, 7934→649 строк)
 - **Adaptive rendering** — LOD, space leaping, early termination
-- **Type safety** — 0 ошибок TypeScript (strict mode пока не включён), типизация всех 431 fractal types
+- **Type safety** — 0 ошибок TypeScript (strict mode ✅ включён), типизация всех 431 fractal types
 - **Testing** — 715 unit-assertions (521 mapper + 113 shader math + 81 engine parity) + 822 integration assertions
 
 ### 3. **Доступность**

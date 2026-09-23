@@ -521,7 +521,7 @@ npm run test:all           # unit + integration + headless + benchmark + quality
 ## 📝 Changelog
 
 ### Phase 5.1 (Current) - September 2026
-- ✅ 0 TypeScript errors (strict mode пока не включён в tsconfig.json)
+- ✅ 0 TypeScript errors (strict mode ✅ включён в tsconfig.json)
 - ✅ Unit test suite: 715 assertions (mapper, shader-math, engine-parity)
 - ✅ Fixed WebGLEngine.ts RenderingContext type narrowing (35 errors)
 - ✅ Fixed data category FractalCategoryKey/FractalType mismatches (55 errors)

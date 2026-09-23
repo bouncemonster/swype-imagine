@@ -323,7 +323,7 @@ Each component has dedicated doc in `docs/`:
 - ✅ Fixed: MEDIUM MathValidation determinant check improved
 - ✅ Fixed: MEDIUM COMPATIBLE_HYBRIDS added 27 missing fractal type entries
 - ✅ Fixed: CRITICAL transparent sphere clipping — r_bound 5.0→12.0 in both GLSL/WGSL
-- ⚠️ Remaining: TypeScript strict mode not enabled
+- ✅ Fixed: TypeScript strict mode enabled (`"strict": true`, 0 errors)
 - ✅ Resolved: category data validated, 0 type mismatches remaining
 - ️ Remaining: fractalFactory.ts non-standard import paths
 - ⚠️ Remaining: No git remote configured (push not possible)

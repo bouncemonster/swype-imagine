@@ -151,7 +151,7 @@ FRAGMENT_SHADER = HEADER + FRACTALS_A + FRACTALS_B + FRACTALS_C + MANDELBROT_VAR
 - **DEVELOPMENT_LOG.md**: Added this session entry
 
 #### 2. Current Project State (Verified)
-- **TypeScript errors**: 0 (tsconfig `strict` is NOT enabled — no `strict` key)
+- **TypeScript errors**: 0 (tsconfig `strict: true` ✅ enabled — all null/undefined narrowing fixed)
 - **Build**: ~873 KB JS (222 KB gzipped), ~76 KB CSS (varies per build)
 - **Unit tests**: 715 passed (521 mapper + 113 shader-math + 81 engine-parity)
 - **Integration tests**: 822 assertions

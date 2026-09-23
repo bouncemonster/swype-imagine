@@ -237,7 +237,7 @@ Performance improvements are always welcome!
 - Use TypeScript for all new code
 - Follow existing naming conventions
 - Add JSDoc comments for public APIs
-- Write strict-mode-compatible code (note: the project's `tsconfig.json` does not currently enable `strict`)
+- Write strict-mode-compatible code (the project's `tsconfig.json` enables `strict: true` — CI runs `tsc --noEmit` and fails on any error)
 
 ### React
 - Functional components with hooks

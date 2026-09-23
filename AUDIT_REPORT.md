@@ -108,15 +108,15 @@ Offset (bytes) | Field
 
 ---
 
-### 3. TypeScript Strict Mode Отсутствует ⚠️ ЗАДОКУМЕНТИРОВАНО
+### 3. TypeScript Strict Mode ✅ РЕШЕНО
 **Файл**: `tsconfig.json`
 
 **Проблема**: 
-`rules.md` утверждал "Strict mode: Enabled in tsconfig.json", но `tsconfig.json` не содержит `"strict": true`.
+Ранее `tsconfig.json` не содержал `"strict": true`.
 
 **Исправление**: 
-✅ `rules.md` и `agent.md` обновлены — теперь корректно отражают что strict mode НЕ включен
-✅ Добавлен план по включению strict mode в будущих релизах
+✅ `"strict": true` включён; все null/undefined narrowing-ошибки исправлены (App, WebGLEngine, FractalInfoHUD, NeuroAestheticsEngine, goldenAudio) — 0 ошибок
+✅ CI (`ci.yml`) выполняет `tsc --noEmit` — строгая проверка регрессии гарантирована
 
 ---
 
@@ -262,10 +262,10 @@ private exportNormals: Float32Array = new Float32Array(100000 * 3); // ❌ 7.2 M
 
 ---
 
-### 18. Missing Strict Mode в tsconfig.json
+### 18. Missing Strict Mode в tsconfig.json ✅ РЕШЕНО
 **Файл**: `tsconfig.json`
 
-**Проблема**: Отсутствует `"strict": true` (см. Critical Bug #3).
+**Решение**: `"strict": true` включён, все ошибки исправлены (см. Critical Bug #3).
 
 ---
 
@@ -275,8 +275,8 @@ private exportNormals: Float32Array = new Float32Array(100000 * 3); // ❌ 7.2 M
 |----------|-------|--------|
 | Critical Bugs | 3 | 3 fixed |
 | Important Issues | 7 | 5 fixed, 2 documented |
-| Minor Issues | 8 | 3 fixed, 5 documented |
-| **Total** | **18** | **11 fixed, 7 documented** |
+| Minor Issues | 8 | 4 fixed, 4 documented |
+| **Total** | **18** | **12 fixed, 6 documented** |
 
 ---
 
@@ -285,7 +285,7 @@ private exportNormals: Float32Array = new Float32Array(100000 * 3); // ❌ 7.2 M
 ### Immediate (Critical) — ALL DONE
 1. ✅ Исправлена синтаксическая ошибка в fractalMappers.ts
 2. ✅ Исправлен WGSL uniform buffer size (verified layout correctness)
-3. ✅ TypeScript strict mode — documented as known issue, rules.md corrected
+3. ✅ TypeScript strict mode включён (`"strict": true`), все ошибки исправлены
 
 ### Short-term (Important) — MOSTLY DONE
 4. ✅ Исправлены per-frame аллокации в WebGLEngine
@@ -296,7 +296,7 @@ private exportNormals: Float32Array = new Float32Array(100000 * 3); // ❌ 7.2 M
 ### Long-term (Minor) — ONGOING
 8. ⚠️ Удалить unnecessary dependencies (express)
 9. ⚠️ Добавить ESLint конфигурацию
-10. ⚠️ Enable TypeScript strict mode and fix resulting errors
+10. ✅ Enable TypeScript strict mode and fix resulting errors
 
 ---
 

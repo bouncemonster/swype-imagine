@@ -200,7 +200,7 @@ npm run lint     # Run linter
 - **Auto-deploy**: On push to main branch
 
 ## Key Conventions
-- **TypeScript**: Strict mode NOT yet enabled (see AUDIT_REPORT.md) — `as any` casts exist in useRenderEngine.ts / WebGLEngine.ts
+- **TypeScript**: Strict mode ✅ enabled (`"strict": true`, 0 errors). Engine swap status exposed via `FractalEngineBase.isShaderSwapping()` / `getSwapProgress()` instead of `as any`
 - **React**: Functional components, hooks
 - **Shaders**: GLSL for WebGL, WGSL for WebGPU
 - **Naming**: camelCase for variables, PascalCase for components
@@ -208,8 +208,8 @@ npm run lint     # Run linter
 - **Documentation**: Markdown with consistent structure
 
 ## Known Issues (from audit 2026-09-11, re-verified against code)
-- TypeScript strict mode not enabled in tsconfig.json
-- `as any` casts remain in `useRenderEngine.ts` (3) and `WebGLEngine.ts` (1)
+- ~~TypeScript strict mode not enabled~~ ✅ resolved (strict enabled, all null/undefined narrowing fixed)
+- Intentional `as any` remain only in debug `window` hooks (`useRenderEngine.ts` ×2) and `getContext` options (`WebGLEngine.ts` ×1)
 - No ESLint configuration (lint script = tsc --noEmit only)
 - WebGPU covers only 131/431 fractal types (131-430 fall back to phyllotaxis)
 - See AUDIT_REPORT.md for full details

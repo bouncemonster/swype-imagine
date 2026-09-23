@@ -19,7 +19,7 @@
 - **Интерактивность**: Вращение, zoom, морфинг в реальном времени
 - **Keyboard shortcuts**: 1-7 (режимы), F (камера), R (сброс), I (инерция), S (стоп)
 - **Аудио**: φ-tuned ambient audio engine (Web Audio API)
-- **Type Safety**: 0 ошибок TypeScript (strict mode пока не включён), типизация всех 431 типов
+- **Type Safety**: 0 ошибок TypeScript (strict mode ✅ включён), типизация всех 431 типов
 - **Lazy Shader Compilation**: Модульная архитектура предотвращает краши браузера (v2.4.0)
 - **Прогресс-загрузка**: CosmicLoader следует реальному прогрессу компиляции шейдеров (parsing 10% → compiling 40% → linking 80% → complete 100%) и скрывается на первом отрисованном кадре
 - **Тестирование**: 715 assertions (521 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions + browser tests
@@ -151,7 +151,7 @@ src/
 - **Deploy**: Cloudflare Pages via Wrangler
 - **Build**: Bun/npm
 - **Testing**: Playwright + custom test harness, 715 assertions (521 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions
-- **Type Safety**: 0 TypeScript errors (strict mode not yet enabled)
+- **Type Safety**: 0 TypeScript errors (strict mode ✅ enabled)
 
 ## 🧪 Тестирование
 
