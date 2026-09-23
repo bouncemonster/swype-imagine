@@ -15,8 +15,12 @@
 
 type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'group' | 'groupEnd' | 'debug';
 
-/** Build-time: Vite replaces `import.meta.env.PROD` at compile time. */
-const IS_PROD = import.meta.env.PROD;
+/** Build-time: Vite replaces `import.meta.env.PROD` at compile time. The
+ *  typeof guard lets non-Vite ESM runtimes (e.g. `npx tsx` test harnesses,
+ *  where import.meta.env is undefined) import src modules without crashing; in
+ *  a Vite build the guard is true and the PROD token is still statically
+ *  replaced, so info-level logging stays silenced in production. */
+const IS_PROD = typeof import.meta.env !== 'undefined' && import.meta.env.PROD === true;
 
 /** Runtime override (URL param or explicit toggle). */
 let _verbose = typeof window !== 'undefined'
