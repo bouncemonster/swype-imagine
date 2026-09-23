@@ -64,6 +64,25 @@ Ranked by (impact × cost). #1–#2 are cheap wins to land first; #3 is the bigg
    `NeuroAestheticsEngine` init to `requestIdleCallback` (or first pointer interaction).
    *Est: −400–600 ms TBT.*
 
+   **Partial fix landed 2026-09-23 (safe subset, no boot-sequence change)**: the biggest
+   boot-only *parse* cost still in the `index` chunk was four always-mounted "closed" modals
+   (`ExplanationModal`, `UserProfileModal`, `ProjectManifestModal`, `FractalAtlasModal`) plus
+   the ~95 KB of `src/data/canonicalFractals.ts` + 11 category files that `FractalAtlasModal`
+   imports transitively. All four already `return null` when `isOpen=false` and have no
+   mount-time side effects, so they are safe `React.lazy()` candidates. Boot `index` chunk
+   shrank **427 KB → 283 KB** (−144 KB, −33.7 %); the four modals split into their own
+   lazy chunks (`FractalAtlasModal-*.js` = 108 KB including catalog, `ExplanationModal-*.js`
+   16 KB, `UserProfileModal-*.js` 14 KB, `ProjectManifestModal-*.js` 7 KB). `Mobile-design-audit`
+   still passes (`panelOpen=true` on 375/430/667×375) because the audit's own `waitFor` on
+   `#toggle-engineer-mode-in-profile` (inside UserProfileModal) and `#tab-gpu-btn` (inside
+   ControlsPanel) absorb the chunk fetch. Deferred (real boot-path work, needs a `WebGLEngine.init`
+   or first-specimen refactor): (a) procedural palette gen — 873 items × 4 HSL→RGB calls
+   at import time in `palettesProcedural.ts`; (b) `NeuroAestheticsEngine` init loops over
+   `ALL_FRACTAL_TYPES` (431) three times for taste profile defaults; (c) full catalog export
+   of unused category files if not touched by Atlas. Each requires an `requestIdleCallback`
+   or `useEffect` deferral — the boot-first-specimen path currently reads
+   `ALL_COLOR_PALETTES[0]` synchronously.
+
 4. **[Med impact · med cost] `shaders` chunk (366 KB decoded) parsed on the critical path.**
    ShaderManager v3 splices a *minimal per-fractal* shader (~1000 lines), yet the monolithic
    fallback still ships preloaded. **Fix**: move the monolith behind a dynamic `import()` that

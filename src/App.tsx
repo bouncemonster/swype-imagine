@@ -8,12 +8,26 @@ import { TelemetryHUD } from './components/TelemetryHUD';
 const ControlsPanel = React.lazy(() =>
   import('./components/ControlsPanel').then(m => ({ default: m.ControlsPanel })),
 );
+// Perf #3 (safe subset): the 4 always-mounted "closed" modals are the biggest boot-
+// only-parse payload still in the index chunk — together ~121 KB source, plus the
+// ~95 KB of src/data/canonicalFractals.ts + 11 category files pulled in transitively
+// by FractalAtlasModal. Each modal already returns null when isOpen=false (verified),
+// so React.lazy defers their parse+eval until first user open. Suspense fallback={null}
+// keeps the API identical: no shim content while the chunk resolves.
+const ExplanationModal = React.lazy(() =>
+  import('./components/ExplanationModal').then(m => ({ default: m.ExplanationModal })),
+);
+const UserProfileModal = React.lazy(() =>
+  import('./components/UserProfileModal').then(m => ({ default: m.UserProfileModal })),
+);
+const ProjectManifestModal = React.lazy(() =>
+  import('./components/ProjectManifestModal').then(m => ({ default: m.ProjectManifestModal })),
+);
+const FractalAtlasModal = React.lazy(() =>
+  import('./components/FractalAtlasModal').then(m => ({ default: m.FractalAtlasModal })),
+);
 import { FractalInfoHUD } from './components/FractalInfoHUD';
-import { ExplanationModal } from './components/ExplanationModal';
-import { UserProfileModal } from './components/UserProfileModal';
 import { CosmicLoader } from './components/CosmicLoader';
-import { ProjectManifestModal } from './components/ProjectManifestModal';
-import { FractalAtlasModal } from './components/FractalAtlasModal';
 import { FractalProbeHUD } from './components/FractalProbeHUD';
 import { FractalScrollFeed } from './components/FractalScrollFeed';
 import { DebugOverlay } from './components/DebugOverlay';
@@ -735,6 +749,7 @@ export default function App() {
       )}
 
       {/* User Profile & Recommendation Taste Space Modal */}
+      <React.Suspense fallback={null}>
       <UserProfileModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
@@ -755,6 +770,7 @@ export default function App() {
         onRemoveLike={handleRemoveLike}
         isCurrentLiked={currentSpecimen ? likedIds.has(currentSpecimen.id) : false}
       />
+      </React.Suspense>
 
       {/* Engineer Mode ("Инж") Overlay: In-depth Math, GPU Shaders & Telemetry */}
       {isEngineerMode && (
@@ -785,12 +801,15 @@ export default function App() {
       )}
 
       {/* Sacred Geometry & Neuro-Aesthetics Research Modal */}
+      <React.Suspense fallback={null}>
       <ExplanationModal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
       />
+      </React.Suspense>
 
       {/* Encyclopedia Atlas of 33 Canonical Fractals & Scientific Manifest Modal */}
+      <React.Suspense fallback={null}>
       <FractalAtlasModal
         isOpen={showAtlasModal}
         onClose={() => setShowAtlasModal(false)}
@@ -801,14 +820,17 @@ export default function App() {
           }));
         }}
       />
+      </React.Suspense>
 
       {/* Official Project Manifest & Marketing Overview Modal */}
+      <React.Suspense fallback={null}>
       <ProjectManifestModal
         isOpen={showManifestModal}
         onClose={() => setShowManifestModal(false)}
         isFirstVisit={isFirstManifestVisit}
         onOpenAtlas={() => setShowAtlasModal(true)}
       />
+      </React.Suspense>
 
       {/* Sacred Geometry Cosmic Loader */}
       <CosmicLoader
