@@ -401,10 +401,16 @@ cannot silently re-create them.
 4. **`theme-color` disagrees with the painted background.** `index.html` declares `#0a0a0a` while
    the root paints `#030305`, and there are three bespoke near-blacks (`#030305`, `#090812`,
    `#06050b`). Mobile browser chrome will band against the app. One-line fix.
-5. **Reduced motion is only half-covered.** `prefers-reduced-motion` appears once, in `App.tsx:70`
+5. **Reduced motion is only half-covered.** ~~`prefers-reduced-motion` appears once, in `App.tsx:70`
    (boot-time render loop). There are **no** `motion-reduce:` CSS variants, so `animate-pulse` (6
    sites) and `animate-ping` (6) keep looping for reduced-motion users. WCAG 2.3.3 is met for
-   animation triggered by interaction, not for ambient loops.
+   animation triggered by interaction, not for ambient loops.~~
+   **Closed 2026-09-23**: `src/index.css` gained a global `@media (prefers-reduced-motion: reduce)`
+   block that sets `animation-duration/transition-duration: 0.001ms !important`,
+   `animation-iteration-count: 1`, and `scroll-behavior: auto` for `*, *::before, *::after`.
+   Covers the 12 `animate-pulse`/`animate-ping` sites and the 2 `animate-[spin_…]` usages without
+   editing each call site; fractal morph/rotation (which IS content) remains governed by the
+   pre-existing `App.tsx:70` `PREFERS_REDUCED_MOTION` module-level check.
 6. **Micro-type tier is undecided.** The 12 px coarse floor means desktop and touch now render
    different type scales by design. Either document `micro` as a desktop-only tier (current state,
    captured above) or promote 12 px everywhere and lose HUD density.

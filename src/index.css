@@ -96,3 +96,26 @@ input[type="range"] {
     line-height: 1rem;
   }
 }
+
+/* ============================================================
+   DESIGN.md Known Gap 5 — reduced motion CSS variants absent.
+   Before this block, `prefers-reduced-motion` was only honoured
+   at boot for the render loop (App.tsx). The 12 ambient CSS
+   animations (6× `animate-pulse`, 6× `animate-ping`, plus any
+   future `animate-bounce`) kept looping for reduced-motion users,
+   violating WCAG 2.3.3 for decorative motion. Global opt-out:
+   kill animations and transitions, and disable smooth scroll.
+   Fractal morphing/rotation stays untouched — that IS content,
+   not decoration, and users can toggle it via the `S` shortcut
+   or the params panel.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
