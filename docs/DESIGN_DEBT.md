@@ -28,11 +28,19 @@ Amber hex values (`#f59e0b` = amber-500, `#fef08a` = amber-200, `#fbbf24` = ambe
 
 **Why it stays:** these are SVG attributes and `box-shadow` colors — Tailwind utilities don't
 cover them without a `shadow-[…]` arbitrary value or a plugin. Converting to CSS variables
-(`var(--brand-500)`) would be clean but touches 4 files and re-regression-checks each glow,
-for zero user-visible benefit today.
+(`var(--brand-500)`) would be clean but touches 4 files and re-regression-checks each glow.
 
-**Fix cost if we ever re-brand:** 1 hour — introduce `--brand-*` in `src/index.css`, replace
-21 occurrences, rebuild, screenshot-diff.
+**Correction (2026-09-23, design-system-capture):** the original "zero user-visible benefit"
+claim is falsified by measurement. Tailwind v4 resolves `amber-500` to `oklch(76.9% 0.188 70.08)`
+→ rendered `#fe9a00`, while the literals still use the v3 hex `#f59e0b` (Δ 11 on green, Δ 11 on
+blue) and `#fbbf24` vs v4 `amber-400` = `#ffb900` (Δ 36 on blue). The glow sits next to utility-
+colored buttons, so the hue mismatch is visible side-by-side. Neutrals have Δ 0 (identical).
+Tailwind v4 exposes tokens as CSS variables, so SVG `stopColor` and `box-shadow` **can** use
+`var(--color-amber-500)` directly — no plugin required. See `DESIGN.md` Gap 2.
+
+**Fix cost (updated):** 30 min — replace 21 hex literals with `var(--color-amber-*)` in
+`CosmicLoader.tsx`, `ControlsPanel.tsx`, `ProjectManifestModal.tsx`, `UserProfileModal.tsx`;
+rebuild, visual-diff.
 
 ## Bucket 2 — Tiny responsive typography (25 sites, 5 files)
 
@@ -72,6 +80,11 @@ Select-String -Path src/**/*.tsx -Pattern '\[[a-z]+-[0-9]+px\]|\[[0-9]+px|\[#'
 - A to-do list. If a future release wants to re-brand or lift the theme, this is the inventory
   to work from; otherwise it stays informational.
 - A signal that a11y is broken — a11y was measured separately in `VISUAL_CONTROL_REPORT.md`
-  and axe reports 0 violations post-v6.0.0.
+  (repo root) and axe reports 0 violations post-v6.0.0.
 - Covering `palettes.ts` / `palettesProcedural.ts`. Those ARE the design tokens; they intentionally
   enumerate hex values as data.
+
+## See also
+
+- `DESIGN.md` (repo root) — the full design-system contract captured from this audit plus live
+  DOM measurements; lists all 6 known gaps with recommendations.

@@ -31,3 +31,46 @@ jobs:
 
       - name: Integration autotest (SDF functions, palettes, render styles, audio, share links — 1875 assertions)
         run: npm run test
+
+  # Responsive contract gate: DESIGN.md «Responsive Behavior». Runs against a local
+  # `vite preview` on 127.0.0.1 so it never depends on external network/CDN/VPN.
+  # Playwright drives real Chromium; (pointer: coarse) is forced via CDP emulation so
+  # the result is hardware-independent. Desktop control run proves touch rules don't leak.
+  # continue-on-error: true  -> flip to blocking after the first green Actions run.
+  mobile-design-audit:
+    runs-on: ubuntu-latest
+    needs: typecheck-and-build
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Production build
+        run: npm run build
+
+      - name: Start local preview server
+        run: |
+          npx vite preview --port 4173 --strictPort > /tmp/preview.log 2>&1 &
+          echo "PREVIEW_PID=$!" >> $GITHUB_ENV
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:4173/ >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:4173/ >/dev/null || { cat /tmp/preview.log; exit 1; }
+
+      - name: Mobile design audit (44px targets + 12px text floor + safe-area, no VPN dependency)
+        run: npm run test:mobile -- http://127.0.0.1:4173
+
+      - name: Stop preview server
+        if: always()
+        run: kill "${PREVIEW_PID:-}" 2>/dev/null || true
