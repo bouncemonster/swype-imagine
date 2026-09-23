@@ -17,6 +17,7 @@ import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
 import { PROCEDURAL_PALETTES } from './palettesProcedural';
 import { logger } from './utils/logger';
+import { FPS_TARGET_DESKTOP, FPS_TARGET_MOBILE, AUTO_ROTATE_SPEED, GOLDEN_RATIO } from './constants';
 
 // Combine hand-crafted and procedural palettes
 const ALL_COLOR_PALETTES = [...COLOR_PALETTES, ...PROCEDURAL_PALETTES];
@@ -88,7 +89,7 @@ const INITIAL_PARAMS: FractalParams = {
   paletteId: 'lapis-lazuli',
   // Mobile: fewer iterations to prevent GPU overload
   iterations: IS_MOBILE ? 12 : 16,
-  phiMultiplier: 1.61803398875,
+  phiMultiplier: GOLDEN_RATIO,
   morphSpeed: 0.45,
   glowIntensity: 1.1,
   detailLevel: 1.0,
@@ -96,9 +97,9 @@ const INITIAL_PARAMS: FractalParams = {
   rotX: 0.4,
   rotY: 0.25,
   autoRotate: true,
-  autoRotateSpeed: 0.12,
+  autoRotateSpeed: AUTO_ROTATE_SPEED,
   // Mobile: cap at 30 FPS to prevent overheating and browser crashes
-  targetFps: IS_MOBILE ? 30 : 60,
+  targetFps: IS_MOBILE ? FPS_TARGET_MOBILE : FPS_TARGET_DESKTOP,
   enableAudio: false,
   audioVolume: 0.65,
   audioTuning: 'phi432',

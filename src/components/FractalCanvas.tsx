@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useEffect } from 'react';
 import { FractalParams, FractalType, TelemetryData } from '../types/fractal';
 import { useRenderEngine } from '../hooks/useRenderEngine';
 import { userProblemLogger } from '../engine/UserProblemLogger';
+import { INERTIA_ROT_SPEED } from '../constants';
 
 interface FractalCanvasProps {
   params: FractalParams;
@@ -237,7 +238,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     }
 
     // Apply rotation with improved sensitivity
-    const rotationSpeed = 0.0035; // Slightly faster (was 0.003)
+    const rotationSpeed = INERTIA_ROT_SPEED; // shared with useRenderEngine inertia (single source)
     const rotDeltaX = dx * rotationSpeed;
     const rotDeltaY = dy * rotationSpeed;
 

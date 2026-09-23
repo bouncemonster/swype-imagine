@@ -82,3 +82,8 @@ export const AUTO_ROTATE_SPEED = 0.12;
 export const PREFETCH_INITIAL_DELAY_MS = 300;
 export const PREFETCH_RETRY_DELAY_MS = 1_000;
 export const PREFETCH_COLD_START_DELAY_MS = 400;
+
+// --- Mathematical constants ---------------------------------------------------
+
+/** phi = (1 + sqrt(5)) / 2 -- golden ratio, fundamental to the entire engine. */
+export const GOLDEN_RATIO = 1.61803398875;
