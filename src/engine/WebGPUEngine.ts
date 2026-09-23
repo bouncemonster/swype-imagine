@@ -5,6 +5,7 @@ import { FractalEngineBase } from './FractalEngineBase';
 import { renderDiagnostics } from './RenderDiagnostics';
 import { userProblemLogger } from './UserProblemLogger';
 import { logger } from '../utils/logger';
+import { GPU_ADAPTER_TIMEOUT_MS } from '../constants';
 
 export class WebGPUEngine extends FractalEngineBase {
   private adapter: GPUAdapter | null = null;
@@ -35,7 +36,7 @@ export class WebGPUEngine extends FractalEngineBase {
     try {
       // Timeout: if adapter request takes >5s, GPU is likely unavailable (headless/software renderer)
       const adapterPromise = navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
-      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), GPU_ADAPTER_TIMEOUT_MS));
       this.adapter = await Promise.race([adapterPromise, timeoutPromise]);
 
       if (!this.adapter) {

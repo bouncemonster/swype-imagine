@@ -5,6 +5,7 @@ import { renderDiagnostics } from './RenderDiagnostics';
 import { userProblemLogger } from './UserProblemLogger';
 import { ShaderManager } from './ShaderManager';
 import { logger } from '../utils/logger';
+import { PREFETCH_CONCURRENCY, WARMUP_FRAMES, SHADER_SWAP_TIMEOUT_MS, CANVAS_HARD_CAP, SHADER_POLL_MAX_SPINS, SHADER_POLL_INTERVAL_MS } from '../constants';
 
 export class WebGLEngine extends FractalEngineBase {
   private gl: WebGL2RenderingContext | null = null;
@@ -37,7 +38,7 @@ export class WebGLEngine extends FractalEngineBase {
   // PREFETCH_CONCURRENCY may be in flight, but the driver-side LINK step is effectively
   // serialized — so the CALLER (useRenderEngine) holds prefetch back until the first real
   // frame is painted, then warms the next figures for instant subsequent switches.
-  private static readonly PREFETCH_CONCURRENCY = 2;
+  private static readonly PREFETCH_CONCURRENCY = PREFETCH_CONCURRENCY;
   private prefetching = new Set<number>();
   // Latest ShaderManager stage percent per fractal index — surfaces REAL compile
   // progress (10/40/80/100) on the swap chip instead of a blind pulse animation.
@@ -260,9 +261,9 @@ export class WebGLEngine extends FractalEngineBase {
     // budget early would fall through to the blocking status read and freeze the tab
     // (same pitfall measured in loader-sync-test). A hung compile is caught by the
     // 120s swap guard in render(), not by a short poll budget here.
-    for (let spins = 0; spins < 16000; spins++) {
+    for (let spins = 0; spins < SHADER_POLL_MAX_SPINS; spins++) {
       if (readStatus(COMPLETION_STATUS_KHR)) return;
-      await new Promise<void>(resolve => setTimeout(resolve, 5));
+      await new Promise<void>(resolve => setTimeout(resolve, SHADER_POLL_INTERVAL_MS));
     }
   }
 
@@ -379,7 +380,7 @@ export class WebGLEngine extends FractalEngineBase {
   private beginWarmup(): void {
     this.preSwapQuality = Math.max(this.qualityLevel, 1); // never restore to a stale 0
     this.qualityLevel = 0;
-    this.warmupFramesLeft = 24; // ~0.4s at 60fps
+    this.warmupFramesLeft = WARMUP_FRAMES;
   }
 
   /** (Re-)cache uniform locations for the active program. */
@@ -467,7 +468,7 @@ export class WebGLEngine extends FractalEngineBase {
       // Time-based safety valve (see swapStartTime comment): real cold driver compiles
       // take tens of seconds — the guard must stay up for the whole wait so the chip
       // shows one continuous honest progress instead of flickering every ~5s.
-      if (performance.now() - this.swapStartTime > 120000) {
+      if (performance.now() - this.swapStartTime > SHADER_SWAP_TIMEOUT_MS) {
         logger.warn('[WebGL2] Shader swap timeout — resetting after', Math.round((performance.now() - this.swapStartTime) / 1000), 's');
         this.isSwappingShader = false;
         this.swapStartTime = 0;
@@ -477,7 +478,7 @@ export class WebGLEngine extends FractalEngineBase {
     }
 
     // Safety: cap canvas size to prevent GPU OOM on extreme DPR
-    if (this.canvas.width > 4096 || this.canvas.height > 4096) return false;
+    if (this.canvas.width > CANVAS_HARD_CAP || this.canvas.height > CANVAS_HARD_CAP) return false;
 
     // LOG FRACTAL TYPE only when it changes (not every frame)
     const indices = this.computeIndices(params);

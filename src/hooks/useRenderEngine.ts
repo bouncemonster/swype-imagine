@@ -4,6 +4,17 @@ import { WebGPUEngine } from '../engine/WebGPUEngine';
 import { WebGLEngine } from '../engine/WebGLEngine';
 import { getFractalIndex } from '../engine/fractalMappers';
 import { logger } from '../utils/logger';
+import {
+  DPR_CAP_DESKTOP, DPR_CAP_EMBEDDED, DPR_CAP_MOBILE,
+  CANVAS_MAX_DIM_DESKTOP, CANVAS_MAX_DIM_MOBILE, CANVAS_MIN_DIM, CANVAS_MIN_HEIGHT,
+  LOADER_FORCE_HIDE_MS, ENGINE_SETUP_TIMEOUT_MS,
+  QUALITY_COOLDOWN_MS, QUALITY_DOWN_THRESHOLD_RATIO, QUALITY_UP_THRESHOLD_RATIO,
+  CONSECUTIVE_ERROR_FLOOR,
+  INERTIA_DECAY, INERTIA_THRESHOLD,
+  AUTO_ROTATE_RESUME_DELAY_MS,
+  FPS_TARGET_DESKTOP, FPS_TARGET_MOBILE,
+  PREFETCH_INITIAL_DELAY_MS, PREFETCH_RETRY_DELAY_MS, PREFETCH_COLD_START_DELAY_MS,
+} from '../constants';
 
 export interface UseRenderEngineOptions {
   forcedBackend: 'webgpu' | 'webgl2' | 'auto';
@@ -151,10 +162,10 @@ export function useRenderEngine(
   const velocityRef = useRef({ x: 0, y: 0 });
   const lastMoveTimeRef = useRef(0);
   const lastInteractionReportTimeRef = useRef<number>(0);
-  const inertiaDecay = 0.94; // Smoother decay (was 0.92)
-  const inertiaThreshold = 0.00008; // Lower threshold for longer glide
+  const inertiaDecay = INERTIA_DECAY;
+  const inertiaThreshold = INERTIA_THRESHOLD;
   const inertiaEnabledRef = useRef(true); // Allow toggling inertia on/off
-  const AUTO_ROTATION_RESUME_DELAY = 3000; // ms of no interaction before auto-rotation resumes
+  const AUTO_ROTATION_RESUME_DELAY = AUTO_ROTATE_RESUME_DELAY_MS;
   // Auto-rotation is an ACCUMULATED angle stored here (not an absolute simTime term added
   // to rotX each frame), so pausing simply stops accumulating and the view holds perfectly
   // still, and resuming eases the spin back in from zero via the ease factor — no snap.
@@ -195,15 +206,15 @@ export function useRenderEngine(
     if (!canvas || !container) return;
 
     // Mobile: stricter DPR and resolution limits to prevent GPU crashes
-    const maxDpr = isMobileDevice ? 1.0 : (isEmbeddedBrowser ? 1.5 : 2.0);
+    const maxDpr = isMobileDevice ? DPR_CAP_MOBILE : (isEmbeddedBrowser ? DPR_CAP_EMBEDDED : DPR_CAP_DESKTOP);
     const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
     const clientW = container.clientWidth || window.innerWidth || 800;
     const clientH = container.clientHeight || window.innerHeight || 600;
 
     // Cap resolution for mobile GPUs (max 1280px on longest side)
-    const maxMobileDim = isMobileDevice ? 1280 : 3840;
-    let width = Math.max(Math.floor(clientW * dpr), 320);
-    let height = Math.max(Math.floor(clientH * dpr), 240);
+    const maxMobileDim = isMobileDevice ? CANVAS_MAX_DIM_MOBILE : CANVAS_MAX_DIM_DESKTOP;
+    let width = Math.max(Math.floor(clientW * dpr), CANVAS_MIN_DIM);
+    let height = Math.max(Math.floor(clientH * dpr), CANVAS_MIN_HEIGHT);
     
     // Enforce max dimension cap
     if (Math.max(width, height) > maxMobileDim) {
@@ -237,7 +248,7 @@ export function useRenderEngine(
         logger.info('[useRenderEngine] Force-hiding loading overlay after 60s (engine never produced a first frame)');
         setIsCompiling(false);
       }
-    }, 60000);
+    }, LOADER_FORCE_HIDE_MS);
 
     const setupTimeoutId = setTimeout(() => {
       if (!engineReadyRef.current && !isDestroyed) {
@@ -245,7 +256,7 @@ export function useRenderEngine(
         // Force-hide loading overlay so user can interact with fallback UI
         setIsCompiling(false);
       }
-    }, 20000);
+    }, ENGINE_SETUP_TIMEOUT_MS);
 
     async function setup() {
       if (!canvas) return;
@@ -617,7 +628,7 @@ export function useRenderEngine(
             // Track consecutive errors — force minimum quality after 10 failures
             // to help GPU recover from persistent driver/hardware issues
             consecutiveRenderErrors++;
-            if (consecutiveRenderErrors >= 10) {
+            if (consecutiveRenderErrors >= CONSECUTIVE_ERROR_FLOOR) {
               const errEngine = webglEngineRef.current || webgpuEngineRef.current;
               if (errEngine && errEngine.qualityLevel > 0) {
                 errEngine.setQualityLevel(0);
@@ -696,11 +707,11 @@ export function useRenderEngine(
           const engine = webglEngineRef.current || webgpuEngineRef.current;
           if (engine) {
             const currentQuality = engine.qualityLevel;
-            const mobileTargetFps = isMobileDevice ? Math.min(currentParams.targetFps || 30, 30) : (currentParams.targetFps || 60);
-            const downThreshold = mobileTargetFps * 0.35; // Downgrade if below 35% of target (was 45%)
-            const upThreshold = mobileTargetFps * 0.92;   // Upgrade only above 92% of target
+            const mobileTargetFps = isMobileDevice ? Math.min(currentParams.targetFps || FPS_TARGET_MOBILE, FPS_TARGET_MOBILE) : (currentParams.targetFps || FPS_TARGET_DESKTOP);
+            const downThreshold = mobileTargetFps * QUALITY_DOWN_THRESHOLD_RATIO;
+            const upThreshold = mobileTargetFps * QUALITY_UP_THRESHOLD_RATIO;
             const now = performance.now();
-            const qualityCooldown = 3000; // ms minimum between quality changes
+            const qualityCooldown = QUALITY_COOLDOWN_MS;
             
             if (avgFps < downThreshold && currentQuality > 0 && (now - lastQualityChangeRef.current) > qualityCooldown) {
               engine.setQualityLevel(currentQuality - 1);
@@ -747,18 +758,16 @@ export function useRenderEngine(
         // WebGPU backend has no prefetch path — stop instead of spinning forever;
         // while WebGL is still setting up, keep retrying until the ref exists.
         if (activeEngineType === 'webgpu') return;
-        timer = setTimeout(tryPrefetch, 1000);
+        timer = setTimeout(tryPrefetch, PREFETCH_RETRY_DELAY_MS);
         return;
       }
       // Cold-start guard: ANGLE/D3D11 serializes the driver-side LINK step, so launching
       // background prefetches while the FIRST fractal is still compiling pushes the
-      // critical-path shader's completion behind them and delays the first painted frame —
-      // the init log shows fractal 0 reaching "linking 65%" early but only "complete 100%"
-      // AFTER prefetched fractals 1 & 2 finished, keeping the loader up through ~3× the link
-      // work. Hold prefetch until the first real frame is on screen; after that, warming the
+      // critical-path shader's completion behind them and delays the first painted frame.
+      // Hold prefetch until the first real frame is on screen; after that, warming the
       // next figures still makes subsequent switches instant (the original goal).
       if (!firstRenderDoneRef.current) {
-        timer = setTimeout(tryPrefetch, 400);
+        timer = setTimeout(tryPrefetch, PREFETCH_COLD_START_DELAY_MS);
         return;
       }
       if (engine.canPrefetch) {
@@ -767,9 +776,9 @@ export function useRenderEngine(
         for (const t of types) engine.prefetchFractal(getFractalIndex(t));
         return;
       }
-      timer = setTimeout(tryPrefetch, 1000);
+      timer = setTimeout(tryPrefetch, PREFETCH_RETRY_DELAY_MS);
     };
-    timer = setTimeout(tryPrefetch, 300); // let the engine ref appear / current swap settle
+    timer = setTimeout(tryPrefetch, PREFETCH_INITIAL_DELAY_MS);
     return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, [nextSpecimenTypes, activeEngineType]);
 
