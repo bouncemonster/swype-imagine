@@ -2421,35 +2421,45 @@ fn mapAmazingBox(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
 
 // 102: Mandelbulb-Mandelbox Hybrid — Best of both worlds
 fn mapMandelbulbMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
+  // Parity port of the WebGL fix (same degenerate interior-zero field): the old
+  // version discarded minDist and returned 0.5*log(max(|z|,1))*|z|/dr with no
+  // escape break, so bounded orbits gave log(1)=0 -> fully black. Now mirrors
+  // mapMandelbulb: escape break + consistent dr + small positive interior dist.
   var z = p;
   var dr: f32 = 1.0;
-  var minDist: f32 = 1e10;
-  let maxIter = i32(clamp(f32(iters), 8.0, 12.0));
-  for (var i: i32 = 0; i < 12; i = i + 1) {
+  var r: f32 = 0.0;
+  let maxIter = i32(clamp(f32(iters), 6.0, 10.0));
+  var escaped: bool = false;
+  for (var i: i32 = 0; i < 10; i = i + 1) {
     if (i >= maxIter) { break; }
-    // Alternate between Mandelbulb and Mandelbox operations
+    r = length(z);
+    if (r > 2.5) { escaped = true; break; }
     if (i % 2 == 0) {
       // Mandelbulb: spherical coordinates
-      let r = length(z);
-      let theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
+      let theta = acos(clamp(z.z / max(r, 0.0001), -1.0, 1.0));
       let phi_angle = atan2(z.y, z.x);
       dr = pow(r, 7.0) * 8.0 * dr + 1.0;
       let zr = pow(r, 8.0);
-      let newTheta = theta * 8.0;
+      let newTheta = theta * 8.0 + t * 0.1;
       let newPhi = phi_angle * 8.0;
-      z = zr * vec3<f32>(sin(newTheta) * cos(newPhi), sin(newTheta) * sin(newPhi), cos(newTheta));
-      z = z + p;
+      z = zr * vec3<f32>(sin(newTheta) * cos(newPhi), sin(newTheta) * sin(newPhi), cos(newTheta)) + p;
     } else {
-      // Mandelbox: box fold + sphere fold
+      // Mandelbox: box fold + sphere fold, with dr tracking the fold/sphere scale
       z = clamp(z, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - z;
-      let r2 = max(dot(z, z), 0.0001); // Guard against division by zero
-      if (r2 < 0.25) { z = z * 4.0; }
-      else if (r2 < 1.0) { z = z / r2; }
+      let r2 = max(dot(z, z), 0.0001);
+      var sc: f32 = 2.0;
+      if (r2 < 0.25) { sc = 4.0; }
+      else if (r2 < 1.0) { sc = 1.0 / r2; }
+      z = z * sc;
+      dr = dr * abs(sc) + 1.0;
       z = z * 2.0 + p;
+      dr = dr * 2.0 + 1.0;
     }
-    minDist = min(minDist, length(z) * 0.5);
   }
-  return vec2<f32>(0.5 * log(max(length(z), 1.0001)) * length(z) / max(dr, 0.0001), 0.0);
+  if (escaped) {
+    return vec2<f32>(0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001), 0.0);
+  }
+  return vec2<f32>(0.001 * f32(maxIter), 0.0);
 }
 
 // 103: Menger-Mandelbox Hybrid — Sponge meets box

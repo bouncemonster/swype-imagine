@@ -2469,36 +2469,47 @@ float mapAmazingBox(vec3 p, float t, float phi, int iters) {
 
 // 102: Mandelbulb-Mandelbox Hybrid — Best of both worlds
 float mapMandelbulbMandelboxHybrid(vec3 p, float t, float phi, int iters) {
+  // Rewritten to mirror the proven mapMandelbulb structure. The previous version
+  // had no escape break and returned 0.5*log(max(|z|,1))*|z|/dr, so every
+  // bounded (interior) orbit gave log(1)=0 -> a degenerate d=0 field that
+  // rendered fully black. Now: escape-break on r>2.5, consistent dr in BOTH the
+  // bulb and box branches, and a small positive interior distance so the march
+  // resolves a real surface.
   vec3 z = p;
   float dr = 1.0;
-  float minDist = 1e10;
-  int maxIter = int(clamp(float(iters), 8.0, 12.0));
-  for (int i = 0; i < 12; i++) {
+  float r = 0.0;
+  int maxIter = int(clamp(float(iters), 6.0, 10.0));
+  bool escaped = false;
+  for (int i = 0; i < 10; i++) {
     if (i >= maxIter) break;
-    float fi = float(i);
-    // Alternate between Mandelbulb and Mandelbox operations
+    r = length(z);
+    if (r > 2.5) { escaped = true; break; }
     if (i % 2 == 0) {
-      // Mandelbulb: spherical coordinates
-      float r = length(z);
-      float theta = acos(clamp(z.z / max(r, 0.001), -1.0, 1.0));
+      // Mandelbulb power-8 step
+      float theta = acos(clamp(z.z / max(r, 0.0001), -1.0, 1.0));
       float phi_angle = atan(z.y, z.x);
       dr = pow(r, 7.0) * 8.0 * dr + 1.0;
       float zr = pow(r, 8.0);
-      theta = theta * 8.0;
+      theta = theta * 8.0 + t * 0.1;
       phi_angle = phi_angle * 8.0;
-      z = zr * vec3(sin(theta) * cos(phi_angle), sin(theta) * sin(phi_angle), cos(theta));
-      z += p;
+      z = zr * vec3(sin(theta) * cos(phi_angle), sin(theta) * sin(phi_angle), cos(theta)) + p;
     } else {
-      // Mandelbox: box fold + sphere fold
-      z = clamp(z, -1.0, 1.0) * 2.0 - z;
+      // Mandelbox fold, with dr tracking the fold/sphere scale and the x2 growth
+      z = clamp(z, vec3(-1.0), vec3(1.0)) * 2.0 - z;
       float r2 = dot(z, z);
-      if (r2 < 0.25) z *= 4.0;
-      else if (r2 < 1.0) z /= r2;
+      float sc = 2.0;
+      if (r2 < 0.25) sc = 4.0;
+      else if (r2 < 1.0) sc = 1.0 / max(r2, 0.0001);
+      z *= sc;
+      dr = dr * abs(sc) + 1.0;
       z = z * 2.0 + p;
+      dr = dr * 2.0 + 1.0;
     }
-    minDist = min(minDist, length(z) * 0.5);
   }
-  return 0.5 * log(max(length(z), 1.0001)) * length(z) / max(dr, 0.0001);
+  if (escaped) return 0.5 * log(max(r, 1.0001)) * r / max(dr, 0.0001);
+  // Interior point: small positive distance (like mapMandelbulb) so the raymarch
+  // registers a filled surface instead of the old degenerate zero field.
+  return 0.001 * float(maxIter);
 }
 
 // 103: Menger-Mandelbox Hybrid — Sponge meets box

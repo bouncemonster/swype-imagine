@@ -24,9 +24,9 @@ the 3% threshold (see commit `ac5dd3b`).
 
 | status   | count | note |
 |----------|-------|------|
-| rendered | 381   | healthy (incl. 4 flame types fixed after the sweep) |
+| rendered | 382   | healthy (incl. 4 flame types + mandelbulbMandelboxHybrid fixed after the sweep) |
 | sparse   | 42    | valid object, small — framing polish |
-| black    | 8     | 3 exact-0% field bugs + 5 near-empty framing |
+| black    | 7     | 2 exact-0% field bugs (112, 127) + 5 near-empty framing |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
 No shader compile errors, no page crashes, no WebGL context loss across the
@@ -38,7 +38,7 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 
 | idx | type | root cause | status |
 |-----|------|------------|--------|
-| 102 | mandelbulbMandelboxHybrid | escape SDF degenerates (alternating bulb/box leaves `dr` inconsistent; `minDist` computed but unused). **Tested `zoomScale 1.1` via re-probe → still 0.0%**, so NOT camera framing — genuine field bug | open (field) |
+| 102 | mandelbulbMandelboxHybrid | degenerate interior-zero field: no escape break + `0.5*log(max(|z|,1))` → every bounded orbit gave `log(1)=0`. Fixed by mirroring `mapMandelbulb` (escape break + consistent `dr` + small positive interior dist) in **both** GLSL and WGSL | ✅ FIXED (WebGL verified 0→7.9%; WGSL parity port, headless-unverifiable) |
 | 112 | torusKnot4D | 4D→3D-projected DE collapses (distance measured in shrunken projected space vs world march). **Tested tube `0.15` + conservative `×0.3` DE scale → still 0.0%**, so NOT tube thinness/overshoot — needs a proper knot SDF | open (field) |
 | 113 | flameSinusoidal | `sin()` op bounded → `pow(phi,-12)` crushed field to a constant | ✅ FIXED (WebGL) |
 | 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
@@ -107,11 +107,12 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
    impl with **no `pow(phi,-N)` bug to port** (left unchanged); headless visual
    capture blocked (rAF suspended / false-black readback) — not a defect,
    deferred to a visible-adapter machine.
-2. **102 / 127 / 112** — confirmed distance-FIELD bugs (framing for 102 and
-   tube-thickness/DE-scale for 112 were re-probed and both stayed 0.0%, ruling
-   those cheap hypotheses out). Each needs a per-function SDF rework (proper
-   folded knot SDF / z-extruded fern / consistent bulb-box `dr`); verify via
-   WebGL re-probe after each.
+2. **102** — ✅ DONE: rewrote as a `mapMandelbulb`-style DE (escape break +
+   consistent `dr` + positive interior) in GLSL **and** WGSL; WebGL verified
+   0% → 7.9%. **112 / 127** — remaining confirmed field bugs (cheap framing /
+   tube-thickness hypotheses re-probed and ruled out); each needs a per-function
+   SDF rework (proper folded knot SDF / z-extruded fern); verify via WebGL
+   re-probe after each.
 3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
    `zoomScale` entries so thin attractors fill the frame.
 
