@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Live demo
+    url: https://fractal.simundis.com/
+    about: Try the engine before filing — many issues are capture-device-specific.
+  - name: Documentation
+    url: https://github.com/bouncemonster/swype-imagine/tree/main/docs
+    about: Architecture, rendering pipeline, fractal catalog, and troubleshooting guides.

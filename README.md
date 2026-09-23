@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://fractal.simundis.com/"><img alt="Live demo" src="https://img.shields.io/badge/Live_demo-fractal.simundis.com-F59E0B?style=for-the-badge&logo=cloudflarepages&logoColor=white" /></a>
-  <a href="https://github.com/bouncemonster/swype-imagine/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/bouncemonster/swype-imagine/ci.yml?branch=main&style=for-the-badge&label=CI" /></a>
+  <a href="https://github.com/bouncemonster/swype-imagine/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-informational?style=for-the-badge&logo=githubactions&logoColor=white" /></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-5.8_strict-blue?style=for-the-badge&logo=typescript&logoColor=white" />
   <img alt="Fractal types" src="https://img.shields.io/badge/fractal_types-431-orange?style=for-the-badge" />
@@ -191,6 +191,12 @@ src/
 | **fractal-autotest** | 1875 | SDF functions, palettes, render styles, audio, share links |
 | **mobile-design-audit** | gate | 44 px tap targets, 12 px text floor, `env(safe-area-inset-*)`, zero horizontal overflow — coarse-pointer forced via CDP `Emulation.setEmulatedMedia` |
 | **Browser tests** | Visual | Playwright + Chromium visual regression, coverage stats for animated renders |
+
+## 🤝 Community
+
+- Contributions welcome — read [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md) and use the [issue templates](./issues/new/choose) or the [PR template](./.github/pull_request_template.md).
+- By participating you agree to the [Contributor Covenant 2.1 Code of Conduct](./.github/CODE_OF_CONDUCT.md).
+- Dependency and Actions updates are automated by [Dependabot](./.github/dependabot.yml).
 
 ## 📜 License
 

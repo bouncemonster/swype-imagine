@@ -1,0 +1,83 @@
+name: Bug report
+description: Report a rendering, interaction, or deployment bug in the fractal engine.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Fill the fields below with
+        as much reproduction detail as possible so we can triage quickly.
+  - type: input
+    id: url
+    attributes:
+      label: Live URL where the bug appears
+      description: e.g. https://fractal.simundis.com/ or a preview deployment hash.
+      placeholder: https://fractal.simundis.com/
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Concrete, ordered steps — fractal index / render style / palette / camera pose all help.
+      value: |
+        1. Open ...
+        2. Select fractal #... (name)
+        3. Change render mode to ...
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to see instead.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What you actually saw (including any console errors, black frames, wrong colors, dropped frames, etc.).
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Rendering backend
+      description: The status is shown in the Engineering HUD (Telemetry panel).
+      options:
+        - WebGL2
+        - WebGPU
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU + driver
+      description: "Chrome: `chrome://gpu` → 'Display' block. Firefox: `about:support` → 'Graphics'."
+      placeholder: "e.g. NVIDIA RTX 4070 / 555.99, Angle: D3D11"
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome 129 on Windows 11 24H2 / Safari 18 on iOS 18"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console / network logs
+      description: Any errors from DevTools console or failed requests.
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-flight checklist
+      options:
+        - label: I reproduced this against the latest `main` deployment (not a cached build).
+          required: true
+        - label: I searched existing issues and none match.
+          required: true

@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest a new fractal type, render style, interaction, or capability.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe the capability you'd like, the math or interaction it
+        involves, and how it fits the current 431-type catalog / 7 render styles.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's missing today?
+      description: A concrete gap in the current engine, not a vague wish.
+      placeholder: "I want to X, but the engine only supports Y because Z."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should be added or changed? Include the fractal formula, SDF, palette, or interaction model if relevant.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected layer
+      multiple: true
+      options:
+        - Shader (GLSL / WGSL)
+        - Engine (WebGL / WebGPU pipeline)
+        - Data (catalog / palettes / hybrids)
+        - UI (controls / HUD / modals)
+        - Personalization (NeuroAesthetics)
+        - Build / CI / deployment
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or existing fractal indices that nearly fit.
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Papers, Shadertoy links, Book of Iterated Orbit Forms entries, screenshots.
