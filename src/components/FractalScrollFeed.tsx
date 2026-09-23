@@ -162,7 +162,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
                 </div>
                 <div>
                   <h2 className="text-xs font-bold text-white tracking-wide">3D Скролл-Лента</h2>
-                  <p className="text-[10px] text-neutral-400">Фракталы & Гибриды</p>
+                  <p className="text-micro text-neutral-400">Фракталы & Гибриды</p>
                 </div>
               </div>
 
@@ -170,7 +170,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
               <button
                 id="toggle-scroll-feed-mode-btn"
                 onClick={onToggleScrollMode}
-                className={`px-2 py-1 rounded-lg border text-[10px] font-medium flex items-center gap-1 transition ${
+                className={`px-2 py-1 rounded-lg border text-micro font-medium flex items-center gap-1 transition ${
                   scrollMode === 'feed'
                     ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
                     : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200'
@@ -194,7 +194,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
             {/* Quick Render Style Selector (All 7 GPU Modalities) */}
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">
+                <span className="text-micro uppercase tracking-wider text-neutral-400 font-semibold">
                   Механика рендеринга ({RENDER_STYLES_CONFIG.length})
                 </span>
               </div>
@@ -207,7 +207,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
                       key={cfg.id}
                       id={`select-render-style-${cfg.id}-btn`}
                       onClick={() => onSelectRenderStyle(cfg.id)}
-                      className={`px-2 py-1.5 rounded-lg border text-left text-[10px] transition flex items-center gap-1.5 truncate ${
+                      className={`px-2 py-1.5 rounded-lg border text-left text-micro transition flex items-center gap-1.5 truncate ${
                         isSel
                           ? cfg.accent + ' font-semibold'
                           : 'bg-neutral-900/60 border-neutral-800/80 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700'
@@ -224,7 +224,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
 
             {/* Specimen Stream Carousel / Vertical Ribbon */}
             <div className="flex items-center justify-between pt-1 border-t border-neutral-800/80">
-              <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">
+              <span className="text-micro uppercase tracking-wider text-neutral-400 font-semibold">
                 Поток фенотипов ({historyQueue.length})
               </span>
               <div className="flex items-center gap-1">
@@ -268,7 +268,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-[9px] font-mono font-bold text-amber-400/90">
+                        <span className="text-micro-sm font-mono font-bold text-amber-400/90">
                           #{item.generation || idx + 1}
                         </span>
                         <span className="text-xs font-semibold truncate text-neutral-200">
@@ -280,7 +280,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-[9px] text-neutral-400 font-mono">
+                    <div className="flex items-center gap-1.5 text-micro-sm text-neutral-400 font-mono">
                       <span className="px-1 py-0.2 rounded bg-neutral-800/80 text-amber-300 border border-neutral-700/60">
                         {item.compositeOp || 'hybrid'}
                       </span>
@@ -294,7 +294,7 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
             </div>
 
             {/* Scroll Hint */}
-            <div className="pt-1 border-t border-neutral-800/60 flex items-center justify-between text-[10px] text-neutral-400 font-mono">
+            <div className="pt-1 border-t border-neutral-800/60 flex items-center justify-between text-micro text-neutral-400 font-mono">
               <span>Скролл мыши / жест</span>
               <span className="text-amber-300/90 font-semibold">
                 {scrollMode === 'feed' ? 'Переход по ленте' : 'Зум вглубь'}

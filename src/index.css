@@ -12,15 +12,16 @@
    ============================================================ */
 @theme {
   /* Typography — micro tiers for dense HUD overlays.
-     173 arbitrary `text-[8-11px]` sites map to these names. */
+     173 arbitrary `text-[8-11px]` sites migrated to these names
+     (2026-09-24). Deliberately NO `--text-*--line-height` partners:
+     `text-[10px]` emits font-size only, so an lh-carrying token would
+     change the computed line-height of every migrated site (the HUD
+     ladder measured 10/15 etc. as `normal`, not as a declared value).
+     Sizes/line-heights in DESIGN.md stay the documented intent. */
   --text-micro: 10px;
-  --text-micro--line-height: 15px;
   --text-nano: 11px;
-  --text-nano--line-height: 16px;
   --text-micro-sm: 9px;
-  --text-micro-sm--line-height: 14px;
   --text-micro-xs: 8px;
-  --text-micro-xs--line-height: 12px;
 
   /* Surfaces — named backgrounds replacing arbitrary `bg-[#hex]`.
      Values correspond to DESIGN.md colors.* frontmatter entries. */

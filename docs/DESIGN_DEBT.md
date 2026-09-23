@@ -9,10 +9,11 @@ drift-awareness baseline. Every number below is reproducible by the commands at 
 ## Verdict up front
 
 The design system is Tailwind v4 with the amber accent as the brand color, applied consistently
-across 12 components. The debt is **concentrated in one place** — SVG gradients and CSS `box-shadow`
-glows cannot reach Tailwind utility classes, so raw hex leaks in there. Elsewhere: only tiny
-responsive typography (`text-[9px..11px]`) is below Tailwind's `text-xs=12px` step. Nothing here
-blocks a release; nothing here has caused a visible bug. **Deferred by decision, not oversight.**
+across 12 components. The debt was **concentrated in two places** — SVG gradients / CSS `box-shadow`
+glows (Bucket 1, resolved 2026-09-23) and sub-12px typography arbitrary values (Bucket 2, resolved
+2026-09-24). Both buckets are now closed: `src/**` has zero hardcoded brand hexes and zero
+`text-[8-11px]` / `bg-[#hex]` sites. What remains (Buckets 3–4) are legitimate Tailwind idioms.
+**This file is a historical baseline, kept so the resolved patterns cannot silently return.**
 
 ## Bucket 1 — Hardcoded brand hex (21 sites, 4 files) — **RESOLVED 2026-09-23**
 
@@ -59,7 +60,10 @@ strings (excluding `bg-[#090812]` which is a distinct surface, not amber) migrat
 - Verified via `grep`: 0 remaining hard-coded amber hexes in `src/components/*.tsx`.
 - Tests: `tsc` clean, mobile-design-audit PASS, `npm run test` 1875 passed.
 
-## Bucket 2 — Tiny responsive typography (25 sites, 5 files)
+## Bucket 2 — Tiny responsive typography (corrected: 173 sites, 10 files) — **RESOLVED 2026-09-24**
+
+<details>
+<summary>Original text (kept for context)</summary>
 
 `text-[9px]`, `text-[10px]`, `text-[11px]` are below Tailwind's `text-xs = 12px` step. Concentrated
 in HUD overlays (`FractalInfoHUD.tsx`, `FractalScrollFeed.tsx`, `CosmicLoader.tsx`) and the atlas
@@ -69,6 +73,22 @@ information over a full-screen canvas.
 **Why it stays:** extending Tailwind's scale to add `text-3xs = 9px / text-2xs = 10px / text-xs2 = 11px`
 would be more consistent, but it's a 30-line `@theme` block in `index.css` and a project-wide
 grep-replace. Low risk, low reward.
+
+</details>
+
+**Resolution (2026-09-24)** — the "25 sites" tally was an undercount; the design-system-capture
+tally found **173** arbitrary `text-[8-11px]` sites across 10 components. All migrated to the
+`@theme` tiers declared in Gap 1 of `DESIGN.md`: `text-micro` (10px), `text-nano` (11px),
+`text-micro-sm` (9px), `text-micro-xs` (8px). The two remaining arbitrary surfaces
+(`bg-[#06050b]`, `bg-[#090812]`) migrated to `bg-surface-loader` / `bg-surface-modal` in the
+same pass — `src/**` now contains **0** `text-[8-11px]` and **0** `bg-[#hex]` sites.
+Zero visual delta proven: the computed (fontSize, lineHeight) multiset over 1,225 text nodes
+across 7 UI states (loader / HUD / profile / controls / atlas / explanation / manifest) is
+byte-identical between the pre- and post-migration bundles (`tests/results/equiv-*.json`,
+reproducible with `node tests/css-equiv-probe.mjs <url> <out.json>`). The theme tiers deliberately
+carry **no** `--text-*--line-height` partners — `text-[10px]` emits font-size only, and an
+lh-carrying token would have shifted every migrated line. `test:mobile` PASS confirms the
+coarse-pointer 12px floor also covers the new class names.
 
 ## Bucket 3 — Layout widths with `calc()` (3 sites)
 

@@ -55,13 +55,13 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({ isOpen, onCl
             <p className="mb-2">
               Число <strong className="text-white font-mono">φ = (1 + √5) / 2 ≈ 1.6180339887...</strong> является наиболее иррациональным числом математики (его непрерывная дробь состоит исключительно из единиц: <code className="text-amber-300 font-mono">[1; 1, 1, 1, ...]</code>). Благодаря этому свойству φ обеспечивает отсутствие периодических резонансов при вращении, создавая максимально плотную и совершенную упаковку материи без взаимных перекрытий.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 bg-neutral-950/80 p-3 rounded-lg border border-neutral-800/80 font-mono text-[11px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 bg-neutral-950/80 p-3 rounded-lg border border-neutral-800/80 font-mono text-nano">
               <div>
-                <span className="text-neutral-400 block text-[10px]">Предел отношений Фибоначчи:</span>
+                <span className="text-neutral-400 block text-micro">Предел отношений Фибоначчи:</span>
                 <span className="text-amber-300 font-bold">lim (F_n+1 / F_n) = φ</span>
               </div>
               <div>
-                <span className="text-neutral-400 block text-[10px]">Золотой угол (Golden Angle):</span>
+                <span className="text-neutral-400 block text-micro">Золотой угол (Golden Angle):</span>
                 <span className="text-amber-300 font-bold">θ_φ = 360° · (1 - 1/φ) ≈ 137.507764°</span>
               </div>
             </div>
@@ -79,13 +79,13 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({ isOpen, onCl
             <div className="space-y-2 text-neutral-300">
               <div className="p-2.5 bg-neutral-950/60 rounded-lg border border-neutral-800/60">
                 <span className="text-amber-300 font-medium block mb-0.5">Спираль Закса и Полином Эйлера:</span>
-                <p className="text-[11px] text-neutral-400">
+                <p className="text-nano text-neutral-400">
                   Полярная параметризация <code className="text-white font-mono">r = √n, θ = 2π√n</code> (спираль Роберта Закса) демонстрирует концентрацию простых чисел вдоль спиральных лучей, соответствующих полиномам генерации простых чисел Леонарда Эйлера <code className="text-amber-300 font-mono">P(n) = n² - n + 41</code>. Модуляция лучей шагом золотого сечения φ раскрывает многоуровневый фрактальный узор.
                 </p>
               </div>
               <div className="p-2.5 bg-neutral-950/60 rounded-lg border border-neutral-800/60">
                 <span className="text-amber-300 font-medium block mb-0.5">Гипотеза Монтгомери-Одлыжко и Нули Дзета-Римана:</span>
-                <p className="text-[11px] text-neutral-400">
+                <p className="text-nano text-neutral-400">
                   Распределение расстояний между нетривиальными нулями дзета-функции Римана <code className="text-white font-mono">ζ(1/2 + iγ_n) = 0</code> математически идентично распределению собственных значений гауссовых унитарных ансамблей (GUE) квантового хаоса тяжелых ядер.
                 </p>
               </div>
@@ -98,7 +98,7 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({ isOpen, onCl
               <Layers className="w-4 h-4 text-amber-400" />
               3. Квазикристаллы Шехтмана, Расслоение Хопфа и Калаби-Яу
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-nano">
               <div className="p-2.5 bg-neutral-950/60 rounded-lg border border-neutral-800/60">
                 <span className="text-amber-300 font-semibold block mb-1">Квазикристаллы (Нобель 2011)</span>
                 <p className="text-neutral-400 leading-snug">
@@ -129,26 +129,26 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({ isOpen, onCl
             <p className="mb-2 text-neutral-300">
               Каждый фрактал рассчитывается как непрерывное скалярное знакопеременное поле расстояний (Signed Distance Field). Суперпозиция десятков и сотен базовых форм реализуется через строгую алгебру:
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-nano">
               <div className="p-2 bg-neutral-950/70 rounded-lg border border-neutral-800">
                 <span className="text-amber-300 font-bold block">⊕_φ Гладкое объединение (smin):</span>
-                <code className="text-[10px] text-neutral-400 block mt-0.5">smin(d₁, d₂, k) = mix(d₂, d₁, h) - k·h·(1-h)</code>
-                <p className="text-neutral-400 text-[10px] mt-1">Обеспечивает гладкое слияние C¹-гладкости между абсолютно разнородными топологиями.</p>
+                <code className="text-micro text-neutral-400 block mt-0.5">smin(d₁, d₂, k) = mix(d₂, d₁, h) - k·h·(1-h)</code>
+                <p className="text-neutral-400 text-micro mt-1">Обеспечивает гладкое слияние C¹-гладкости между абсолютно разнородными топологиями.</p>
               </div>
               <div className="p-2 bg-neutral-950/70 rounded-lg border border-neutral-800">
                 <span className="text-amber-300 font-bold block">⮁_φ Искривление пространства (Warp):</span>
-                <code className="text-[10px] text-neutral-400 block mt-0.5">p' = p + WarpVector(p, Type₂) · strength</code>
-                <p className="text-neutral-400 text-[10px] mt-1">Векторное поле одного фрактала деформирует метрику пространства другого до вычисления расстояния.</p>
+                <code className="text-micro text-neutral-400 block mt-0.5">p' = p + WarpVector(p, Type₂) · strength</code>
+                <p className="text-neutral-400 text-micro mt-1">Векторное поле одного фрактала деформирует метрику пространства другого до вычисления расстояния.</p>
               </div>
               <div className="p-2 bg-neutral-950/70 rounded-lg border border-neutral-800">
                 <span className="text-amber-300 font-bold block">⊗_φ Волновая интерференция (Resonance):</span>
-                <code className="text-[10px] text-neutral-400 block mt-0.5">d_res = d₁ + [sin(d₂ · φ³) / φ³] · blend</code>
-                <p className="text-neutral-400 text-[10px] mt-1">Аналог стоячих квантовых волн и распределения нетривиальных нулей дзета-Римана.</p>
+                <code className="text-micro text-neutral-400 block mt-0.5">d_res = d₁ + [sin(d₂ · φ³) / φ³] · blend</code>
+                <p className="text-neutral-400 text-micro mt-1">Аналог стоячих квантовых волн и распределения нетривиальных нулей дзета-Римана.</p>
               </div>
               <div className="p-2 bg-neutral-950/70 rounded-lg border border-neutral-800">
                 <span className="text-amber-300 font-bold block">∑ Октавы Фибоначчи:</span>
-                <code className="text-[10px] text-neutral-400 block mt-0.5">{'H(p) = ∑_{n=1}^{N} [Harmonic(p · φⁿ) / φⁿ]'}</code>
-                <p className="text-neutral-400 text-[10px] mt-1">Иерархическое наложение микро-рельефа со спектральным затуханием 1/φ.</p>
+                <code className="text-micro text-neutral-400 block mt-0.5">{'H(p) = ∑_{n=1}^{N} [Harmonic(p · φⁿ) / φⁿ]'}</code>
+                <p className="text-neutral-400 text-micro mt-1">Иерархическое наложение микро-рельефа со спектральным затуханием 1/φ.</p>
               </div>
             </div>
           </div>
@@ -162,10 +162,10 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({ isOpen, onCl
             <p className="mb-2">
               При частоте развертки <strong className="text-white font-mono">144 Гц</strong> время вычисления кадра ограничено квантом:
             </p>
-            <div className="bg-neutral-950/80 p-2.5 rounded-lg border border-neutral-800/80 font-mono text-[11px] text-emerald-400 text-center font-bold">
+            <div className="bg-neutral-950/80 p-2.5 rounded-lg border border-neutral-800/80 font-mono text-nano text-emerald-400 text-center font-bold">
               1000 мс / 144 кадров = 6.944 миллисекунды на кадр
             </div>
-            <p className="mt-2 text-neutral-400 text-[11px]">
+            <p className="mt-2 text-neutral-400 text-nano">
               Прямой рендеринг в шейдерах WebGPU (WGSL) с адаптивным шагом луча исключает задержки CPU, а логарифмическая нелинейная интерполяция гарантирует детальный обзор как на колоссальном удалении, так и глубоко внутри полых фрактальных соборов без пересвета.
             </p>
           </div>
@@ -179,7 +179,7 @@ export const ExplanationModal: React.FC<ExplanationModalProps> = ({ isOpen, onCl
             <p className="mb-2 text-neutral-300">
               В исследованиях профессора Ричарда Тейлора (<em>«Perceptual and Physiological Responses to Fractals»</em>, University of Oregon) зафиксировано:
             </p>
-            <ul className="list-disc pl-5 space-y-1.5 text-neutral-400 text-[11px]">
+            <ul className="list-disc pl-5 space-y-1.5 text-neutral-400 text-nano">
               <li>
                 <strong className="text-neutral-200">Снижение физиологического стресса до 60%:</strong> Зрительная кора человека оптимизирована эволюцией под фрактальную размерность D ≈ 1.3–1.5 (контуры облаков, крон деревьев, береговых линий). Созерцание фракталов φ стимулирует когерентные альфа-волны частотой 8–12 Гц в лобных долях.
               </li>

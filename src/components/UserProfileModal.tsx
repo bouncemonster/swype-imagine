@@ -63,7 +63,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div className="flex items-center gap-3.5">
             <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-neutral-900 border border-amber-500/40 shadow-inner">
               <User className="w-6 h-6 text-amber-300" />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-amber-400 border-2 border-neutral-950 flex items-center justify-center text-[9px] text-neutral-950 font-bold">
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-amber-400 border-2 border-neutral-950 flex items-center justify-center text-micro-sm text-neutral-950 font-bold">
                 φ
               </div>
             </div>
@@ -72,7 +72,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <h2 className="text-base font-semibold text-white tracking-wide">
                   Профиль Исследователя
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full text-micro font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">
                   Нейро-Эстетика
                 </span>
               </div>
@@ -97,12 +97,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           {/* 1. Key Metrics Cards */}
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3.5 rounded-xl bg-neutral-900/50 border border-neutral-800/80 flex flex-col">
-              <span className="text-[11px] text-neutral-400 font-medium">Текущий Резонанс</span>
+              <span className="text-nano text-neutral-400 font-medium">Текущий Резонанс</span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-2xl font-bold text-amber-300 font-mono">
                   {resonanceScore}%
                 </span>
-                <span className="text-[10px] text-neutral-500">гармония</span>
+                <span className="text-micro text-neutral-500">гармония</span>
               </div>
               <div className="w-full h-1 bg-neutral-800 rounded-full mt-2 overflow-hidden">
                 <div 
@@ -113,26 +113,26 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-neutral-900/50 border border-neutral-800/80 flex flex-col">
-              <span className="text-[11px] text-neutral-400 font-medium">Исследовано</span>
+              <span className="text-nano text-neutral-400 font-medium">Исследовано</span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-2xl font-bold text-white font-mono">
                   {tasteProfile?.totalSpecimensExplored || 1}
                 </span>
-                <span className="text-[10px] text-neutral-500">форм</span>
+                <span className="text-micro text-neutral-500">форм</span>
               </div>
-              <span className="text-[10px] text-neutral-500 mt-2">
+              <span className="text-micro text-neutral-500 mt-2">
                 Ген #{currentSpecimen?.generation || 1} в фокусе
               </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-neutral-900/50 border border-neutral-800/80 flex flex-col">
-              <span className="text-[11px] text-neutral-400 font-medium">Пиковый Резонанс</span>
+              <span className="text-nano text-neutral-400 font-medium">Пиковый Резонанс</span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-2xl font-bold text-emerald-400 font-mono">
                   {tasteProfile?.highestResonanceScore || 95}%
                 </span>
               </div>
-              <span className="text-[10px] text-neutral-500 mt-2">
+              <span className="text-micro text-neutral-500 mt-2">
                 Авто-обучение активно
               </span>
             </div>
@@ -146,12 +146,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <h3 className="text-xs font-semibold text-white tracking-wide uppercase">
                   Избранные Фракталы
                 </h3>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                <span className="px-1.5 py-0.5 rounded-full text-micro font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30">
                   {likedSpecimens.length}
                 </span>
               </div>
               {isCurrentLiked && currentSpecimen && (
-                <span className="text-[10px] text-rose-400 flex items-center gap-1">
+                <span className="text-micro text-rose-400 flex items-center gap-1">
                   <Heart className="w-3 h-3 fill-rose-400" />
                   Текущий в избранном
                 </span>
@@ -169,10 +169,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     key={specimen.id}
                     className="flex items-center gap-2 p-2 rounded-lg bg-neutral-900/60 border border-neutral-800/60 hover:border-amber-500/30 transition group"
                   >
-                    <span className="text-[10px] text-neutral-500 font-mono w-5 text-right">{idx + 1}</span>
+                    <span className="text-micro text-neutral-500 font-mono w-5 text-right">{idx + 1}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] text-neutral-200 font-medium truncate">{specimen.name}</div>
-                      <div className="text-[9px] text-neutral-500 font-mono">φ {specimen.phiMultiplier.toFixed(4)} • Gen #{specimen.generation}</div>
+                      <div className="text-nano text-neutral-200 font-medium truncate">{specimen.name}</div>
+                      <div className="text-micro-sm text-neutral-500 font-mono">φ {specimen.phiMultiplier.toFixed(4)} • Gen #{specimen.generation}</div>
                     </div>
                     {onPlayLiked && (
                       <button
@@ -207,7 +207,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   Математический Вектор Резонанса (Архетипы)
                 </h3>
               </div>
-              <span className="text-[11px] text-neutral-500 font-mono">
+              <span className="text-nano text-neutral-500 font-mono">
                 5D Пространство Вкуса
               </span>
             </div>
@@ -243,7 +243,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   Акустический Гармонический Строй
                 </h3>
               </div>
-              <span className="text-[11px] text-neutral-500">432 Гц Золотой Резонатор</span>
+              <span className="text-nano text-neutral-500">432 Гц Золотой Резонатор</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
@@ -262,7 +262,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   }`}
                 >
                   <span className="text-xs font-semibold">{opt.label}</span>
-                  <span className="text-[10px] text-neutral-500 mt-1">{opt.desc}</span>
+                  <span className="text-micro text-neutral-500 mt-1">{opt.desc}</span>
                 </button>
               ))}
             </div>
@@ -278,7 +278,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <h3 className="text-xs font-semibold text-white tracking-wide flex items-center gap-1.5">
                   <span>О проекте & Описание Архитектуры</span>
                 </h3>
-                <p className="text-[11px] text-neutral-400">
+                <p className="text-nano text-neutral-400">
                   34 топологии, фундаментальные константы φ, π, e и алгоритмы рендеринга WebGPU
                 </p>
               </div>
@@ -307,7 +307,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   <h3 className="text-xs font-semibold text-white tracking-wide">
                     Режим Инженера (Продвинутый)
                   </h3>
-                  <p className="text-[11px] text-neutral-400">
+                  <p className="text-nano text-neutral-400">
                     Прямой доступ к 34 топологиям, шейдерам, срезам полостей и FPS
                   </p>
                 </div>
@@ -332,7 +332,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <span>Панель управления инженера и телеметрия FPS активированы на холсте.</span>
                 <button
                   onClick={onClose}
-                  className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-semibold transition"
+                  className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-nano font-semibold transition"
                 >
                   Перейти на холст
                 </button>
@@ -344,7 +344,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-800/80 bg-neutral-900/40 text-xs">
-          <span className="text-neutral-500 font-mono text-[11px]">
+          <span className="text-neutral-500 font-mono text-nano">
             Алгоритм Резонанса: Косинусная близость 5D • Золотой угол 137.5°
           </span>
 

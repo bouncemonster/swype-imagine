@@ -38,7 +38,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
     >
       <div
         id="project-manifest-modal-content"
-        className="relative w-full max-w-2xl my-6 bg-[#090812] border border-amber-500/30 rounded-3xl text-slate-200 overflow-hidden"
+        className="relative w-full max-w-2xl my-6 bg-surface-modal border border-amber-500/30 rounded-3xl text-slate-200 overflow-hidden"
         style={{ boxShadow: '0 0 60px color-mix(in srgb, var(--brand-amber) 15%, transparent)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -80,7 +80,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
             </div>
 
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-mono tracking-wider uppercase mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-nano font-mono tracking-wider uppercase mb-2">
                 <Sparkles className="w-3 h-3 text-amber-400" />
                 <span>3D Резонатор • Золотое Сечение φ</span>
               </div>
@@ -101,7 +101,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
                 <Compass className="w-4 h-4 text-amber-400" />
                 <span>100+ Канонических Форм</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-nano text-slate-400 leading-relaxed">
                 Снежинки Коха, кривые дракона, 3D Мандельбульбы, квантовая бабочка Хофштадтера и странные аттракторы.
               </p>
             </div>
@@ -112,7 +112,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
                 <Layers className="w-4 h-4 text-cyan-400" />
                 <span>Живой Морфинг & Слияние</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-nano text-slate-400 leading-relaxed">
                 Бесшовное перетекание геометрий и синтез невиданных гибридных форм по законам золотого сечения.
               </p>
             </div>
@@ -123,7 +123,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
                 <Music className="w-4 h-4 text-purple-400" />
                 <span>Гармоники Звука φ</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-nano text-slate-400 leading-relaxed">
                 Генеративный медитативный дрон на частотах 432 Гц, модулируемый глубиной реймаршинга SDF.
               </p>
             </div>

@@ -53,7 +53,7 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
           <button
             id="toggle-telemetry-btn"
             onClick={() => setMinimized(!minimized)}
-            className="text-[10px] text-neutral-400 hover:text-neutral-200 px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 transition"
+            className="text-micro text-neutral-400 hover:text-neutral-200 px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 transition"
           >
             {minimized ? 'Expand' : 'Compact'}
           </button>
@@ -63,9 +63,9 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
         <div className="grid grid-cols-2 gap-2 mb-2.5">
           {/* FPS Block */}
           <div className="bg-neutral-900/90 rounded-lg p-2 border border-neutral-800">
-            <div className="flex flex-wrap items-center justify-between gap-x-1 text-[10px] text-neutral-400 mb-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-1 text-micro text-neutral-400 mb-0.5">
               <span>RATE</span>
-              <span className={`px-1 rounded text-[9px] font-mono font-medium ${
+              <span className={`px-1 rounded text-micro-sm font-mono font-medium ${
                 telemetry.fps >= 135 
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
                   : 'bg-neutral-800 text-neutral-400'
@@ -77,9 +77,9 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
               <span className="text-xl font-bold font-mono tracking-tight text-white">
                 {telemetry.fps}
               </span>
-              <span className="text-[10px] text-neutral-400">FPS</span>
+              <span className="text-micro text-neutral-400">FPS</span>
             </div>
-            <div className="text-[10px] text-neutral-400 mt-0.5 flex justify-between">
+            <div className="text-micro text-neutral-400 mt-0.5 flex justify-between">
               <span>1% Low:</span>
               <span className="font-mono text-neutral-300">{telemetry.onePercentLow} FPS</span>
             </div>
@@ -87,9 +87,9 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
 
           {/* Frame Time Block */}
           <div className="bg-neutral-900/90 rounded-lg p-2 border border-neutral-800">
-            <div className="flex flex-wrap items-center justify-between gap-x-1 text-[10px] text-neutral-400 mb-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-1 text-micro text-neutral-400 mb-0.5">
               <span>FRAME TIME</span>
-              <span className="font-mono text-[9px] text-neutral-400">
+              <span className="font-mono text-micro-sm text-neutral-400">
                 {targetFps >= 240 ? 'Max 250 FPS' : `${targetFps}Hz = ${(1000/targetFps).toFixed(2)}ms`}
               </span>
             </div>
@@ -99,9 +99,9 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
               }`}>
                 {telemetry.frameTimeMs}
               </span>
-              <span className="text-[10px] text-neutral-400">ms</span>
+              <span className="text-micro text-neutral-400">ms</span>
             </div>
-            <div className="text-[10px] text-neutral-400 mt-0.5 flex justify-between">
+            <div className="text-micro text-neutral-400 mt-0.5 flex justify-between">
               <span>Avg:</span>
               <span className="font-mono text-neutral-300">
                 {(1000 / (telemetry.avgFps || 1)).toFixed(1)} ms
@@ -114,9 +114,9 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
           <>
             {/* Live Frame Time Sparkline Graph */}
             <div className="mb-2.5">
-              <div className="flex justify-between text-[10px] text-neutral-400 mb-1">
+              <div className="flex justify-between text-micro text-neutral-400 mb-1">
                 <span>{targetFps} FPS Frame Pacing</span>
-                <span className="font-mono text-[9px] text-amber-400/90">
+                <span className="font-mono text-micro-sm text-amber-400/90">
                   Target: {targetBudgetMs.toFixed(2)} ms
                 </span>
               </div>
@@ -139,7 +139,7 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
             </div>
 
             {/* Sacred Mathematics & Hardware Specs */}
-            <div className="bg-neutral-900/60 rounded-lg p-2 border border-neutral-800 space-y-1 text-[11px]">
+            <div className="bg-neutral-900/60 rounded-lg p-2 border border-neutral-800 space-y-1 text-nano">
               <div className="flex items-center justify-between text-neutral-300">
                 <span className="flex items-center gap-1 text-amber-300/90">
                   <Sparkles className="w-3 h-3 text-amber-400" />
@@ -157,7 +157,7 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
                 <span className="truncate max-w-[140px]" title={telemetry.adapterName}>
                   {telemetry.adapterName}
                 </span>
-                <span className="font-mono text-[10px] text-neutral-400">
+                <span className="font-mono text-micro text-neutral-400">
                   {telemetry.resolution[0]}×{telemetry.resolution[1]}
                 </span>
               </div>

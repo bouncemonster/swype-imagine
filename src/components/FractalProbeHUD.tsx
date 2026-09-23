@@ -37,25 +37,25 @@ export const FractalProbeHUD: React.FC<FractalProbeHUDProps> = ({
             <div className="w-1 h-1 rounded-full bg-emerald-400" />
           </div>
           {/* Degree ticks */}
-          <div className="absolute -top-3 text-[9px] text-emerald-400/80 font-mono tracking-widest">
+          <div className="absolute -top-3 text-micro-sm text-emerald-400/80 font-mono tracking-widest">
             PROBE
           </div>
-          <div className="absolute -bottom-3 text-[9px] text-emerald-400/80 font-mono">
+          <div className="absolute -bottom-3 text-micro-sm text-emerald-400/80 font-mono">
             {params.macroMode ? 'MACRO 10⁻⁴' : 'STANDARD'}
           </div>
         </div>
       </div>
 
       {/* Top Left: Probe Telemetry */}
-      <div className="pointer-events-auto w-64 bg-slate-950/85 backdrop-blur-md border border-emerald-500/30 rounded-xl p-3 shadow-xl text-[11px] text-slate-300 space-y-2">
+      <div className="pointer-events-auto w-64 bg-slate-950/85 backdrop-blur-md border border-emerald-500/30 rounded-xl p-3 shadow-xl text-nano text-slate-300 space-y-2">
         <div className="flex items-center justify-between border-b border-emerald-500/20 pb-1.5">
-          <span className="text-emerald-400 font-semibold flex items-center gap-1.5 tracking-wider uppercase text-[10px]">
+          <span className="text-emerald-400 font-semibold flex items-center gap-1.5 tracking-wider uppercase text-micro">
             <Crosshair className="w-3.5 h-3.5" />
             Топологический Зонд
           </span>
           <button
             onClick={onToggleProbe}
-            className="text-[10px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-slate-800/80"
+            className="text-micro text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-slate-800/80"
           >
             Закрыть
           </button>
@@ -69,7 +69,7 @@ export const FractalProbeHUD: React.FC<FractalProbeHUDProps> = ({
 
           <div className="flex justify-between">
             <span className="text-slate-500">Позиция Камеры:</span>
-            <span className="text-slate-300 font-mono text-[10px]">
+            <span className="text-slate-300 font-mono text-micro">
               X:{(params.camPosX ?? 0).toFixed(2)} Y:{(params.camPosY ?? 0).toFixed(2)} Z:{(params.camPosZ ?? 0).toFixed(2)}
             </span>
           </div>
@@ -99,7 +99,7 @@ export const FractalProbeHUD: React.FC<FractalProbeHUDProps> = ({
         <div className="pt-1 border-t border-slate-800 flex gap-1.5">
           <button
             onClick={onToggleMacro}
-            className={`flex-1 py-1 rounded text-[10px] font-medium transition-colors ${
+            className={`flex-1 py-1 rounded text-micro font-medium transition-colors ${
               params.macroMode
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                 : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
@@ -111,7 +111,7 @@ export const FractalProbeHUD: React.FC<FractalProbeHUDProps> = ({
       </div>
 
       {/* Bottom Center: Coordinates & Compass */}
-      <div className="self-center bg-slate-950/80 backdrop-blur-sm border border-slate-800 rounded-full px-4 py-1 text-[10px] text-slate-400 flex items-center gap-3">
+      <div className="self-center bg-slate-950/80 backdrop-blur-sm border border-slate-800 rounded-full px-4 py-1 text-micro text-slate-400 flex items-center gap-3">
         <span className="flex items-center gap-1 text-emerald-400">
           <Activity className="w-3 h-3" />
           SDF 1-Lipschitz Verified

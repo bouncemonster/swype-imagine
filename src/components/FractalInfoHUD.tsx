@@ -265,7 +265,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
             <button
               id="open-atlas-btn-hud"
               onClick={onOpenAtlas}
-              className="px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-neutral-950/80 border border-amber-500/40 backdrop-blur-md text-amber-300 hover:bg-amber-500/20 transition shadow-lg flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold"
+              className="px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-neutral-950/80 border border-amber-500/40 backdrop-blur-md text-amber-300 hover:bg-amber-500/20 transition shadow-lg flex items-center gap-1 sm:gap-1.5 text-nano sm:text-xs font-semibold"
               title="Научный Атлас канонических фракталов"
             >
               <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
@@ -293,11 +293,11 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
           <button
             id="open-user-profile-btn"
             onClick={onOpenProfile}
-            className="px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-neutral-800/90 bg-neutral-950/80 backdrop-blur-md text-neutral-200 hover:text-white hover:border-amber-500/50 transition shadow-lg flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold"
+            className="px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-neutral-800/90 bg-neutral-950/80 backdrop-blur-md text-neutral-200 hover:text-white hover:border-amber-500/50 transition shadow-lg flex items-center gap-1.5 sm:gap-2 text-nano sm:text-xs font-semibold"
             title="Настройки"
           >
             <User className="w-3.5 h-3.5 text-amber-300" />
-            <span className="px-1 py-0.5 sm:px-1.5 sm:py-0.2 rounded text-[9px] sm:text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <span className="px-1 py-0.5 sm:px-1.5 sm:py-0.2 rounded text-micro-sm sm:text-micro font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
               {resonanceScore}%
             </span>
           </button>
@@ -308,7 +308,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
       {isInteracting && (
         <div 
           id="interaction-feedback-chip"
-          className="safe-t absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 py-1 rounded-full bg-neutral-950/80 backdrop-blur-md border border-neutral-800 text-[11px] text-neutral-300 flex items-center gap-1.5 transition-all duration-300 hidden sm:flex"
+          className="safe-t absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 py-1 rounded-full bg-neutral-950/80 backdrop-blur-md border border-neutral-800 text-nano text-neutral-300 flex items-center gap-1.5 transition-all duration-300 hidden sm:flex"
         >
           <Compass className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
           <span>
@@ -331,18 +331,18 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span 
-                  className="text-[11px] sm:text-sm font-semibold text-white tracking-wide truncate"
+                  className="text-nano sm:text-sm font-semibold text-white tracking-wide truncate"
                   title={specimen?.name || 'Золотой Фрактал'}
                 >
                   {specimen?.name || 'Золотой Фрактал'}
                 </span>
                 {specimen?.hybridBlend && specimen.hybridBlend > 0.05 && (
-                  <span className="px-1 py-0.5 rounded text-[8px] sm:text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0" title={specimen.compositeOp}>
+                  <span className="px-1 py-0.5 rounded text-micro-xs sm:text-micro-sm font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0" title={specimen.compositeOp}>
                     {friendlyOpName}
                   </span>
                 )}
               </div>
-              <span className="text-[9px] sm:text-[10px] text-neutral-400 font-mono">
+              <span className="text-micro-sm sm:text-micro text-neutral-400 font-mono">
                 φ {specimen?.phiMultiplier.toFixed(4) || '1.6180'}
               </span>
             </div>
@@ -396,7 +396,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
             <button
               id="feed-next-btn"
               onClick={(e) => { e.currentTarget.blur(); onNext(); }}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-semibold transition text-[11px] sm:text-xs flex items-center gap-1 shadow-md shadow-amber-500/20"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-semibold transition text-nano sm:text-xs flex items-center gap-1 shadow-md shadow-amber-500/20"
               title="Следующий случайный фрактал [Пробел]"
             >
               <span>Далее</span>

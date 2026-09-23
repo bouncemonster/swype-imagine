@@ -191,7 +191,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
               <div className="px-3 py-2 border-b border-slate-800 overflow-x-auto flex gap-1.5 scrollbar-thin">
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`px-2.5 py-1 text-[11px] rounded-md font-medium whitespace-nowrap transition-colors ${
+                  className={`px-2.5 py-1 text-nano rounded-md font-medium whitespace-nowrap transition-colors ${
                     selectedCategory === 'all'
                       ? 'bg-indigo-600 text-white shadow-sm'
                       : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
@@ -203,7 +203,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-2.5 py-1 text-[11px] rounded-md font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1 text-nano rounded-md font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                       selectedCategory === cat.id
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
@@ -239,13 +239,13 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                           <span className="text-xs font-semibold text-white tracking-wide">
                             {item.name}
                           </span>
-                          <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/60 border border-indigo-800/50 px-1.5 py-0.5 rounded">
+                          <span className="text-micro font-mono text-indigo-400 bg-indigo-950/60 border border-indigo-800/50 px-1.5 py-0.5 rounded">
                             {item.dimension.split('≈')[0]?.replace('D = ', 'D=')}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                        <div className="flex items-center justify-between text-nano text-slate-400">
                           <span className="truncate max-w-[200px]">{item.englishName}</span>
-                          <span className="font-mono text-[10px] text-slate-500 truncate max-w-[100px]">
+                          <span className="font-mono text-micro text-slate-500 truncate max-w-[100px]">
                             {item.formula}
                           </span>
                         </div>
@@ -299,7 +299,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                   {/* Math Formula Card */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                      <div className="text-nano font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         Математическая Формула / Отображение
                       </div>
                       <div className="text-sm font-mono font-medium text-amber-300 select-all">
@@ -308,7 +308,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                      <div className="text-nano font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         Размерность Хаусдорфа — Безиковича
                       </div>
                       <div className="text-sm font-mono font-medium text-emerald-300">
@@ -320,7 +320,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                   {/* Generator / L-System Rule */}
                   {selectedFractal.generatorRule && (
                     <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
-                      <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                      <div className="text-nano font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         Правило Генератора / L-Система
                       </div>
                       <div className="text-xs font-mono text-cyan-300">
@@ -351,7 +351,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                   </div>
 
                   {/* 3D Engine Mapping Details */}
-                  <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                  <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800 text-nano text-slate-400 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Cpu className="w-3.5 h-3.5 text-indigo-400" />
                       Конфигурация 3D SDF: <strong className="text-slate-200">{selectedFractal.enginePreset.type}</strong>
@@ -359,7 +359,7 @@ export const FractalAtlasModal: React.FC<FractalAtlasModalProps> = ({
                         <> + <strong className="text-slate-200">{selectedFractal.enginePreset.hybridType}</strong></>
                       )}
                     </span>
-                    <span className="font-mono text-[10px] text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-800/30">
+                    <span className="font-mono text-micro text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-800/30">
                       {selectedFractal.enginePreset.compositeOp}
                     </span>
                   </div>

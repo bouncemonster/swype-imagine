@@ -196,13 +196,15 @@ near-black translucent glass, hairline borders, one amber accent, monospace nume
 
 Three facts define the whole system:
 
-1. There is **no theme layer**. `src/index.css` is 99 lines with `@import "tailwindcss"` and zero
-   `@theme` blocks / zero CSS custom properties. The effective token set is whatever
-   Tailwind v4.1.14 ships (`node_modules/tailwindcss/theme.css`) plus two literals.
+1. There **is now a theme layer** (Gap 1 closed + migrated 2026-09-24). `src/index.css` declares an
+   `@theme` block: four micro text tiers, four semantic surfaces, five brand aliases. All 173
+   arbitrary `text-[8-11px]` and both `bg-[#hex]` call sites now reference those named utilities;
+   color/spacing/radius usage is still Tailwind v4 stock tokens (`node_modules/tailwindcss/theme.css`).
 2. There is **no webfont**. 211 of 227 visible elements resolve to the platform system stack;
    16 resolve to `ui-monospace`. Nothing in `index.html` loads a font.
 3. Density wins over rhythm. The HUD has to survive on top of a 3D render, which produced a
-   micro-typography ladder (8–11 px) that is *below* Tailwind's smallest documented step.
+   micro-typography ladder (8–11 px) that is *below* Tailwind's smallest documented step —
+   since 2026-09-24 it is a named tier (`text-micro-xs/sm/-/nano`), not an arbitrary value.
 
 ## Colors
 
@@ -246,8 +248,13 @@ round-trip on a page whose first paint is already shader-bound.
 | `{typography.heading-md}` | 16 / 24 | 600 | Modal titles |
 | `{typography.body-sm}` | 14 / 20 | 400 | Modal body, panel labels |
 | `{typography.caption}` | 12 / 16 | 400 | The desktop floor; `text-xs` 83 sites |
-| `{typography.micro}` | 10 / 15 | 400 | **The single most common small size**: `text-[10px]` 81 + `text-[11px]` 63 + `text-[9px]` 22 + `text-[8px]` 7 = 173 sites |
+| `{typography.micro}` | 10 / 15 | 400 | **The single most common small size**: `text-micro` 81 sites (was `text-[10px]` until the 2026-09-24 migration) |
 | `{typography.numeric-caption}` | 10 / 15 mono | 400 | `{colors.*}` readouts, φ value, FPS, resonance % — 89 `font-mono` sites |
+
+The 10/15, 11/16, 9/14 and 8/12 line-heights are the *measured computed* values (`normal`), not
+utility-emitted ones: the `@theme` tiers deliberately carry **no** `--text-*--line-height`
+partner, because `text-[10px]` emits font-size only and an lh-carrying token would shift
+every migrated line. Keep them that way unless a full visual re-baseline is planned.
 
 Weights in the live DOM: 400 (191) / 600 (26) / 500 (7) / 700 (2) / 300 (1). `font-light` (300)
 is reserved for the loader. Letter-spacing is `0px` except `tracking-wide` (14) /
@@ -386,16 +393,18 @@ They are recorded here so an automated edit cannot silently re-create them.
    variables, so nothing resists a new one-off value; meanwhile 173 arbitrary px type sites and
    21 hardcoded hexes are de-facto tokens with no names. Proposed: add an additive `@theme` block
    with the values in this file (zero visual change), then migrate call sites opportunistically.~~
-   **Closed 2026-09-23**: `src/index.css` now has a `@theme` block that declares:
+   **Closed 2026-09-23, fully migrated 2026-09-24**: `src/index.css` now has a `@theme` block that declares:
    – micro text tiers (`--text-micro: 10px`, `--text-nano: 11px`, `--text-micro-sm: 9px`,
    `--text-micro-xs: 8px`) creating named `text-micro`/`text-nano`/etc. utilities;
    – semantic surfaces (`--color-canvas`, `--color-surface-deep`, `--color-surface-loader`,
    `--color-surface-modal`) replacing `bg-[#hex]` arbitrary values;
    – brand aliases (`--color-brand`, `--color-brand-bright`, `--color-brand-soft`,
    `--color-brand-warm`, `--color-brand-deep`) mapping to Tailwind's `--color-amber-*` scale.
-   Additive: all 173 existing arbitrary sites still compile unchanged; the coarse-pointer
-   floor rule covers both old `text-[Npx]` and new `.text-micro`/`.text-nano` class names.
-   Migration is now opportunistic (new code uses named tokens, old code follows when touched).
+   **Migration complete**: all 173 `text-[8-11px]` sites in 10 components + both `bg-[#hex]`
+   surfaces now use the named utilities (0 arbitrary sites left in `src/**`). Zero visual delta
+   proven by computed-style multiset diff over 1,225 text nodes × 7 UI states
+   (`tests/results/equiv-before.json` vs `equiv-after1.json`: IDENTICAL). The coarse-pointer
+   floor rule covers the new class names; `npm run test:mobile` passes against the migrated build.
 2. **Hardcoded brand hexes are v3 hexes next to v4 utilities (measured drift).** ~~Painting both and
    reading pixels: `amber-500` renders `#fe9a00` but the code literals say `#f59e0b` (max channel
    Δ **11**); `amber-400` renders `#ffb900` against literal `#fbbf24` (Δ **36**, visible: the
@@ -457,7 +466,7 @@ They are recorded here so an automated edit cannot silently re-create them.
 
 ## Evidence and reproduction
 
-Every number in this file came from one of these, on 2026-09-23, commit range `de2b535..c46337f`:
+Every number in this file came from one of these, on 2026-09-23/24, commit range `de2b535..e18acbe`:
 
 ```powershell
 # class-frequency tallies (color utilities, type ladder, radii, motion, spacing)

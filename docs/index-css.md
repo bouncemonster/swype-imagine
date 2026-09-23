@@ -21,28 +21,33 @@ input[type=range]            ← touch-action: pan-y (gesture isolation)
 @media (prefers-reduced-motion: reduce) ← Animation/transition kill switch
 ```
 
-## @theme Token Layer (Gap 1 — added 2026-09-23)
+## @theme Token Layer (Gap 1 — added 2026-09-23, fully migrated 2026-09-24)
 
-Additive Tailwind v4 `@theme` block that creates named utility classes:
+Tailwind v4 `@theme` block that creates named utility classes:
 
-| Token | Utility | Value | Replaces |
+| Token | Utility | Value | Migrated from |
 |-------|---------|-------|----------|
-| `--text-micro` | `text-micro` | 10px / 15px lh | `text-[10px]` (81 sites) |
-| `--text-nano` | `text-nano` | 11px / 16px lh | `text-[11px]` (63 sites) |
-| `--text-micro-sm` | `text-micro-sm` | 9px / 14px lh | `text-[9px]` (22 sites) |
-| `--text-micro-xs` | `text-micro-xs` | 8px / 12px lh | `text-[8px]` (7 sites) |
+| `--text-micro` | `text-micro` | 10px (font-size only) | `text-[10px]` (81 sites) |
+| `--text-nano` | `text-nano` | 11px (font-size only) | `text-[11px]` (63 sites) |
+| `--text-micro-sm` | `text-micro-sm` | 9px (font-size only) | `text-[9px]` (22 sites) |
+| `--text-micro-xs` | `text-micro-xs` | 8px (font-size only) | `text-[8px]` (7 sites) |
 | `--color-canvas` | `bg-canvas`, `text-canvas` | #030305 | Root background |
 | `--color-surface-deep` | `bg-surface-deep` | #0a0a0a | Overlay backdrop |
-| `--color-surface-loader` | `bg-surface-loader` | #06050b | CosmicLoader |
-| `--color-surface-modal` | `bg-surface-modal` | #090812 | ProjectManifestModal |
+| `--color-surface-loader` | `bg-surface-loader` | #06050b | CosmicLoader (`bg-[#06050b]` → migrated) |
+| `--color-surface-modal` | `bg-surface-modal` | #090812 | ProjectManifestModal (`bg-[#090812]` → migrated) |
 | `--color-brand` | `text-brand`, `bg-brand` | → amber-500 | Primary accent |
 | `--color-brand-bright` | `text-brand-bright` | → amber-400 | High-emphasis |
 | `--color-brand-soft` | `text-brand-soft` | → amber-200 | Gradient highlights |
 | `--color-brand-warm` | `text-brand-warm` | → amber-300 | Golden nodes |
 | `--color-brand-deep` | `text-brand-deep` | → amber-600 | Gradient ends |
 
-**Migration policy**: New code uses named utilities; existing arbitrary values remain (zero visual
-delta). Opportunistic conversion when a file is otherwise touched.
+**Migration status (2026-09-24)**: complete — all 173 `text-[8-11px]` and both `bg-[#hex]` sites
+in `src/**` now use the named utilities (0 arbitrary sites left). The micro tiers deliberately
+have **no** `--text-*--line-height` partners: `text-[Npx]` emitted font-size only, so an
+lh-carrying token would have changed every migrated line (zero-delta was verified by a
+computed-style multiset diff, see `docs/DESIGN_DEBT.md` Bucket 2 resolution).
+`@media (pointer: coarse)` floor rules cover both legacy escaped classes (kept for safety,
+now inert) and the new token utilities.
 
 ## :root Brand Aliases (Gap 2 — added 2026-09-23)
 

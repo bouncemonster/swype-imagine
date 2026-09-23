@@ -71,7 +71,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
   return (
     <div
       id="cosmic-loader-overlay"
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#06050b] text-amber-100 transition-opacity duration-700 ease-out select-none ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface-loader text-amber-100 transition-opacity duration-700 ease-out select-none ${
         fadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
@@ -158,7 +158,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
         <h1 className="text-2xl sm:text-3xl font-light tracking-[0.28em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400">
           ФРАКТАЛЬНЫЙ КОНТИНУУМ
         </h1>
-        <p className="text-[11px] uppercase tracking-[0.3em] text-amber-200/55 font-mono">
+        <p className="text-nano uppercase tracking-[0.3em] text-amber-200/55 font-mono">
           Живая Геометрия • 100+ Канонических Форм • φ = 1.618
         </p>
       </div>
@@ -179,7 +179,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
       </div>
 
       {/* Quiet Geometric Harmony Watermark */}
-      <div className="absolute bottom-5 text-[10px] text-amber-500/35 font-mono tracking-widest uppercase">
+      <div className="absolute bottom-5 text-micro text-amber-500/35 font-mono tracking-widest uppercase">
         WebGPU & WebGL2 • 60–250 FPS • Нейроэстетика
       </div>
     </div>
