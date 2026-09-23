@@ -52,8 +52,39 @@ mandelbulb-style SDF fractals. Two ideas worth stealing:
 
 ## Shadertoy context (public signals)
 
-- Shadertoy's `/trending` returned "Sorry!" via our scrape (page itself 403s to bots).
-  No live trending list obtained today.
+- **Trending endpoints bot-gated**: `/trending`, `/Hot` and `/SubmittedList` return the
+  "Sorry!" 403 page to non-browser scrapers (Cloudflare + cookie gate), and the Firecrawl
+  `interact` live-session backend errored (`fetch failed`). **Workaround that worked**: the
+  server-rendered `results?sort=…` listing pages (`--wait-for 3500`) render without the JS
+  challenge, so we obtained real view/like counts (see `.firecrawl/shadertoy-popular.md`,
+  `.firecrawl/shadertoy-hot-list.md`).
+- **All-time most-viewed (sort=popular) — the techniques that define the medium**:
+
+  | # | Shader | Author | Views | Likes | Relevance to us |
+  |---|--------|--------|------:|------:|-----------------|
+  | 1 | Raymarching - Primitives | iq | 1,164,782 | 1,689 | the SDF/raymarch canon our engine is built on |
+  | 2 | Seascape | TDM | 885,063 | 2,250 | domain-warped fBM noise — a fog/ether texture idea |
+  | 3 | Creation | Danguafer | 803,623 | 1,372 | kaleidoscopic folding — same `phi`-fold family as our evolution |
+  | 4 | Cyber Fuji 2020 | kaiware007 | 669,559 | 476 | multipass + mesh-fractal hybrid (our gap #1 path-tracing analog) |
+  | 5 | Lover 2 | FabriceNeyret2 | 549,679 | 530 | curve/implicit-surface raymarch |
+  | 6 | Octagrams | whisky_shusuky | 525,976 | 543 | iterative folding sculpture — directly comparable to our mandelbulb family |
+  | 7 | fractal pyramid | bradjamesgrant | 470,216 | 674 | deterministic fractal geometry |
+  | 8 | Rainforest | iq | 462,032 | 1,367 | scene composition / fog grading |
+  | 9 | CineShader Lava | edankwan | 436,156 | 443 | volumetric lava — a Volume-Rendering mode reference (Fractr has it, we don't) |
+  | 10 | Base warp fBM | trinketMage | 421,927 | 421 | domain warping |
+  | 11 | mandelbulb_by | EvilRyu | 417,796 | 289 | **mandelbulb** — our flagship form, rendered by the community |
+  | 12 | another synthwave sunset thing | stduhpf | 409,456 | 245 | stylized palette grading (our render-style analog) |
+
+  Take-aways for the roadmap: (a) the entire top-12 is **raymarched SDF**, confirming our
+  core technique is the medium's mainstream, not a niche; (b) volumetric/domain-warp looks
+  (Seascape, CineShader Lava, Base warp fBM) cluster tightly — reinforcing **gap #1
+  (volumetric/path-traced mode)** as the highest-value visual upgrade; (c) a mandelbulb is
+  #11 by views, so our flagship has proven mass appeal.
+- **Hot / trending (sort=hot)** at snapshot time was dominated by *fresh low-view* uploads
+  (Faux 2D Voronoi Traversal by Shane, Vibe coded Shadertoy Wipeout by Himred 188 views,
+  Liminal Space, Hamsa Tunnel) with a few evergreens re-surfacing (Lover 2, Cyber Fuji,
+  Kerr Newman Black Hole by baopinsui 53,274 views) — i.e. the live feed is discovery-driven,
+  not view-ranked. No fractal-infinite-zoom technique was in the hot set today.
 - WebSearch hits:
   - "3D on the Web 2026 — WebGPU Updates" (Khronos GDC-week event, Mar 11 2026) — the
     WebGPU ecosystem is actively evolving; our dual-backend (WebGL2 primary + WebGPU subset
@@ -102,4 +133,7 @@ type ..\_lab\glChAoS.P\readme.md
 # Live-verify their public URLs (browser):
 start https://shinigami92.github.io/Fractr/
 start https://michelemorrone.eu/glchaosp/webGL.html
+# Shadertoy: /trending & /Hot 403 to bots — use the server-rendered results list instead:
+firecrawl scrape "https://www.shadertoy.com/results?query=&sort=popular&filter=" --wait-for 3500 --only-main-content -o .firecrawl/shadertoy-popular.md
+firecrawl scrape "https://www.shadertoy.com/results?query=&sort=hot&filter=" --wait-for 3500 --only-main-content -o .firecrawl/shadertoy-hot-list.md
 ```
