@@ -16,7 +16,7 @@
 
 **431 fractal types** (141 core + 290 variants) rendered in real time on WebGL2 with an
 optional WebGPU path. A single distance evaluator (`map*` + `ray march`) drives signed-distance
-fractals, adaptive quality, and seven render styles. Ships always-on at Cloudflare Pages with a
+fractals, adaptive quality, and ten render styles. Ships always-on at Cloudflare Pages with a
 personalization engine that learns from interaction.
 
 🌐 **Live demo**: https://fractal.simundis.com/  ·  **Mirror**: https://golden-ratio-fractal-engine.pages.dev/
@@ -39,10 +39,10 @@ Screenshots captured by `tests/visual-snapshot-sweep.ts` at 1280×720 from the s
 - **Ray Marching**: GLSL 256/192/128 шагов по дистанции × quality-множитель (0.5-1.0); WGSL 512/384/256; до 64 итераций фрактала
 - **Адаптивный рендеринг**: LOD, space leaping, early termination
 - **Продвинутое освещение**: Soft shadows, SSS, environment reflections, bounce light, god rays, motion blur
-- **7 режимов рендеринга**: Solid PBR, X-Ray, Topography, Hologram, Iridescent, Quantum, Crystal
+- **10 режимов рендеринга**: Solid PBR, X-Ray, Topography, Hologram, Iridescent, Quantum, Crystal, Wireframe, Heatmap, Neon
 - **666 палитр**: 26 ручных (palettes.ts) + 640 процедурных (80 тем × 8), Harmonic cosine palette system с φ-сдвигами
 - **Интерактивность**: Вращение, zoom, морфинг в реальном времени
-- **Keyboard shortcuts**: 1-7 (режимы), F (камера), R (сброс), I (инерция), S (стоп)
+- **Keyboard shortcuts**: 1-9 + 0 (режимы), F (камера), R (сброс), I (инерция), S (стоп)
 - **Аудио**: φ-tuned ambient audio engine (Web Audio API)
 - **Type Safety**: 0 ошибок TypeScript (strict mode ✅ включён), типизация всех 431 типов
 - **Lazy Shader Compilation**: Модульная архитектура предотвращает краши браузера (введена в v2.4.0, доработана к v6.0.0)

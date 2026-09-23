@@ -5,7 +5,7 @@
 | File | Lines | Size | Purpose |
 |------|-------|------|---------|
 | [FractalEngineBase.ts](../src/engine/FractalEngineBase.ts) | 221 | 9.7KB | Base class, uniform packing (48 floats) |
-| [fractalMappers.ts](../src/engine/fractalMappers.ts) | 577 | 23KB | String→index mappings (473 names) |
+| [fractalMappers.ts](../src/engine/fractalMappers.ts) | 577 | 22KB | String→index mappings (451 names → 431 indices) |
 | [types/fractal.ts](../src/types/fractal.ts) | 576 | 32KB | TypeScript interfaces |
 | [WebGLEngine.ts](../src/engine/WebGLEngine.ts) | 523 | 23KB | WebGL2 renderer |
 | [WebGPUEngine.ts](../src/engine/WebGPUEngine.ts) | 239 | 8.7KB | WebGPU renderer |
