@@ -50,7 +50,11 @@ Ranked by (impact × cost). #1–#2 are cheap wins to land first; #3 is the bigg
      Cache-Control: public, max-age=31536000, immutable
    ```
    No first-load change (Lighthouse is cold), but returning visitors reload instantly.
-   Also delete the empty `public/assets/aistudio/` build artifact.
+   Also delete the empty `public/assets/aistudio/` build artifact. (Note: `public/assets/aistudio/.gitignore`
+   is a `*`-only keep-dir placeholder for AI-Studio exports; it stays.)
+
+   **Done 2026-09-23**: `public/_headers` created with `/assets/* immutable` and explicit
+   `/index.html must-revalidate`. Needs a deploy to take effect; verify with `curl -sD -`.
 
 3. **[High impact · med cost] TBT 1,584 ms from synchronous boot work in the `index` chunk.**
    Before the first frame the boot path builds the **431-type catalog**, the **666 palette**

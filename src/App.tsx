@@ -161,6 +161,7 @@ export default function App() {
   const [resonanceScore, setResonanceScore] = useState<number>(65);
   const [isEngineerMode, setIsEngineerMode] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [loaderDismissed, setLoaderDismissed] = useState(false);
   const [interactionType, setInteractionType] = useState<'idle' | 'zooming' | 'orbiting'>('idle');
   const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastNavTimeRef = useRef<number>(0);
@@ -318,7 +319,10 @@ export default function App() {
   }, [neuroEngine, autoExplore, currentSpecimen, params.type]);
 
   const handleLoaderFinished = useCallback(() => {
-    // Keep clean entrance directly into the 3D scroll feed without annoying popups
+    // Perf #5 (PERF_AUDIT-2026-09-23): heavy overlay components (HUD, feed, probe) were
+    // mounting under the full-screen loader, burning Style+Layout+Render time invisibly.
+    // Gate them on this flag so they mount only after the loader fade-out completes.
+    setLoaderDismissed(true);
   }, []);
 
   const [telemetry, setTelemetry] = useState<TelemetryData>({
@@ -678,6 +682,8 @@ export default function App() {
       />
 
       {/* 3D Fractal & Hybrid Scroll Feed Stream Ribbon */}
+      {loaderDismissed && (
+      <>
       <FractalScrollFeed
         currentSpecimen={currentSpecimen}
         historyQueue={neuroEngine.getHistory()}
@@ -719,6 +725,8 @@ export default function App() {
         onToggleProbe={() => setParams(prev => ({ ...prev, probeActive: !prev.probeActive }))}
         onToggleMacro={() => setParams(prev => ({ ...prev, macroMode: !prev.macroMode }))}
       />
+      </>
+      )}
 
       {/* User Profile & Recommendation Taste Space Modal */}
       <UserProfileModal

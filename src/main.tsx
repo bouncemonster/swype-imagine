@@ -23,6 +23,16 @@ if (rootElement) {
       <App />
     </FractalErrorBoundary>
   );
+
+  // Dismiss the pre-paint splash after React's first commit so FCP is taken
+  // by the splash (immediate) not by React (after 5 s of script work).
+  requestAnimationFrame(() => {
+    const splash = document.getElementById('pre-splash');
+    if (splash) {
+      splash.classList.add('dismiss');
+      setTimeout(() => splash.remove(), 500);
+    }
+  });
 } else {
   logger.error('[main] Root element #root not found — application cannot mount.');
 }

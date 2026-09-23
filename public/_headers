@@ -1,0 +1,8 @@
+# Cloudflare Pages _headers
+# Hashed asset filenames (index-AbCd1234.js) are safe to cache forever.
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
