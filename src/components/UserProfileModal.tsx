@@ -289,7 +289,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               onClick={() => {
                 onOpenManifest?.();
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-semibold transition shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-1.5 shrink-0"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-semibold transition flex items-center gap-1.5 shrink-0"
+              style={{ boxShadow: '0 0 15px color-mix(in srgb, var(--brand-amber) 25%, transparent)' }}
             >
               <span>Читать</span>
             </button>

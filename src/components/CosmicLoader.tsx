@@ -97,9 +97,9 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
         >
           <defs>
             <linearGradient id="spiralGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fef08a" stopOpacity="0.95" />
-              <stop offset="45%" stopColor="#f59e0b" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#b45309" stopOpacity="0.4" />
+              <stop offset="0%" style={{ stopColor: 'var(--brand-amber-soft)' }} stopOpacity="0.95" />
+              <stop offset="45%" style={{ stopColor: 'var(--brand-amber)' }} stopOpacity="0.8" />
+              <stop offset="100%" style={{ stopColor: 'var(--brand-amber-deep)' }} stopOpacity="0.4" />
             </linearGradient>
             <filter id="softGlow">
               <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
@@ -127,7 +127,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
               <path
                 d="M 80,80 C 88,65 106,60 118,74 C 104,82 92,86 80,80 Z"
                 fill="none"
-                stroke="#f59e0b"
+                stroke="currentColor"
                 strokeWidth="0.8"
                 opacity="0.5"
               />
@@ -136,18 +136,21 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
                 cx="118"
                 cy="74"
                 r="1.8"
-                fill="#fde68a"
+                fill="currentColor"
                 opacity="0.8"
               />
             </g>
           ))}
 
           {/* Golden Center Core Node */}
-          <circle cx="80" cy="80" r="4.5" fill="#fef3c7" filter="url(#softGlow)" />
+          <circle cx="80" cy="80" r="4.5" fill="currentColor" opacity="0.95" filter="url(#softGlow)" />
         </svg>
 
         {/* Pulsing Luminous Core Glow */}
-        <div className="absolute w-6 h-6 rounded-full bg-amber-400/50 blur-[4px] shadow-[0_0_24px_#f59e0b] animate-pulse" />
+        <div
+          className="absolute w-6 h-6 rounded-full bg-amber-400/50 blur-[4px] animate-pulse"
+          style={{ boxShadow: '0 0 24px var(--brand-amber)' }}
+        />
       </div>
 
       {/* Minimalist Elegant Brand Typography */}

@@ -38,7 +38,8 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
     >
       <div
         id="project-manifest-modal-content"
-        className="relative w-full max-w-2xl my-6 bg-[#090812] border border-amber-500/30 rounded-3xl shadow-[0_0_60px_rgba(245,158,11,0.15)] text-slate-200 overflow-hidden"
+        className="relative w-full max-w-2xl my-6 bg-[#090812] border border-amber-500/30 rounded-3xl text-slate-200 overflow-hidden"
+        style={{ boxShadow: '0 0 60px color-mix(in srgb, var(--brand-amber) 15%, transparent)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Subtle Golden Ambient Edge Glow */}
@@ -70,11 +71,11 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
                 <polygon
                   points="50,5 78,92 5,38 95,38 22,92"
                   fill="none"
-                  stroke="#fbbf24"
+                  stroke="currentColor"
                   strokeWidth="1.8"
                   opacity="0.9"
                 />
-                <circle cx="50" cy="50" r="3" fill="#fef08a" />
+                <circle cx="50" cy="50" r="3" fill="currentColor" opacity="0.95" />
               </svg>
             </div>
 
@@ -162,7 +163,8 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
             <button
               id="btn-manifest-start"
               onClick={handleDismiss}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold text-xs shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all flex items-center justify-center gap-1.5 group"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold text-xs transition-all flex items-center justify-center gap-1.5 group"
+              style={{ boxShadow: '0 0 20px color-mix(in srgb, var(--brand-amber) 25%, transparent)' }}
             >
               <span>Начать погружение</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

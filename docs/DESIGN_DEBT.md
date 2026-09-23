@@ -14,7 +14,10 @@ glows cannot reach Tailwind utility classes, so raw hex leaks in there. Elsewher
 responsive typography (`text-[9px..11px]`) is below Tailwind's `text-xs=12px` step. Nothing here
 blocks a release; nothing here has caused a visible bug. **Deferred by decision, not oversight.**
 
-## Bucket 1 — Hardcoded brand hex (21 sites, 4 files)
+## Bucket 1 — Hardcoded brand hex (21 sites, 4 files) — **RESOLVED 2026-09-23**
+
+<details>
+<summary>Original text (kept for context)</summary>
 
 Amber hex values (`#f59e0b` = amber-500, `#fef08a` = amber-200, `#fbbf24` = amber-400,
 `#b45309` = amber-700, `#fde68a` = amber-300, `#fef3c7` = amber-100) appear literally in:
@@ -41,6 +44,20 @@ Tailwind v4 exposes tokens as CSS variables, so SVG `stopColor` and `box-shadow`
 **Fix cost (updated):** 30 min — replace 21 hex literals with `var(--color-amber-*)` in
 `CosmicLoader.tsx`, `ControlsPanel.tsx`, `ProjectManifestModal.tsx`, `UserProfileModal.tsx`;
 rebuild, visual-diff.
+
+</details>
+
+**Resolution (later same day, 2026-09-23)** — all 14 amber hex literals and rgba-in-shadow
+strings (excluding `bg-[#090812]` which is a distinct surface, not amber) migrated:
+- `src/index.css` gained `--brand-amber` / `--brand-amber-bright` / `--brand-amber-soft` /
+  `--brand-amber-warm` / `--brand-amber-deep` aliases forwarding to `--color-amber-{500,400,200,300,600}`.
+- SVG gradients use `style={{ stopColor: 'var(--brand-amber*)' }}`; SVG `<path stroke>` and
+  `<circle fill>` inherit `currentColor` from the parent `text-amber-*` utility.
+- Every `shadow-[…rgba(245,158,11,…)]` arbitrary utility was replaced by an inline
+  `boxShadow: '0 0 … color-mix(in srgb, var(--brand-amber) …%, transparent)'` style, because
+  Tailwind's arbitrary-value parser doesn't handle `color-mix()`'s inner spaces cleanly.
+- Verified via `grep`: 0 remaining hard-coded amber hexes in `src/components/*.tsx`.
+- Tests: `tsc` clean, mobile-design-audit PASS, `npm run test` 1875 passed.
 
 ## Bucket 2 — Tiny responsive typography (25 sites, 5 files)
 

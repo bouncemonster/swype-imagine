@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* ============================================================
+   DESIGN.md Known Gap 2 — brand hex tokens.
+   Six components previously hardcoded v3 Tailwind amber hexes
+   (`#f59e0b` / `#fbbf24`) in SVG `stopColor`/`stroke`/`fill`
+   attributes and in `box-shadow` values. Tailwind v4 renders
+   those utilities at different oklch-precise sRGB values, so
+   the literals had drifted (Δ11 for amber-500, Δ36 for
+   amber-400 — visible paler/yellower). Aliases below let the
+   SVG/box-shadow paths reference the same semantic token as
+   the utility classes, so a future theme change is one place.
+   ============================================================ */
+:root {
+  --brand-amber: var(--color-amber-500);        /* main CTA / glow */
+  --brand-amber-bright: var(--color-amber-400); /* high-emphasis accent */
+  --brand-amber-soft: var(--color-amber-200);   /* gradient start / highlight */
+  --brand-amber-warm: var(--color-amber-300);   /* golden node */
+  --brand-amber-deep: var(--color-amber-600);   /* gradient fade end */
+}
+
 html, body, #root {
   width: 100%;
   height: 100%;

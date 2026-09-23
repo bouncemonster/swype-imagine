@@ -386,14 +386,24 @@ cannot silently re-create them.
    variables, so nothing resists a new one-off value; meanwhile 173 arbitrary px type sites and
    21 hardcoded hexes are de-facto tokens with no names. Proposed: add an additive `@theme` block
    with the values in this file (zero visual change), then migrate call sites opportunistically.
-2. **Hardcoded brand hexes are v3 hexes next to v4 utilities (measured drift).** Painting both and
+2. **Hardcoded brand hexes are v3 hexes next to v4 utilities (measured drift).** ~~Painting both and
    reading pixels: `amber-500` renders `#fe9a00` but the code literals say `#f59e0b` (max channel
    Δ **11**); `amber-400` renders `#ffb900` against literal `#fbbf24` (Δ **36**, visible: the
    literal is paler/yellower). Neutral literals match exactly (Δ 0), so this is an amber-only
    problem in `CosmicLoader` (8 sites), `ControlsPanel` (5), `ProjectManifestModal` (3),
    `UserProfileModal` (1). Tailwind v4 exposes these as CSS variables, so SVG `stopColor` and
    `box-shadow` **can** reference them — `docs/DESIGN_DEBT.md`'s "zero user-visible benefit"
-   claim is falsified by the Δ36 measurement and should be updated with the fix.
+   claim is falsified by the Δ36 measurement and should be updated with the fix.~~
+   **Closed 2026-09-23**: `src/index.css` declares five brand aliases (`--brand-amber`,
+   `--brand-amber-bright`, `--brand-amber-soft`, `--brand-amber-warm`, `--brand-amber-deep`)
+   that forward to the matching Tailwind v4 `--color-amber-*` tokens. 14 sites in
+   `CosmicLoader`, `ControlsPanel`, `ProjectManifestModal`, `UserProfileModal` migrated:
+   SVG `<stop stopColor>` / `<path stroke>` / `<circle fill>` now reference `currentColor`
+   (inheriting the parent's `text-amber-*` utility) or `var(--brand-amber*)` via the `style`
+   prop; every `shadow-[…rgba(245,158,11,…)]` arbitrary class was replaced by an inline
+   `boxShadow: '0 0 … color-mix(in srgb, var(--brand-amber) …, transparent)'` style. The
+   v3→v4 hex drift is eliminated at the source (one token change updates all uses) and
+   the semantic naming matches the rest of the design system.
 3. **Two greyscale families split by component boundary.** `slate-*` appears only in
    `FractalAtlasModal` (65), `FractalProbeHUD` (13), `ProjectManifestModal` (7); the other nine
    components use `neutral-*` (e.g. 109 in `ControlsPanel`). Decision: adopt `neutral` and migrate

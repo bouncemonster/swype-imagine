@@ -249,16 +249,20 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   }}
                   className={`w-full text-left p-2.5 rounded-xl border transition-all ${
                     isSelected
-                      ? 'bg-amber-950/40 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.18)]'
+                      ? 'bg-amber-950/40 border-amber-500/80'
                       : 'bg-neutral-900/60 border-neutral-800/80 hover:bg-neutral-800/70 hover:border-neutral-700'
                   }`}
+                  style={isSelected ? { boxShadow: '0 0 12px color-mix(in srgb, var(--brand-amber) 18%, transparent)' } : undefined}
                 >
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-semibold ${isSelected ? 'text-amber-300' : 'text-neutral-200'}`}>
                       {arch.label}
                     </span>
                     {isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]" />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                        style={{ boxShadow: '0 0 6px var(--brand-amber)' }}
+                      />
                     )}
                   </div>
                   <p className="text-[10px] text-neutral-400 mt-0.5 line-clamp-1">{arch.desc}</p>
@@ -605,9 +609,10 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 onClick={() => onParamsChange(prev => ({ ...prev, paletteId: pal.id, customPalette: pal }))}
                 className={`w-full p-2 rounded-xl border flex items-center justify-between transition ${
                   isSelected 
-                    ? 'bg-amber-950/40 border-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.15)]' 
+                    ? 'bg-amber-950/40 border-amber-500/80' 
                     : 'bg-neutral-900/60 border-neutral-800 hover:bg-neutral-800/70'
                 }`}
+                style={isSelected ? { boxShadow: '0 0 10px color-mix(in srgb, var(--brand-amber) 15%, transparent)' } : undefined}
               >
                 <div className="text-left">
                   <span className={`text-[11px] font-semibold block ${isSelected ? 'text-amber-300' : 'text-neutral-200'}`}>
@@ -807,9 +812,10 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               onClick={() => onParamsChange(prev => ({ ...prev, enableAudio: !prev.enableAudio }))}
               className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition ${
                 params.enableAudio
-                  ? 'bg-amber-400 text-neutral-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                  ? 'bg-amber-400 text-neutral-950'
                   : 'bg-neutral-900 text-neutral-400 border border-neutral-800'
               }`}
+              style={params.enableAudio ? { boxShadow: '0 0 12px color-mix(in srgb, var(--brand-amber) 30%, transparent)' } : undefined}
             >
               {params.enableAudio ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'}
             </button>
