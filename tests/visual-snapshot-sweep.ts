@@ -47,7 +47,7 @@ interface TypeResult {
   sizeBytes: number;
   fillRatio: number | null;
   avgLum: number | null;
-  status: 'rendered' | 'black' | 'error' | 'timeout';
+  status: 'rendered' | 'sparse' | 'black' | 'error' | 'timeout';
   consoleErrors: string[];
   contextLost: boolean;
   crash: boolean;
@@ -189,7 +189,7 @@ async function main() {
   }
 
   const t0 = Date.now();
-  let rendered = 0, black = 0, errored = 0;
+  let rendered = 0, sparse = 0, black = 0, errored = 0;
 
   for (const idx of indices) {
     const name = types[idx];
@@ -201,6 +201,7 @@ async function main() {
     const file = `fractal-${pad3(idx)}-${name}.png`;
     const filePath = path.join(SHOT_DIR, file);
     let status: TypeResult['status'] = 'rendered';
+    let bestFill = 0, bestLum = 0; // peak canvas sample across animation frames
 
     // Unique _f forces a full document load so the mount-time hash parser runs.
     const url = `${BASE_URL}/?test=1&_f=${idx}#type=${encodeURIComponent(name)}&renderStyle=${RENDER_STYLE}`;
@@ -222,21 +223,24 @@ async function main() {
 
       await page.waitForTimeout(2500);
 
-      // Verify the canvas has real content; retry to give slow shaders time.
-      let stats: { avgLum: number; nonBlackRatio: number } | null = null;
+      // Sample the canvas repeatedly: fractals animate (morph), so a single
+      // instantaneous frame can dip below threshold even when the object is
+      // clearly present. Track the PEAK non-black ratio across attempts to
+      // avoid flaky black/rendered classification near the threshold.
       for (let attempt = 0; attempt < 4; attempt++) {
-        stats = await readCanvasStats();
-        if (stats && stats.nonBlackRatio > 0.03) break;
-        await page.waitForTimeout(4000);
+        const s = await readCanvasStats();
+        if (s && s.nonBlackRatio > bestFill) { bestFill = s.nonBlackRatio; bestLum = s.avgLum; }
+        if (bestFill > 0.03) break; // confidently present — stop early
+        if (attempt < 3) await page.waitForTimeout(4000);
       }
 
       await page.screenshot({ path: filePath, timeout: 15000 });
 
       const size = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0;
-      const fill = stats ? stats.nonBlackRatio : null;
       if (current.crash) status = 'error';
-      else if (fill === null || fill <= 0.03 || size < 3000) status = 'black';
-      else status = 'rendered';
+      else if (bestFill > 0.03) status = 'rendered';
+      else if (bestFill > 0.005 && size >= 3000) status = 'sparse'; // real but small — framing candidate
+      else status = 'black'; // near-empty — likely broken
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       current.errors.push(`navigate/screenshot: ${msg}`);
@@ -258,15 +262,15 @@ async function main() {
       durationMs: Date.now() - iterStart,
       ts: new Date().toISOString(),
     };
-    // Re-read stats for the record if present (kept simple: recompute once).
-    try {
-      const s = await readCanvasStats();
-      if (s) { result.fillRatio = s.nonBlackRatio; result.avgLum = s.avgLum; }
-    } catch { /* noop */ }
+    // Record the peak sample used for classification (not a fresh, possibly
+    // lower frame) so fill/avgLum in the JSONL match the status decision.
+    result.fillRatio = bestFill;
+    result.avgLum = bestLum;
 
     fs.appendFileSync(RESULTS_JSONL, JSON.stringify(result) + '\n');
 
     if (status === 'rendered') rendered++;
+    else if (status === 'sparse') sparse++;
     else if (status === 'black') black++;
     else errored++;
 
@@ -276,7 +280,7 @@ async function main() {
 
   const dur = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`\n=== SWEEP CHUNK DONE in ${dur}s ===`);
-  console.log(`rendered=${rendered} black=${black} error/timeout=${errored} total=${indices.length}`);
+  console.log(`rendered=${rendered} sparse=${sparse} black=${black} error/timeout=${errored} total=${indices.length}`);
   console.log(`Screenshots: ${SHOT_DIR}`);
   console.log(`Results JSONL: ${RESULTS_JSONL}`);
 
