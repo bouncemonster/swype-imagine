@@ -38,7 +38,7 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 
 | idx | type | root cause | status |
 |-----|------|------------|--------|
-| 102 | mandelbulbMandelboxHybrid | degenerate interior-zero field: no escape break + `0.5*log(max(|z|,1))` → every bounded orbit gave `log(1)=0`. Fixed by mirroring `mapMandelbulb` (escape break + consistent `dr` + small positive interior dist) in **both** GLSL and WGSL | ✅ FIXED (WebGL verified 0→7.9%; WGSL parity port, headless-unverifiable) |
+| 102 | mandelbulbMandelboxHybrid | degenerate interior-zero field: no escape break + `0.5*log(max(|z|,1))` → every bounded orbit gave `log(1)=0`. Fixed by mirroring `mapMandelbulb` (escape break + consistent `dr` + small positive interior dist) in **both** GLSL and WGSL. A CodeReview pass then caught a box-branch double-scale (`sc` init 2.0 → x4 growth, not x2) and it was corrected in both backends | ✅ FIXED (WebGL verified 0→9.7%; WGSL parity port, headless-unverifiable) |
 | 112 | torusKnot4D | old analytic `length(projected - torus)` point-to-angle approximation never crossed 0 (black). **Rewritten to sample the (2,3) knot curve and take min distance to a tube** (same technique the WGSL port already used) | ✅ FIXED (WebGL: black -> rendered, 6.0%) |
 | 113 | flameSinusoidal | `sin()` op bounded → `pow(phi,-12)` crushed field to a constant | ✅ FIXED (WebGL) |
 | 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
@@ -109,7 +109,9 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
    deferred to a visible-adapter machine.
 2. **102 / 112 / 127** — ✅ ALL DONE (WebGL, each re-probed):
    - **102**: `mapMandelbulb`-style DE rewrite (escape break + consistent `dr` +
-     positive interior); 0% → 7.9%. WGSL shared the identical bug → same port.
+     positive interior); 0% → 9.7%. WGSL shared the identical bug → same port.
+     Follow-up CodeReview caught + fixed a box-branch `sc=2.0` double-scale in
+     both backends (was x4 growth / `dr+3`; now x2 / `dr*sc*2+1`).
    - **112**: knot-curve sampling + tube (replacing the degenerate point-to-angle
      field); 0% → 6.0%. WGSL 112 already used this correct technique → no port.
    - **127**: orbit-traced fern + zoomScale 0.4; 0% → valid (2.5%, thin like idx

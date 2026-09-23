@@ -2444,16 +2444,17 @@ fn mapMandelbulbMandelboxHybrid(p: vec3<f32>, t: f32, phi: f32, iters: i32) -> v
       let newPhi = phi_angle * 8.0;
       z = zr * vec3<f32>(sin(newTheta) * cos(newPhi), sin(newTheta) * sin(newPhi), cos(newTheta)) + p;
     } else {
-      // Mandelbox: box fold + sphere fold, with dr tracking the fold/sphere scale
+      // Mandelbox fold: box reflection, then sphere fold (sc = identity 1.0 when
+      // r2>=1, so the box grows only x2 per iter via the fixed scale below, not
+      // x4), then translate. dr accumulates ONCE from the total scale sc*2.
       z = clamp(z, vec3<f32>(-1.0), vec3<f32>(1.0)) * 2.0 - z;
       let r2 = max(dot(z, z), 0.0001);
-      var sc: f32 = 2.0;
+      var sc: f32 = 1.0;
       if (r2 < 0.25) { sc = 4.0; }
       else if (r2 < 1.0) { sc = 1.0 / r2; }
       z = z * sc;
-      dr = dr * abs(sc) + 1.0;
       z = z * 2.0 + p;
-      dr = dr * 2.0 + 1.0;
+      dr = dr * abs(sc) * 2.0 + 1.0;
     }
   }
   if (escaped) {
