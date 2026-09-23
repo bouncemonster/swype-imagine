@@ -32,7 +32,7 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
   return (
     <div 
       id="telemetry-hud"
-      className="absolute top-4 left-4 z-20 pointer-events-auto select-none hidden sm:block"
+      className="safe-t safe-l absolute top-4 left-4 z-20 pointer-events-auto select-none hidden sm:block max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain"
     >
       <div className="bg-neutral-950/80 backdrop-blur-md border border-neutral-800/80 rounded-xl p-3.5 shadow-2xl text-xs text-neutral-300 w-56 md:w-72 transition-all">
         {/* Header with 144Hz pill */}
@@ -63,7 +63,7 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
         <div className="grid grid-cols-2 gap-2 mb-2.5">
           {/* FPS Block */}
           <div className="bg-neutral-900/90 rounded-lg p-2 border border-neutral-800">
-            <div className="flex items-center justify-between text-[10px] text-neutral-400 mb-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-1 text-[10px] text-neutral-400 mb-0.5">
               <span>RATE</span>
               <span className={`px-1 rounded text-[9px] font-mono font-medium ${
                 telemetry.fps >= 135 
@@ -87,7 +87,7 @@ export const TelemetryHUD: React.FC<TelemetryHUDProps> = ({
 
           {/* Frame Time Block */}
           <div className="bg-neutral-900/90 rounded-lg p-2 border border-neutral-800">
-            <div className="flex items-center justify-between text-[10px] text-neutral-400 mb-0.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-1 text-[10px] text-neutral-400 mb-0.5">
               <span>FRAME TIME</span>
               <span className="font-mono text-[9px] text-neutral-400">
                 {targetFps >= 240 ? 'Max 250 FPS' : `${targetFps}Hz = ${(1000/targetFps).toFixed(2)}ms`}

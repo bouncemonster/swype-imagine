@@ -145,14 +145,14 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
       {/* Floating Left-Side Ribbon: Scroll Feed of 3D Fractals & Hybrids */}
       <aside
         id="fractal-scroll-feed-panel"
-        className={`fixed top-1/2 -translate-y-1/2 left-3 z-30 transition-all duration-300 ease-out flex flex-col pointer-events-auto ${
+        className={`safe-l fixed top-1/2 -translate-y-1/2 left-3 z-30 transition-all duration-300 ease-out flex flex-col pointer-events-auto ${
           isOpen ? 'translate-x-0 opacity-100' : '-translate-x-[110%] opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex items-stretch">
           {/* Main Feed Card Panel */}
           <div 
-            className="w-72 max-h-[82vh] bg-neutral-950/85 backdrop-blur-xl border border-neutral-800/90 rounded-2xl shadow-2xl p-3 flex flex-col gap-2.5 overflow-hidden text-neutral-200"
+            className="w-72 max-w-[calc(100vw-1.5rem)] max-h-[82dvh] bg-neutral-950/85 backdrop-blur-xl border border-neutral-800/90 rounded-2xl shadow-2xl p-3 flex flex-col gap-2.5 overflow-hidden text-neutral-200"
           >
             {/* Header: Title & Feed Mode Toggle */}
             <div className="flex items-center justify-between pb-2 border-b border-neutral-800/80">

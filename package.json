@@ -18,6 +18,7 @@
     "test:quality": "npx tsx tests/code-quality-check.ts",
     "test:mapper": "npx tsx tests/fractal-mapper-test.ts",
     "test:shader-math": "npx tsx tests/shader-math-validation-test.ts",
+    "test:mobile": "npx tsx tests/mobile-design-audit.ts",
     "test:engine-parity": "npx tsx tests/cross-engine-parity-test.ts",
     "test:unit": "npm run test:mapper && npm run test:shader-math && npm run test:engine-parity",
     "test:all": "npm run test:unit && npm run test && npm run test:headless && npm run test:benchmark && npm run test:quality"

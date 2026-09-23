@@ -61,6 +61,8 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
   const [shareCopied, setShareCopied] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isHoveringRef = useRef(false);
+  // True when the current expansion came from pointer hover (not from a tap).
+  const hoverOpenedRef = useRef(false);
 
   useEffect(() => {
     setHasFavorited(isCurrentLiked);
@@ -85,6 +87,16 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
   };
 
   const toggleTopBarMobile = () => {
+    // Touch browsers synthesise mouseenter/mousemove *before* click, so onMouseEnter
+    // has already expanded the menu by the time this fires. Toggling then would
+    // immediately collapse it — the menu could never be opened on an iPhone/iPad.
+    // Consume the hover-driven open once; later taps toggle normally.
+    if (hoverOpenedRef.current) {
+      hoverOpenedRef.current = false;
+      setShowTopBar(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      return;
+    }
     setTopBarExpanded(prev => !prev);
     setShowTopBar(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -204,9 +216,9 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
       {/* Top Right — single "⋯" trigger always visible, expands on tap (mobile) or hover (desktop) */}
       {/* Single hover container wraps trigger + dropdown to prevent gap-collapse */}
       <div 
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 pointer-events-auto"
-        onMouseEnter={() => { isHoveringRef.current = true; setShowTopBar(true); setTopBarExpanded(true); if (hideTimerRef.current) clearTimeout(hideTimerRef.current); }}
-        onMouseLeave={() => { isHoveringRef.current = false; setTopBarExpanded(false); scheduleHide(); }}
+        className="safe-t safe-r absolute top-3 right-3 sm:top-4 sm:right-4 z-30 pointer-events-auto"
+        onMouseEnter={() => { isHoveringRef.current = true; hoverOpenedRef.current = true; setShowTopBar(true); setTopBarExpanded(true); if (hideTimerRef.current) clearTimeout(hideTimerRef.current); }}
+        onMouseLeave={() => { isHoveringRef.current = false; hoverOpenedRef.current = false; setTopBarExpanded(false); scheduleHide(); }}
       >
         {/* Always-visible trigger button */}
         <button
@@ -296,7 +308,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
       {isInteracting && (
         <div 
           id="interaction-feedback-chip"
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 py-1 rounded-full bg-neutral-950/80 backdrop-blur-md border border-neutral-800 text-[11px] text-neutral-300 flex items-center gap-1.5 transition-all duration-300 hidden sm:flex"
+          className="safe-t absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 py-1 rounded-full bg-neutral-950/80 backdrop-blur-md border border-neutral-800 text-[11px] text-neutral-300 flex items-center gap-1.5 transition-all duration-300 hidden sm:flex"
         >
           <Compass className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
           <span>
@@ -308,13 +320,13 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
       {/* Bottom Feed Bar — auto-hides after 3s */}
       <div 
         id="neuro-feed-bar"
-        className={`absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-2 w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[94vw] transition-all duration-500 ${
+        className={`safe-b absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-2 w-[calc(100vw-1rem)] sm:w-auto sm:max-w-[94vw] transition-all duration-500 ${
           showBottomBar ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >
-        <div className="bg-neutral-950/85 backdrop-blur-md border border-neutral-800/90 rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-2xl flex items-center gap-2 sm:gap-3 text-neutral-200 w-full">
-          {/* Specimen Info — takes remaining space, name truncates with tooltip */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="bg-neutral-950/85 backdrop-blur-md border border-neutral-800/90 rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-2xl flex flex-wrap items-center gap-2 sm:gap-3 text-neutral-200 w-full">
+          {/* Specimen Info — full row on phones (44px targets would squeeze it to 2 lines of overlap), inline from sm up */}
+          <div className="flex items-center gap-2 min-w-0 flex-1 basis-full sm:basis-auto">
             <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50 shrink-0" />
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5 min-w-0">

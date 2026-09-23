@@ -53,9 +53,9 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
     : fractalArchitectures.filter(a => a.group === selectedGroup);
 
   return (
-    <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-40 w-[calc(100vw-1.5rem)] sm:w-[410px] max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-neutral-950/94 backdrop-blur-2xl border border-neutral-800/90 shadow-2xl p-3.5 sm:p-4 text-xs select-none transition-all">
+    <div className="safe-t safe-r safe-fit fixed top-3 right-3 sm:top-4 sm:right-4 z-40 w-[calc(100vw-1.5rem)] sm:w-[410px] max-h-[calc(100dvh-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl bg-neutral-950/94 backdrop-blur-2xl border border-neutral-800/90 shadow-2xl p-3.5 sm:p-4 text-xs select-none transition-all">
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-neutral-800/80 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2 pb-3 border-b border-neutral-800/80 mb-3">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
           <div>
@@ -67,7 +67,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           </div>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-end gap-1">
           {onOpenAtlasModal && (
             <button
               id="open-atlas-modal-btn"
