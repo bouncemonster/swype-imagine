@@ -71,6 +71,19 @@ Ranked by (impact × cost). #1–#2 are cheap wins to land first; #3 is the bigg
    paying its parse cost at boot. *Est: −150–250 ms scripting.* (Scoped reversal of the
    "lazy-load removed" decision, hot path untouched.)
 
+   **Partial fix landed 2026-09-23 (safe subset, monolith untouched)**: full dynamic-import of
+   the shader monolith was assessed and deferred — ShaderManager v3 *requires* the complete
+   `FRAGMENT_SHADER_SOURCE` string at init to parse+splice the ~1000-line minimal shader, so
+   wrapping the module in `import()` would either change the boot sequence (WebGLEngine.init
+   becomes async) or require a build-time pre-computation pass. Both are follow-up work.
+   In the meantime, the sibling bundle-size win was captured: `ControlsPanel` (45 KB TSX →
+   33 KB chunk) is now `React.lazy()`-loaded behind `isEngineerMode`. `index` chunk shrank
+   458 KB → 427 KB (−31 KB, −6.8 % boot script parse). Mobile-design-audit still passes with
+   `panelOpen=true` on all three viewports (its `waitForFunction` on `#tab-gpu-btn` absorbs
+   the chunk fetch). Gated follow-ups for the monolith: (a) make `WebGLEngine.init` await a
+   single dynamic import of `webglShaders`, or (b) emit pre-spliced per-fractal shader files
+   at build time and reserve the monolith for the `*Variant` fallback only.
+
 5. **[Med impact · low cost] ControlsPanel + feed-ribbon DOM built under the loader.**
    Style & Layout (1,119 ms) + Rendering (525 ms) include the 8-tab `ControlsPanel`/HUD mounted
    *behind* the full-screen overlay. **Fix**: gate their mount on `CosmicLoader.onFinished`

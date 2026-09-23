@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef, Component as ReactComponent, ErrorInfo, ReactNode } from 'react';
 import { FractalCanvas } from './components/FractalCanvas';
 import { TelemetryHUD } from './components/TelemetryHUD';
-import { ControlsPanel } from './components/ControlsPanel';
+// Perf #4 (safe subset): ControlsPanel is 45 KB of TSX rendered ONLY when
+// isEngineerMode is true (never on first paint). React.lazy pulls it out of the
+// boot bundle; Suspense resolves the chunk on demand. The mobile-design-audit
+// already waitForFunction on #tab-gpu-btn, so it tolerates the chunk fetch.
+const ControlsPanel = React.lazy(() =>
+  import('./components/ControlsPanel').then(m => ({ default: m.ControlsPanel })),
+);
 import { FractalInfoHUD } from './components/FractalInfoHUD';
 import { ExplanationModal } from './components/ExplanationModal';
 import { UserProfileModal } from './components/UserProfileModal';
@@ -752,13 +758,14 @@ export default function App() {
 
       {/* Engineer Mode ("Инж") Overlay: In-depth Math, GPU Shaders & Telemetry */}
       {isEngineerMode && (
-        <>
-          <TelemetryHUD
-            telemetry={telemetry}
-            targetFps={params.targetFps}
-            phiMultiplier={params.phiMultiplier}
-          />
-          <ControlsPanel
+        <React.Suspense fallback={null}>
+          <>
+            <TelemetryHUD
+              telemetry={telemetry}
+              targetFps={params.targetFps}
+              phiMultiplier={params.phiMultiplier}
+            />
+            <ControlsPanel
             params={params}
             onParamsChange={setParams}
             onSelectFractalType={handleSelectFractalType}
@@ -773,7 +780,8 @@ export default function App() {
             tasteProfile={neuroEngine.getTasteProfile()}
             onSaveToFeed={handleSaveToFeed}
           />
-        </>
+          </>
+        </React.Suspense>
       )}
 
       {/* Sacred Geometry & Neuro-Aesthetics Research Modal */}
