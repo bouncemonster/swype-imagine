@@ -1,11 +1,36 @@
-> **Repo:** https://github.com/bouncemonster/swype-imagine
-> **Local git root:** `J:\project\swype-imagine\app` (folder `swype-imagine`, GitHub spelling **swype-imagine**)
-> Local `npm run dev` → typically `http://localhost:3000`. Not academy `:9002` / battle `:9003`.
 # Golden Ratio WebGPU Fractal Engine
 
-**431 тип фракталов** (141 core + 290 вариантов) с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением. **v6.0.0**: стабильный релиз — модульная шейдерная архитектура с lazy compilation, coverage-based визуальная регрессия, всегда-онлайн хостинг.
+<p align="center">
+  <img src=".github/assets/hero-mandelbulb.png" alt="Mandelbulb rendered by the engine — 431-type WebGL2/WebGPU SDF raymarcher" width="100%" />
+</p>
 
-🌐 **Live Demo**: https://fractal.simundis.com/  ·  always-on mirror: https://golden-ratio-fractal-engine.pages.dev/
+<p align="center">
+  <a href="https://fractal.simundis.com/"><img alt="Live demo" src="https://img.shields.io/badge/Live_demo-fractal.simundis.com-F59E0B?style=for-the-badge&logo=cloudflarepages&logoColor=white" /></a>
+  <a href="https://github.com/bouncemonster/swype-imagine/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/bouncemonster/swype-imagine/ci.yml?branch=main&style=for-the-badge&label=CI" /></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
+  <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-5.8_strict-blue?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img alt="Fractal types" src="https://img.shields.io/badge/fractal_types-431-orange?style=for-the-badge" />
+  <img alt="Assertions" src="https://img.shields.io/badge/tests-2_593_passed-brightgreen?style=for-the-badge" />
+  <img alt="Boot bundle" src="https://img.shields.io/badge/boot_JS-283_KB-blue?style=for-the-badge" />
+</p>
+
+**431 fractal types** (141 core + 290 variants) rendered in real time on WebGL2 with an
+optional WebGPU path. A single distance evaluator (`map*` + `ray march`) drives signed-distance
+fractals, adaptive quality, and seven render styles. Ships always-on at Cloudflare Pages with a
+personalization engine that learns from interaction.
+
+🌐 **Live demo**: https://fractal.simundis.com/  ·  **Mirror**: https://golden-ratio-fractal-engine.pages.dev/
+📚 **Docs**: [`docs/`](./docs) · [`DESIGN.md`](./DESIGN.md) · [`ARCHITECTURE.md`](./ARCHITECTURE.md) · [`CHANGELOG.md`](./docs/CHANGELOG.md)
+
+---
+
+## Gallery
+
+| Apollonian gasket | Quasicrystal | Hofstadter butterfly | Gyroid (hologram) |
+|:---:|:---:|:---:|:---:|
+| <img src=".github/assets/gallery-apollonian.png" alt="Apollonian gasket" width="240" /> | <img src=".github/assets/gallery-quasicrystal.png" alt="Quasicrystal" width="240" /> | <img src=".github/assets/gallery-hofstadter.png" alt="Hofstadter butterfly" width="240" /> | <img src=".github/assets/gallery-gyroid-holo.png" alt="Gyroid in holographic style" width="240" /> |
+
+Screenshots captured by `tests/visual-snapshot-sweep.ts` at 1280×720 from the shipping bundle.
 
 ## 🚀 Возможности
 
@@ -23,6 +48,7 @@
 - **Lazy Shader Compilation**: Модульная архитектура предотвращает краши браузера (введена в v2.4.0, доработана к v6.0.0)
 - **Прогресс-загрузка**: CosmicLoader следует реальному прогрессу компиляции шейдеров (parsing 10% → compiling 40% → linking 80% → complete 100%) и скрывается на первом отрисованном кадре
 - **Тестирование**: 718 unit-ассертов (524 mapper + 113 shader-math + 81 engine-parity) + 1875 integration-ассертов (autotest) + 477 headless + browser tests — все зелёные
+- **Перформанс загрузки**: 458 KB → **283 KB** boot `index` chunk (−38 %) за React.lazy ControlsPanel + 4 closed modals, immutable cache headers, CSS-only pre-paint splash. Подробности в [`docs/PERF_AUDIT-2026-09-23.md`](./docs/PERF_AUDIT-2026-09-23.md).
 
 ## 📦 Установка и запуск
 
@@ -43,6 +69,7 @@ npm run deploy:cf
 npm run test:unit      # Unit tests (718 assertions)
 npm run test           # Integration tests (1875 assertions)
 npm run test:browser   # Playwright browser tests
+npm run test:mobile    # Responsive/tap-target audit (coarse-pointer emulation)
 npm run test:all       # Full test suite
 npm run lint           # TypeScript type check
 ```
@@ -76,15 +103,15 @@ src/
 │   └── UserProblemLogger.ts     # Логирование проблем (6.9KB, 238 lines)
 ├── components/
 │   ├── FractalCanvas.tsx     # GPU canvas + interaction (10KB, 269 lines)
-│   ├── ControlsPanel.tsx      # UI контролы (43KB, 873 lines)
+│   ├── ControlsPanel.tsx      # UI контролы (43KB, 873 lines) — React.lazy
 │   ├── TelemetryHUD.tsx      # FPS/draw-call overlay (7.6KB, 171 lines)
 │   ├── FractalInfoHUD.tsx    # Информация о фрактале (17KB, 389 lines)
 │   ├── FractalScrollFeed.tsx # Горизонтальный браузер (12KB, 281 lines)
-│   ├── FractalAtlasModal.tsx # Модальное окно атласа (33KB, 574 lines)
+│   ├── FractalAtlasModal.tsx # Модальное окно атласа (33KB, 574 lines) — React.lazy + 95 KB catalog
 │   ├── FractalProbeHUD.tsx   # Probe overlay (5.5KB, 128 lines)
-│   ├── ExplanationModal.tsx  # Модальное окно объяснений (16KB, 207 lines)
-│   ├── UserProfileModal.tsx  # Профиль пользователя (18KB, 363 lines)
-│   ├── ProjectManifestModal.tsx # Манифест проекта (8.5KB, 176 lines)
+│   ├── ExplanationModal.tsx  # Модальное окно объяснений (16KB, 207 lines) — React.lazy
+│   ├── UserProfileModal.tsx  # Профиль пользователя (18KB, 363 lines) — React.lazy
+│   ├── ProjectManifestModal.tsx # Манифест проекта (8.5KB, 176 lines) — React.lazy
 │   ├── CosmicLoader.tsx      # Прогресс-загрузка (6.9KB, 180 lines)
 │   └── DebugOverlay.tsx      # Debug overlay (6.6KB, 158 lines)
 ├── hooks/
@@ -117,7 +144,7 @@ src/
 └── main.tsx                  # Точка входа (725B, 18 lines)
 ```
 
-**Total**: 73 TypeScript/TSX files (54 src + 19 tests), ~935KB src source code
+**Total**: 73 TypeScript/TSX files (54 src + 19 tests), ~935 KB src source code.
 
 ## 🎨 Типы фракталов (431 total = 141 core + 290 variants)
 
@@ -142,16 +169,17 @@ src/
 | **AO Probes** | GLSL 7 samples + 4 distances (WGSL 5 + 3) |
 | **Hit Threshold** | max(max(cam_dist * 0.0003, 0.0001) * 3.0, 0.002) |
 | **SDF Calls/Pixel** | ~170-270 (with all effects) |
+| **Boot `index` chunk** | 283 KB decoded / 88 KB brotli (from 458 KB pre-perf) |
 
 ## 🛠️ Технологии
 
-- **Frontend**: React 19 + TypeScript 5.8 + Vite ^6.2.3
-- **Styling**: Tailwind CSS v4
+- **Frontend**: React 19 + TypeScript 5.8 (strict) + Vite ^6.2.3
+- **Styling**: Tailwind CSS v4 (oklch tokens; brand aliases in `src/index.css`)
 - **Rendering**: GLSL ES 3.0 (WebGL2) / WGSL (WebGPU)
-- **Deploy**: Cloudflare Pages via Wrangler
+- **Deploy**: Cloudflare Pages via Wrangler; named tunnel for `fractal.simundis.com`
 - **Build**: Bun/npm
-- **Testing**: Playwright + custom test harness, 718 unit assertions (524 mapper + 113 shader-math + 81 engine-parity) + 1875 integration assertions
-- **Type Safety**: 0 TypeScript errors (strict mode ✅ enabled)
+- **Testing**: Playwright + custom harness — 718 unit + 1875 integration + 477 headless assertions
+- **CI**: GitHub Actions (`.github/workflows/ci.yml`): typecheck → build → unit trio → autotest → mobile design audit
 
 ## 🧪 Тестирование
 
@@ -161,15 +189,19 @@ src/
 | **shader-math-validation-test** | 113 | Division-by-zero guards, NaN protection, color mixing, SDF properties, uniform consistency |
 | **cross-engine-parity-test** | 81 | WebGL/WebGPU uniform packing, draw calls, fallback, quality levels |
 | **fractal-autotest** | 1875 | SDF functions, palettes, render styles, audio, share links |
-| **Browser tests** | Visual | Playwright + Chromium visual regression |
+| **mobile-design-audit** | gate | 44 px tap targets, 12 px text floor, `env(safe-area-inset-*)`, zero horizontal overflow — coarse-pointer forced via CDP `Emulation.setEmulatedMedia` |
+| **Browser tests** | Visual | Playwright + Chromium visual regression, coverage stats for animated renders |
 
-##  License
+## 📜 License
 
-MIT License — Free for research and commercial use
+[MIT](LICENSE) — free for research and commercial use.
 
 ---
 
 **Built with ❤️ for the fractal community**
 
-*Last updated: September 2026*
-
+<sub>
+Repo: <a href="https://github.com/bouncemonster/swype-imagine">bouncemonster/swype-imagine</a> ·
+Local git root: <code>J:\project\swype-imagine\app</code> ·
+Last updated: September 2026
+</sub>
