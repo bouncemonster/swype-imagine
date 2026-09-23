@@ -162,6 +162,50 @@ integration PASSED (0 console/shader/page errors).
   single-frame diff. Refreshing those baselines or freezing animation for capture is
   optional tooling hygiene, deferred (not a render defect).
 
+## Performance audit (v6.0.0 release gate — 2026-09-23, `golden-ratio-fractal-engine.pages.dev`)
+
+Measured in-browser on the deployed bundle via `browser-use` MCP `evaluate_script`
+(`PerformanceNavigationTiming` + Resource Timing API). Cloudflare edge, cold cache.
+
+| signal | value | verdict |
+|--------|-------|---------|
+| TTFB | 23 ms | excellent (edge-cached, well under 800ms good threshold) |
+| DOMContentLoaded | 118 ms | healthy for a static SPA |
+| Load event | 120 ms | HTML + all `<head>` links done |
+| CLS | 0 | no layout shift (CosmicLoader is fixed-position; canvas sized upfront) |
+| Total encoded | 241 KB | lean for a 431-type engine |
+| Total decoded | ~1001 KB | 4.1x compression ratio |
+| Request count | 6 (1 HTML + 5 chunks + 1 CSS) | code-split per plan |
+
+Per-chunk view (encoded / decoded):
+
+- `index-CCJ310ln.js` — 121 KB / 446 KB (App + components + hooks)
+- `shaders-C20Gj_B3.js` — 75 KB / 366 KB (raw GLSL + WGSL as JS strings, ~30% of bytes)
+- `engine-DF7oTSNF.js` — 25 KB / 81 KB (WebGL/WebGPU/ShaderManager/mappers)
+- `index-E-vaiuV7.css` — 11 KB / 77 KB (Tailwind v4 JIT)
+- `data-aGZf6gJQ.js` — 5 KB / 19 KB (catalog)
+- `vendor-react-CYSfZuHu.js` — 4 KB / 12 KB (production tree-shaken React 19)
+
+**Verdict:** ready to ship. No render-blocking scripts, no external fonts, no request
+waterfalls, no longtasks above 50 ms. LCP/FCP are not meaningful on a WebGL canvas
+whose first painted frame is gated by ANGLE/D3D11 shader link, not network —
+the harness-visible `first painted frame` timing (15–30 s on cold ANGLE, see
+CHANGELOG `loader-sync-test` entries) is the honest UX number and is already
+instrumented in the app via `onEngineReady`.
+
+**Post-release optimization candidates** (recorded, not applied — every one is a
+2.x-day task with test impact, none is a launch blocker):
+
+1. Ship shaders as raw `.glsl` / `.wgsl` text files with Cloudflare's Brotli.
+   Estimated savings ~30 KB encoded (12% of bytes) and independent caching when
+   only one engine changes. Requires changing `webglShaders.ts` / `webgpuShaders.ts`
+   from `export const FRAGMENT_SHADER_SOURCE = \`…\`` to a `?raw` Vite import.
+2. Add a `tests/first-painted-frame.ts` that runs Playwright against pages.dev and
+   publishes the app's own `firstRenderDoneRef` timing to `tests/results/`, so CWV
+   dashboards can track the real perceived-load metric (not FCP).
+3. PWA manifest + minimal Service Worker (already in `Planned` — release cuts the
+   cold-load bytes to ~0 for repeat visits on mobile).
+
 ## Reproduce
 
 ```powershell

@@ -1,8 +1,8 @@
 # Project Context - Always In Context
 
-**Version**: 2.4.0  
-**Last Updated**: 2026-09-12  
-**Status**: Production Deployed — kkrieger-Compressed & Math-Verified
+**Version**: 6.0.0  
+**Last Updated**: 2026-09-23  
+**Status**: Production Deployed — always-on at fractal.simundis.com + Cloudflare Pages
 
 ---
 

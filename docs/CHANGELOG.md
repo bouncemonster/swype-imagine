@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+nothing yet — post-6.0.0 work lands here.
+
+## [6.0.0] - 2026-09-23
+
+Release milestone: 431-type engine stable (visual sweep 406 rendered / 23 sparse / 2 black / 0 error),
+full test suite green (unit 718 + autotest 1875 + headless 477 + browser integration), always-on
+public hosting on Cloudflare Pages + `fractal.simundis.com`. All `[Unreleased]` work below is cut into this release.
+
 ### Added
 - **Form-diversity truth audit + verified runtime dispatch probe** — on the user's "в глубь правды о разнообразии математических и реальных форм… какие идеально подходят для 3д рендеринга, какие есть у нас, и как они преобразуются из математики в 3д фигуры". Confirmed from source that the WebGL fragment shader holds **131 hand-written `map*` distance estimators** (idx 0–130) + 10 generated `mapMandelbrotVariantN` (131–140) + **5 parameterised variant bases** (`mapJuliaVariant`/`mapIFSVariant`/`mapLSystemVariant`/`mapFlameVariant`/`mapHybridVariant`, idx 141–430) — so the advertised **431** ids collapse to **~146 distinct DE mechanisms**, and the live UI only ever selects **idx 0–130** (showcase 61 / `ALL_FRACTAL_TYPES` 113 / Atlas 146-entries→57-unique-types, verified 0 `*Variant` catalog entries). A headless probe (loading production with `#type=<variant>` and reading the app's own `Built minimal shader for fractal N (mapX)` log) **disproved** the prior doc claim that `*Variant` ids uniformly fall back to the monolith: `extractFractalFunction` keys on **source position**, and because the five `*Variations` modules are concatenated at the TOP of the source, idx 135 resolves to `mapFlameSwirl` and idx 141 to `mapFlameDiamond` (silently wrong form), while idx ≥167 build nothing and fall through to the correct monolith dispatch. **Latent, not user-facing** (UI caps at 130). Documented in `docs/fractal-math-to-render.md` §3b with the measured table + the fix path (key `extractFractalFunction` on the catalog ordinal, not position, before ever surfacing `*Variant` ids); corrected the overstated "all 431 active/rendered" headline counts in `docs/CONTEXT.md` and `docs/README.md`. Docs-only, no src change; `tsc` 0.
 - **Auto-rotation start/stop toggle in the Camera tab** — the user asked for "возможность его остановить или запустить вращение". A new `toggle-auto-rotate-btn` card in `ControlsPanel` binds directly to `params.autoRotate` (shows Pause/"Вращается" when on, RotateCw/"Остановлено" when off) and mirrors the `S` keyboard shortcut, so rotation control is discoverable without memorising the key. `tsc` 0, `npm test` 1875/0, build ok, headless render 0 errors.

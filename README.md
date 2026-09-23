@@ -3,7 +3,7 @@
 > Local `npm run dev` → typically `http://localhost:3000`. Not academy `:9002` / battle `:9003`.
 # Golden Ratio WebGPU Fractal Engine
 
-**431 тип фракталов** (141 core + 290 вариантов) с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением. **v2.4.0**: Модульная шейдерная архитектура с lazy compilation для предотвращения крашей браузера.
+**431 тип фракталов** (141 core + 290 вариантов) с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением. **v6.0.0**: стабильный релиз — модульная шейдерная архитектура с lazy compilation, coverage-based визуальная регрессия, всегда-онлайн хостинг.
 
 🌐 **Live Demo**: https://fractal.simundis.com/  ·  always-on mirror: https://golden-ratio-fractal-engine.pages.dev/
 
@@ -20,9 +20,9 @@
 - **Keyboard shortcuts**: 1-7 (режимы), F (камера), R (сброс), I (инерция), S (стоп)
 - **Аудио**: φ-tuned ambient audio engine (Web Audio API)
 - **Type Safety**: 0 ошибок TypeScript (strict mode ✅ включён), типизация всех 431 типов
-- **Lazy Shader Compilation**: Модульная архитектура предотвращает краши браузера (v2.4.0)
+- **Lazy Shader Compilation**: Модульная архитектура предотвращает краши браузера (введена в v2.4.0, доработана к v6.0.0)
 - **Прогресс-загрузка**: CosmicLoader следует реальному прогрессу компиляции шейдеров (parsing 10% → compiling 40% → linking 80% → complete 100%) и скрывается на первом отрисованном кадре
-- **Тестирование**: 718 assertions (524 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions + browser tests
+- **Тестирование**: 718 unit-ассертов (524 mapper + 113 shader-math + 81 engine-parity) + 1875 integration-ассертов (autotest) + 477 headless + browser tests — все зелёные
 
 ## 📦 Установка и запуск
 
@@ -41,7 +41,7 @@ npm run deploy:cf
 
 # Запуск тестов
 npm run test:unit      # Unit tests (718 assertions)
-npm run test           # Integration tests (822 assertions)
+npm run test           # Integration tests (1875 assertions)
 npm run test:browser   # Playwright browser tests
 npm run test:all       # Full test suite
 npm run lint           # TypeScript type check
@@ -67,7 +67,7 @@ src/
 ├── engine/
 │   ├── WebGLEngine.ts        # WebGL2 рендерер (23KB, 523 lines)
 │   ├── WebGPUEngine.ts       # WebGPU рендерер (8.7KB, 238 lines)
-│   ├── ShaderManager.ts      # Lazy минимальная сборка шейдера + LRU cache (15KB, 327 lines) ⭐ v2.4.0
+│   ├── ShaderManager.ts      # Lazy минимальная сборка шейдера + LRU cache (15KB, 327 lines) ⭐ введена в v2.4.0
 │   ├── FractalEngineBase.ts  # Базовый класс (9.6KB, 220 lines)
 │   ├── fractalMappers.ts     # Маппинги типов (22KB, 577 lines, 451 имя → 431 индекс)
 │   ├── NeuroAestheticsEngine.ts # AI эстетика (44KB, 1112 lines)
@@ -150,7 +150,7 @@ src/
 - **Rendering**: GLSL ES 3.0 (WebGL2) / WGSL (WebGPU)
 - **Deploy**: Cloudflare Pages via Wrangler
 - **Build**: Bun/npm
-- **Testing**: Playwright + custom test harness, 718 assertions (524 mapper + 113 shader-math + 81 engine-parity) + 822 integration assertions
+- **Testing**: Playwright + custom test harness, 718 unit assertions (524 mapper + 113 shader-math + 81 engine-parity) + 1875 integration assertions
 - **Type Safety**: 0 TypeScript errors (strict mode ✅ enabled)
 
 ## 🧪 Тестирование
@@ -160,7 +160,7 @@ src/
 | **fractal-mapper-test** | 524 | Index mapping completeness, aliases, render styles, composite ops, camera modes |
 | **shader-math-validation-test** | 113 | Division-by-zero guards, NaN protection, color mixing, SDF properties, uniform consistency |
 | **cross-engine-parity-test** | 81 | WebGL/WebGPU uniform packing, draw calls, fallback, quality levels |
-| **fractal-autotest** | 822 | SDF functions, palettes, render styles, audio, share links |
+| **fractal-autotest** | 1875 | SDF functions, palettes, render styles, audio, share links |
 | **Browser tests** | Visual | Playwright + Chromium visual regression |
 
 ##  License
