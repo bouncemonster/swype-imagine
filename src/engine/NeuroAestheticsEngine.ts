@@ -2,6 +2,7 @@ import { FractalSpecimen, FractalType, ColorPalette, CompositeOp, RenderStyle } 
 import { COLOR_PALETTES } from '../palettes';
 import { COMPATIBLE_HYBRIDS } from '../data/compatibleHybrids';
 import { hslToRgb } from '../utils/colorMath';
+import { logger } from '../utils/logger';
 export { COMPATIBLE_HYBRIDS };
 
 export const COMPOSITE_OP_NAMES: Record<CompositeOp, string> = {
@@ -799,7 +800,7 @@ export class NeuroAestheticsEngine {
         selectedType = showcaseTypes[this.explorationIndex];
         this.explorationIndex++;
         isExplorationShowcase = true;
-        console.info(`[NeuroAesthetics] Exploration mode: showing type ${this.explorationIndex}/${showcaseTypes.length}: ${selectedType}`);
+        logger.info(`[NeuroAesthetics] Exploration mode: showing type ${this.explorationIndex}/${showcaseTypes.length}: ${selectedType}`);
       } else {
         // After exploration, use Thompson sampling with reduced penalty
         const weights = types.map(t => {
@@ -897,7 +898,7 @@ export class NeuroAestheticsEngine {
         // 60% chance: completely random partner from ALL types
         const allPartners = ALL_FRACTAL_TYPES.filter(t => t !== selectedType);
         hybridType = allPartners[Math.floor(Math.random() * allPartners.length)];
-        console.info(`[NeuroAesthetics] Random hybrid: ${selectedType} + ${hybridType}`);
+        logger.info(`[NeuroAesthetics] Random hybrid: ${selectedType} + ${hybridType}`);
       } else {
         // 40% chance: use compatibility matrix for curated hybrids
 

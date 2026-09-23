@@ -4,6 +4,7 @@ import { FractalEngineBase } from './FractalEngineBase';
 import { renderDiagnostics } from './RenderDiagnostics';
 import { userProblemLogger } from './UserProblemLogger';
 import { ShaderManager } from './ShaderManager';
+import { logger } from '../utils/logger';
 
 export class WebGLEngine extends FractalEngineBase {
   private gl: WebGL2RenderingContext | null = null;
@@ -69,18 +70,18 @@ export class WebGLEngine extends FractalEngineBase {
 
   public init(): boolean {
     const initStart = performance.now();
-    console.group('[WebGL2] === INITIALIZATION START ===');
+    logger.group('[WebGL2] === INITIALIZATION START ===');
     renderDiagnostics.log('info', 'gpu', 'WebGL2 initialization started');
-    console.info('[WebGL2] Canvas element:', this.canvas);
-    console.info('[WebGL2] Canvas size (CSS):', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
-    console.info('[WebGL2] Canvas size (buffer):', this.canvas.width, 'x', this.canvas.height);
-    console.info('[WebGL2] User Agent:', navigator.userAgent);
-    console.info('[WebGL2] Device Pixel Ratio:', window.devicePixelRatio);
+    logger.info('[WebGL2] Canvas element:', this.canvas);
+    logger.info('[WebGL2] Canvas size (CSS):', this.canvas.clientWidth, 'x', this.canvas.clientHeight);
+    logger.info('[WebGL2] Canvas size (buffer):', this.canvas.width, 'x', this.canvas.height);
+    logger.info('[WebGL2] User Agent:', navigator.userAgent);
+    logger.info('[WebGL2] Device Pixel Ratio:', window.devicePixelRatio);
 
     // Ensure canvas has valid dimensions before context creation
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
-      console.warn('[WebGL2] Canvas has zero dimensions, setting fallback size...');
+      logger.warn('[WebGL2] Canvas has zero dimensions, setting fallback size...');
       this.canvas.width = Math.max(1, this.canvas.clientWidth || 800);
       this.canvas.height = Math.max(1, this.canvas.clientHeight || 600);
     }
@@ -94,57 +95,57 @@ export class WebGLEngine extends FractalEngineBase {
       preserveDrawingBuffer: true,
     } : undefined;
     
-    console.info('[WebGL2] Attempt 1: getContext("webgl2")' + (isTestMode ? ' with preserveDrawingBuffer (test mode)' : ' with no options') + '...');
+    logger.info('[WebGL2] Attempt 1: getContext("webgl2")' + (isTestMode ? ' with preserveDrawingBuffer (test mode)' : ' with no options') + '...');
     let gl: WebGL2RenderingContext | null = this.canvas.getContext('webgl2', ctxOptions as any) as WebGL2RenderingContext | null;
-    console.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
+    logger.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
 
     // Fallback: try with preserveDrawingBuffer for screenshots
     if (!gl) {
-      console.info('[WebGL2] Attempt 2: webgl2 with preserveDrawingBuffer...');
+      logger.info('[WebGL2] Attempt 2: webgl2 with preserveDrawingBuffer...');
       gl = this.canvas.getContext('webgl2', {
         alpha: false,
         antialias: false,
         powerPreference: 'high-performance',
         preserveDrawingBuffer: true,
       }) as WebGL2RenderingContext | null;
-      console.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
+      logger.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
     }
 
     // Fallback: try without preserveDrawingBuffer
     if (!gl) {
-      console.info('[WebGL2] Attempt 3: webgl2 with high-performance...');
+      logger.info('[WebGL2] Attempt 3: webgl2 with high-performance...');
       gl = this.canvas.getContext('webgl2', {
         alpha: false,
         antialias: false,
         powerPreference: 'high-performance',
       }) as WebGL2RenderingContext | null;
-      console.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
+      logger.info('[WebGL2] Result:', gl ? 'SUCCESS' : 'FAILED');
     }
 
     // Last resort: try webgl (WebGL1)
     if (!gl) {
-      console.warn('[WebGL2] All webgl2 attempts failed, trying webgl (WebGL1)...');
+      logger.warn('[WebGL2] All webgl2 attempts failed, trying webgl (WebGL1)...');
       const gl1 = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
       if (gl1) {
-        console.error('[WebGL2] WebGL1 obtained but WebGL2 is required. Check chrome://gpu');
-        console.error('[WebGL2] WebGL1 renderer:', (gl1 as WebGLRenderingContext).getParameter((gl1 as WebGLRenderingContext).RENDERER));
+        logger.error('[WebGL2] WebGL1 obtained but WebGL2 is required. Check chrome://gpu');
+        logger.error('[WebGL2] WebGL1 renderer:', (gl1 as WebGLRenderingContext).getParameter((gl1 as WebGLRenderingContext).RENDERER));
       }
-      console.error('[WebGL2] === INITIALIZATION FAILED ===');
-      console.groupEnd();
+      logger.error('[WebGL2] === INITIALIZATION FAILED ===');
+      logger.groupEnd();
       return false;
     }
     this.gl = gl;
-    console.info('[WebGL2] Context acquired!');
-    console.info('[WebGL2] GL_VERSION:', gl.getParameter(gl.VERSION));
-    console.info('[WebGL2] GL_RENDERER:', gl.getParameter(gl.RENDERER));
-    console.info('[WebGL2] GL_VENDOR:', gl.getParameter(gl.VENDOR));
-    console.info('[WebGL2] GL_SHADING_LANGUAGE_VERSION:', gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+    logger.info('[WebGL2] Context acquired!');
+    logger.info('[WebGL2] GL_VERSION:', gl.getParameter(gl.VERSION));
+    logger.info('[WebGL2] GL_RENDERER:', gl.getParameter(gl.RENDERER));
+    logger.info('[WebGL2] GL_VENDOR:', gl.getParameter(gl.VENDOR));
+    logger.info('[WebGL2] GL_SHADING_LANGUAGE_VERSION:', gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
     
     // Check for critical extensions
     const extensions = gl.getSupportedExtensions();
-    console.info('[WebGL2] Supported extensions count:', extensions?.length || 0);
-    console.info('[WebGL2] KHR_parallel_shader_compile:', extensions?.includes('KHR_parallel_shader_compile'));
-    console.info('[WebGL2] WEBGL_debug_renderer_info:', extensions?.includes('WEBGL_debug_renderer_info'));
+    logger.info('[WebGL2] Supported extensions count:', extensions?.length || 0);
+    logger.info('[WebGL2] KHR_parallel_shader_compile:', extensions?.includes('KHR_parallel_shader_compile'));
+    logger.info('[WebGL2] WEBGL_debug_renderer_info:', extensions?.includes('WEBGL_debug_renderer_info'));
 
     // NOTE: Context loss/restore is managed by FractalCanvas.tsx which orchestrates
     // the full engine lifecycle (destroy + reinit). Do NOT add handlers here —
@@ -164,7 +165,7 @@ export class WebGLEngine extends FractalEngineBase {
 
     // Initialize ShaderManager for lazy compilation
     this.shaderManager = new ShaderManager(gl, (progress) => {
-      console.info(`[ShaderManager] ${progress.stage}: ${progress.fractalName} (${progress.progress}%)`);
+      logger.info(`[ShaderManager] ${progress.stage}: ${progress.fractalName} (${progress.progress}%)`);
       this.compilePctByIndex.set(progress.fractalIndex, progress.progress);
       this.onCompileProgress?.(progress.stage, progress.progress);
     });
@@ -172,12 +173,12 @@ export class WebGLEngine extends FractalEngineBase {
     // Compile initial shader for phyllotaxis (fractal index 0) - the default fractal
     // DEFERRED: Use setTimeout(0) to yield to browser before heavy shader compilation
     // This prevents main thread freeze on launch — browser can process events first
-    console.info('[WebGL2] Deferring initial shader compilation to next event loop tick...');
+    logger.info('[WebGL2] Deferring initial shader compilation to next event loop tick...');
     setTimeout(() => {
       this.lazyCompileShader(0).then(() => {
-        console.info('[WebGL2] Initial shader compilation complete');
+        logger.info('[WebGL2] Initial shader compilation complete');
       }).catch(err => {
-        console.error('[WebGL2] Initial shader compilation failed:', err);
+        logger.error('[WebGL2] Initial shader compilation failed:', err);
       });
     }, 0);
 
@@ -190,9 +191,9 @@ export class WebGLEngine extends FractalEngineBase {
 
     this.vbo = gl.createBuffer();
     if (!this.vbo) {
-      console.error('[WebGL2] Failed to create vertex buffer');
-      console.error('[WebGL2] === INITIALIZATION FAILED ===');
-      console.groupEnd();
+      logger.error('[WebGL2] Failed to create vertex buffer');
+      logger.error('[WebGL2] === INITIALIZATION FAILED ===');
+      logger.groupEnd();
       return false;
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -204,8 +205,8 @@ export class WebGLEngine extends FractalEngineBase {
     const initTime = performance.now() - initStart;
     renderDiagnostics.log('info', 'gpu', 'WebGL2 initialization completed', { initTime });
     renderDiagnostics.trackGPUContext(false, initTime);
-    console.info('[WebGL2] Initialization time:', initTime.toFixed(2), 'ms');
-    console.groupEnd();
+    logger.info('[WebGL2] Initialization time:', initTime.toFixed(2), 'ms');
+    logger.groupEnd();
     return true;
   }
 
@@ -226,7 +227,7 @@ export class WebGLEngine extends FractalEngineBase {
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       const errorLog = gl.getShaderInfoLog(shader);
-      console.error('Shader compilation error:', errorLog);
+      logger.error('Shader compilation error:', errorLog);
       userProblemLogger.log({
         level: 'error',
         category: 'render',
@@ -236,7 +237,7 @@ export class WebGLEngine extends FractalEngineBase {
       gl.deleteShader(shader);
       return null;
     }
-    console.info('[WebGL2] Shader compiled successfully (' + (type === gl.VERTEX_SHADER ? 'vertex' : 'fragment') + ')');
+    logger.info('[WebGL2] Shader compiled successfully (' + (type === gl.VERTEX_SHADER ? 'vertex' : 'fragment') + ')');
     return shader;
   }
 
@@ -275,7 +276,7 @@ export class WebGLEngine extends FractalEngineBase {
     // Skip if already compiled for this fractal
     if (this.currentFractalIdx === fractalIdx) return;
     
-    console.info(`[WebGL2] Lazy compiling shader for fractal ${fractalIdx}...`);
+    logger.info(`[WebGL2] Lazy compiling shader for fractal ${fractalIdx}...`);
     
     try {
       const program = await this.shaderManager.getShaderForFractal(
@@ -285,7 +286,7 @@ export class WebGLEngine extends FractalEngineBase {
       
       // Guard: GL context may have been lost during the async compilation
       if (!this.gl) {
-        console.warn('[WebGL2] GL context lost during async shader compilation — skipping VAO setup');
+        logger.warn('[WebGL2] GL context lost during async shader compilation — skipping VAO setup');
         return;
       }
       
@@ -306,11 +307,11 @@ export class WebGLEngine extends FractalEngineBase {
       this.cacheUniformLocations(program);
       this.shaderManager?.setProtectedIndices([fractalIdx]);
       
-      console.info(`[WebGL2] Lazy compilation complete for fractal ${fractalIdx}`);
+      logger.info(`[WebGL2] Lazy compilation complete for fractal ${fractalIdx}`);
       this.beginWarmup();
     } catch (error) {
-      console.error(`[WebGL2] Lazy compilation failed for fractal ${fractalIdx}:`, error);
-      console.info('[WebGL2] Falling back to full shader compilation...');
+      logger.error(`[WebGL2] Lazy compilation failed for fractal ${fractalIdx}:`, error);
+      logger.info('[WebGL2] Falling back to full shader compilation...');
       
       // Fallback to full shader compilation
       const gl = this.gl;
@@ -364,10 +365,10 @@ export class WebGLEngine extends FractalEngineBase {
               this.uniformLocs[name] = this.gl.getUniformLocation(program, name);
             });
             
-            console.info('[WebGL2] Full shader compilation successful');
+            logger.info('[WebGL2] Full shader compilation successful');
             this.beginWarmup();
           } else {
-            console.error('[WebGL2] Full shader link failed:', gl.getProgramInfoLog(program));
+            logger.error('[WebGL2] Full shader link failed:', gl.getProgramInfoLog(program));
           }
         }
       }
@@ -415,10 +416,10 @@ export class WebGLEngine extends FractalEngineBase {
     if (fractalIdx === this.currentFractalIdx || this.prefetching.has(fractalIdx)) return;
     if (this.shaderManager.isCached(fractalIdx)) return;
     this.prefetching.add(fractalIdx);
-    console.info(`[WebGL2] Prefetch: compiling shader for fractal ${fractalIdx} in background...`);
+    logger.info(`[WebGL2] Prefetch: compiling shader for fractal ${fractalIdx} in background...`);
     this.shaderManager.getShaderForFractal(fractalIdx, GLSL_VERTEX_SHADER)
-      .then(() => console.info(`[WebGL2] Prefetch ready for fractal ${fractalIdx}`))
-      .catch(err => console.warn(`[WebGL2] Prefetch failed for fractal ${fractalIdx}:`, (err as Error)?.message ?? err))
+      .then(() => logger.info(`[WebGL2] Prefetch ready for fractal ${fractalIdx}`))
+      .catch(err => logger.warn(`[WebGL2] Prefetch failed for fractal ${fractalIdx}:`, (err as Error)?.message ?? err))
       .finally(() => this.prefetching.delete(fractalIdx));
   }
 
@@ -445,7 +446,7 @@ export class WebGLEngine extends FractalEngineBase {
     this.swapTargetIdx = -1;
     this.cacheUniformLocations(program);
     this.shaderManager?.setProtectedIndices([fractalIdx]);
-    console.info(`[WebGL2] Instant swap to cached shader for fractal ${fractalIdx} (prefetched)`);
+    logger.info(`[WebGL2] Instant swap to cached shader for fractal ${fractalIdx} (prefetched)`);
     return true;
   }
 
@@ -467,7 +468,7 @@ export class WebGLEngine extends FractalEngineBase {
       // take tens of seconds — the guard must stay up for the whole wait so the chip
       // shows one continuous honest progress instead of flickering every ~5s.
       if (performance.now() - this.swapStartTime > 120000) {
-        console.warn('[WebGL2] Shader swap timeout — resetting after', Math.round((performance.now() - this.swapStartTime) / 1000), 's');
+        logger.warn('[WebGL2] Shader swap timeout — resetting after', Math.round((performance.now() - this.swapStartTime) / 1000), 's');
         this.isSwappingShader = false;
         this.swapStartTime = 0;
         this.swapTargetIdx = -1;
@@ -510,7 +511,7 @@ export class WebGLEngine extends FractalEngineBase {
             this.swapStartTime = 0;
             this.swapTargetIdx = -1;
           }).catch(err => {
-            console.error('[WebGL2] Lazy compile failed, using full shader:', err);
+            logger.error('[WebGL2] Lazy compile failed, using full shader:', err);
             this.isSwappingShader = false;
             this.swapStartTime = 0;
             this.swapTargetIdx = -1;

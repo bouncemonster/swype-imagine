@@ -5,6 +5,7 @@
 
 import { FractalParams, FractalType, AudioTuning } from '../types/fractal';
 import { getFractalIndex } from '../engine/fractalMappers';
+import { logger } from '../utils/logger';
 
 // AudioTuning is imported from types/fractal.ts (single source of truth)
 
@@ -152,7 +153,7 @@ class GoldenAudioEngine {
       this.rebuildVoicesForGeometry(this.currentFractalType, this.currentHybridType);
       this.isRunning = true;
     } catch (e) {
-      console.warn('AudioContext initialization deferred or unavailable', e);
+      logger.warn('AudioContext initialization deferred or unavailable', e);
     }
   }
 
@@ -534,7 +535,7 @@ class GoldenAudioEngine {
         this.compressor = null;
       }, 350);
     } catch (e) {
-      console.warn('Error stopping audio', e);
+      logger.warn('Error stopping audio', e);
     }
   }
 

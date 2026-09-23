@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { logger } from '../utils/logger';
 
 interface CosmicLoaderProps {
   isReady: boolean;
@@ -38,7 +39,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
   useEffect(() => {
     const forceDismissTimer = setTimeout(() => {
       if (!isReady) {
-        console.warn('[CosmicLoader] Force-dismissing after 60s — engine failed to initialize');
+        logger.warn('[CosmicLoader] Force-dismissing after 60s — engine failed to initialize');
         setFadingOut(true);
         const hideTimer = setTimeout(() => {
           setHidden(true);

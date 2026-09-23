@@ -11,6 +11,7 @@
  */
 
 import { FRAGMENT_SHADER_SOURCE } from '../shaders/webglShaders';
+import { logger } from '../utils/logger';
 
 export interface CompilationProgress {
   fractalIndex: number;
@@ -72,7 +73,7 @@ export class ShaderManager {
     this.onProgress = onProgress;
     this.parallelCompile = !!gl.getExtension('KHR_parallel_shader_compile');
     if (!this.parallelCompile) {
-      console.warn('[ShaderManager] KHR_parallel_shader_compile unavailable — compile checks will block once per shader');
+      logger.warn('[ShaderManager] KHR_parallel_shader_compile unavailable — compile checks will block once per shader');
     }
   }
 
@@ -139,7 +140,7 @@ export class ShaderManager {
     const header = allLines.slice(0, headerEnd).join('\n');
     const footer = allLines.slice(sceneSDFEnd + 1).join('\n');
     this.sections = { header, footer, funcNames, cachedLines: allLines, headerEnd, sceneSDFStart };
-    console.info('[ShaderManager] Parsed:', funcNames.length, 'functions, header=' + headerEnd + ' lines, footer=' + (allLines.length - sceneSDFEnd - 1) + ' lines');
+    logger.info('[ShaderManager] Parsed:', funcNames.length, 'functions, header=' + headerEnd + ' lines, footer=' + (allLines.length - sceneSDFEnd - 1) + ' lines');
     return this.sections;
   }
 
@@ -152,7 +153,7 @@ export class ShaderManager {
       map.set(parseInt(m[1], 10), m[2]);
     }
     this.ordinalNameMap = map;
-    console.info('[ShaderManager] Parsed dispatch table: ' + map.size + ' ordinal->function name(s)');
+    logger.info('[ShaderManager] Parsed dispatch table: ' + map.size + ' ordinal->function name(s)');
     return map;
   }
 
@@ -253,7 +254,7 @@ export class ShaderManager {
     const sections = this.parseSections();
     const fractal = this.extractFractalFunction(fractalIndex);
     if (!fractal.code) {
-      console.warn('[ShaderManager] Could not extract fractal ' + fractalIndex + ', using full shader');
+      logger.warn('[ShaderManager] Could not extract fractal ' + fractalIndex + ', using full shader');
       return FRAGMENT_SHADER_SOURCE;
     }
     // The engine feeds the catalog ordinal (0-430) in as the Nth-map-function index, but the
@@ -279,9 +280,9 @@ export class ShaderManager {
     const minimalSceneSDF = this.generateMinimalSceneSDF(fractal.name, fractal.returnType, fractal.takesIters);
     const assembled = sections.header + '\n' + helperBlock + fractal.code + '\n\n' + minimalSceneSDF + '\n' + sections.footer;
     if (helpers.length) {
-      console.info('[ShaderManager] Fractal ' + fractalIndex + ' (' + fractal.name + '): included ' + helpers.length + ' helper function(s)');
+      logger.info('[ShaderManager] Fractal ' + fractalIndex + ' (' + fractal.name + '): included ' + helpers.length + ' helper function(s)');
     }
-    console.info('[ShaderManager] Built minimal shader for fractal ' + fractalIndex + ' (' + fractal.name + '): ' + assembled.split('\n').length + ' lines (vs ' + sections.cachedLines.length + ' full)');
+    logger.info('[ShaderManager] Built minimal shader for fractal ' + fractalIndex + ' (' + fractal.name + '): ' + assembled.split('\n').length + ' lines (vs ' + sections.cachedLines.length + ' full)');
     return assembled;
   }
 

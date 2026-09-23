@@ -3,6 +3,7 @@ import { FractalParams, FractalType, TelemetryData, RenderStyle, CameraMode } fr
 import { WebGPUEngine } from '../engine/WebGPUEngine';
 import { WebGLEngine } from '../engine/WebGLEngine';
 import { getFractalIndex } from '../engine/fractalMappers';
+import { logger } from '../utils/logger';
 
 export interface UseRenderEngineOptions {
   forcedBackend: 'webgpu' | 'webgl2' | 'auto';
@@ -174,7 +175,7 @@ export function useRenderEngine(
       setActiveEngineType('webgl2');
     } else if (forcedBackend === 'webgpu') {
       if (isEmbeddedBrowser) {
-        console.warn('[useRenderEngine] WebGPU blocked in embedded browser — using WebGL2');
+        logger.warn('[useRenderEngine] WebGPU blocked in embedded browser — using WebGL2');
         webgpuFailedRef.current = true;
         setActiveEngineType('webgl2');
         return;
@@ -215,7 +216,7 @@ export function useRenderEngine(
       const oldW = canvas.width, oldH = canvas.height;
       canvas.width = width;
       canvas.height = height;
-      console.info(`[Resize] Canvas buffer: ${oldW}x${oldH} → ${width}x${height} (container: ${clientW}x${clientH}, DPR: ${dpr.toFixed(2)}${isMobileDevice ? ', MOBILE' : ''})`);
+      logger.info(`[Resize] Canvas buffer: ${oldW}x${oldH} → ${width}x${height} (container: ${clientW}x${clientH}, DPR: ${dpr.toFixed(2)}${isMobileDevice ? ', MOBILE' : ''})`);
     }
   }, [isEmbeddedBrowser, isMobileDevice]);
 
@@ -233,14 +234,14 @@ export function useRenderEngine(
     // rendered frame; this only trips on a genuinely hung pipeline.
     const forceHideTimeoutId = setTimeout(() => {
       if (!isDestroyed && !firstRenderDoneRef.current) {
-        console.info('[useRenderEngine] Force-hiding loading overlay after 60s (engine never produced a first frame)');
+        logger.info('[useRenderEngine] Force-hiding loading overlay after 60s (engine never produced a first frame)');
         setIsCompiling(false);
       }
     }, 60000);
 
     const setupTimeoutId = setTimeout(() => {
       if (!engineReadyRef.current && !isDestroyed) {
-        console.error('[useRenderEngine] Engine setup timed out after 20s — GPU unavailable');
+        logger.error('[useRenderEngine] Engine setup timed out after 20s — GPU unavailable');
         // Force-hide loading overlay so user can interact with fallback UI
         setIsCompiling(false);
       }
@@ -248,7 +249,7 @@ export function useRenderEngine(
 
     async function setup() {
       if (!canvas) return;
-      console.info('[useRenderEngine] Setup starting, activeEngineType=', activeEngineType);
+      logger.info('[useRenderEngine] Setup starting, activeEngineType=', activeEngineType);
       setIsCompiling(true);
       setInitFailed(false);
       engineReadyRef.current = false;
@@ -267,7 +268,7 @@ export function useRenderEngine(
       }
 
       if (activeEngineType === 'webgpu') {
-        console.info('[useRenderEngine] Attempting WebGPU init...');
+        logger.info('[useRenderEngine] Attempting WebGPU init...');
         const gpuEngine = new WebGPUEngine(canvas);
         const success = await gpuEngine.init();
         if (success && !isDestroyed) {
@@ -285,10 +286,10 @@ export function useRenderEngine(
           // ADAPTIVE QUALITY: Set quality level based on device
           const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
           gpuEngine.setQualityLevel(qualityLevel);
-          console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
+          logger.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
           
           // NOTE: isCompiling stays true until first successful render (shader compilation is deferred)
-          console.info(`[DIAG] Engine ready: WebGPU | ${gpuEngine.adapterInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
+          logger.info(`[DIAG] Engine ready: WebGPU | ${gpuEngine.adapterInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
           return;
         } else {
           webgpuFailedRef.current = true;
@@ -302,7 +303,7 @@ export function useRenderEngine(
       }
 
       // WebGL2
-      console.info('[useRenderEngine] Attempting WebGL2 init...');
+      logger.info('[useRenderEngine] Attempting WebGL2 init...');
       const glEngine = new WebGLEngine(canvas);
       const success = glEngine.init();
       if (success && !isDestroyed) {
@@ -325,10 +326,10 @@ export function useRenderEngine(
         // ADAPTIVE QUALITY: Set quality level based on device
         const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
         glEngine.setQualityLevel(qualityLevel);
-        console.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
+        logger.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
         
         // NOTE: isCompiling stays true until first successful render (shader compilation is deferred)
-        console.info(`[DIAG] Engine ready: WebGL2 | ${glEngine.rendererInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
+        logger.info(`[DIAG] Engine ready: WebGL2 | ${glEngine.rendererInfo} | ${canvas.width}x${canvas.height} | fractal=${paramsRef.current.type} | palette=${paramsRef.current.paletteId} | renderStyle=${paramsRef.current.renderStyle} | paletteSeed=${paramsRef.current.paletteSeed ?? 0}`);
       } else {
         // Init failed — dismiss the loader so the fallback UI stays reachable.
         setInitFailed(true);
@@ -339,7 +340,7 @@ export function useRenderEngine(
     }
 
     setup().catch((err) => {
-      console.error('[useRenderEngine] Engine setup crashed:', err);
+      logger.error('[useRenderEngine] Engine setup crashed:', err);
       setInitFailed(true);
       setIsCompiling(false);
       setLoadProgress(1);
@@ -367,7 +368,7 @@ export function useRenderEngine(
       // Guard: don't re-init if component unmounted during context loss
       if (!isDestroyed) {
         setup().catch((err) => {
-          console.error('[useRenderEngine] Context restore setup failed:', err);
+          logger.error('[useRenderEngine] Context restore setup failed:', err);
         });
       }
     };
@@ -602,7 +603,7 @@ export function useRenderEngine(
                 setIsCompiling(false);
                 // First pixels are genuinely on screen → loading is truly done. This
                 // is the signal that syncs the loader lifetime to real device init.
-                console.info('[useRenderEngine] First frame rendered — device init complete, dismissing loader');
+                logger.info('[useRenderEngine] First frame rendered — device init complete, dismissing loader');
                 setLoadProgress(1);
                 onEngineReadyRef.current?.();
               }
@@ -612,7 +613,7 @@ export function useRenderEngine(
               setShaderCompilePct(0);
             }
           } catch (renderErr) {
-            console.error('[useRenderEngine] Render frame error:', renderErr);
+            logger.error('[useRenderEngine] Render frame error:', renderErr);
             // Track consecutive errors — force minimum quality after 10 failures
             // to help GPU recover from persistent driver/hardware issues
             consecutiveRenderErrors++;
@@ -620,7 +621,7 @@ export function useRenderEngine(
               const errEngine = webglEngineRef.current || webgpuEngineRef.current;
               if (errEngine && errEngine.qualityLevel > 0) {
                 errEngine.setQualityLevel(0);
-                console.warn('[useRenderEngine] 10+ consecutive render errors — forcing quality to minimum');
+                logger.warn('[useRenderEngine] 10+ consecutive render errors — forcing quality to minimum');
               }
               consecutiveRenderErrors = 0;
             }
@@ -634,7 +635,7 @@ export function useRenderEngine(
             const dataUrl = curCanvas.toDataURL('image/png');
             onScreenshotCapturedRef.current?.(dataUrl);
           } catch (e) {
-            console.error('Screenshot capture failed', e);
+            logger.error('Screenshot capture failed', e);
           }
         }
 
@@ -686,7 +687,7 @@ export function useRenderEngine(
           if (timestamp - lastHealthLogRef.current > 30000) {
             lastHealthLogRef.current = timestamp;
             const p = paramsRef.current;
-            console.info(`[DIAG] Health: fps=${currentFps} avg=${avgFps} 1%=${onePercentLow} | fractal=${p.type} hybrid=${p.hybridType} | style=${p.renderStyle} cam=${p.cameraMode} | palette=${p.paletteId} seed=${p.paletteSeed ?? 0} rot=${p.paletteRotation} | audio=${p.enableAudio} tuning=${p.audioTuning} | res=${curCanvas?.width}x${curCanvas?.height}`);
+            logger.info(`[DIAG] Health: fps=${currentFps} avg=${avgFps} 1%=${onePercentLow} | fractal=${p.type} hybrid=${p.hybridType} | style=${p.renderStyle} cam=${p.cameraMode} | palette=${p.paletteId} seed=${p.paletteSeed ?? 0} rot=${p.paletteRotation} | audio=${p.enableAudio} tuning=${p.audioTuning} | res=${curCanvas?.width}x${curCanvas?.height}`);
           }
 
           // DYNAMIC QUALITY: Auto-adjust based on FPS with hysteresis and cooldown
@@ -704,11 +705,11 @@ export function useRenderEngine(
             if (avgFps < downThreshold && currentQuality > 0 && (now - lastQualityChangeRef.current) > qualityCooldown) {
               engine.setQualityLevel(currentQuality - 1);
               lastQualityChangeRef.current = now;
-              console.warn(`[DynamicQuality] FPS ${avgFps} < ${downThreshold.toFixed(1)} → quality ${currentQuality} → ${currentQuality - 1}`);
+              logger.warn(`[DynamicQuality] FPS ${avgFps} < ${downThreshold.toFixed(1)} → quality ${currentQuality} → ${currentQuality - 1}`);
             } else if (avgFps > upThreshold && currentQuality < 2 && (now - lastQualityChangeRef.current) > qualityCooldown) {
               engine.setQualityLevel(currentQuality + 1);
               lastQualityChangeRef.current = now;
-              console.info(`[DynamicQuality] FPS ${avgFps} > ${upThreshold.toFixed(1)} → quality ${currentQuality} → ${currentQuality + 1}`);
+              logger.info(`[DynamicQuality] FPS ${avgFps} > ${upThreshold.toFixed(1)} → quality ${currentQuality} → ${currentQuality + 1}`);
             }
           }
         }
@@ -802,7 +803,7 @@ export function useRenderEngine(
           } else if (paramsRef.current) {
             paramsRef.current = { ...paramsRef.current, autoRotate: nextAutoRotate };
           }
-          console.info(`[Controls] Auto-rotation ${nextAutoRotate ? 'started' : 'stopped'} (S key)`);
+          logger.info(`[Controls] Auto-rotation ${nextAutoRotate ? 'started' : 'stopped'} (S key)`);
         } else if (e.key === 'i' || e.key === 'I' || e.key === 'ш' || e.key === 'Ш') {
           // Toggle inertia (I or Russian Ш)
           e.preventDefault();
@@ -810,7 +811,7 @@ export function useRenderEngine(
           if (!inertiaEnabledRef.current) {
             velocityRef.current = { x: 0, y: 0 };
           }
-          console.info(`[Controls] Inertia ${inertiaEnabledRef.current ? 'enabled' : 'disabled'} (I key)`);
+          logger.info(`[Controls] Inertia ${inertiaEnabledRef.current ? 'enabled' : 'disabled'} (I key)`);
         } else if (/^[1-9]$/.test(e.key) || e.key === '0') {
           // Quick render mode switch: keys 1-9 → styles 1-9, key 0 → style 10 (neon)
           e.preventDefault();
@@ -823,7 +824,7 @@ export function useRenderEngine(
               renderStyle: renderStyleName,
             };
           }
-          console.info(`[Controls] Render mode: ${renderStyleName} (${e.key} key)`);
+          logger.info(`[Controls] Render mode: ${renderStyleName} (${e.key} key)`);
         } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
           // Reset camera position (R or Russian К)
           e.preventDefault();
@@ -839,7 +840,7 @@ export function useRenderEngine(
               camPosZ: 0,
             };
           }
-          console.info('[Controls] Camera reset (R key)');
+          logger.info('[Controls] Camera reset (R key)');
         }
       }
 
@@ -852,7 +853,7 @@ export function useRenderEngine(
             ...paramsRef.current,
             cameraMode: newMode,
           };
-          console.info(`[Controls] Camera mode: ${newMode} (F key)`);
+          logger.info(`[Controls] Camera mode: ${newMode} (F key)`);
         }
       }
     };

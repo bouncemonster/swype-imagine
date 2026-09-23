@@ -4,6 +4,7 @@ import { WGSL_SHADER } from '../shaders/webgpuShaders';
 import { FractalEngineBase } from './FractalEngineBase';
 import { renderDiagnostics } from './RenderDiagnostics';
 import { userProblemLogger } from './UserProblemLogger';
+import { logger } from '../utils/logger';
 
 export class WebGPUEngine extends FractalEngineBase {
   private adapter: GPUAdapter | null = null;
@@ -27,7 +28,7 @@ export class WebGPUEngine extends FractalEngineBase {
 
   public async init(): Promise<boolean> {
     if (!WebGPUEngine.isSupported()) {
-      console.info('[WebGPU] navigator.gpu not available');
+      logger.info('[WebGPU] navigator.gpu not available');
       return false;
     }
 
@@ -38,11 +39,11 @@ export class WebGPUEngine extends FractalEngineBase {
       this.adapter = await Promise.race([adapterPromise, timeoutPromise]);
 
       if (!this.adapter) {
-        console.warn('[WebGPU] Adapter request failed or timed out — GPU unavailable');
+        logger.warn('[WebGPU] Adapter request failed or timed out — GPU unavailable');
         return false;
       }
 
-      console.info('[WebGPU] Adapter acquired, requesting device...');
+      logger.info('[WebGPU] Adapter acquired, requesting device...');
 
       // Read adapter info if available
       try {
@@ -60,7 +61,7 @@ export class WebGPUEngine extends FractalEngineBase {
 
       // Handle device loss gracefully to prevent unhandled errors each frame
       this.device.lost.then((info) => {
-        console.warn(`WebGPU device lost: ${info.message}`, info);
+        logger.warn(`WebGPU device lost: ${info.message}`, info);
         this.isDestroyed = true;
       });
 
@@ -93,7 +94,7 @@ export class WebGPUEngine extends FractalEngineBase {
         initialPass.end();
         this.device.queue.submit([initialEncoder.finish()]);
       } catch (clearErr) {
-        console.debug('Initial clear pass handled:', clearErr);
+        logger.debug('Initial clear pass handled:', clearErr);
       }
 
       const shaderModule = this.device.createShaderModule({
@@ -108,12 +109,12 @@ export class WebGPUEngine extends FractalEngineBase {
           const errors = compInfo.messages.filter(m => m.type === 'error');
           if (errors.length > 0) {
             for (const err of errors) {
-              console.error(`[WGSL Compile Error] Line ${err.lineNum}:${err.linePos}: ${err.message}`);
+              logger.error(`[WGSL Compile Error] Line ${err.lineNum}:${err.linePos}: ${err.message}`);
             }
             return false;
           }
         } catch (e) {
-          console.debug('Compilation info inspection skipped:', e);
+          logger.debug('Compilation info inspection skipped:', e);
         }
       }
 
@@ -153,7 +154,7 @@ export class WebGPUEngine extends FractalEngineBase {
 
       return true;
     } catch (e) {
-      console.warn('WebGPU init failed, will use fallback:', e);
+      logger.warn('WebGPU init failed, will use fallback:', e);
       return false;
     }
   }
@@ -197,7 +198,7 @@ export class WebGPUEngine extends FractalEngineBase {
         textureView = currentTexture.createView();
       } catch (textureErr) {
         // Surface texture not available (resize in progress, etc.) — skip frame
-        console.debug('WebGPU surface texture unavailable:', (textureErr as Error).message);
+        logger.debug('WebGPU surface texture unavailable:', (textureErr as Error).message);
         return false;
       }
 
@@ -223,7 +224,7 @@ export class WebGPUEngine extends FractalEngineBase {
       // Surface texture acquisition failed (device lost, context reconfigured, etc.)
       // Silently skip this frame — the device.lost handler will set isDestroyed
       renderDiagnostics.log('warn', 'render', 'WebGPU render frame skipped', { error: (e as Error).message });
-      console.debug('WebGPU render frame skipped:', (e as Error).message);
+      logger.debug('WebGPU render frame skipped:', (e as Error).message);
     }
 
     // Update diagnostics

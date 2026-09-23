@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { renderDiagnostics, RenderStats } from '../engine/RenderDiagnostics';
+import { logger } from '../utils/logger';
 
 interface DebugOverlayProps {
   visible: boolean;
@@ -136,7 +137,7 @@ export const DebugOverlay: React.FC<DebugOverlayProps> = ({
             <button
               onClick={() => {
                 const report = renderDiagnostics.exportReport();
-                console.log('Diagnostics Report:', report);
+                logger.log('Diagnostics Report:', report);
                 alert('Diagnostics report exported to console');
               }}
               className="flex-1 bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs transition-colors"

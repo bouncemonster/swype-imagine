@@ -16,6 +16,7 @@ import { NeuroAestheticsEngine, SOLID_EXPLORATION_TYPES, TUNED_GENOME } from './
 import { goldenAudio } from './audio/goldenAudio';
 import { COLOR_PALETTES } from './palettes';
 import { PROCEDURAL_PALETTES } from './palettesProcedural';
+import { logger } from './utils/logger';
 
 // Combine hand-crafted and procedural palettes
 const ALL_COLOR_PALETTES = [...COLOR_PALETTES, ...PROCEDURAL_PALETTES];
@@ -119,7 +120,7 @@ export class FractalErrorBoundary extends ReactComponent<{ children: ReactNode }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[FractalErrorBoundary] App crashed:', error, errorInfo);
+    logger.error('[FractalErrorBoundary] App crashed:', error, errorInfo);
   }
 
   render() {
@@ -443,7 +444,7 @@ export default function App() {
           return;
         }
       } catch (e) {
-        console.warn('[App] Failed to parse share link, using default specimen:', e);
+        logger.warn('[App] Failed to parse share link, using default specimen:', e);
         // Fall through to default breeding
       }
     }

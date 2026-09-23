@@ -3,6 +3,8 @@
  * Uses IndexedDB for persistent storage of errors, warnings, and user interactions
  */
 
+import { logger } from '../utils/logger';
+
 export interface UserLogEntry {
   id?: number;
   timestamp: number;
@@ -31,7 +33,7 @@ class UserProblemLogger {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = () => {
-          console.warn('[UserLogger] IndexedDB unavailable, using memory buffer only');
+          logger.warn('[UserLogger] IndexedDB unavailable, using memory buffer only');
           this.initialized = true;
           resolve();
         };
@@ -58,7 +60,7 @@ class UserProblemLogger {
           }
         };
       } catch (e) {
-        console.warn('[UserLogger] IndexedDB init failed:', e);
+        logger.warn('[UserLogger] IndexedDB init failed:', e);
         this.initialized = true;
         resolve();
       }
@@ -104,11 +106,11 @@ class UserProblemLogger {
         
         transaction.oncomplete = () => resolve();
         transaction.onerror = () => {
-          console.warn('[UserLogger] Failed to persist log entry');
+          logger.warn('[UserLogger] Failed to persist log entry');
           resolve();
         };
       } catch (e) {
-        console.warn('[UserLogger] DB write error:', e);
+        logger.warn('[UserLogger] DB write error:', e);
         resolve();
       }
     });
@@ -159,11 +161,11 @@ class UserProblemLogger {
         };
 
         request.onerror = () => {
-          console.warn('[UserLogger] Failed to read logs');
+          logger.warn('[UserLogger] Failed to read logs');
           resolve([]);
         };
       } catch (e) {
-        console.warn('[UserLogger] DB read error:', e);
+        logger.warn('[UserLogger] DB read error:', e);
         resolve([]);
       }
     });
