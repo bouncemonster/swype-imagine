@@ -62,6 +62,13 @@ const IS_MOBILE = typeof window !== 'undefined' && (
   (navigator.maxTouchPoints > 1 && window.innerWidth < 1024)
 );
 
+// Respect the user's OS-level "reduce motion" preference (WCAG 2.3.3).
+// Auto-rotation and palette rotation are DECORATIVE motion — the fractal's
+// own mathematical development (morphSpeed) IS the content, so it stays under
+// user control via the slider. Post-v6.0.0 a11y follow-through.
+const PREFERS_REDUCED_MOTION = typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
 const INITIAL_PARAMS: FractalParams = {
   type: 'phyllotaxis',
   hybridType: 'mandelbulb',
@@ -96,7 +103,7 @@ const INITIAL_PARAMS: FractalParams = {
   zoom: 3.2,
   rotX: 0.4,
   rotY: 0.25,
-  autoRotate: true,
+  autoRotate: !PREFERS_REDUCED_MOTION,
   autoRotateSpeed: AUTO_ROTATE_SPEED,
   // Mobile: cap at 30 FPS to prevent overheating and browser crashes
   targetFps: IS_MOBILE ? FPS_TARGET_MOBILE : FPS_TARGET_DESKTOP,
@@ -283,8 +290,8 @@ export default function App() {
         // shader's rigid breath/precession saturate at clamp(morph,0,1), this speeds ONLY
         // the genuine mathematical development, not the wobble. Varied for diversity.
         morphSpeed: [0.9, 1.15, 1.4][idx % 3],
-        paletteRotation: true,
-        autoRotate: true,
+        paletteRotation: !PREFERS_REDUCED_MOTION,
+        autoRotate: !PREFERS_REDUCED_MOTION,
       }));
     }, intervalMs); // Change every 18s (desktop) or 30s (mobile)
     return () => clearInterval(interval);

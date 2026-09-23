@@ -28,3 +28,6 @@ jobs:
 
       - name: Unit tests (mapper + shader-math + engine-parity)
         run: npm run test:unit
+
+      - name: Integration autotest (SDF functions, palettes, render styles, audio, share links — 1875 assertions)
+        run: npm run test
