@@ -24,9 +24,9 @@ the 3% threshold (see commit `ac5dd3b`).
 
 | status   | count | note |
 |----------|-------|------|
-| rendered | 382   | healthy (incl. 4 flame types + mandelbulbMandelboxHybrid fixed after the sweep) |
+| rendered | 383   | healthy (incl. 4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed after the sweep) |
 | sparse   | 43    | valid object, small — framing polish (incl. ifs3DFern, now black->valid) |
-| black    | 6     | 1 exact-0% field bug (112 torusKnot4D) + 5 near-empty framing |
+| black    | 5     | near-empty framing candidates only — NO exact-0% field bugs remain |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
 No shader compile errors, no page crashes, no WebGL context loss across the
@@ -39,7 +39,7 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 | idx | type | root cause | status |
 |-----|------|------------|--------|
 | 102 | mandelbulbMandelboxHybrid | degenerate interior-zero field: no escape break + `0.5*log(max(|z|,1))` → every bounded orbit gave `log(1)=0`. Fixed by mirroring `mapMandelbulb` (escape break + consistent `dr` + small positive interior dist) in **both** GLSL and WGSL | ✅ FIXED (WebGL verified 0→7.9%; WGSL parity port, headless-unverifiable) |
-| 112 | torusKnot4D | angle-projection DE (`length(projected - torus)`) is degenerate. Re-probed and ruled out: tube-thickening (0.15), projected->world DE scale-up (×2.5), and zoom-out (zoomScale 1.6) — all stayed exact 0.0% (a thin valid ring would read *sparse*, so the field never crosses 0). Needs a proper torus-knot SDF, not framing | open (field) |
+| 112 | torusKnot4D | old analytic `length(projected - torus)` point-to-angle approximation never crossed 0 (black). **Rewritten to sample the (2,3) knot curve and take min distance to a tube** (same technique the WGSL port already used) | ✅ FIXED (WebGL: black -> rendered, 6.0%) |
 | 113 | flameSinusoidal | `sin()` op bounded → `pow(phi,-12)` crushed field to a constant | ✅ FIXED (WebGL) |
 | 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
 | 117 | flameButterfly | scaled only `xy` (z unscaled) → constant field; stale `zoomScale 0.5` | ✅ FIXED (WebGL) |
@@ -107,13 +107,15 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
    impl with **no `pow(phi,-N)` bug to port** (left unchanged); headless visual
    capture blocked (rAF suspended / false-black readback) — not a defect,
    deferred to a visible-adapter machine.
-2. **102** — ✅ DONE: rewrote as a `mapMandelbulb`-style DE (escape break +
-   consistent `dr` + positive interior) in GLSL **and** WGSL; WebGL verified
-   0% → 7.9%. **127** — ✅ DONE: rewritten as an orbit-traced fern + framed at
-   0.4; WebGL verified black → valid (2.5% thin fill, like idx 53). **112** —
-   remaining field bug: angle-projection DE is degenerate (zoom-out / tube-
-   thickness / DE-scale-up all re-probed and stayed exact 0.0%); needs a proper
-   torus-knot SDF; verify via WebGL re-probe after.
+2. **102 / 112 / 127** — ✅ ALL DONE (WebGL, each re-probed):
+   - **102**: `mapMandelbulb`-style DE rewrite (escape break + consistent `dr` +
+     positive interior); 0% → 7.9%. WGSL shared the identical bug → same port.
+   - **112**: knot-curve sampling + tube (replacing the degenerate point-to-angle
+     field); 0% → 6.0%. WGSL 112 already used this correct technique → no port.
+   - **127**: orbit-traced fern + zoomScale 0.4; 0% → valid (2.5%, thin like idx
+     53). WGSL 127 is a separate scale-normalized impl → no port.
+   All three were confirmed distance-FIELD bugs (cheap framing/tube hypotheses
+   re-probed and ruled out first). WGSL output remains headless-unverifiable.
 3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
    `zoomScale` entries so thin attractors fill the frame.
 

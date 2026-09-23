@@ -2673,15 +2673,24 @@ float mapMobiusStrip3D(vec3 p, float t, float phi) {
 }
 
 float mapTorusKnot4D(vec3 p, float t, float phi, int iters) {
-  float angle = t * 0.2;
-  float c = cos(angle), s = sin(angle);
-  vec4 p4 = vec4(p, 0.0);
-  p4.xw = mat2(c, -s, s, c) * p4.xw;
-  vec3 projected = project4Dto3D(p4, 3.0).xyz;
-  float u = atan(projected.y, projected.x);
-  float r = 1.0 + 0.3 * cos(3.0 * u);
-  vec3 torus = vec3(r * cos(2.0 * u), r * sin(2.0 * u), 0.3 * sin(3.0 * u));
-  return length(projected - torus) - 0.08;
+  // Robust rewrite: sample the (2,3) torus knot curve and take the minimum
+  // distance to a tube (same reliable technique as the orbit-traced fern). The
+  // previous analytic distance (projected query minus a curve point at the
+  // query angle) was a point-to-angle approximation that never crossed 0 inside
+  // the raymarcher, so it rendered fully black. A 4D-style xz rotation keeps the
+  // knot tumbling over time.
+  vec3 q = p;
+  float a = t * 0.25;
+  float c = cos(a), s = sin(a);
+  q.xz = mat2(c, -s, s, c) * q.xz;
+  float d = 1e10;
+  for (int k = 0; k < 48; k++) {
+    float u = 6.2831853 * float(k) / 48.0;
+    float r = 1.2 + 0.4 * cos(3.0 * u);
+    vec3 kc = vec3(r * cos(2.0 * u), 0.45 * sin(3.0 * u), r * sin(2.0 * u));
+    d = min(d, length(q - kc));
+  }
+  return d - 0.12;
 }
 
 // Delegates to the proven escape-time mapFlameBase (op 0 = sinusoidal). The
