@@ -16,7 +16,7 @@ Real-time 3D fractal visualization engine with **431 fractal types** (141 core +
 ```
 src/                                          # 54 TypeScript/TSX files, ~935KB source
 ├── shaders/
-│   ├── webglShaders.ts          # Main shader (161KB, 4195 lines) - ALL 431 types, 7 render modes
+│   ├── webglShaders.ts          # Main shader (161KB, 4195 lines) - ALL 431 types, 10 render modes
 │   ├── webgpuShaders.ts         # WebGPU shader (158KB, 4069 lines) - 131/431 types
 │   └── modules/
 │       ├── juliaVariations.ts   # 50 Julia variations (6.3KB, 110 lines, 12x compression)
