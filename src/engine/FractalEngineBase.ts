@@ -89,7 +89,7 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   82:  { zoomScale: 0.25, tiltOffset: 0.5 }, // popcornFunction — flat 2D attractor
   83:  { zoomScale: 0.25, tiltOffset: 0.5 }, // bedheadAttractor — flat 2D attractor
   84:  { zoomScale: 0.35, tiltOffset: 0.0 }, // fourSpotAttractor — thin attractor
-  102: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbulbMandelboxHybrid
+  102: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbulbMandelboxHybrid (field bug; see report — 1.1 still black, not framing)
   // 117 flameButterfly: stale 0.5 zoom was tuned for the old (black) formula;
   // now delegates to mapFlameBase op2 like flameVariant3, which frames at 1.0.
   120: { zoomScale: 0.5,  tiltOffset: 0.0 }, // flameHyperbolic

@@ -38,13 +38,13 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 
 | idx | type | root cause | status |
 |-----|------|------------|--------|
-| 102 | mandelbulbMandelboxHybrid | proper `dr` escape SDF, but object falls outside camera range at `zoomScale 0.5` | open |
-| 112 | torusKnot4D | thin tube SDF (`length-0.08`) around a 4D→3D projection; never crossed within tube radius | open |
+| 102 | mandelbulbMandelboxHybrid | escape SDF degenerates (alternating bulb/box leaves `dr` inconsistent; `minDist` computed but unused). **Tested `zoomScale 1.1` via re-probe → still 0.0%**, so NOT camera framing — genuine field bug | open (field) |
+| 112 | torusKnot4D | 4D→3D-projected DE collapses (distance measured in shrunken projected space vs world march). **Tested tube `0.15` + conservative `×0.3` DE scale → still 0.0%**, so NOT tube thinness/overshoot — needs a proper knot SDF | open (field) |
 | 113 | flameSinusoidal | `sin()` op bounded → `pow(phi,-12)` crushed field to a constant | ✅ FIXED (WebGL) |
 | 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
 | 117 | flameButterfly | scaled only `xy` (z unscaled) → constant field; stale `zoomScale 0.5` | ✅ FIXED (WebGL) |
 | 120 | flameHyperbolic | same `pow(phi,-N)` over-normalization on a non-phi-growing op | ✅ FIXED (WebGL) |
-| 127 | ifs3DFern | crude SDF of a thin 2D fern; `d-0.1` never reached | open |
+| 127 | ifs3DFern | all IFS transforms keep `z` and offset only in `y` → an infinitely-thin 2D sheet in 3D; mixed contraction (×0.85/×0.2) vs `×phi` growth makes the `pow(phi,-i)` normalization inconsistent | open (field) |
 
 **Fix applied (113/114/117/120):** the four standalone `mapFlame*` functions now
 delegate to the proven `mapFlameBase` (correct escape-time derivative) with a
@@ -107,7 +107,11 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
    impl with **no `pow(phi,-N)` bug to port** (left unchanged); headless visual
    capture blocked (rAF suspended / false-black readback) — not a defect,
    deferred to a visible-adapter machine.
-2. **102 / 127 / 112** — per-function SDF/camera rework; verify visually.
+2. **102 / 127 / 112** — confirmed distance-FIELD bugs (framing for 102 and
+   tube-thickness/DE-scale for 112 were re-probed and both stayed 0.0%, ruling
+   those cheap hypotheses out). Each needs a per-function SDF rework (proper
+   folded knot SDF / z-extruded fern / consistent bulb-box `dr`); verify via
+   WebGL re-probe after each.
 3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
    `zoomScale` entries so thin attractors fill the frame.
 
