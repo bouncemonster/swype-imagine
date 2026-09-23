@@ -39,7 +39,7 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 | idx | type | root cause | status |
 |-----|------|------------|--------|
 | 102 | mandelbulbMandelboxHybrid | degenerate interior-zero field: no escape break + `0.5*log(max(|z|,1))` → every bounded orbit gave `log(1)=0`. Fixed by mirroring `mapMandelbulb` (escape break + consistent `dr` + small positive interior dist) in **both** GLSL and WGSL | ✅ FIXED (WebGL verified 0→7.9%; WGSL parity port, headless-unverifiable) |
-| 112 | torusKnot4D | 4D→3D-projected DE collapses (distance measured in shrunken projected space vs world march). **Tested tube `0.15` + conservative `×0.3` DE scale → still 0.0%**, so NOT tube thinness/overshoot — needs a proper knot SDF | open (field) |
+| 112 | torusKnot4D | angle-projection DE (`length(projected - torus)`) is degenerate. Re-probed and ruled out: tube-thickening (0.15), projected->world DE scale-up (×2.5), and zoom-out (zoomScale 1.6) — all stayed exact 0.0% (a thin valid ring would read *sparse*, so the field never crosses 0). Needs a proper torus-knot SDF, not framing | open (field) |
 | 113 | flameSinusoidal | `sin()` op bounded → `pow(phi,-12)` crushed field to a constant | ✅ FIXED (WebGL) |
 | 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
 | 117 | flameButterfly | scaled only `xy` (z unscaled) → constant field; stale `zoomScale 0.5` | ✅ FIXED (WebGL) |

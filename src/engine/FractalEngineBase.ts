@@ -89,7 +89,10 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   82:  { zoomScale: 0.25, tiltOffset: 0.5 }, // popcornFunction — flat 2D attractor
   83:  { zoomScale: 0.25, tiltOffset: 0.5 }, // bedheadAttractor — flat 2D attractor
   84:  { zoomScale: 0.35, tiltOffset: 0.0 }, // fourSpotAttractor — thin attractor
-  102: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbulbMandelboxHybrid (field bug; see report — 1.1 still black, not framing)
+  102: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbulbMandelboxHybrid — FIXED at source (DE rewrite); 0.5 frames the rebuilt object
+  // 112 torusKnot4D: angle-projection DE is degenerate (black) — zoom-out (1.6),
+  // tube-thickness and projected->world DE scale-up were all re-probed and stayed
+  // 0.0%; needs a proper torus-knot SDF, not framing. See VISUAL_CONTROL_REPORT.
   // 117 flameButterfly: stale 0.5 zoom was tuned for the old (black) formula;
   // now delegates to mapFlameBase op2 like flameVariant3, which frames at 1.0.
   120: { zoomScale: 0.5,  tiltOffset: 0.0 }, // flameHyperbolic
