@@ -5,7 +5,7 @@
 
 **431 тип фракталов** (141 core + 290 вариантов) с рендерингом в реальном времени на WebGL2/WebGPU. Движок использует ray marching с оценкой расстояния (SDF), адаптивными оптимизациями и продвинутым освещением. **v2.4.0**: Модульная шейдерная архитектура с lazy compilation для предотвращения крашей браузера.
 
-🌐 **Live Demo**: https://golden-ratio-fractal-engine.pages.dev/
+🌐 **Live Demo**: https://fractal.simundis.com/  ·  always-on mirror: https://golden-ratio-fractal-engine.pages.dev/
 
 ## 🚀 Возможности
 
