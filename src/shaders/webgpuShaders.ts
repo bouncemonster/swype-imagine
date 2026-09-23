@@ -1242,6 +1242,10 @@ fn mapGosperCurve(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
   var p = p_in * 1.5;
   let r0 = rot2D(p.xy, t * 0.06);
   p = vec3<f32>(r0.x, r0.y, p.z);
+  // Gosper is intrinsically planar: fold in 2D, then restore z as an extrusion
+  // slab so the silhouette is visible edge-on (was a sub-pixel flat plane).
+  let zslab = p.z;
+  p = vec3<f32>(p.x, p.y, 0.0);
   let sc: f32 = 2.6457513;
   var trap: f32 = 0.0;
   var d: f32 = 1e10;
@@ -1264,8 +1268,11 @@ fn mapGosperCurve(p_in: vec3<f32>, t: f32, phi: f32, iters: i32) -> vec2<f32> {
     else if (mn == d5) { p = (p - c5 / sc) * sc; }
     else if (mn == d6) { p = (p - c6 / sc) * sc; }
     else { p = (p - c7 / sc) * sc; }
-    d = min(d, length(p) / sc);
+    d = min(d, length(p.xy) / sc);
   }
+  // Extrude the flat silhouette into a thin 3D slab (z restored after the 2D fold).
+  let thickness: f32 = 1.2;
+  d = length(vec2<f32>(d, max(abs(zslab) - thickness, 0.0)));
   let bound = length(p_in) - 2.5;
   return vec2<f32>(max(d * 0.5, bound * 0.3), trap * 0.1);
 }

@@ -25,8 +25,8 @@ the 3% threshold (see commit `ac5dd3b`).
 | status   | count | note |
 |----------|-------|------|
 | rendered | 406   | healthy (4 flames + mandelbulbMandelboxHybrid + torusKnot4D fixed; 333 + 8 flame + 9 L-system + 2 attractors + mobiusStrip3D/flowerOfLife/ifsVariant45 lifted sparse->rendered via framing) |
-| sparse   | 22    | valid object, small — every one has been framing-checked (override or base-table); residual are intrinsically thin line/2D structures where the camera lever is exhausted |
-| black    | 3     | near-empty only — gosperCurve/vicsekFractal/popcornFunction, all at framing ceiling (see B). NO exact-0% field bugs remain |
+| sparse   | 23    | valid object, small — every one has been framing-checked (override or base-table); residual are intrinsically thin line/2D structures where the camera lever is exhausted (incl. gosperCurve now extruded to visible) |
+| black    | 2     | near-empty only — vicsekFractal/popcornFunction (genuinely thin, not flat-plane). gosperCurve extruded out of black. NO exact-0% field bugs remain |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
 No shader compile errors, no page crashes, no WebGL context loss across the
@@ -84,17 +84,17 @@ Framing-lever pass (FRACTAL_CAM_ADJUST_OVERRIDES, verified via re-probe):
 |-----|------|--------|-------|--------|
 | 333 | flameVariant43 | 0.35% | **56.7%** | ✅ black->rendered (thin flame on mapFlameBase; framed 1.0->0.6, no shader change) |
 | 72  | fitzHugh | 0.33% | **2.4%** | ✅ black->sparse (flat 2D neural attractor; framed 1.0->0.22 face-on) |
-| 48  | gosperCurve | 0.01% | 0.01% | ⏸ at ceiling (0.25+tilt put camera *inside* -> errored); intrinsic thin curve |
-| 79  | vicsekFractal | 0.05% | 0.05% | ⏸ at ceiling (already 0.25/0.4); flat diffusion cluster |
-| 82  | popcornFunction | 0.12% | 0.12% | ⏸ at ceiling (already 0.25/0.5); flat 2D map |
+| 48  | gosperCurve | 0.01% | **2.0%** | ✅ black->sparse — extruded the flat 2D silhouette into a z-slab (DE rewrite in both GLSL+WGSL), then re-framed; no longer a sub-pixel plane |
+| 79  | vicsekFractal | 0.05% | 0.05% | ⏸ genuinely 3D cross fold (not flat); at framing ceiling (0.25/0.4); thin fractal dust, not a plane to extrude |
+| 82  | popcornFunction | 0.12% | 0.12% | ⏸ already carries a z-slab term; thin, near-black is tan() orbit divergence (risky to touch), left as-is |
 
 333 and 72 were simply un-framed (default zoomScale 1.0); the designed camera lever
-resolved both with no shader churn. The remaining three already carry aggressive
-overrides and closer camera goes inside -> black, so they are intrinsically thin
-flat structures, **not defects** — they render a real but hairline 2D object that
-the >3% / >0.5% thresholds classify as black/sparse. Making them fatter would mean
-extruding 2D->3D in-shader (an aesthetic change to their math, not a bug fix) and
-is intentionally not done here.
+resolved both with no shader churn. 48 gosperCurve was a true flat-plane degeneracy
+(z never folded -> sub-pixel edge-on): fixed at the source by folding the IFS in 2D and
+restoring z as an extrusion slab (GLSL + WGSL), lifting it 0.01% -> 2.0% (visible
+structure). The remaining two (79 vicsek, 82 popcorn) are NOT the flat-plane class —
+79 is a genuine 3D cross fold and 82 already has a z-slab — so they stay sparse and are
+left as-is (making them fatter would be an aesthetic math change, not a bug fix).
 
 ## Sparse list (42 — valid, framing polish)
 

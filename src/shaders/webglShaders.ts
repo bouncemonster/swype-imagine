@@ -1260,6 +1260,10 @@ vec2 mapTetrix(vec3 p_in, float t, float phi, int iters) {
 vec2 mapGosperCurve(vec3 p_in, float t, float phi, int iters) {
   vec3 p = p_in * 1.5;
   p.xy = rot2D(t * 0.06) * p.xy;
+  // Gosper is intrinsically planar: fold in 2D, then restore z as an extrusion
+  // slab so the silhouette is visible edge-on (was a sub-pixel flat plane).
+  float z = p.z;
+  p.z = 0.0;
   // Standard IFS: fold to nearest of 7 Gosper centers, constant scale
   float sc = 2.6457513; // sqrt(7)
   float trap = 0.0;
@@ -1283,8 +1287,11 @@ vec2 mapGosperCurve(vec3 p_in, float t, float phi, int iters) {
     else if (mn == d5) p = (p - c5 / sc) * sc;
     else if (mn == d6) p = (p - c6 / sc) * sc;
     else p = (p - c7 / sc) * sc;
-    d = min(d, length(p) / sc);
+    d = min(d, length(p.xy) / sc);
   }
+  // Extrude the flat silhouette into a thin 3D slab (z restored after the 2D fold).
+  float thickness = 1.2;
+  d = length(vec2(d, max(abs(z) - thickness, 0.0)));
   float bound = length(p_in) - 2.5;
   return vec2(max(d * 0.5, bound * 0.3), trap * 0.1);
 }
