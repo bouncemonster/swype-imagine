@@ -218,8 +218,10 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
           }`}
           onClick={toggleTopBarMobile}
           title="Меню"
+          aria-label="Открыть меню"
+          aria-expanded={topBarExpanded}
         >
-          <MoreHorizontal className="w-4 h-4" />
+          <MoreHorizontal className="w-4 h-4" aria-hidden="true" />
         </button>
 
         {/* Expanded buttons panel — dropdown on mobile, inline row on desktop */}
@@ -241,8 +243,10 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
                 : 'bg-neutral-950/75 border-neutral-800 text-neutral-400 hover:text-neutral-200'
             }`}
             title={enableAudio ? 'Выключить звук' : 'Включить гармонический звук φ (432 Гц)'}
+            aria-label={enableAudio ? 'Выключить звук' : 'Включить гармонический звук φ (432 Гц)'}
+            aria-pressed={enableAudio}
           >
-            {enableAudio ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+            {enableAudio ? <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" aria-hidden="true" /> : <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />}
           </button>
 
           {onOpenAtlas && (
@@ -267,8 +271,10 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
                   : 'bg-neutral-950/75 border-neutral-800 text-neutral-400 hover:text-neutral-200'
               }`}
               title={isFeedOpen ? 'Скрыть ленту фракталов' : 'Показать ленту фракталов'}
+              aria-label={isFeedOpen ? 'Скрыть ленту фракталов' : 'Показать ленту фракталов'}
+              aria-pressed={isFeedOpen}
             >
-              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
             </button>
           )}
 
@@ -342,8 +348,10 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
                 : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-rose-400 hover:border-rose-500/30'
             }`}
             title="Отметить как понравившийся"
+            aria-label={hasFavorited ? 'Убрать из понравившихся' : 'Отметить как понравившийся'}
+            aria-pressed={hasFavorited}
           >
-            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform ${hasFavorited ? 'fill-rose-400 text-rose-400 scale-110' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform ${hasFavorited ? 'fill-rose-400 text-rose-400 scale-110' : ''}`} aria-hidden="true" />
           </button>
 
           {/* Share Button */}
@@ -356,8 +364,9 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
                 : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-amber-300 hover:border-amber-500/30'
             }`}
             title={shareCopied ? 'Ссылка скопирована!' : 'Поделиться этим фракталом'}
+            aria-label={shareCopied ? 'Ссылка скопирована' : 'Поделиться этим фракталом'}
           >
-            {shareCopied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+            {shareCopied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" /> : <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />}
           </button>
 
           {/* Navigation Buttons */}
@@ -367,8 +376,9 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
               onClick={(e) => { e.currentTarget.blur(); onPrev(); }}
               className="p-1.5 sm:p-2 rounded-xl bg-neutral-900/80 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
               title="Предыдущий [Стрелка влево]"
+              aria-label="Предыдущий фрактал (клавиша: стрелка влево)"
             >
-              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
             </button>
 
             <button

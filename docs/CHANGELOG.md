@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-nothing yet — post-6.0.0 work lands here.
+### Fixed
+- **Accessibility: axe-core now reports 0 violations on the live pages.dev bundle** — on the user's "максимум задействования установленного из маркетплейса для… выхода к релизу". Post-v6.0.0 audit run through the `web-perf` skill workflow (`browser-use` MCP + axe-core 4.10.2) surfaced **one critical violation** (`meta-viewport`: `user-scalable=no, maximum-scale=1.0` blocks pinch-zoom for low-vision users) and **8 icon-only buttons without accessible names** (screen readers announced just "button"). Fixes: `index.html` viewport meta stripped of the zoom-blocking flags; `aria-label` + `aria-pressed`/`aria-expanded` added to `feed-ribbon-prev-btn`, `feed-ribbon-next-btn` (`FractalScrollFeed.tsx`), `top-right-trigger`, `toggle-audio-btn-hud`, `toggle-feed-panel-btn`, `boost-affinity-btn`, `share-fractal-btn`, `feed-prev-btn` (`FractalInfoHUD.tsx`); decorative SVG lucide icons inside labelled buttons marked `aria-hidden="true"` so they aren't read twice; `<canvas id="fractal-canvas">` gained `role="img"` + dynamic `aria-label={"3D фрактал: ${params.type}…"}` so screen readers announce the current figure; a visually-hidden `<h1 className="sr-only">` added at the top of `<main>` (`App.tsx`) for landmark structure. Verified live: after redeploy, `axe.run()` returns **0 violations**, `document.querySelectorAll('button').filter(no-name)` returns **empty**, viewport content is `width=device-width, initial-scale=1.0, viewport-fit=cover`, canvas aria-label reads `3D фрактал: phyllotaxis (WebGL2/WebGPU raymarcher)` (dynamic on type change). `tsc` 0, unit trio **524+113+81=718** pass, autotest **1875** pass; new bundle `index-CPpcrOCV.js` deployed to `golden-ratio-fractal-engine.pages.dev` (Production alias `65376885`).
+
+### Added
+- **`docs/DESIGN_DEBT.md`** — an honest, reproducible inventory of Tailwind design-system drift (21 hardcoded brand hexes in SVG `stopColor`/`box-shadow` glows across 4 components, 25 `text-[9-11px]` sites below Tailwind's `text-xs` step). Every entry has a bucket, a reason it stays, and a fix cost if the brand ever needs to shift. Documents a decision, not a to-do list.
+- **`docs/COMPETITOR_SNAPSHOT-2026-09-23.md`** — feature-parity delta vs. `_lab/Fractr` (Vue 3 + WebGPU, 19 fractals) and `_lab/glChAoS.P` (OpenGL + WASM, 250+ strange attractors). Ranks 6 prioritised gaps (path-traced render mode, saved-locations with thumbnails, 6DOF camera, particle-emitter mode via `gl_TRANSFORM_FEEDBACK`, gamepad support, live URL camera sync) with cost estimates; also lists non-gaps we intentionally don't ship. Grounded in cited README lines, not vibes.
+- **`.firecrawl/` added to `.gitignore`** so future firecrawl-scrape runs don't leave transient markdown in `git status`.
 
 ## [6.0.0] - 2026-09-23
 

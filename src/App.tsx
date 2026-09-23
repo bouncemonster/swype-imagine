@@ -650,6 +650,9 @@ export default function App() {
 
   return (
     <main className="relative w-full h-full min-h-screen overflow-hidden bg-neutral-950 font-sans text-neutral-100 select-none">
+      {/* Screen-reader landmark: provides an accessible page title (visually hidden).
+          axe-core flagged the missing h1 in the a11y sweep (release v6.0.0 post-cut). */}
+      <h1 className="sr-only">Golden Ratio WebGPU Fractal Engine — интерактивный 3D-фрактал-исследователь</h1>
       {/* Fractal Canvas with WebGPU (WGSL) and WebGL2 (GLSL) */}
       <FractalCanvas
         params={params}

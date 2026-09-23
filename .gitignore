@@ -16,3 +16,6 @@ test-results/
 # Dist
 dist/
 .wrangler/
+
+# Firecrawl CLI working dir (transient web scrapes; never commit)
+.firecrawl/

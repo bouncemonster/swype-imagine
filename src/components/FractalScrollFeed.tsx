@@ -233,16 +233,18 @@ export const FractalScrollFeed: React.FC<FractalScrollFeedProps> = ({
                   onClick={(e) => { e.currentTarget.blur(); onPrev(); }}
                   className="p-1 rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
                   title="Предыдущий образец"
+                  aria-label="Предыдущий образец"
                 >
-                  <ChevronUp className="w-3 h-3" />
+                  <ChevronUp className="w-3 h-3" aria-hidden="true" />
                 </button>
                 <button
                   id="feed-ribbon-next-btn"
                   onClick={(e) => { e.currentTarget.blur(); onNext(); }}
                   className="p-1 rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
                   title="Следующий образец"
+                  aria-label="Следующий образец"
                 >
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className="w-3 h-3" aria-hidden="true" />
                 </button>
               </div>
             </div>
