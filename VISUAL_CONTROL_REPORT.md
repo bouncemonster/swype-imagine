@@ -51,10 +51,13 @@ delegate to the proven `mapFlameBase` (correct escape-time derivative) with a
 distinct `(scale, op, param)` per name. Verified via re-probe: all four went
 0.0% → rendered, matching the look of their working siblings (flameSwirl /
 flameHeart render as blobby DE surfaces in this engine, so the fixed flames are
-consistent with the family aesthetic). **WebGPU parity is still open** —
-`src/shaders/webgpuShaders.ts` still contains the old broken `mapFlame*` bodies
-and has no `mapFlameBase`; either port the helper or confirm these types fall
-back to WebGL.
+consistent with the family aesthetic). **WebGPU (WGSL) is a separate
+implementation** — `src/shaders/webgpuShaders.ts` renders these flames with an
+orbit-trap technique (`trap = min(trap, length(z))`, returning `vec2(dist, trap)`),
+NOT the `pow(phi,-N)` field that was broken in GLSL. The WebGL-only sweep
+(`?test=1` forces WebGLEngine) does not exercise the WGSL path, so the WGSL
+flame output for 113/114/117/120 is **unverified** here; confirm with an
+`#...&engine=webgpu` probe before assuming parity either way.
 
 Root cause for 113/114/117/120 is shared: the standalone `mapFlame*` functions
 in [`src/shaders/webglShaders.ts`](src/shaders/webglShaders.ts) use a
@@ -93,7 +96,8 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
 ## Fix plan (ordered by confidence)
 
 1. **flame 113/114/117/120** — ✅ DONE (WebGL): re-implemented to delegate to
-   `mapFlameBase`; verified black → rendered. **Remaining: WebGPU (WGSL) parity.**
+   `mapFlameBase`; verified black → rendered. WGSL uses a different orbit-trap
+   impl (not the same bug) — **unverified via an `engine=webgpu` probe**.
 2. **102 / 127 / 112** — per-function SDF/camera rework; verify visually.
 3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
    `zoomScale` entries so thin attractors fill the frame.
