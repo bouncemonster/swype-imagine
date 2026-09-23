@@ -19,11 +19,11 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 4178,
     strictPort: true,
-    // Allow sharing the built app through a Cloudflare quick tunnel
-    // (https://<random>.trycloudflare.com). Vite 6 blocks non-localhost Host
-    // headers with 403; this allowlists only the tunnel domain suffix, so the
-    // host-check still protects against arbitrary Host spoofing.
-    allowedHosts: ['.trycloudflare.com'],
+    // Allow sharing the built app through Cloudflare tunnels: ephemeral quick
+    // tunnels (*.trycloudflare.com) and the permanent named tunnel on our own
+    // zone (*.simundis.com). Vite 6 blocks non-localhost Host headers with 403;
+    // this scoped allowlist keeps the host-check against arbitrary spoofing.
+    allowedHosts: ['.trycloudflare.com', '.simundis.com'],
   },
   build: {
     rollupOptions: {
