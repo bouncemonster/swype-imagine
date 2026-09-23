@@ -10,8 +10,8 @@ import {
   LOADER_FORCE_HIDE_MS, ENGINE_SETUP_TIMEOUT_MS,
   QUALITY_COOLDOWN_MS, QUALITY_DOWN_THRESHOLD_RATIO, QUALITY_UP_THRESHOLD_RATIO,
   CONSECUTIVE_ERROR_FLOOR,
-  INERTIA_DECAY, INERTIA_THRESHOLD,
-  AUTO_ROTATE_RESUME_DELAY_MS,
+  INERTIA_DECAY, INERTIA_THRESHOLD, INERTIA_ROT_SPEED,
+  AUTO_ROTATE_RESUME_DELAY_MS, AUTO_ROTATE_SPEED,
   FPS_TARGET_DESKTOP, FPS_TARGET_MOBILE,
   PREFETCH_INITIAL_DELAY_MS, PREFETCH_RETRY_DELAY_MS, PREFETCH_COLD_START_DELAY_MS,
 } from '../constants';
@@ -537,7 +537,7 @@ export function useRenderEngine(
           ? Math.min(1, autoRotateEaseRef.current + deltaMs / 1200)
           : 0;
         if (autoRotateEaseRef.current > 0) {
-          const spinRate = (currentParams.autoRotateSpeed ?? 0.12) * 0.5; // rad/sec at full ease
+          const spinRate = (currentParams.autoRotateSpeed ?? AUTO_ROTATE_SPEED) * 0.5; // rad/sec at full ease
           autoRotAccumRef.current += spinRate * autoRotateEaseRef.current * (deltaMs / 1000);
           autoRotPhaseRef.current += autoRotateEaseRef.current * (deltaMs / 1000) * 0.18;
           // Wrap the yaw to keep the float small; a full-turn wrap is visually identical so
@@ -555,7 +555,6 @@ export function useRenderEngine(
           // dynamicSensitivity diverged from the fixed drag rotationSpeed, so at close
           // zooms the figure visibly stalled the instant the pointer was released.
           const dtSec = deltaMs / 1000.0;
-          const INERTIA_ROT_SPEED = 0.0035; // keep in sync with FractalCanvas handlePointerMove rotationSpeed
           inertiaRotX = velocityRef.current.x * deltaMs * INERTIA_ROT_SPEED;
           inertiaRotY = velocityRef.current.y * deltaMs * INERTIA_ROT_SPEED;
           // Frame-rate independent decay: 0.94 at 60fps → same feel at any FPS

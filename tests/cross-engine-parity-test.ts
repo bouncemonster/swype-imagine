@@ -269,8 +269,11 @@ assert(webglSource.includes('test=1'), 'Test mode detection exists');
 
 console.log('\n━━━ Test 11: WebGPU Init Safety ━━━');
 
-// WebGPU has 5-second adapter timeout
-assert(webgpuSource.includes('5000'), 'WebGPU has 5s adapter timeout');
+// WebGPU has adapter timeout (via centralized constant or inline literal)
+assert(
+  webgpuSource.includes('GPU_ADAPTER_TIMEOUT_MS') || webgpuSource.includes('5000'),
+  'WebGPU has adapter timeout'
+);
 assert(webgpuSource.includes('Promise.race'), 'WebGPU uses Promise.race for timeout');
 
 // WebGPU handles device loss
