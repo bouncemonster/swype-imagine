@@ -579,7 +579,7 @@ export function useRenderEngine(
             // time: prefetched programs swap synchronously inside render() (guard never
             // set), and the 400ms grace absorbs single-frame cold swaps without a flash.
             const activeEngine = webglEngineRef.current || webgpuEngineRef.current;
-            const isSwapping = (activeEngine as any)?.isSwappingShader === true;
+            const isSwapping = activeEngine?.isShaderSwapping() === true;
             if (isSwapping && firstRenderDoneRef.current) {
               if (swapGraceStartRef.current === 0) {
                 swapGraceStartRef.current = performance.now();
@@ -587,8 +587,7 @@ export function useRenderEngine(
                 setIsCompiling(true);
                 // Honest percentage from the engine's live ShaderManager stages —
                 // identical value most frames, so React bails without re-renders.
-                setShaderCompilePct(typeof (activeEngine as any).getSwapProgress === 'function'
-                  ? (activeEngine as any).getSwapProgress() : 0);
+                setShaderCompilePct(activeEngine?.getSwapProgress() ?? 0);
               }
             } else {
               swapGraceStartRef.current = 0;

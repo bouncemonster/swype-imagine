@@ -246,6 +246,17 @@ export abstract class FractalEngineBase {
     return out;
   }
 
+  /** Whether the engine is mid-shader-swap. Only WebGL2 overrides; WebGPU
+   *  compiles pipelines without a per-frame swap guard. */
+  public isShaderSwapping(): boolean {
+    return false;
+  }
+
+  /** Live shader-compile progress 0..100 for the compiling overlay. */
+  public getSwapProgress(): number {
+    return 0;
+  }
+
   abstract init(): Promise<boolean> | boolean;
   abstract render(timeSec: number, params: FractalParams): void;
   abstract destroy(): void;

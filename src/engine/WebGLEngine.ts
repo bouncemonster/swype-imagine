@@ -424,6 +424,11 @@ export class WebGLEngine extends FractalEngineBase {
       .finally(() => this.prefetching.delete(fractalIdx));
   }
 
+  /** True while a lazy shader swap is mid-flight (re-entrant render guard). */
+  public isShaderSwapping(): boolean {
+    return this.isSwappingShader;
+  }
+
   /**
    * Real compile progress (0-100) of the swap the user is currently waiting on —
    * read by the UI to show "Initializing GPU… 40%" driven by actual ShaderManager
