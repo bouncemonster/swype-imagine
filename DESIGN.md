@@ -379,7 +379,7 @@ icon-only controls and a wrapping ribbon.
 
 ## Known Gaps
 
-Gaps 1, 2, 4, and 5 are closed (see below). Gaps 3 and 6 remain **`needs-design-decision`**.
+Gaps 1, 2, 4, 5, and 6 are closed (see below). Gap 3 remains **`needs-design-decision`**.
 They are recorded here so an automated edit cannot silently re-create them.
 
 1. ~~**No declared theme (conflict, high impact).** `src/index.css` has no `@theme` block and no CSS
@@ -436,9 +436,16 @@ They are recorded here so an automated edit cannot silently re-create them.
    Covers the 12 `animate-pulse`/`animate-ping` sites and the 2 `animate-[spin_…]` usages without
    editing each call site; fractal morph/rotation (which IS content) remains governed by the
    pre-existing `App.tsx:70` `PREFERS_REDUCED_MOTION` module-level check.
-6. **Micro-type tier is undecided.** The 12 px coarse floor means desktop and touch now render
+6. ~~**Micro-type tier is undecided.** The 12 px coarse floor means desktop and touch now render
    different type scales by design. Either document `micro` as a desktop-only tier (current state,
-   captured above) or promote 12 px everywhere and lose HUD density.
+   captured above) or promote 12 px everywhere and lose HUD density.~~
+   **Closed 2026-09-23**: Decision — **micro tiers are desktop-only**. The `@theme` block declares
+   `--text-micro` (10px), `--text-nano` (11px), `--text-micro-sm` (9px), `--text-micro-xs` (8px)
+   as the information-density tier for fine-pointer HUD overlays. The `@media (pointer: coarse)`
+   floor rule bumps all four to 12px/16px on touch devices (alongside the legacy `text-[8-11px]`
+   arbitrary values). This is intentional: HUD panels need ~40 % more data per square cm on a
+   1280px+ desktop viewport; on a 375px phone the density is unreadable and the floor protects
+   accessibility. No code change needed — the two rules coexist cleanly.
 
 ## Evidence and reproduction
 
