@@ -12,6 +12,14 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
   },
+  // Pinned to match tests/visual-snapshot-sweep.ts default BASE_URL (127.0.0.1:4178).
+  // strictPort makes a port clash fail loudly instead of silently drifting and
+  // breaking the sweep's fixed BASE_URL assumption.
+  preview: {
+    host: '127.0.0.1',
+    port: 4178,
+    strictPort: true,
+  },
   build: {
     rollupOptions: {
       output: {
