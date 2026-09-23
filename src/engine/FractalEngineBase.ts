@@ -90,7 +90,8 @@ const FRACTAL_CAM_ADJUST_OVERRIDES: Record<number, { zoomScale: number; tiltOffs
   83:  { zoomScale: 0.25, tiltOffset: 0.5 }, // bedheadAttractor — flat 2D attractor
   84:  { zoomScale: 0.35, tiltOffset: 0.0 }, // fourSpotAttractor — thin attractor
   102: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbulbMandelboxHybrid
-  117: { zoomScale: 0.5,  tiltOffset: 0.0 }, // flameButterfly
+  // 117 flameButterfly: stale 0.5 zoom was tuned for the old (black) formula;
+  // now delegates to mapFlameBase op2 like flameVariant3, which frames at 1.0.
   120: { zoomScale: 0.5,  tiltOffset: 0.0 }, // flameHyperbolic
   132: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant2 (high-power thin shell)
   133: { zoomScale: 0.5,  tiltOffset: 0.0 }, // mandelbrotVariant3

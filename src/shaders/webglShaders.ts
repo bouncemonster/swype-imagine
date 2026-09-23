@@ -2673,25 +2673,18 @@ float mapTorusKnot4D(vec3 p, float t, float phi, int iters) {
   return length(projected - torus) - 0.08;
 }
 
+// Delegates to the proven escape-time mapFlameBase (op 0 = sinusoidal). The
+// previous hand-rolled loop used a bounded sin() operator with a pow(phi,-N)
+// normalization that assumed per-iteration phi growth, collapsing the distance
+// field to a constant (rendered fully black). op 0 reproduces the sinusoidal
+// flame variation with a correct derivative.
 float mapFlameSinusoidal(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  for (int i = 0; i < 12; i++) {
-    z = vec3(sin(z.x), sin(z.y), sin(z.z)) * phi;
-    z += 0.1 * p;
-    if (i % 3 == 0) z = z.zxy;
-  }
-  return length(z) * pow(phi, -12.0) - 0.5;
+  return mapFlameBase(p, t, phi, iters, 1.55, 0, 0.32, vec3(0.0));
 }
 
+// See mapFlameSinusoidal: op 1 = spherical inversion via the correct base.
 float mapFlameSpherical(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  float r2 = max(dot(z, z), 0.0001); // Guard against division by zero
-  for (int i = 0; i < 10; i++) {
-    z = z / r2 * phi;
-    z += 0.15 * p;
-    r2 = max(dot(z, z), 0.0001); // Guard against division by zero
-  }
-  return length(z) * pow(phi, -10.0) - 0.6;
+  return mapFlameBase(p, t, phi, iters, 1.7, 1, 0.28, vec3(0.0));
 }
 
 float mapFlameSwirl(vec3 p, float t, float phi, int iters) {
@@ -2718,16 +2711,10 @@ float mapFlameHorseshoe(vec3 p, float t, float phi, int iters) {
   return length(z) * pow(phi, -11.0) - 0.5;
 }
 
+// See mapFlameSinusoidal: op 5 = disc fold (rotationally symmetric wings);
+// scale/param mirror the richly-rendering flameVariant6 (~89% fill).
 float mapFlameButterfly(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  for (int i = 0; i < 13; i++) {
-    float r = length(z.xy);
-    float x = z.x * cos(r) - z.y * sin(r);
-    float y = z.x * sin(r) + z.y * cos(r);
-    z.xy = vec2(x, y) * phi * 0.8;
-    z += 0.08 * p;
-  }
-  return length(z) * pow(phi, -13.0) - 0.45;
+  return mapFlameBase(p, t, phi, iters, 1.78, 5, 0.24, vec3(0.0));
 }
 
 float mapFlameHeart(vec3 p, float t, float phi, int iters) {
@@ -2755,16 +2742,9 @@ float mapFlameSpiral(vec3 p, float t, float phi, int iters) {
   return length(z) * pow(phi, -15.0) - 0.4;
 }
 
+// See mapFlameSinusoidal: op 3 = horseshoe/hyperbolic fold via the correct base.
 float mapFlameHyperbolic(vec3 p, float t, float phi, int iters) {
-  vec3 z = p;
-  for (int i = 0; i < 10; i++) {
-    float r = length(z.xy);
-    float angle = atan(z.y, z.x);
-    z.xy = vec2(cosh(r) * cos(angle), sinh(r) * sin(angle));
-    z *= phi * 0.7;
-    z += 0.15 * p;
-  }
-  return length(z) * pow(phi, -10.0) - 0.6;
+  return mapFlameBase(p, t, phi, iters, 1.9, 3, 0.2, vec3(0.0));
 }
 
 float mapFlameDiamond(vec3 p, float t, float phi, int iters) {
