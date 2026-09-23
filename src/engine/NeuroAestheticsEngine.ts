@@ -869,7 +869,7 @@ export class NeuroAestheticsEngine {
     const baseGlow = Math.max(0.4, Math.min(2.2, this.taste.preferredGlow + (Math.random() * 0.4 - 0.2)));
     const glowIntensity = parseFloat(baseGlow.toFixed(2));
 
-    const zoom = DEFAULT_ZOOMS[selectedType] * (0.95 + Math.random() * 0.1);
+    const zoom = (DEFAULT_ZOOMS[selectedType] ?? 2.8) * (0.95 + Math.random() * 0.1);
 
     // High-performance mathematically compatible hybrid breeding
     // FIX: Increased hybrid chance and wider blend ranges for more dramatic combinations
@@ -934,8 +934,8 @@ export class NeuroAestheticsEngine {
       octaveLayers = Math.random() < 0.4 ? 2 : 1;
 
       const sym = COMPOSITE_OP_SYMBOLS[compositeOp];
-      const name1 = FRACTAL_NAMES[selectedType].split(' ')[0];
-      const name2 = FRACTAL_NAMES[hybridType].split(' ')[0];
+      const name1 = (FRACTAL_NAMES[selectedType] ?? selectedType).split(' ')[0];
+      const name2 = (FRACTAL_NAMES[hybridType] ?? hybridType).split(' ')[0];
       specimenName = `${name1} ${sym} ${name2} • φ-${this.currentGeneration}`;
 
       // Tertiary layer: 50% chance to add a 3rd fractal for richer topology
@@ -962,7 +962,7 @@ export class NeuroAestheticsEngine {
           }
           tertiaryType = bestTertiary;
           tertiaryBlend = parseFloat((0.10 + Math.random() * 0.30).toFixed(3));
-          const name3 = FRACTAL_NAMES[tertiaryType].split(' ')[0];
+          const name3 = (FRACTAL_NAMES[tertiaryType] ?? tertiaryType).split(' ')[0];
           specimenName = `${name1} ${sym} ${name2} ⊕ ${name3} • φ-${this.currentGeneration}`;
         }
       }
@@ -1022,24 +1022,24 @@ export class NeuroAestheticsEngine {
     orbitDelta: number,
     specimen: FractalSpecimen
   ): number {
-    specimen.dwellTimeSeconds += dwellDeltaSec;
-    if (Math.abs(zoomDelta) > 0.05) specimen.zoomInteractions++;
-    if (orbitDelta > 0.05) specimen.orbitInteractions++;
+    specimen.dwellTimeSeconds = (specimen.dwellTimeSeconds ?? 0) + dwellDeltaSec;
+    if (Math.abs(zoomDelta) > 0.05) specimen.zoomInteractions = (specimen.zoomInteractions ?? 0) + 1;
+    if (orbitDelta > 0.05) specimen.orbitInteractions = (specimen.orbitInteractions ?? 0) + 1;
 
     // Realistic, subtle neuro-aesthetic affinity curve (0 to 100%)
     // - Base score starts modest (25%)
     // - Dwell time smoothly scales over 90+ seconds (max +35%)
     // - Active exploration (zooming inside and orbiting) scales gently (max +30%)
-    const dwellFactor = Math.min(35, (specimen.dwellTimeSeconds / 90.0) * 35.0);
-    const zoomFactor = Math.min(18, Math.log1p(specimen.zoomInteractions) * 3.2);
-    const orbitFactor = Math.min(18, Math.log1p(specimen.orbitInteractions) * 2.8);
+    const dwellFactor = Math.min(35, ((specimen.dwellTimeSeconds ?? 0) / 90.0) * 35.0);
+    const zoomFactor = Math.min(18, Math.log1p(specimen.zoomInteractions ?? 0) * 3.2);
+    const orbitFactor = Math.min(18, Math.log1p(specimen.orbitInteractions ?? 0) * 2.8);
     const baseAffinity = 25;
 
     const rawAffinity = Math.round(Math.min(96, baseAffinity + dwellFactor + zoomFactor + orbitFactor));
-    specimen.affinityScore = Math.max(specimen.affinityScore, rawAffinity);
+    specimen.affinityScore = Math.max(specimen.affinityScore ?? 0, rawAffinity);
 
     // Absorb positive traits into user taste profile gently over meaningful time
-    if (specimen.dwellTimeSeconds > 10.0 && specimen.affinityScore > 50) {
+    if ((specimen.dwellTimeSeconds ?? 0) > 10.0 && specimen.affinityScore > 50) {
       const currentAffinity = this.taste.typeAffinities[specimen.type] || 1.0;
       this.taste.typeAffinities[specimen.type] = Math.min(4.0, currentAffinity + 0.005);
 
@@ -1053,16 +1053,18 @@ export class NeuroAestheticsEngine {
       this.taste.preferredIterations = Math.round(this.taste.preferredIterations * 0.99 + specimen.iterations * 0.01);
 
       // Learn preferred hue from specimen palette primary color (RGB → hue)
-      const [pr, pg, pb] = specimen.palette.primary;
-      const pMax = Math.max(pr, pg, pb), pMin = Math.min(pr, pg, pb);
-      const pDelta = pMax - pMin;
-      if (pDelta > 0.05) {
-        let specimenHue = 0;
-        if (pMax === pr) specimenHue = 60 * (((pg - pb) / pDelta) % 6);
-        else if (pMax === pg) specimenHue = 60 * (((pb - pr) / pDelta) + 2);
-        else specimenHue = 60 * (((pr - pg) / pDelta) + 4);
-        if (specimenHue < 0) specimenHue += 360;
-        this.taste.preferredHue = (this.taste.preferredHue * 0.97 + specimenHue * 0.03) % 360;
+      if (specimen.palette) {
+        const [pr, pg, pb] = specimen.palette.primary;
+        const pMax = Math.max(pr, pg, pb), pMin = Math.min(pr, pg, pb);
+        const pDelta = pMax - pMin;
+        if (pDelta > 0.05) {
+          let specimenHue = 0;
+          if (pMax === pr) specimenHue = 60 * (((pg - pb) / pDelta) % 6);
+          else if (pMax === pg) specimenHue = 60 * (((pb - pr) / pDelta) + 2);
+          else specimenHue = 60 * (((pr - pg) / pDelta) + 4);
+          if (specimenHue < 0) specimenHue += 360;
+          this.taste.preferredHue = (this.taste.preferredHue * 0.97 + specimenHue * 0.03) % 360;
+        }
       }
 
       if (specimen.affinityScore > this.taste.highestResonanceScore) {

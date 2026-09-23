@@ -363,7 +363,7 @@ export class WebGLEngine extends FractalEngineBase {
               'u_auto_rotate', 'u_quality_level'
             ];
             uniformNames.forEach(name => {
-              this.uniformLocs[name] = this.gl.getUniformLocation(program, name);
+              this.uniformLocs[name] = this.gl!.getUniformLocation(program, name);
             });
             
             logger.info('[WebGL2] Full shader compilation successful');
@@ -526,7 +526,7 @@ export class WebGLEngine extends FractalEngineBase {
     // importantly it wraps the function call which prevents V8 inlining of render setup
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       gl.useProgram(this.program);
-      this.gl.bindVertexArray(this.vao);
+      gl.bindVertexArray(this.vao);
 
       const palette = this.resolvePalette(params);
       // indices already computed above for logging, reuse it

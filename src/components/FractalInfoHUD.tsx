@@ -131,8 +131,8 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
     const urlParams = new URLSearchParams({
       // Core fractal genome
       type: specimen.type,
-      hybrid: specimen.hybridType,
-      tertiary: specimen.tertiaryType,
+      hybrid: specimen.hybridType ?? '',
+      tertiary: specimen.tertiaryType ?? '',
       op: specimen.compositeOp,
       blend: specimen.hybridBlend.toFixed(3),
       tertiaryBlend: specimen.tertiaryBlend.toFixed(3),
@@ -149,7 +149,7 @@ export const FractalInfoHUD: React.FC<FractalInfoHUDProps> = ({
       zoom: specimen.zoom.toFixed(3),
       name: specimen.name,
       // Palette & coloring
-      palette: specimen.palette.id,
+      palette: specimen.palette?.id ?? '',
       paletteSeed: String(p?.paletteSeed ?? 0),
       paletteRotation: p?.paletteRotation ? '1' : '0',
       // Render style & camera

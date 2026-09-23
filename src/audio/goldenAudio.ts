@@ -292,7 +292,7 @@ class GoldenAudioEngine {
       let lastNode: AudioNode = filter;
 
       let panner: StereoPannerNode | undefined;
-      if (this.ctx!.createStereoPanner) {
+      if (typeof this.ctx!.createStereoPanner === 'function') {
         panner = this.ctx!.createStereoPanner();
         panner.pan.setValueAtTime(spec.pan, now);
         filter.connect(panner);

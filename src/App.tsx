@@ -331,7 +331,7 @@ export default function App() {
   const applySpecimen = useCallback((specimen: FractalSpecimen) => {
     setAutoExplore(false); // User interaction disables auto-explore
     setCurrentSpecimen(specimen);
-    setResonanceScore(specimen.affinityScore);
+    setResonanceScore(specimen.affinityScore ?? 65);
 
     // Suggest a varied render style based on fractal archetype — EXCEPT during the pure
     // exploration showcase: there the whole point is to read each type's characteristic
@@ -357,7 +357,7 @@ export default function App() {
       boxFold: specimen.boxFold,
       sphereFold: specimen.sphereFold,
       interiorCut: specimen.interiorCut,
-      paletteId: specimen.palette.id,
+      paletteId: specimen.palette?.id ?? 'lapis-lazuli',
       customPalette: specimen.palette,
       iterations: specimen.iterations,
       phiMultiplier: specimen.phiMultiplier,
