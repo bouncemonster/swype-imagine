@@ -24,9 +24,9 @@ the 3% threshold (see commit `ac5dd3b`).
 
 | status   | count | note |
 |----------|-------|------|
-| rendered | 377   | healthy |
+| rendered | 381   | healthy (incl. 4 flame types fixed after the sweep) |
 | sparse   | 42    | valid object, small — framing polish |
-| black    | 12    | 7 exact-0% field bugs + 5 near-empty framing |
+| black    | 8     | 3 exact-0% field bugs + 5 near-empty framing |
 | error    | 0     | no crashes, timeouts, context-loss, or console errors |
 
 No shader compile errors, no page crashes, no WebGL context loss across the
@@ -36,15 +36,25 @@ entire catalog. The earlier favicon 404 noise was fixed (commit `b663210`).
 
 ### A. Exact 0.0% — degenerate distance field (real render bugs)
 
-| idx | type | root cause |
-|-----|------|------------|
-| 102 | mandelbulbMandelboxHybrid | proper `dr` escape SDF, but object falls outside camera range at `zoomScale 0.5` |
-| 112 | torusKnot4D | thin tube SDF (`length-0.08`) around a 4D→3D projection; never crossed within tube radius |
-| 113 | flameSinusoidal | `sin()` op is bounded → `pow(phi,-12)` crushes field to a constant → no surface |
-| 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush |
-| 117 | flameButterfly | scales only `xy` (z unscaled) → `length(z)` dominated by unscaled z → constant field |
-| 120 | flameHyperbolic | same `pow(phi,-N)` over-normalization on a non-phi-growing op |
-| 127 | ifs3DFern | crude SDF of a thin 2D fern; `d-0.1` never reached |
+| idx | type | root cause | status |
+|-----|------|------------|--------|
+| 102 | mandelbulbMandelboxHybrid | proper `dr` escape SDF, but object falls outside camera range at `zoomScale 0.5` | open |
+| 112 | torusKnot4D | thin tube SDF (`length-0.08`) around a 4D→3D projection; never crossed within tube radius | open |
+| 113 | flameSinusoidal | `sin()` op bounded → `pow(phi,-12)` crushed field to a constant | ✅ FIXED (WebGL) |
+| 114 | flameSpherical | inversion `z/r2` bounded → same over-normalization crush | ✅ FIXED (WebGL) |
+| 117 | flameButterfly | scaled only `xy` (z unscaled) → constant field; stale `zoomScale 0.5` | ✅ FIXED (WebGL) |
+| 120 | flameHyperbolic | same `pow(phi,-N)` over-normalization on a non-phi-growing op | ✅ FIXED (WebGL) |
+| 127 | ifs3DFern | crude SDF of a thin 2D fern; `d-0.1` never reached | open |
+
+**Fix applied (113/114/117/120):** the four standalone `mapFlame*` functions now
+delegate to the proven `mapFlameBase` (correct escape-time derivative) with a
+distinct `(scale, op, param)` per name. Verified via re-probe: all four went
+0.0% → rendered, matching the look of their working siblings (flameSwirl /
+flameHeart render as blobby DE surfaces in this engine, so the fixed flames are
+consistent with the family aesthetic). **WebGPU parity is still open** —
+`src/shaders/webgpuShaders.ts` still contains the old broken `mapFlame*` bodies
+and has no `mapFlameBase`; either port the helper or confirm these types fall
+back to WebGL.
 
 Root cause for 113/114/117/120 is shared: the standalone `mapFlame*` functions
 in [`src/shaders/webglShaders.ts`](src/shaders/webglShaders.ts) use a
@@ -82,10 +92,8 @@ flameVariant{3,5,13,15,23,25,33,35,45}.
 
 ## Fix plan (ordered by confidence)
 
-1. **flame 113/114/117/120** — re-implement the four standalone `mapFlame*`
-   functions to delegate to the proven `mapFlameBase` (correct derivative),
-   then re-probe those indices and eyeball quality. (WebGL; check WebGPU subset
-   parity if these types are in it.)
+1. **flame 113/114/117/120** — ✅ DONE (WebGL): re-implemented to delegate to
+   `mapFlameBase`; verified black → rendered. **Remaining: WebGPU (WGSL) parity.**
 2. **102 / 127 / 112** — per-function SDF/camera rework; verify visually.
 3. **framing (5 black-B + 42 sparse)** — add/tune `FRACTAL_CAM_ADJUST`
    `zoomScale` entries so thin attractors fill the frame.
