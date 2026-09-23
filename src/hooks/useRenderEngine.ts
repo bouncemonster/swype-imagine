@@ -295,7 +295,7 @@ export function useRenderEngine(
           setLoadProgress(0.12);
           
           // ADAPTIVE QUALITY: Set quality level based on device
-          const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
+          const qualityLevel = isMobileDevice ? 0 : 1; // medium for desktop/embedded
           gpuEngine.setQualityLevel(qualityLevel);
           logger.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
           
@@ -335,7 +335,7 @@ export function useRenderEngine(
         };
         
         // ADAPTIVE QUALITY: Set quality level based on device
-        const qualityLevel = isMobileDevice ? 0 : (isEmbeddedBrowser ? 1 : 1); // Start at medium for desktop
+        const qualityLevel = isMobileDevice ? 0 : 1; // medium for desktop/embedded
         glEngine.setQualityLevel(qualityLevel);
         logger.info(`[useRenderEngine] Quality level set to ${qualityLevel} (mobile=${isMobileDevice}, embedded=${isEmbeddedBrowser})`);
         
