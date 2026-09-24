@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Deferred to the next cycle (boot-sequence risk, accepted for 6.1.0):
+- **Perf #3 (full)**: `palettesProcedural` (873 palettes generated at import time) + `NeuroAestheticsEngine` init loops idle deferral — must preserve the `ALL_COLOR_PALETTES[0]` boot-first-specimen invariant (idle-time hook or curated-61 slice).
+- **Perf #4 (full)**: shader-monolith dynamic import — requires `WebGLEngine.init` to become `await`-based or a build-time per-fractal splice (ShaderManager v3 needs the whole `FRAGMENT_SHADER_SOURCE` at init).
+
+## [6.1.0] - 2026-09-24
+
+Release milestone: the design-system arc is closed — `DESIGN.md` is now an *enforced* contract
+(173 arbitrary text sites + glow ramp tokenized, zero visual delta proven; repeatable `design.qa`
+pipeline green: 3/3 visual diffPixels=0, anchors 6/6, axe 0, ui-alignment Pass). Full verification
+stack green (`tsc` 0 · `npm run test` 1875/0 · `test:mobile` PASS · `test:quality` pass) and shipped
+on both public routes: flagship **https://fractal.simundis.com** (named tunnel → local preview,
+live-browser audit PASS on the public URL) and always-on **golden-ratio-fractal-engine.pages.dev**
+(same build, asset-hash parity verified over HTTP).
+
 ### Performance
 - **Perf #1: Pre-paint splash** (`index.html` + `main.tsx`) — a CSS-only golden-ring animation renders at ~0.4 s (HTML parse + paint), decoupling FCP from the ~5 s of JS parse+exec that gates React mounting. Dismissed on `requestAnimationFrame` after first commit. *Est impact: FCP 2.0 s → ~0.5 s.*
 - **Perf #2: `public/_headers`** (`Cache-Control: immutable` for hashed assets, `must-revalidate` for index.html) — returning visitors skip re-downloading all 6 chunks. *Zero first-load change, instant repeat visits.*

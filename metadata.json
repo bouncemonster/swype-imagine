@@ -1,6 +1,6 @@
 {
   "name": "Golden Ratio WebGPU Fractal Engine",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "High-performance WebGL2 (primary) and WebGPU (optional) real-time 3D fractal raymarching engine with 431 fractal types, 10 render modes, and advanced PBR lighting. Based on golden ratio \u03c6, prime distributions, TPMS surfaces, and mathematical hybrids. 0 TypeScript errors (strict), 2593 test assertions, React.lazy code-split, @theme design tokens, adaptive quality.",
   "fractalTypes": 431,
   "renderModes": 10,
