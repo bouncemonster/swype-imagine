@@ -11,8 +11,8 @@ and a global reduced-motion opt-out. This is the single CSS entry point imported
 
 ```
 @import "tailwindcss";        ← Tailwind v4 entry (includes preflight + utility engine)
-@theme { ... }                ← DESIGN.md Gap 1: named semantic utilities
-:root { --brand-amber* }     ← Inline-style/SVG aliases for boxShadow/stopColor
+@theme { ... }                ← DESIGN.md Gap 1: named semantic utilities + amber glow ramp
+:root { --brand-amber* }     ← SVG stopColor/inline aliases (static boxShadow sites now utilities)
 html, body, #root            ← Full-screen dark canvas base
 canvas                       ← Display block, 100% fill
 .safe-t/b/l/r, .safe-fit     ← env(safe-area-inset-*) utilities
@@ -31,7 +31,8 @@ Tailwind v4 `@theme` block that creates named utility classes:
 | `--text-nano` | `text-nano` | 11px (font-size only) | `text-[11px]` (63 sites) |
 | `--text-micro-sm` | `text-micro-sm` | 9px (font-size only) | `text-[9px]` (22 sites) |
 | `--text-micro-xs` | `text-micro-xs` | 8px (font-size only) | `text-[8px]` (7 sites) |
-| `--color-canvas` | `bg-canvas`, `text-canvas` | #030305 | Root background |
+| `--color-canvas` | `bg-canvas`, `text-canvas` | #030305 | Root background (`html, body` base rule uses `var(--color-canvas)`) |
+| `--color-ink` | `text-ink` | #f5f5f5 | Base text (`html, body` base rule uses `var(--color-ink)`) |
 | `--color-surface-deep` | `bg-surface-deep` | #0a0a0a | Overlay backdrop |
 | `--color-surface-loader` | `bg-surface-loader` | #06050b | CosmicLoader (`bg-[#06050b]` → migrated) |
 | `--color-surface-modal` | `bg-surface-modal` | #090812 | ProjectManifestModal (`bg-[#090812]` → migrated) |
@@ -40,9 +41,15 @@ Tailwind v4 `@theme` block that creates named utility classes:
 | `--color-brand-soft` | `text-brand-soft` | → amber-200 | Gradient highlights |
 | `--color-brand-warm` | `text-brand-warm` | → amber-300 | Golden nodes |
 | `--color-brand-deep` | `text-brand-deep` | → amber-600 | Gradient ends |
+| `--shadow-glow-dot` | `shadow-glow-dot` | 0 0 6px brand | static inline `boxShadow` (ControlsPanel status dot) |
+| `--shadow-glow-node` | `shadow-glow-node` | 0 0 24px brand | static inline `boxShadow` (CosmicLoader core) |
+| `--shadow-glow-action` | `shadow-glow-action` | 0 0 15px 25% mix | static inline `boxShadow` (UserProfileModal CTA) |
+| `--shadow-glow-cta` | `shadow-glow-cta` | 0 0 20px 25% mix | static inline `boxShadow` (ManifestModal CTA) |
+| `--shadow-glow-modal` | `shadow-glow-modal` | 0 0 60px 15% mix | static inline `boxShadow` (ManifestModal shell) |
 
 **Migration status (2026-09-24)**: complete — all 173 `text-[8-11px]` and both `bg-[#hex]` sites
-in `src/**` now use the named utilities (0 arbitrary sites left). The micro tiers deliberately
+in `src/**` now use the named utilities (0 arbitrary sites left); the design-qa sweep the same
+day also absorbed the five static inline `boxShadow` glows into `--shadow-glow-*` utilities. The micro tiers deliberately
 have **no** `--text-*--line-height` partners: `text-[Npx]` emitted font-size only, so an
 lh-carrying token would have changed every migrated line (zero-delta was verified by a
 computed-style multiset diff, see `docs/DESIGN_DEBT.md` Bucket 2 resolution).

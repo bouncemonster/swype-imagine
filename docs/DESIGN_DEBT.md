@@ -12,7 +12,11 @@ The design system is Tailwind v4 with the amber accent as the brand color, appli
 across 12 components. The debt was **concentrated in two places** — SVG gradients / CSS `box-shadow`
 glows (Bucket 1, resolved 2026-09-23) and sub-12px typography arbitrary values (Bucket 2, resolved
 2026-09-24). Both buckets are now closed: `src/**` has zero hardcoded brand hexes and zero
-`text-[8-11px]` / `bg-[#hex]` sites. What remains (Buckets 3–4) are legitimate Tailwind idioms.
+`text-[8-11px]` / `bg-[#hex]` sites. A design-qa pipeline sweep the same day tokenized the last
+five *static* inline `boxShadow` glows into `@theme --shadow-glow-*` utilities, moved two
+`index.css` base literals to `var()` token refs, and replaced two redundant inline `touchAction`
+styles with `touch-none`/`overscroll-none` utilities (see Bucket 1 follow-up). What remains
+(Buckets 3–4 + dynamic inline styles) are legitimate Tailwind idioms or runtime-value styles.
 **This file is a historical baseline, kept so the resolved patterns cannot silently return.**
 
 ## Bucket 1 — Hardcoded brand hex (21 sites, 4 files) — **RESOLVED 2026-09-23**
@@ -59,6 +63,16 @@ strings (excluding `bg-[#090812]` which is a distinct surface, not amber) migrat
   Tailwind's arbitrary-value parser doesn't handle `color-mix()`'s inner spaces cleanly.
 - Verified via `grep`: 0 remaining hard-coded amber hexes in `src/components/*.tsx`.
 - Tests: `tsc` clean, mobile-design-audit PASS, `npm run test` 1875 passed.
+
+**Follow-up (2026-09-24, design-qa sweep)** — the inline-`boxShadow` layer was itself a debt
+finding. The five *static* ones are now `@theme` utilities: `--shadow-glow-{dot,node,action,cta,modal}`
+in `src/index.css`, replacing `style={{ boxShadow: … }}` at `ControlsPanel.tsx:264`,
+`CosmicLoader.tsx:152`, `ProjectManifestModal.tsx:42/167`, `UserProfileModal.tsx:293`.
+Zero visual delta proven: computed `box-shadow` matches (v4 adds inert zero-shadow slots),
+computed-style probe multiset still IDENTICAL vs pre-migration baseline, and the pipeline's
+`hard-coded-color` count fell 3 → 1 (remainder: `var()`-based SVG `stopColor` styles, which are
+structural). The surviving ~15 inline styles all carry runtime values (progress %, palette rgb,
+bar heights, particle transforms) or are SVG attributes — accepted, not suppressible by tokens.
 
 ## Bucket 2 — Tiny responsive typography (corrected: 173 sites, 10 files) — **RESOLVED 2026-09-24**
 

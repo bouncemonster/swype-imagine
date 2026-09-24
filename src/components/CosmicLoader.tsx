@@ -148,8 +148,7 @@ export const CosmicLoader: React.FC<CosmicLoaderProps> = ({ isReady, progress = 
 
         {/* Pulsing Luminous Core Glow */}
         <div
-          className="absolute w-6 h-6 rounded-full bg-amber-400/50 blur-[4px] animate-pulse"
-          style={{ boxShadow: '0 0 24px var(--brand-amber)' }}
+          className="absolute w-6 h-6 rounded-full bg-amber-400/50 blur-[4px] animate-pulse shadow-glow-node"
         />
       </div>
 

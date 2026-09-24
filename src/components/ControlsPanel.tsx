@@ -260,8 +260,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     </span>
                     {isSelected && (
                       <span
-                        className="w-1.5 h-1.5 rounded-full bg-amber-400"
-                        style={{ boxShadow: '0 0 6px var(--brand-amber)' }}
+                        className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-glow-dot"
                       />
                     )}
                   </div>

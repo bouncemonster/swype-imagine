@@ -26,6 +26,7 @@
   /* Surfaces — named backgrounds replacing arbitrary `bg-[#hex]`.
      Values correspond to DESIGN.md colors.* frontmatter entries. */
   --color-canvas: #030305;           /* root background / html / body */
+  --color-ink: #f5f5f5;               /* base text color (DESIGN.md colors.ink) */
   --color-surface-deep: #0a0a0a;    /* overlay surface, modal backdrop */
   --color-surface-loader: #06050b;  /* CosmicLoader full-screen backdrop */
   --color-surface-modal: #090812;   /* ProjectManifestModal panel */
@@ -37,6 +38,15 @@
   --color-brand-soft: var(--color-amber-200);
   --color-brand-warm: var(--color-amber-300);
   --color-brand-deep: var(--color-amber-600);
+
+  /* Elevation — amber glow scale. Replaces the five static inline
+     `style={{ boxShadow: '0 0 Npx …' }}` sites found by the design-debt
+     audit (design-qa 2026-09-24). Semantic name = where it belongs. */
+  --shadow-glow-dot: 0 0 6px var(--color-brand);                                  /* status indicator dot */
+  --shadow-glow-node: 0 0 24px var(--color-brand);                                 /* loader orbiting node */
+  --shadow-glow-action: 0 0 15px color-mix(in srgb, var(--color-brand) 25%, transparent); /* small amber CTA */
+  --shadow-glow-cta: 0 0 20px color-mix(in srgb, var(--color-brand) 25%, transparent);    /* gradient CTA */
+  --shadow-glow-modal: 0 0 60px color-mix(in srgb, var(--color-brand) 15%, transparent);  /* modal shell halo */
 }
 
 /* Inline-style / SVG references (boxShadow, stopColor) use the
@@ -56,8 +66,9 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #030305;
-  color: #f5f5f5;
+  /* token refs, not literals — design-debt audit flags raw hexes here (Gap 2) */
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
   user-select: none;
   -webkit-user-select: none;
 }

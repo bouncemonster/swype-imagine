@@ -109,15 +109,15 @@ components:
     textColor: "{colors.muted-ink}"
     typography: "{typography.button-md}"
     rounded: "{rounded.lg}"
-    padding: "6px 10px"
-    height: 32px
+    padding: "6px 12px"
+    height: 30px
   hud-icon-button-active:
     backgroundColor: "rgba(254, 154, 0, 0.2)"
     textColor: "{colors.primary-soft}"
     typography: "{typography.button-md}"
     rounded: "{rounded.lg}"
-    padding: "6px 10px"
-    height: 32px
+    padding: "6px 12px"
+    height: 30px
   cta-gradient:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
@@ -275,7 +275,7 @@ is reserved for the loader. Letter-spacing is `0px` except `tracking-wide` (14) 
 
 ## Elevation & Depth
 
-**There is no shadow ramp. Blur + translucency are the only depth tools.**
+**There is no elevation shadow ramp. Blur + translucency are the only depth tools.**
 
 - `backdrop-blur-md` = `blur(12px)` (13 sites) on every floating surface; live probe confirms the
   feed panel and HUD trigger both compute `blur(12px)`.
@@ -286,6 +286,13 @@ is reserved for the loader. Letter-spacing is `0px` except `tracking-wide` (14) 
 - `shadow-*` utilities exist (24 `shadow`, 8 `shadow-2xl`) but compute to transparent ambient
   shadows on dark fills. They are decoration, not depth: **do not reach for a shadow to make
   something float — raise its fill opacity and add `backdrop-blur-md`.**
+- The one sanctioned shadow family is the **amber glow ramp** (`@theme --shadow-glow-*`,
+  added 2026-09-24 out of the 5 static inline-`boxShadow` sites the design-debt audit flagged):
+  `shadow-glow-dot` (0 0 6px brand) for status indicators, `shadow-glow-node` (0 0 24px brand)
+  for the loader core, `shadow-glow-action` (0 0 15px 25% mix) for small CTAs,
+  `shadow-glow-cta` (0 0 20px 25% mix) for gradient CTAs, `shadow-glow-modal` (0 0 60px 15% mix)
+  for the manifest modal halo. These express *luminosity* (the fractal-glow metaphor), never
+  elevation; new glow uses must pick one of these five, not a fresh blur radius.
 
 ## Shapes
 
@@ -314,7 +321,9 @@ State variants are named `<component>-<state>` in the frontmatter. Implementatio
   expands to a dropdown column on touch, inline row from `sm` up. Its open/close logic must stay
   hover/click reconciled (`hoverOpenedRef`) — see `Do's and Don'ts`.
 - `hud-icon-button` / `hud-icon-button-active` — same file, plus `ControlsPanel.tsx` icon rows.
-  Icon-only variant drops the label (`<span className="hidden sm:inline">`).
+  Icon-only variant drops the label (`<span className="hidden sm:inline">`). Height is measured
+  30px at ≥`sm` (16px line + 2×6px padding + 2×1px border) and 28px below `sm` (`px-2`, label hidden);
+  the frontmatter records the ≥`sm` value, the design-qa anchor checks it with that tolerance.
 - `cta-gradient` — `#feed-next-btn`, the app's primary action ("next fractal", also Space).
 - `floating-panel` — `ControlsPanel.tsx` root; scrollable, `overscroll-contain`, `.safe-fit`.
 - `feed-ribbon` — `#neuro-feed-bar`; `flex-wrap` on phones so the 44 px target row never squeezes
@@ -347,7 +356,8 @@ above rather than defining new ones.
 
 **Don't**
 
-- Don't add a `shadow-*` for elevation, a drop-shadow will not read on `#030305`.
+- Don't add a `shadow-*` for elevation, a drop-shadow will not read on `#030305` —
+  the sole sanctioned shadow use is the amber glow ramp (`{--shadow-glow-*}`, see Elevation).
 - Don't introduce a webfont, or a `theme-color` value that differs from `{colors.canvas}`.
 - Don't hardcode amber hexes in `stopColor` / `box-shadow`; the v3 literals drift from the v4
   utilities that sit next to them (see Gap 2).
@@ -423,6 +433,12 @@ They are recorded here so an automated edit cannot silently re-create them.
    `boxShadow: '0 0 … color-mix(in srgb, var(--brand-amber) …, transparent)'` style. The
    v3→v4 hex drift is eliminated at the source (one token change updates all uses) and
    the semantic naming matches the rest of the design system.
+   **Follow-up 2026-09-24 (design-qa sweep)**: the five *static* inline `boxShadow` glow styles
+   from that migration were themselves tokenized into the `@theme` amber glow ramp
+   (`--shadow-glow-{dot,node,action,cta,modal}`), and the base `html, body` literals became
+   `var(--color-canvas)` / `var(--color-ink)` references. The design-debt audit's hard-coded-color
+   count fell 3 → 1 (remainder: CosmicLoader SVG gradient stops, legitimately `var()`-based
+   `style` props — dynamic/structural inline styles are the accepted residue, 15 sites).
 3. ~~**Two greyscale families split by component boundary.** `slate-*` appears only in
    `FractalAtlasModal` (65), `FractalProbeHUD` (13), `ProjectManifestModal` (7); the other nine
    components use `neutral-*` (e.g. 109 in `ControlsPanel`). Decision: adopt `neutral` and migrate

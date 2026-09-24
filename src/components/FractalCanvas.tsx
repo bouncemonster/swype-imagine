@@ -265,8 +265,7 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
     <div
       ref={containerRef}
       id="fractal-canvas-container"
-      className="absolute inset-0 w-full h-full overflow-hidden bg-black select-none touch-none cursor-grab active:cursor-grabbing"
-      style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+      className="absolute inset-0 w-full h-full overflow-hidden bg-black select-none touch-none overscroll-none cursor-grab active:cursor-grabbing"
     >
       {/* Clear user-facing message when no GPU backend could initialize (silent failure,
           not caught by the React error boundary) — instead of a blank black canvas. */}
@@ -322,7 +321,6 @@ export const FractalCanvas: React.FC<FractalCanvasProps> = ({
         ref={canvasRef}
         id="fractal-canvas"
         className="w-full h-full block touch-none"
-        style={{ touchAction: 'none' }}
         role="img"
         aria-label={`3D фрактал: ${params.type} (WebGL2/WebGPU raymarcher)`}
         onPointerDown={handlePointerDown}

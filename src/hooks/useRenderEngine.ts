@@ -429,6 +429,11 @@ export function useRenderEngine(
     // Test harness pause/resume (headless browser screenshots)
     (window as any).__pauseRender = () => { renderPaused = true; };
     (window as any).__resumeRender = () => { renderPaused = false; lastRenderTimestamp = performance.now(); };
+    // ?test=1&pauseRender=1 → auto-freeze after 3 rendered frames so slow software
+    // compositors (design-qa screenshot capture) finish before the CDP 30s timeout.
+    // Inert unless BOTH flags are present in the query string.
+    const harnessSearch = typeof window !== 'undefined' ? window.location.search : '';
+    let autoPauseAfterFrames = harnessSearch.includes('test=1') && harnessSearch.includes('pauseRender=1') ? 3 : -1;
 
     const handleVisibilityChange = () => {
       isVisibleRef.current = !document.hidden;
@@ -470,6 +475,7 @@ export function useRenderEngine(
       if (targetInterval <= 0 || elapsedSinceLast >= targetInterval - 0.75) {
         const deltaMs = Math.min(elapsedSinceLast, 100);
         lastRenderTimestamp = timestamp;
+        if (autoPauseAfterFrames >= 0 && --autoPauseAfterFrames === 0) renderPaused = true;
 
         simTimeRef.current += (deltaMs / 1000.0);
         // Wrap simTime to prevent float32 precision loss after extended runtime

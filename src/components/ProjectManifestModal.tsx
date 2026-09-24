@@ -38,8 +38,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
     >
       <div
         id="project-manifest-modal-content"
-        className="relative w-full max-w-2xl my-6 bg-surface-modal border border-amber-500/30 rounded-3xl text-slate-200 overflow-hidden"
-        style={{ boxShadow: '0 0 60px color-mix(in srgb, var(--brand-amber) 15%, transparent)' }}
+        className="relative w-full max-w-2xl my-6 bg-surface-modal border border-amber-500/30 rounded-3xl text-slate-200 overflow-hidden shadow-glow-modal"
         onClick={e => e.stopPropagation()}
       >
         {/* Subtle Golden Ambient Edge Glow */}
@@ -163,8 +162,7 @@ export const ProjectManifestModal: React.FC<ProjectManifestModalProps> = ({
             <button
               id="btn-manifest-start"
               onClick={handleDismiss}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold text-xs transition-all flex items-center justify-center gap-1.5 group"
-              style={{ boxShadow: '0 0 20px color-mix(in srgb, var(--brand-amber) 25%, transparent)' }}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold text-xs transition-all flex items-center justify-center gap-1.5 group shadow-glow-cta"
             >
               <span>Начать погружение</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

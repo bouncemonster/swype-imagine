@@ -1,0 +1,165 @@
+# Design QA contract for swype-imagine / FractalFlow.
+# Screen map mirrors DESIGN.md ## Responsive Behavior; canvas is masked on every
+# screen because the fractal render is nondeterministic pixel output (established
+# project rule: visual regression here needs coverage stats / computed styles,
+# not full-frame pixel diffs — see memory 2026-09-23 and tests/mobile-design-audit.ts).
+# Debt gates below are DOCUMENTED BASELINES (audit counts at 2026-09-24), not
+# target-zero: lowering them is a design decision, raising them must be explained.
+
+project:
+  name: swype-imagine-fractalflow
+  # vite.config.ts pins preview to 4178 strictPort (NOT the vite default 4173).
+  baseUrl: http://127.0.0.1:4178
+  outputDir: .design-qa
+  # Start the server before running the pipeline: `npm run preview`
+  # (appCommand intentionally omitted; a second `vite preview` would collide
+  # with strictPort 4178 and the pipeline would boot-fail).
+  appReadyUrl: http://127.0.0.1:4178
+  appReadyTimeoutMs: 30000
+
+design:
+  designMd: DESIGN.md
+  screenSpec: SCREEN_SPEC.md # absent — known gap, hierarchy comes from DESIGN.md
+
+screens:
+  # Fixed boot hash + ?test=1 (preserveDrawingBuffer) + pauseRender=1
+  # (auto-freezes the render loop after 3 frames — without it the software
+  # WebGL compositor starves CDP Page.captureScreenshot past 30s; verified
+  # 2026-09-24: capture took 30.5s live vs ~1s paused).
+  - name: desktop-1280
+    mode: regression
+    expected:
+      type: image
+      path: .design-qa/expected/desktop-1280.png
+    app:
+      url: /?test=1&pauseRender=1#type=mandelbulb&renderStyle=solid
+      viewport: { width: 1280, height: 720 }
+      deviceScaleFactor: 1
+      fullPage: false
+      waitUntil: networkidle
+      waitForSelector: "#top-right-trigger"
+      waitForSelectorTimeoutMs: 90000 # headless software-WebGL shader compile is 10-25s
+    compare:
+      maxDiffPixelRatio: 0.01
+      maxDiffPixels: 3000
+      threshold: 0.2
+      masks:
+        - selector: "canvas" # nondeterministic fractal field
+      ignoreSelectors:
+        - "#fractal-probe-hud" # live fps/coords/depth, deterministic only under autotest
+
+  - name: mobile-390
+    mode: regression
+    expected:
+      type: image
+      path: .design-qa/expected/mobile-390.png
+    app:
+      url: /?test=1&pauseRender=1#type=mandelbulb&renderStyle=solid
+      viewport: { width: 390, height: 844 }
+      deviceScaleFactor: 1
+      fullPage: false
+      waitUntil: networkidle
+      waitForSelector: "#top-right-trigger"
+      waitForSelectorTimeoutMs: 90000
+    compare:
+      maxDiffPixelRatio: 0.01
+      maxDiffPixels: 3000
+      threshold: 0.2
+      masks:
+        - selector: "canvas"
+      ignoreSelectors:
+        - "#fractal-probe-hud"
+
+  - name: tablet-768
+    mode: regression
+    expected:
+      type: image
+      path: .design-qa/expected/tablet-768.png
+    app:
+      url: /?test=1&pauseRender=1#type=mandelbulb&renderStyle=solid
+      viewport: { width: 768, height: 1024 }
+      deviceScaleFactor: 1
+      fullPage: false
+      waitUntil: networkidle
+      waitForSelector: "#top-right-trigger"
+      waitForSelectorTimeoutMs: 90000
+    compare:
+      maxDiffPixelRatio: 0.01
+      maxDiffPixels: 3000
+      threshold: 0.2
+      masks:
+        - selector: "canvas"
+      ignoreSelectors:
+        - "#fractal-probe-hud"
+
+uiAlignment:
+  runVisualComparison: true
+  runComponentAudit: true
+  runDebtAudit: true
+  runA11yAudit: true
+  measurementTolerancePx: 1
+  # Global anchors = DESIGN.md component contract, checked on every screen.
+  # Only default-boot-visible elements qualify; panel/modal surfaces need
+  # interaction state and are covered by tests/css-equiv-probe.mjs instead.
+  # Values verified against live computed styles 2026-09-24.
+  anchors:
+    - name: hud trigger pill (hud-trigger-pill)
+      selector: "#top-right-trigger"
+      severity: minor
+      expected:
+        height: { value: 34, tolerance: 1 } # {components.hud-trigger-pill.size}
+        # radius intentionally unchecked: rounded-full computes to 3.35e7px,
+        # string compare vs "9999px" would always fail.
+    - name: hud icon button (hud-icon-button)
+      selector: "#open-atlas-btn-hud"
+      severity: minor
+      expected:
+        # measured 30px ≥sm, 28px below sm (px-2 variant) — DESIGN.md said
+        # 32px; doc corrected to measured with the responsive spread noted.
+        height: { value: 30, tolerance: 4 }
+        css:
+          borderRadius: 12px # {rounded.lg} per DESIGN.md scale (class is rounded-xl — see naming-drift note in DESIGN.md)
+
+code:
+  include:
+    - src/**/*.{ts,tsx,js,jsx,css}
+  exclude:
+    - node_modules/**
+    - dist/**
+    - .design-qa/**
+    - tests/**
+
+components:
+  # No external UI library by contract (DESIGN.md: implicit Tailwind utilities +
+  # @theme tokens). Raw <button>/<input> ARE the system here; alignment is
+  # judged by token-class consistency, which the debt audit covers.
+  libraryImportPatterns: []
+  rawElementPolicy: {}
+  allowedRawElementFiles:
+    - "src/**"
+
+a11y:
+  disabledRules: []
+  includeSelectors: []
+  excludeSelectors:
+    - "[data-a11y-ignore]"
+
+debt:
+  # Measured at commit e0e18e5+ (2026-09-24, post text-[Npx] migration).
+  # NOTE: this plugin's audit only consumes debt.allowedColorValues as a gate;
+  # the max* numbers below are the DOCUMENTED BASELINE for future CI, and any
+  # rise must come with a CHANGELOG note. Categories:
+  #  - hard-coded-color: CosmicLoader SVG glow (quarantined, DESIGN.md Gap 2)
+  #  - functional-color: ControlsPanel palette swatches + loader glow rgba —
+  #    dynamic procedural colors, cannot be static tokens (acceptable)
+  #  - inline-style: 16 dynamic transforms/values (loader particles, sliders,
+  #    progress widths) — runtime values, accepted
+  #  - px-magic / arbitrary-tailwind: layout constants, documented Gap 1/2
+  maxHardCodedColors: 1
+  maxFunctionalColors: 5
+  maxArbitraryTailwindValues: 36
+  maxInlineStyles: 16
+  allowedColorValues:
+    - "#000"
+    - "#fff"
+    - transparent
