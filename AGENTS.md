@@ -1,73 +1,65 @@
-GitHub spelling: `swype-imagine` (local folder `swype-imagine`).
+# Agent entry — swype-imagine
 
-# Agent Rules — swype-imagine
+## Correct source and reading order
 
-**Git root:** `J:\project\swype-imagine\app` → `git@github.com:bouncemonster/swype-imagine.git`  
-**Deep context:** see `AGENT.md` (architecture). This file = rules.
+This is `bouncemonster/swype-imagine`, the Golden Ratio Fractal Engine. Its current GitHub `main` is authoritative. The recorded local checkout `J:\project\swype-imagine\app` is a location hint, not evidence that its contents are current. Do not create a second engine beside it or substitute another simulation project.
 
-## Git
-- Branch: `main` / `origin/main`
-- Do not commit `.env`, secrets, giant binaries, or `_archive` zips
-- Do not recreate a second copy of the engine beside `app/`
-## Project-Specific
+Read [.github/README.md](.github/README.md) for the product, [ARCHITECTURE.md](ARCHITECTURE.md) for the implementation map, and [DESIGN.md](DESIGN.md) for the design contract. The old instruction pointing to `AGENT.md` was incorrect: that file was absent at the 2026-10-05 inspection. Do not recreate a competing architecture document to satisfy the obsolete pointer.
 
-- Design system contract: `DESIGN.md` (YAML frontmatter + prose). Source of truth for tokens.
-- `src/index.css` declares `@theme` block (Tailwind v4 semantic utilities) + `:root` brand aliases.
-- Community files: `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`, `.github/SECURITY.md`, `.github/CODE_OF_CONDUCT.md`, `.github/dependabot.yml`
-- CI: `.github/workflows/ci.yml` (typecheck → build → unit → integration → mobile audit)
+Use [RENDERING_SYSTEM.md](RENDERING_SYSTEM.md) for renderer details and [package.json](package.json) for current scripts/dependencies. Version labels, assertion totals, bundle sizes and timing claims in historical prose are not fresh measurements.
 
+## Resume before changing
 
+Inspect branch, current GitHub revision, recent commits, existing issue/handoff, staged and unstaged changes. Preserve other IDEs' work and identify active workers before claiming files. A running local IDE does not supersede GitHub source. Do not reset, clean, stash or force-push to reconcile divergence.
 
-### Engine
+Use `main` as the established publication branch. Keep one bounded outcome and disjoint worker scopes; serialize shared instructions, package/lock files and generated assets. No automatic worktrees, parallel copies or new deployment route.
 
-- WebGL2 primary (all 431 fractal types) + WebGPU optional (131/431, rest fall back to phyllotaxis) dual renderer
+## Rendering boundaries
 
-- Fragment-shader (ray-marching) pipelines on both backends; no compute shaders
+WebGL2 is primary. The maintained renderer contract describes 431 types in WebGL2 and partial WebGPU coverage with the documented fallback. Both are fragment-shader ray-marching pipelines, not compute-shader implementations. Do not advertise full backend parity from the existence of a WebGPU path.
 
-- Shader modules in `src/shaders/`
+Shaders live under `src/shaders/`; engine behavior and type mappings live under `src/engine/`. Confirm paths in the current tree before editing. Keep catalog changes, mappings, shader math and renderer expectations consistent.
 
+`src/index.css` contains the Tailwind theme and brand aliases. Respect the design contract, reduced motion, touch targets and lazy-loading boundaries. Do not replace actual renderer evidence with generated artwork or inflate performance claims.
 
+## Build and checks
 
-### Build & Test
+From the repository root, with dependencies prepared:
 
-```powershell
-
-npm install          # Dependencies
-
-npm run dev          # Dev server (localhost:3000)
-
-npm run build        # Production build
-
-npx tsc --noEmit     # Type check
-
-npm run test:unit    # Unit (mapper + shader-math + parity: 718 assertions)
-
-npm run test         # Integration autotest (1875 assertions)
-
-npm run test:mobile  # Coarse-pointer design audit (44px targets + 12px floor)
-
-npm run test:all     # Full suite
-
+```sh
+npm run lint
+npm run build
+npm run test:unit
+npm run test
 ```
 
-### Deployment
+`lint` is TypeScript checking. The following declared lanes need their corresponding browser/runtime environment:
 
-```powershell
-
-npx wrangler pages deploy dist --commit-dirty=true   # Cloudflare Pages
-
+```sh
+npm run test:browser
+npm run test:mobile
+npm run test:headless
+npm run test:benchmark
 ```
 
-Production: https://fractal.simundis.com / https://golden-ratio-fractal-engine.pages.dev
+`npm run test:all` includes unit, integration, headless, benchmark and quality scripts, but **does not include `test:browser` or `test:mobile`** in the inspected manifest. Run relevant missing lanes separately. Do not report a script as passed merely because it exists.
 
+For a local interactive inspection:
 
-
-### GPU Diagnostics
-
-```powershell
-
-nvidia-smi           # GPU status
-
+```sh
+npm run dev -- --host 127.0.0.1
 ```
 
+The declared port is 3000. Check it first and stop only the task-owned server. Local GPU support, browser flags and rendering resolution affect results; record them when comparing output or performance.
 
+## Demonstrations and assets
+
+The README gallery uses existing repository images. Those images are illustrative project assets, not newly captured proof of current UI behavior. A new demonstration must record source revision, actual renderer, fractal/preset, browser/device, viewport and whether the scene is animated or paused.
+
+Preserve existing assets and license notices. Avoid adding giant binaries or archived source bundles. Community guidance stays in `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`, `.github/SECURITY.md` and `.github/CODE_OF_CONDUCT.md`.
+
+## Publication and handoff
+
+Documentation work does not authorize Cloudflare publication. `deploy:cf` builds and deploys; it is not a test command. No `.env`, tokens, private data, generated deployment credentials or `_archive` ZIPs belong in commits.
+
+After a scoped change, record files, source revision, exact checks and outcomes, publication commit/readback and remaining work in the current task record. Preserve active/unknown worker ownership and one next action before switching IDEs or compressing context. Keep PASS, FAIL, NOT RUN and BLOCKED distinct. A documentation commit is not a deployed application revision.
