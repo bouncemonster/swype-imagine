@@ -1,8 +1,10 @@
 # Project Context - Always In Context
 
 **Version**: 6.0.0  
-**Last Updated**: 2026-09-23  
-**Status**: Production Deployed — always-on at fractal.simundis.com + Cloudflare Pages
+**Last Updated**: 2026-10-12  
+**Status**: Production deployed on Cloudflare Pages (`golden-ratio-fractal-engine.pages.dev`, HTTP 200 verified
+2026-10-12) plus the pinned explainer build `swype-imagine.moonsugar.space`. The `fractal.simundis.com` alias is
+**not** serving the engine: HTTP 530 (Cloudflare error 1033) at that same check.
 
 ---
 

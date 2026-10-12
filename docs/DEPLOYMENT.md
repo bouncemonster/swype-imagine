@@ -140,7 +140,12 @@ npm run deploy:cf
 
 ### Custom Domain
 1. Pages project → Custom domains
-2. Add domain: **`fractal.simundis.com`** (live as of 2026-09)
+2. Add domain: **`fractal.simundis.com`** — **not verified as a Pages custom domain.** The name lives in the
+   Simundis Cloudflare zone and answered **HTTP 530 (Cloudflare error 1033: no connected tunnel for that
+   hostname)** on 2026-10-12, and it is absent from the Simundis tunnel ingress
+   (`simundis-backend/config/cloudflared/config.yml`). Historical notes (`docs/CHANGELOG.md`, `memory/`) call it
+   the flagship because it was served by a named tunnel running from a private machine, which is not a Pages
+   route and not something this repository controls. Do not follow these steps as if the domain were live.
 3. Update DNS:
    ```
    Type: CNAME

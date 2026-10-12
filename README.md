@@ -5,7 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://fractal.simundis.com/"><img alt="Live demo" src="https://img.shields.io/badge/Live_demo-fractal.simundis.com-F59E0B?style=for-the-badge&logo=cloudflarepages&logoColor=white" /></a>
+  <a href="https://golden-ratio-fractal-engine.pages.dev/"><img alt="Live demo" src="https://img.shields.io/badge/Live_demo-golden--ratio--fractal--engine.pages.dev-F59E0B?style=for-the-badge&logo=cloudflarepages&logoColor=white" /></a>
+  <a href="https://swype-imagine.moonsugar.space/"><img alt="Explainer build" src="https://img.shields.io/badge/Explainer_build-swype--imagine.moonsugar.space-8B5CF6?style=for-the-badge" /></a>
   <a href="https://github.com/bouncemonster/swype-imagine/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-informational?style=for-the-badge&logo=githubactions&logoColor=white" /></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" /></a>
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-5.8_strict-blue?style=for-the-badge&logo=typescript&logoColor=white" />
@@ -19,7 +20,9 @@ optional WebGPU path. A single distance evaluator (`map*` + `ray march`) drives 
 fractals, adaptive quality, and ten render styles. Ships always-on at Cloudflare Pages with a
 personalization engine that learns from interaction.
 
-🌐 **Live demo**: https://fractal.simundis.com/  ·  **Mirror**: https://golden-ratio-fractal-engine.pages.dev/
+🌐 **Live demo**: https://golden-ratio-fractal-engine.pages.dev/  ·  **Explainer build**: https://swype-imagine.moonsugar.space/
+_(The historical flagship alias `https://fractal.simundis.com/` answered **HTTP 530 / Cloudflare error 1033** when last
+checked on 2026-10-12 — do not present it as a working link. Owners and exact check dates: [`.github/README.md` → Hosted builds](.github/README.md#hosted-builds).)_
 📚 **Docs**: [`docs/`](./docs) · [`DESIGN.md`](./DESIGN.md) · [`ARCHITECTURE.md`](./ARCHITECTURE.md) · [`CHANGELOG.md`](./docs/CHANGELOG.md)
 
 ---
@@ -184,7 +187,8 @@ src/
 - **Frontend**: React 19 + TypeScript 5.8 (strict) + Vite ^6.2.3
 - **Styling**: Tailwind CSS v4 (oklch tokens; brand aliases in `src/index.css`)
 - **Rendering**: GLSL ES 3.0 (WebGL2) / WGSL (WebGPU)
-- **Deploy**: Cloudflare Pages via Wrangler; named tunnel for `fractal.simundis.com`
+- **Deploy**: Cloudflare Pages via Wrangler; `fractal.simundis.com` is a hostname in the Simundis zone routed
+  through a named tunnel whose connector runs on a private machine (HTTP 530 / Cloudflare 1033 on 2026-10-12)
 - **Build**: Bun/npm
 - **Testing**: Playwright + custom harness — 718 unit + 1875 integration + 477 headless assertions
 - **CI**: GitHub Actions (`.github/workflows/ci.yml`): typecheck → build → unit trio → autotest → mobile design audit
