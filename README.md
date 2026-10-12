@@ -74,6 +74,14 @@ npm run test:all       # Full test suite
 npm run lint           # TypeScript type check
 ```
 
+## 🌐 Опубликованные сборки
+
+- **[swype-imagine.moonsugar.space](https://swype-imagine.moonsugar.space/)** — сборка этого репозитория на ревизии `1dbbfd5`, опубликована соседним репозиторием `moonsugar.space`; хостинг, DNS и выпуск принадлежат ему, пуш сюда не перепубликует поддомен.
+- **[golden-ratio-fractal-engine.pages.dev](https://golden-ratio-fractal-engine.pages.dev/)** — Cloudflare Pages, `npm run deploy:cf`.
+- `fractal.simundis.com` на 2026-10-12 отвечает **HTTP 530** (ошибка Cloudflare 1033): имя в зоне Simundis, тюнель которого не подключён. Не выдавайте его за рабочую ссылку.
+
+Таблица владельцев и точная дата проверки — в [.github/README.md](.github/README.md#hosted-builds).
+
 ## 🏗️ Архитектура
 
 ```

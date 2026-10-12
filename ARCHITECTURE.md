@@ -314,3 +314,9 @@ npm run test:all     # Full test suite (unit + integration + headless + benchmar
 - **Build command**: `npm run build`
 - **Output directory**: `dist`
 - **Deploy command**: `npm run deploy:cf`
+- **Second published surface**: `https://swype-imagine.moonsugar.space/` — the same `npm run build` output,
+  pinned to revision `1dbbfd5` and published by the sibling `moonsugar.space` repository. That repository
+  owns the hosting, DNS, ingress and release lane; pushing here does not republish it.
+- **`fractal.simundis.com`**: a Simundis-zone hostname whose tunnel connector runs on a private machine.
+  It returned HTTP 530 (Cloudflare error 1033) when measured on 2026-10-12 and must not be presented as a
+  working link. See "Hosted builds" in `.github/README.md` for the ownership breakdown.

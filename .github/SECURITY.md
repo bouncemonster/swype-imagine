@@ -9,7 +9,7 @@ preferences (profile, engineer mode, personalization weights) live in
 
 | Version | Supported | Notes |
 |---------|-----------|-------|
-| `main`  | ✅        | Deployed continuously to https://fractal.simundis.com/ |
+| `main`  | ✅        | Published builds: https://golden-ratio-fractal-engine.pages.dev/ and the pinned explainer build https://swype-imagine.moonsugar.space/ (ownership in README "Hosted builds"). `fractal.simundis.com` answered HTTP 530 at the 2026-10-12 check and is not a supported channel |
 | Older tagged releases | ⚠️ best-effort | Only if a security-relevant commit chain is intact |
 
 ## Reporting a vulnerability

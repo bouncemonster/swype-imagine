@@ -6,7 +6,7 @@
 
 Interactive fractals · WebGL2 · Optional WebGPU · Palettes and ambient audio
 
-[Interactive site](https://fractal.simundis.com/) · [Try a session](#try-a-session) · [Gallery](#project-gallery) · [Run locally](#run-locally) · [Agent entry](../AGENTS.md)
+[Published build](https://swype-imagine.moonsugar.space/) · [Pages deployment](https://golden-ratio-fractal-engine.pages.dev/) · [Try a session](#try-a-session) · [Gallery](#project-gallery) · [Run locally](#run-locally) · [Hosted builds](#hosted-builds) · [Agent entry](../AGENTS.md)
 
 </div>
 
@@ -22,7 +22,7 @@ A browser-based fractal explorer built with **React, TypeScript and Vite**. Move
 
 **Compare deliberately.** Use WebGPU only where the selected browser/device supports it. Its type coverage differs from WebGL2: a fallback is not evidence of equivalent rendering. Keep renderer, preset and resolution with any comparison.
 
-This is a suggested demonstration route, not a record that these interactions were rerun during the README update. The site is the project's documented deployment address; the current deployment revision is not established here.
+This is a suggested demonstration route, not a record that these interactions were rerun during the README update. Which published URL currently answers is stated in [Hosted builds](#hosted-builds); the deployment revision of any URL is established there, not here.
 
 ## Project gallery
 
@@ -83,6 +83,29 @@ npm run preview -- --host 127.0.0.1
 ```
 
 Use the preview address printed by Vite. A local preview is not a Cloudflare deployment.
+
+## Hosted builds
+
+Three published surfaces exist. They are different owners and must not be conflated; every status below
+is a single measurement taken over public HTTPS on 2026-10-12, not an uptime claim.
+
+| Surface | Owner | State on 2026-10-12 |
+| --- | --- | --- |
+| [`swype-imagine.moonsugar.space`](https://swype-imagine.moonsugar.space/) | sibling **`moonsugar.space`** repository ("Layer B" apps lane) | HTTP 200; serves this repository's `npm run build` output pinned to revision `1dbbfd5` |
+| [`golden-ratio-fractal-engine.pages.dev`](https://golden-ratio-fractal-engine.pages.dev/) | this repository, Cloudflare Pages (`npm run deploy:cf`) | HTTP 200 |
+| `fractal.simundis.com` | hostname in the **Simundis** Cloudflare zone, served by a named tunnel from a private machine | HTTP 530 (Cloudflare error 1033): proxied record with no connected tunnel for that hostname |
+
+The historical prose in `docs/CHANGELOG.md` and `memory/2026-09-23.md` calls `fractal.simundis.com` the
+flagship production alias. That is retained as history, not as a current fact: the alias depended on a
+personal-machine connector, and it did not answer when checked. Do not present it as a working link until
+it is re-verified.
+
+About the Moonsugar subdomain: hosting, DNS, ingress and the release lane live in that other repository,
+whose `apps.lock.json` names the pinned revision. A commit or push here does **not** republish it, and no
+production write is authorized by work in this tree. The published page also carries two elements that are
+not in this source — a brand-bridge link to `moonsugar.space` and a dismissible disclosure bar stating that
+the subdomain explains the project rather than certifies a finished hosted service. Neither restyles the
+application; everything else is the built artifact.
 
 ## Verify and hand off
 

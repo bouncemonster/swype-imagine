@@ -16,7 +16,7 @@ Shader / Engine / Data / UI / Personalization / Build / Docs (delete non-applica
 - [ ] `npm run test:unit` → green
 - [ ] `npm run test` (1875-assertion integration autotest) → green
 - [ ] `npm run test:mobile -- http://127.0.0.1:4173` → PASS on 3 viewports
-- [ ] Manual smoke on https://fractal.simundis.com/ preview deploy (paste URL)
+- [ ] Manual smoke on a live URL (Pages preview deployment, or https://swype-imagine.moonsugar.space/ once that lane is rebuilt from this revision — paste URL; `fractal.simundis.com` answered HTTP 530 at the 2026-10-12 check)
 
 ## Screenshots / captures
 Before / after for any visual or HUD change. Delete this section if purely

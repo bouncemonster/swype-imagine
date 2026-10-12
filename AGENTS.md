@@ -62,4 +62,6 @@ Preserve existing assets and license notices. Avoid adding giant binaries or arc
 
 Documentation work does not authorize Cloudflare publication. `deploy:cf` builds and deploys; it is not a test command. No `.env`, tokens, private data, generated deployment credentials or `_archive` ZIPs belong in commits.
 
+A second repository, `moonsugar.space`, publishes a pinned explainer build at `swype-imagine.moonsugar.space`. Its host, DNS, ingress and release lane live there (`apps.lock.json` names the revision); a commit or push in this tree does not move it and authorizes no write there. Verify a published URL before repeating it as live: on 2026-10-12 `swype-imagine.moonsugar.space` and the Pages deployment answered 200, while `fractal.simundis.com` answered HTTP 530 (Cloudflare error 1033). Ownership detail lives in `.github/README.md` → "Hosted builds"; do not duplicate it here.
+
 After a scoped change, record files, source revision, exact checks and outcomes, publication commit/readback and remaining work in the current task record. Preserve active/unknown worker ownership and one next action before switching IDEs or compressing context. Keep PASS, FAIL, NOT RUN and BLOCKED distinct. A documentation commit is not a deployed application revision.
