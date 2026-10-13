@@ -18,7 +18,10 @@
   "palettes": 666,
   "designTokens": "@theme block (micro/nano text tiers, semantic surfaces, brand aliases)",
   "license": "MIT",
-  "liveUrl": "https://fractal.simundis.com",
+  "liveUrl": "https://golden-ratio-fractal-engine.pages.dev",
+  "explainerBuildUrl": "https://swype-imagine.moonsugar.space",
+  "urlsVerifiedOn": "2026-10-12",
+  "urlNotes": "The historical alias https://fractal.simundis.com answered HTTP 530 (Cloudflare error 1033) on 2026-10-12 and is not a live surface. Ownership of each URL is documented in .github/README.md -> Hosted builds.",
   "majorCapabilities": [
     "WebGL2_Primary_WebGPU_Optional",
     "431_Fractal_Types",

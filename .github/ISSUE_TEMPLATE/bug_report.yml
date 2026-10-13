@@ -12,8 +12,8 @@ body:
     id: url
     attributes:
       label: Live URL where the bug appears
-      description: e.g. https://fractal.simundis.com/ or a preview deployment hash.
-      placeholder: https://fractal.simundis.com/
+      description: e.g. https://golden-ratio-fractal-engine.pages.dev/, the pinned explainer build https://swype-imagine.moonsugar.space/, or a preview deployment hash.
+      placeholder: https://golden-ratio-fractal-engine.pages.dev/
     validations:
       required: true
   - type: textarea
