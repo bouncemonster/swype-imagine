@@ -153,6 +153,16 @@ npm run deploy:cf
    Target: your-project.pages.dev
    ```
 
+### Second published surface (owned by another repository)
+
+`https://swype-imagine.moonsugar.space/` serves the output of this same `npm run build`, pinned to revision
+`1dbbfd5` and published on 2026-10-12 by the sibling `moonsugar.space` repository — the pin is named in its
+`apps.lock.json`. Both URLs answered **HTTP 200** at the 2026-10-12 check, alongside the Pages deployment.
+This surface is **not** deployed from this guide: no credential, DNS record or release step here creates,
+republishes or rolls it back, and a commit or push in this repository does not move it. The injected brand
+bridge and the dismissible disclosure banner are added by that repository, not by this source. Ownership
+breakdown: `.github/README.md` → *Hosted builds*; behaviour boundary: `ARCHITECTURE.md` → *Deployment*.
+
 ### Cloudflare Configuration
 `wrangler.toml` (this project's file is exactly 3 lines — there is no `[headers]` block):
 ```toml
